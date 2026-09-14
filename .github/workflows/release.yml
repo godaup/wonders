@@ -49,12 +49,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install poetry
+          pip install build
 
       - name: build documentation
         run: |
-          poetry install -E doc
-          poetry run mkdocs build
+          pip install ".[doc]"
+          mkdocs build
 
       - name: publish documentation
         uses: peaceiris/actions-gh-pages@v3
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build wheels and source tarball
         run: >-
-          poetry build
+          python -m build
 
       - name: show temporary files
         run: >-

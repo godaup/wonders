@@ -8,13 +8,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Tooling & Commands
 
-Dependency and environment management uses **Poetry**. Install everything for local dev:
+Dependencies are managed with a plain **virtual environment + pip** (PEP 621 metadata in `pyproject.toml`, setuptools build backend). Set up for local dev:
 
 ```
-poetry install -E test -E doc -E dev
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -e ".[test,doc,dev]"
 ```
 
-The `makefile` is the primary task runner (prefix with `poetry run` if not inside the venv):
+Optional-dependency groups: `test`, `doc`, `dev` (defined under `[project.optional-dependencies]`).
+
+The `makefile` is the primary task runner (activate the venv first):
 
 - `make test` — runs `format`, `lint`, then `unittest` (the full local gate)
 - `make format` — `isort` + `black` (line length **120**)
@@ -25,17 +29,17 @@ The `makefile` is the primary task runner (prefix with `poetry run` if not insid
 Run a single test:
 
 ```
-poetry run pytest tests/test_wonders.py::test_command_line_interface
+pytest tests/test_wonders.py::test_command_line_interface
 ```
 
-Multi-version testing (py36–py39) is done via `poetry run tox`, which mirrors CI.
+Multi-version testing (py36–py39) is done via `tox`, which mirrors CI.
 
 The console entry point `wonders` maps to `wonders.cli:main` (Click-based).
 
 ## CI / Release
 
 - CI (`.github/workflows/dev.yml`, `preview.yml`) runs the tox matrix across Python 3.6–3.9 plus format/lint/build stages defined in `setup.cfg`.
-- Releasing is tag-driven: bump with `poetry run bump2version {major|minor|patch}` (updates `pyproject.toml` and `wonders/__init__.py`, commits, and tags per `.bumpversion.cfg`), then `git push --tags`. `release.yml` deploys to PyPI on passing tests. Add a `CHANGELOG.md` entry before bumping.
+- Releasing is tag-driven: bump with `bump2version {major|minor|patch}` (updates `pyproject.toml` and `wonders/__init__.py`, commits, and tags per `.bumpversion.cfg`), then `git push --tags`. `release.yml` builds with `python -m build` and deploys to PyPI on passing tests. Add a `CHANGELOG.md` entry before bumping.
 
 ## Architecture
 

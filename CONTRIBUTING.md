@@ -55,11 +55,17 @@ Ready to contribute? Here's how to set up `wonders` for local development.
     $ git clone git@github.com:your_name_here/wonders.git
     ```
 
-3. Ensure [poetry](https://python-poetry.org/docs/) is installed.
-4. Install dependencies and start your virtualenv:
+3. Create and activate a virtual environment:
 
     ```
-    $ poetry install -E test -E doc -E dev
+    $ python -m venv .venv
+    $ source .venv/bin/activate   # Windows: .venv\Scripts\activate
+    ```
+
+4. Install the package with its development dependencies (editable install):
+
+    ```
+    $ pip install -e ".[test,doc,dev]"
     ```
 
 5. Create a branch for local development:
@@ -74,7 +80,7 @@ Ready to contribute? Here's how to set up `wonders` for local development.
    tests, including testing other Python versions, with tox:
 
     ```
-    $ poetry run tox
+    $ tox
     ```
 
 7. Commit your changes and push your branch to GitHub:
@@ -102,7 +108,7 @@ Before you submit a pull request, check that it meets these guidelines:
 ## Tips
 
 ```
-$ poetry run pytest tests/test_wonders.py
+$ pytest tests/test_wonders.py
 ```
 
 To run a subset of tests.
@@ -115,7 +121,7 @@ Make sure all your changes are committed (including an entry in CHANGELOG.md).
 Then run:
 
 ```
-$ poetry run bump2version patch # possible: major / minor / patch
+$ bump2version patch # possible: major / minor / patch
 $ git push
 $ git push --tags
 ```
