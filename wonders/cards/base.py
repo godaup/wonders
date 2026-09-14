@@ -1,45 +1,123 @@
-import enum
-from typing import List, Optional
+"""Core static card types: colors, resources, costs and the Card itself.
 
-from wonders.effects.base import Effect
+This module deliberately imports nothing from :mod:`wonders.effects` at runtime so
+that the effect system can depend on these enums without an import cycle. The
+``effects`` field is only type-annotated (resolved lazily via
+``from __future__ import annotations``).
+"""
+
+from __future__ import annotations
+
+import enum
+from collections import Counter
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Optional, Tuple
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from wonders.effects.base import Effect
 
 
 class Color(enum.Enum):
-    BROWN = 'brown'
-    RED = 'red'
-    BLUE = 'blue'
-    YELLOW = 'yellow'
-    GREY = 'grey'
-    GREEN = 'green'
-    PURPLE = 'purple'
-    WHITE = 'white'
-    BLACK = 'black'
+    """Card categories. WHITE/BLACK are reserved for the Leaders/Cities expansions."""
+
+    BROWN = 'brown'  # raw materials
+    GREY = 'grey'  # manufactured goods
+    BLUE = 'blue'  # civilian (victory points)
+    YELLOW = 'yellow'  # commercial (coins / trade / resources)
+    RED = 'red'  # military
+    GREEN = 'green'  # science
+    PURPLE = 'purple'  # guilds (Age III only)
+    WHITE = 'white'  # Leaders expansion
+    BLACK = 'black'  # Cities expansion
 
 
 class Ressource(enum.Enum):
+    """Tradeable resources.
+
+    Spelling kept as ``Ressource`` to match the original scaffold. ``GOLD`` models
+    coins and is intentionally *not* a producible/tradeable resource — coins are
+    tracked as integers on the player and never satisfy a resource cost.
+    """
+
     WOOD = 'wood'
     STONE = 'stone'
     ORE = 'ore'
-    BRICKS = 'bricks'
+    BRICKS = 'bricks'  # a.k.a. clay
     GLASS = 'glass'
-    LINEN = 'linen'
-    PAPER = 'paper'
-    GOLD = 'gold'
+    LINEN = 'linen'  # a.k.a. loom / textile
+    PAPER = 'paper'  # a.k.a. papyrus
+    GOLD = 'gold'  # coins; see note above
+
+    @property
+    def is_raw(self) -> bool:
+        return self in RAW_MATERIALS
+
+    @property
+    def is_manufactured(self) -> bool:
+        return self in MANUFACTURED_GOODS
 
 
+RAW_MATERIALS = frozenset({Ressource.WOOD, Ressource.STONE, Ressource.ORE, Ressource.BRICKS})
+MANUFACTURED_GOODS = frozenset({Ressource.GLASS, Ressource.LINEN, Ressource.PAPER})
+
+
+class ScienceSymbol(enum.Enum):
+    TABLET = 'tablet'
+    GEAR = 'gear'
+    COMPASS = 'compass'
+
+
+@dataclass(frozen=True)
+class Cost:
+    """What a structure (or wonder stage) costs to build.
+
+    ``coins`` are paid to the bank; ``resources`` must be produced by the player or
+    bought from a neighbour. A free build is ``Cost()``.
+    """
+
+    coins: int = 0
+    resources: Counter = field(default_factory=Counter)
+
+    @classmethod
+    def of(cls, *resources: Ressource, coins: int = 0) -> 'Cost':
+        """Convenience constructor: ``Cost.of(WOOD, WOOD, coins=2)``."""
+        return cls(coins=coins, resources=Counter(resources))
+
+    @classmethod
+    def free(cls) -> 'Cost':
+        return cls()
+
+    @property
+    def is_free(self) -> bool:
+        return self.coins == 0 and not self.resources
+
+    def __post_init__(self) -> None:
+        # Normalise a plain mapping/iterable into a Counter for ergonomics.
+        if not isinstance(self.resources, Counter):
+            object.__setattr__(self, 'resources', Counter(self.resources))
+
+
+# A single unit of production offers a *choice* of one resource among a set.
+# e.g. a brown "Wood" card -> frozenset({WOOD}); a "choice" card -> frozenset of options.
+ResourceOption = frozenset
+
+
+@dataclass
 class Card:
-    def __init__(
-        self,
-        name: str,
-        color: Color,
-        costs: List[Ressource],
-        chain_requires: Optional[str],
-        chain_enables: Optional[List[str]],
-        effects: List[Effect],
-    ) -> None:
-        self.name = name
-        self.color = color
-        self.costs = costs
-        self.chain_requires = chain_requires
-        self.chain_enables = chain_enables
-        self.effects = effects
+    """A structure that can be built into a player's city.
+
+    ``chain_requires`` is the name of a previously-built structure that lets this
+    card be built for free; ``chain_enables`` lists structures this one unlocks.
+    """
+
+    name: str
+    color: Color
+    cost: Cost = field(default_factory=Cost)
+    effects: Tuple['Effect', ...] = ()
+    chain_requires: Optional[str] = None
+    chain_enables: Tuple[str, ...] = ()
+    age: Optional[int] = None
+
+    def __post_init__(self) -> None:
+        self.effects = tuple(self.effects)
+        self.chain_enables = tuple(self.chain_enables)

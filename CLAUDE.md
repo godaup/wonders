@@ -43,18 +43,49 @@ The console entry point `wonders` maps to `wonders.cli:main` (Click-based).
 
 ## Architecture
 
-The game model is split into three domains under `wonders/`, each a package with a `base.py` defining core abstractions:
+The game implements the **7 Wonders** base game (3 Ages of 6 plays, draft-and-pass,
+build/wonder/discard, neighbour trading, military conflict, and the full seven
+scoring categories). It is split into three packages under `wonders/`:
 
-- **`wonders/cards/`** — `base.py` holds the `Card` class plus the `Color` and `Ressource` enums (note the spelling: `Ressource`). A `Card` carries a `color`, a list of `costs` (`Ressource`s), chaining links (`chain_requires` / `chain_enables`, referencing other card names), and a list of `Effect`s. This is the most developed part of the model.
-- **`wonders/effects/`** — `Effect` (base.py) is the extension point for what a card *does* when played. Currently an empty base class; concrete effects are expected to subclass it. `Card.effects` is typed against this base.
-- **`wonders/engine/`** — game-flow orchestration. `Phase` (phase.py) is a stub for the turn/round phase state machine.
+- **`wonders/cards/`** — static content. `base.py` has the `Color` and `Ressource`
+  enums (note the spelling; `GOLD` models coins and is *not* a tradeable resource),
+  `ScienceSymbol`, the `Cost` value object (bank coins + a `Counter` of resources),
+  and the `Card` dataclass (color, cost, `effects`, chaining via
+  `chain_requires`/`chain_enables`). `wonder.py` has `Wonder`/`WonderStage` boards.
+  `library.py` is a *representative* slice of real cards + three A-side wonders used
+  by tests/demos — **not** the full deck (transcribing every card/wonder side is the
+  main outstanding data-entry task).
+- **`wonders/effects/`** — what a card or wonder stage *does*. `base.py` defines the
+  hook-based `Effect` (every effect answers the same uniform hooks —
+  `production`, `shields`, `science`, `trade_rules`, `coins_on_build`,
+  `victory_points` — with neutral defaults), plus `Context` (a player + its two
+  neighbours) and `TradeRule`. `library.py` has the concrete effects; `Tally` is a
+  flexible counter that expresses most yellow commercial cards and purple guilds.
+- **`wonders/engine/`** — the rules. `player.py` (`Player` aggregates production /
+  shields / science / trade-prices from all built effects), `trade.py`
+  (`cheapest_payment`: the min-coin resource-payment solver — the core piece,
+  own production free + neighbours priced, each slot used once per build),
+  `game.py` (`Game`: payment, the three actions, legality, military resolution,
+  scoring, the `play`/`play_age` draft loop), `actions.py`, and `phase.py`.
 
-`wonders/wonders.py` is the legacy cookiecutter "main module" placeholder and is effectively unused — real logic lives in the subpackages above.
+Design rules to preserve when extending:
+- **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;
+  the engine introspects effects only through the uniform `Effect` hooks and never
+  type-switches on concrete effect classes. Add a new mechanic by adding an effect.
+- **Import direction is one-way**: `cards.base` imports nothing from `effects` at
+  runtime (the `Effect` annotation is `TYPE_CHECKING`-only). Keep it that way — the
+  cycle is what the scaffold originally tripped on.
+- **DL-facing surface**: `Game.legal_actions(i, hand)` and `Game.observe(i)`
+  (numeric snapshot) plus `Game.score(i)` (a `ScoreBreakdown`) are the intended
+  machine interfaces — keep state explicit and cheap to serialize.
 
-Key design intent when extending: cards compose behavior via `Effect` objects rather than subclassing `Card`, and card interactions (chaining, resource costs) are data on the `Card` rather than hardcoded logic. Keep the engine's state representation explicit and serializable to serve the Deep Learning goal.
+`wonders/wonders.py` is now a thin public-API re-export (`from wonders.wonders import
+Game, Player, ...`). Expansions are anticipated but unimplemented: `Color.WHITE`
+(Leaders) and `Color.BLACK` (Cities) already exist in the enum.
 
 ## Conventions
 
 - `black` and `isort` are authoritative for formatting (line length 120, `skip-string-normalization`). Google-style docstrings; `flake8` ignores `E203, E266, W503`.
 - Type annotations are expected — `mypy` runs in the lint gate (over `wonders` and `tests`).
+- The engine uses `dataclasses` and `from __future__ import annotations`, so it needs **Python 3.7+** in practice even though `pyproject.toml` classifiers still list 3.6.
 - Pre-commit hooks (`.pre-commit-config.yaml`) enforce the above plus CRLF/whitespace fixes; run `make pre-commit` to check all files.
