@@ -33,3 +33,13 @@ def test_command_line_interface():
     help_result = runner.invoke(cli.main, ['--help'])
     assert help_result.exit_code == 0
     assert '--help  Show this message and exit.' in help_result.output
+
+
+def test_gallery_command_writes_html(tmp_path):
+    """The gallery command renders cards + wonders to a self-contained HTML file."""
+    out = tmp_path / 'g.html'
+    result = CliRunner().invoke(cli.gallery, ['--out', str(out)])
+    assert result.exit_code == 0
+    html = out.read_text(encoding='utf-8')
+    assert html.startswith('<!doctype html>')
+    assert 'Wonder boards' in html and '<svg' in html

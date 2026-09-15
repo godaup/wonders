@@ -52,6 +52,7 @@ doc = [
 
 [project.scripts]
 wonders = "wonders.cli:main"
+wonders-gallery = "wonders.cli:gallery"
 
 [build-system]
 requires = ["setuptools>=61.0"]
