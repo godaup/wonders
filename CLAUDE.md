@@ -50,11 +50,19 @@ scoring categories). It is split into three packages under `wonders/`:
 - **`wonders/cards/`** — static content. `base.py` has the `Color` and `Ressource`
   enums (note the spelling; `GOLD` models coins and is *not* a tradeable resource),
   `ScienceSymbol`, the `Cost` value object (bank coins + a `Counter` of resources),
-  and the `Card` dataclass (color, cost, `effects`, chaining via
-  `chain_requires`/`chain_enables`). `wonder.py` has `Wonder`/`WonderStage` boards.
-  `library.py` is a *representative* slice of real cards + three A-side wonders used
-  by tests/demos — **not** the full deck (transcribing every card/wonder side is the
-  main outstanding data-entry task).
+  and the `Card` dataclass (color, cost, `effects`, chaining, plus deck-composition
+  metadata: `expansion`, `at_players`, `guild`). `wonder.py` has `Wonder`/`WonderStage`.
+  **Content is data, not code**: cards and wonders live declaratively in
+  `data/<expansion>.json` and are parsed by `content.py`, which maps a small typed
+  *effect spec* (`{"type": "production", ...}`) to `Effect` objects via
+  `EFFECT_BUILDERS`. `content.build_age_deck(content, age, n_players, rng)` assembles
+  a deck honouring per-card copy counts (`at_players` thresholds ≤ N) and drawing
+  `n_players + 2` guilds into Age III. To add a card, edit JSON; to add a *mechanic*,
+  add an effect + register it. `library.py` is now thin loader-backed accessors for
+  tests/demos. The shipped `data/base.json` is a *representative slice* with
+  provisional `at_players` — the full deck + expansions (WHITE/BLACK) are the main
+  outstanding data-entry. JSON is bundled via `[tool.setuptools.package-data]` and
+  read with `importlib.resources`.
 - **`wonders/effects/`** — what a card or wonder stage *does*. `base.py` defines the
   hook-based `Effect` (every effect answers the same uniform hooks —
   `production`, `shields`, `science`, `trade_rules`, `coins_on_build`,

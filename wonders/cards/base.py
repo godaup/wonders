@@ -120,7 +120,19 @@ class Card:
     chain_requires: Optional[str] = None
     chain_enables: Tuple[str, ...] = ()
     age: Optional[int] = None
+    # Deck-composition metadata (used by the deck builder, not the rules engine):
+    expansion: str = 'base'
+    # Player counts at which a copy of this card enters the deck. The number of
+    # copies used in an N-player game is how many of these values are <= N.
+    # Guild cards leave this empty — the builder draws (players + 2) of them at random.
+    at_players: Tuple[int, ...] = ()
+    guild: bool = False
 
     def __post_init__(self) -> None:
         self.effects = tuple(self.effects)
         self.chain_enables = tuple(self.chain_enables)
+        self.at_players = tuple(self.at_players)
+
+    def copies_for(self, n_players: int) -> int:
+        """How many copies of this card a game with ``n_players`` uses."""
+        return sum(1 for p in self.at_players if p <= n_players)
