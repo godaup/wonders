@@ -21,6 +21,7 @@ from wonders.effects.library import (
     Production,
     Science,
     ScienceWild,
+    Special,
     Tally,
     Trade,
     VictoryPoints,
@@ -121,6 +122,7 @@ ICONS = {
     '<rect x="3" y="8" width="11" height="8" rx="4"/><rect x="10" y="8" width="11" height="8" rx="4"/></g>',
     'trade': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     '<path d="M4 9h14M15 6l3 3-3 3"/><path d="M20 15H6M9 12l-3 3 3 3"/></g>',
+    'special': '<path fill="currentColor" d="M12 2 13.7 9.3 21 11 13.7 12.7 12 20 10.3 12.7 3 11 10.3 9.3Z"/>',
 }
 
 Row = Tuple[List[Tuple[str, str]], str]  # (icons, label)
@@ -220,6 +222,8 @@ def _describe(effect) -> List[Row]:
         return [([('coin', GOLD)], f'+{effect.amount} Coins')]
     if isinstance(effect, Trade):
         return [([('trade', GOLD)], f'Buy {effect.category} ({effect.side}) {effect.price}c')]
+    if isinstance(effect, Special):
+        return [([('special', GUILD)], effect.description or effect.power.replace('_', ' '))]
     if isinstance(effect, Tally):
         target = '/'.join(sorted(c.value for c in effect.colors)) or effect.what.replace('_', ' ')
         parts = [

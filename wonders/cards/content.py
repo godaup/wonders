@@ -30,6 +30,7 @@ from wonders.effects.library import (
     Production,
     Science,
     ScienceWild,
+    Special,
     Tally,
     Trade,
     VictoryPoints,
@@ -78,6 +79,7 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     ),
     'victory_points': lambda s: VictoryPoints(s['points']),
     'tally': _tally,
+    'special': lambda s: Special(s['power'], s.get('description', '')),
 }
 
 

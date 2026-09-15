@@ -8,6 +8,7 @@ from wonders.effects.library import (
     Production,
     Science,
     ScienceWild,
+    Special,
     Tally,
     Trade,
     VictoryPoints,

@@ -103,6 +103,20 @@ class VictoryPoints(Effect):
         return self.points
 
 
+@dataclass
+class Special(Effect):
+    """A power that is not yet mechanized in the engine (mostly wonder stages).
+
+    Inert on every hook, so it neither scores nor produces — it only documents the
+    intended power (e.g. play-from-discard, free-build, copy-a-guild, play the 7th
+    card). Implementing these requires turn-loop support; until then this keeps the
+    data complete and renderable and makes the gaps explicit.
+    """
+
+    power: str
+    description: str = ''
+
+
 def _targets(ctx: Context, scope: str):
     if scope == 'self':
         return (ctx.player,)
