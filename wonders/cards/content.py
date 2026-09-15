@@ -141,11 +141,11 @@ class Content:
     cards: List[Card] = field(default_factory=list)
     wonders: List[Wonder] = field(default_factory=list)
 
-    def wonder(self, name: str) -> Wonder:
+    def wonder(self, name: str, side: Optional[str] = None) -> Wonder:
         for w in self.wonders:
-            if w.name == name:
+            if w.name == name and (side is None or w.side == side):
                 return w
-        raise KeyError(name)
+        raise KeyError((name, side))
 
     def card(self, name: str) -> Card:
         for c in self.cards:

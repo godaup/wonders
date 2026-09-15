@@ -74,7 +74,19 @@ scoring categories). It is split into three packages under `wonders/`:
   (`cheapest_payment`: the min-coin resource-payment solver — the core piece,
   own production free + neighbours priced, each slot used once per build),
   `game.py` (`Game`: payment, the three actions, legality, military resolution,
-  scoring, the `play`/`play_age` draft loop), `actions.py`, and `phase.py`.
+  scoring, the `play`/`play_age` draft loop — `play_age` takes an optional `on_turn`
+  observer for recording), `actions.py`, `phase.py`, plus the DL/interface layer:
+  `observation.py` (`build_observation` → a per-seat `Observation`: full public
+  tableaus, own hand, legal actions, and a **history filtered for partial
+  observability** — opponents' buried/discarded card identities are hidden) and
+  `record.py` (`GameRecord`: a chess-PGN-style replayable notation — setup + ordered
+  decks + every decision; `replay()` re-simulates deterministically without any RNG).
+- **`wonders/agents/`** — the agent layer over the engine. `base.Agent` is the shared
+  `decide(obs) -> Action` interface; `baselines.py` has `RandomAgent`/`GreedyAgent`;
+  `encoders.py` maps an `Observation` to a representation (`DictEncoder` structured,
+  `FlatEncoder` fixed-length vector with optional history) so representations can be
+  swapped without touching agents or the engine; `match.play_match` runs agents and
+  returns `(Game, GameRecord)`.
 
 Design rules to preserve when extending:
 - **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;
@@ -83,9 +95,11 @@ Design rules to preserve when extending:
 - **Import direction is one-way**: `cards.base` imports nothing from `effects` at
   runtime (the `Effect` annotation is `TYPE_CHECKING`-only). Keep it that way — the
   cycle is what the scaffold originally tripped on.
-- **DL-facing surface**: `Game.legal_actions(i, hand)` and `Game.observe(i)`
-  (numeric snapshot) plus `Game.score(i)` (a `ScoreBreakdown`) are the intended
-  machine interfaces — keep state explicit and cheap to serialize.
+- **DL-facing surface**: agents consume an `Observation` (via `build_observation`)
+  and return a legal `Action`; `encoders` turn observations into tensors/dicts;
+  `GameRecord` is the canonical serialized game. `Game.legal_actions`/`observe`/`score`
+  remain the low-level primitives. Keep state explicit, serializable, and keep the
+  Observation partial-observability-correct (never leak hidden cards to opponents).
 
 `wonders/wonders.py` is now a thin public-API re-export (`from wonders.wonders import
 Game, Player, ...`). Expansions are anticipated but unimplemented: `Color.WHITE`

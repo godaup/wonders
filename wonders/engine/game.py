@@ -270,19 +270,30 @@ class Game:
         return max(range(self.n), key=key)
 
     # -- draft loop --------------------------------------------------------
-    def play_age(self, age: int, hands: List[List[Card]], policy: Policy) -> None:
+    def play_age(
+        self,
+        age: int,
+        hands: List[List[Card]],
+        policy: Policy,
+        on_turn: Optional[Callable[[int, int, List[Action]], None]] = None,
+    ) -> None:
         """Play one Age from ``hands`` (one hand per player) using ``policy``.
 
         Six-card ages in the real game leave one card that is discarded; this
         generalises: with hands of size H, players make H-1 plays and the final
         leftover card of each hand is discarded (no coins), per the base rules.
+
+        ``on_turn(age, turn, actions)`` is called each turn with the chosen actions
+        (in seat order) before they are applied — used to record a transcript.
         """
         self.age = age
         self.phase = Phase.for_age(age)
         pass_left = self.phase.pass_left
         plays = len(hands[0]) - 1
-        for _ in range(plays):
+        for turn in range(plays):
             actions = [policy(self, i, hands[i]) for i in range(self.n)]
+            if on_turn is not None:
+                on_turn(age, turn, actions)
             for i, action in enumerate(actions):
                 hands[i].remove(action.card)
                 self.apply(i, action)
