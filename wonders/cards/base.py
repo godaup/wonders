@@ -80,7 +80,10 @@ class Cost:
 
     @classmethod
     def of(cls, *resources: Ressource, coins: int = 0) -> 'Cost':
-        """Convenience constructor: ``Cost.of(WOOD, WOOD, coins=2)``."""
+        """Build a cost from positional resources plus optional coins.
+
+        Example: ``Cost.of(WOOD, WOOD, coins=2)``.
+        """
         return cls(coins=coins, resources=Counter(resources))
 
     @classmethod

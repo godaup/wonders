@@ -73,7 +73,7 @@ class Science(Effect):
 
 @dataclass
 class ScienceWild(Effect):
-    """ "Choose any science symbol" (Scientists Guild, Babylon B stage)."""
+    """Choose any one science symbol (Scientists Guild, Babylon B stage)."""
 
     count: int = 1
 

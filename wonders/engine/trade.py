@@ -52,7 +52,6 @@ def cheapest_payment(
     ``price(side, resource)`` gives the coins to buy one ``resource`` from the
     neighbour on ``side`` (``'left'`` / ``'right'``).
     """
-
     units: List[Ressource] = list(required.elements())
     if not units:
         return Payment(0, 0, 0)
