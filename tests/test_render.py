@@ -9,13 +9,13 @@ def test_card_svg_contains_name_and_effects():
     svg = card_svg(content.card('Scriptorium'))
     assert svg.startswith('<svg') and svg.rstrip().endswith('</svg>')
     assert 'Scriptorium' in svg
-    assert 'Tab' in svg  # science tablet effect badge
+    assert 'Tablet' in svg  # science tablet effect label
 
 
 def test_card_svg_shows_cost_and_free():
     content = load_content('base')
-    assert 'free' in card_svg(content.card('Lumber Yard'))  # no cost
-    assert 'St' in card_svg(content.card('Baths'))  # costs one stone
+    assert 'Free' in card_svg(content.card('Lumber Yard'))  # no cost
+    assert 'Stone' in card_svg(content.card('Baths'))  # costs one stone (icon title)
 
 
 def test_every_base_card_renders():
