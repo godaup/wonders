@@ -116,8 +116,11 @@ class Game:
         player = self.players[i]
         if player.has(card.name):
             return None  # cannot own two copies of the same structure
-        if card.chain_requires and player.has(card.chain_requires):
-            return (0, Payment(0, 0, 0))  # free via chain
+        # Free via chaining: any owned structure that unlocks this one. Using the
+        # owners' chain_enables (rather than this card's chain_requires) naturally
+        # handles cards unlocked by more than one prerequisite (e.g. Forum).
+        if any(card.name in owned.chain_enables for owned in player.cards):
+            return (0, Payment(0, 0, 0))
         pay = self.payment_for(i, card.cost)
         if pay is None:
             return None

@@ -61,6 +61,18 @@ def test_chain_build_is_free_even_without_resources():
     assert g.players[0].coins == 0 and g.score(0).civilian == 5
 
 
+def test_chain_free_from_either_prerequisite():
+    # Forum is unlocked by East OR West Trading Post; owning either builds it free.
+    from wonders.cards.content import load_content
+
+    content = load_content('base')
+    for post in ('East Trading Post', 'West Trading Post'):
+        g = two_players()
+        g.players[0].coins = 0  # cannot pay Forum's 2-clay cost
+        g.apply(0, Action.build(content.card(post)))
+        assert g.can_build_card(0, content.card('Forum'))
+
+
 def test_duplicate_structure_is_illegal():
     g = two_players()
     altar = Card('Altar', Color.BLUE, effects=(VictoryPoints(2),))
@@ -131,8 +143,8 @@ def test_full_three_age_game_runs_and_scores():
     assert g.phase is Phase.FINISHED
     for p in g.players:
         assert p.coins >= 0  # never overspend
-        # 2 conflict tokens per age resolution, 3 ages
-        assert len(p.tokens) == 6
+        # up to 2 conflict tokens per age (fewer on ties), across 3 ages
+        assert 0 <= len(p.tokens) <= 6
     totals = [g.score(i).total for i in range(g.n)]
     assert all(isinstance(t, int) for t in totals)
     assert 0 <= g.winner() < g.n

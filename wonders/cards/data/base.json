@@ -1,8 +1,7 @@
 {
   "meta": {
     "expansion": "base",
-    "description": "Representative slice of the 7 Wonders base game. NOT the full deck.",
-    "note": "at_players thresholds are provisional for this subset and should be verified against a full card database before the deck builder yields legal (7 * players) age decks."
+    "description": "Complete 7 Wonders base game (2010): 68 cards, 10 guilds, 7 wonders (A/B)."
   },
   "wonders": [
     {
@@ -11,20 +10,203 @@
       "side": "A",
       "starting_resource": "ore",
       "stages": [
-        {"cost": {"resources": {"wood": 2}}, "effects": [{"type": "victory_points", "points": 3}]},
-        {"cost": {"resources": {"bricks": 3}}, "effects": [{"type": "military", "shields": 2}]},
-        {"cost": {"resources": {"ore": 4}}, "effects": [{"type": "victory_points", "points": 7}]}
+        {
+          "cost": {
+            "resources": {
+              "wood": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "bricks": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "military",
+              "shields": 2
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "ore": 4
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
       ]
     },
     {
-      "name": "The Pyramids of Giza",
+      "name": "The Colossus of Rhodes",
+      "expansion": "base",
+      "side": "B",
+      "starting_resource": "ore",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "stone": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "military",
+              "shields": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "coins",
+              "amount": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "ore": 4
+            }
+          },
+          "effects": [
+            {
+              "type": "military",
+              "shields": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 4
+            },
+            {
+              "type": "coins",
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Lighthouse of Alexandria",
       "expansion": "base",
       "side": "A",
-      "starting_resource": "stone",
+      "starting_resource": "glass",
       "stages": [
-        {"cost": {"resources": {"stone": 2}}, "effects": [{"type": "victory_points", "points": 3}]},
-        {"cost": {"resources": {"wood": 3}}, "effects": [{"type": "victory_points", "points": 5}]},
-        {"cost": {"resources": {"stone": 4}}, "effects": [{"type": "victory_points", "points": 7}]}
+        {
+          "cost": {
+            "resources": {
+              "stone": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "ore": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "production",
+              "choice": [
+                "wood",
+                "stone",
+                "bricks",
+                "ore"
+              ]
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "glass": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Lighthouse of Alexandria",
+      "expansion": "base",
+      "side": "B",
+      "starting_resource": "glass",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "bricks": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "production",
+              "choice": [
+                "wood",
+                "stone",
+                "bricks",
+                "ore"
+              ]
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "production",
+              "choice": [
+                "glass",
+                "linen",
+                "paper"
+              ]
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
       ]
     },
     {
@@ -33,138 +215,2245 @@
       "side": "A",
       "starting_resource": "paper",
       "stages": [
-        {"cost": {"resources": {"stone": 2}}, "effects": [{"type": "victory_points", "points": 3}]},
-        {"cost": {"resources": {"wood": 2}}, "effects": [{"type": "coins", "amount": 9}]},
-        {"cost": {"resources": {"paper": 2}}, "effects": [{"type": "victory_points", "points": 7}]}
+        {
+          "cost": {
+            "resources": {
+              "stone": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "coins",
+              "amount": 9
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "paper": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Temple of Artemis in Ephesus",
+      "expansion": "base",
+      "side": "B",
+      "starting_resource": "paper",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "stone": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 2
+            },
+            {
+              "type": "coins",
+              "amount": 4
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "coins",
+              "amount": 4
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "glass": 1,
+              "paper": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 5
+            },
+            {
+              "type": "coins",
+              "amount": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Hanging Gardens of Babylon",
+      "expansion": "base",
+      "side": "A",
+      "starting_resource": "bricks",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "bricks": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "science_wild",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "bricks": 4
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Hanging Gardens of Babylon",
+      "expansion": "base",
+      "side": "B",
+      "starting_resource": "bricks",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "bricks": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 2,
+              "glass": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "special",
+              "power": "play_seventh_card",
+              "description": "Play the last card of each Age instead of discarding it"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "bricks": 3,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "science_wild",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Statue of Zeus in Olympia",
+      "expansion": "base",
+      "side": "A",
+      "starting_resource": "wood",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "special",
+              "power": "free_build_per_age",
+              "description": "Once per Age, build a card from your hand for free"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "ore": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Statue of Zeus in Olympia",
+      "expansion": "base",
+      "side": "B",
+      "starting_resource": "wood",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "trade",
+              "side": "both",
+              "category": "raw"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 5
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "linen": 1,
+              "ore": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "special",
+              "power": "copy_guild",
+              "description": "At game end, copy one guild built by a neighbor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Mausoleum of Halicarnassus",
+      "expansion": "base",
+      "side": "A",
+      "starting_resource": "linen",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "bricks": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "ore": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "special",
+              "power": "build_from_discard",
+              "description": "Build one card from the discard pile for free"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "linen": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Mausoleum of Halicarnassus",
+      "expansion": "base",
+      "side": "B",
+      "starting_resource": "linen",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "ore": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 2
+            },
+            {
+              "type": "special",
+              "power": "build_from_discard",
+              "description": "Build one card from the discard pile for free"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "bricks": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 1
+            },
+            {
+              "type": "special",
+              "power": "build_from_discard",
+              "description": "Build one card from the discard pile for free"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "glass": 1,
+              "paper": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "special",
+              "power": "build_from_discard",
+              "description": "Build one card from the discard pile for free"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Pyramids of Giza",
+      "expansion": "base",
+      "side": "A",
+      "starting_resource": "stone",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "stone": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 5
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 4
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Pyramids of Giza",
+      "expansion": "base",
+      "side": "B",
+      "starting_resource": "stone",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 5
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "bricks": 3
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 5
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "paper": 1,
+              "stone": 4
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
       ]
     }
   ],
   "cards": [
-    {"name": "Lumber Yard", "color": "brown", "age": 1, "at_players": [3, 4],
-     "effects": [{"type": "production", "resources": ["wood"]}]},
-    {"name": "Stone Pit", "color": "brown", "age": 1, "at_players": [3, 5],
-     "effects": [{"type": "production", "resources": ["stone"]}]},
-    {"name": "Clay Pool", "color": "brown", "age": 1, "at_players": [3, 5],
-     "effects": [{"type": "production", "resources": ["bricks"]}]},
-    {"name": "Ore Vein", "color": "brown", "age": 1, "at_players": [3, 4],
-     "effects": [{"type": "production", "resources": ["ore"]}]},
-    {"name": "Tree Farm", "color": "brown", "age": 1, "at_players": [6],
-     "cost": {"coins": 1},
-     "effects": [{"type": "production", "choice": ["wood", "bricks"]}]},
-
-    {"name": "Loom", "color": "grey", "age": 1, "at_players": [3, 6],
-     "effects": [{"type": "production", "resources": ["linen"]}]},
-    {"name": "Glassworks", "color": "grey", "age": 1, "at_players": [3, 6],
-     "effects": [{"type": "production", "resources": ["glass"]}]},
-    {"name": "Press", "color": "grey", "age": 1, "at_players": [3, 6],
-     "effects": [{"type": "production", "resources": ["paper"]}]},
-
-    {"name": "Altar", "color": "blue", "age": 1, "at_players": [3, 5],
-     "chain_enables": ["Temple"],
-     "effects": [{"type": "victory_points", "points": 2}]},
-    {"name": "Baths", "color": "blue", "age": 1, "at_players": [3, 7],
-     "cost": {"resources": {"stone": 1}}, "chain_enables": ["Aqueduct"],
-     "effects": [{"type": "victory_points", "points": 3}]},
-
-    {"name": "East Trading Post", "color": "yellow", "age": 1, "at_players": [3, 7],
-     "chain_enables": ["Forum"],
-     "effects": [{"type": "trade", "side": "right", "category": "raw"}]},
-    {"name": "West Trading Post", "color": "yellow", "age": 1, "at_players": [3, 7],
-     "chain_enables": ["Forum"],
-     "effects": [{"type": "trade", "side": "left", "category": "raw"}]},
-    {"name": "Marketplace", "color": "yellow", "age": 1, "at_players": [3, 6],
-     "chain_enables": ["Caravansery"],
-     "effects": [{"type": "trade", "side": "both", "category": "manufactured"}]},
-    {"name": "Tavern", "color": "yellow", "age": 1, "at_players": [4, 5, 7],
-     "effects": [{"type": "coins", "amount": 5}]},
-
-    {"name": "Stockade", "color": "red", "age": 1, "at_players": [3, 7],
-     "cost": {"resources": {"wood": 1}},
-     "effects": [{"type": "military", "shields": 1}]},
-    {"name": "Barracks", "color": "red", "age": 1, "at_players": [3, 5],
-     "cost": {"resources": {"ore": 1}},
-     "effects": [{"type": "military", "shields": 1}]},
-    {"name": "Guard Tower", "color": "red", "age": 1, "at_players": [3, 4],
-     "cost": {"resources": {"bricks": 1}},
-     "effects": [{"type": "military", "shields": 1}]},
-
-    {"name": "Apothecary", "color": "green", "age": 1, "at_players": [3, 5],
-     "cost": {"resources": {"linen": 1}}, "chain_enables": ["Dispensary"],
-     "effects": [{"type": "science", "symbol": "compass"}]},
-    {"name": "Workshop", "color": "green", "age": 1, "at_players": [3, 7],
-     "cost": {"resources": {"glass": 1}}, "chain_enables": ["Laboratory"],
-     "effects": [{"type": "science", "symbol": "gear"}]},
-    {"name": "Scriptorium", "color": "green", "age": 1, "at_players": [3, 4],
-     "cost": {"resources": {"paper": 1}}, "chain_enables": ["Library", "Courthouse"],
-     "effects": [{"type": "science", "symbol": "tablet"}]},
-
-    {"name": "Sawmill", "color": "brown", "age": 2, "at_players": [3, 4],
-     "cost": {"coins": 1},
-     "effects": [{"type": "production", "resources": ["wood"]},
-                 {"type": "production", "resources": ["wood"]}]},
-    {"name": "Aqueduct", "color": "blue", "age": 2, "at_players": [3, 7],
-     "cost": {"resources": {"stone": 3}}, "chain_requires": "Baths",
-     "effects": [{"type": "victory_points", "points": 5}]},
-    {"name": "Temple", "color": "blue", "age": 2, "at_players": [3, 6],
-     "cost": {"resources": {"wood": 1, "bricks": 1, "glass": 1}},
-     "chain_requires": "Altar", "chain_enables": ["Pantheon"],
-     "effects": [{"type": "victory_points", "points": 3}]},
-    {"name": "Forum", "color": "yellow", "age": 2, "at_players": [3, 6, 7],
-     "cost": {"resources": {"bricks": 2}}, "chain_requires": "East Trading Post",
-     "effects": [{"type": "production", "choice": ["glass", "linen", "paper"]}]},
-    {"name": "Walls", "color": "red", "age": 2, "at_players": [3, 7],
-     "cost": {"resources": {"stone": 3}}, "chain_enables": ["Fortifications"],
-     "effects": [{"type": "military", "shields": 2}]},
-    {"name": "Library", "color": "green", "age": 2, "at_players": [3, 6],
-     "cost": {"resources": {"stone": 2, "linen": 1}}, "chain_requires": "Scriptorium",
-     "effects": [{"type": "science", "symbol": "tablet"}]},
-    {"name": "Dispensary", "color": "green", "age": 2, "at_players": [3, 4],
-     "cost": {"resources": {"ore": 2, "glass": 1}}, "chain_requires": "Apothecary",
-     "effects": [{"type": "science", "symbol": "compass"}]},
-
-    {"name": "Pantheon", "color": "blue", "age": 3, "at_players": [3, 6],
-     "cost": {"resources": {"bricks": 2, "ore": 1, "glass": 1, "paper": 1, "linen": 1}},
-     "chain_requires": "Temple",
-     "effects": [{"type": "victory_points", "points": 7}]},
-    {"name": "Palace", "color": "blue", "age": 3, "at_players": [3, 7],
-     "cost": {"resources": {"stone": 1, "ore": 1, "wood": 1, "bricks": 1, "glass": 1, "paper": 1, "linen": 1}},
-     "effects": [{"type": "victory_points", "points": 8}]},
-    {"name": "University", "color": "green", "age": 3, "at_players": [3, 4],
-     "cost": {"resources": {"wood": 2, "paper": 1, "glass": 1}}, "chain_requires": "Library",
-     "effects": [{"type": "science", "symbol": "tablet"}]},
-
-    {"name": "Haven", "color": "yellow", "age": 3, "at_players": [3, 4],
-     "cost": {"resources": {"wood": 1, "ore": 1, "linen": 1}},
-     "effects": [{"type": "tally", "what": "colors", "scope": "self",
-                  "colors": ["brown"], "coins_each": 1, "vp_each": 1}]},
-    {"name": "Lighthouse", "color": "yellow", "age": 3, "at_players": [3, 6],
-     "cost": {"resources": {"stone": 1, "glass": 1}}, "chain_requires": "Caravansery",
-     "effects": [{"type": "tally", "what": "colors", "scope": "self",
-                  "colors": ["yellow"], "coins_each": 1, "vp_each": 1}]},
-    {"name": "Arena", "color": "yellow", "age": 3, "at_players": [3, 5, 7],
-     "cost": {"resources": {"stone": 2, "ore": 1}},
-     "effects": [{"type": "tally", "what": "wonder_stages", "scope": "self",
-                  "coins_each": 3, "vp_each": 1}]},
-    {"name": "Fortifications", "color": "red", "age": 3, "at_players": [3, 7],
-     "cost": {"resources": {"stone": 1, "ore": 3}}, "chain_requires": "Walls",
-     "effects": [{"type": "military", "shields": 3}]},
-
-    {"name": "Workers Guild", "color": "purple", "age": 3, "guild": true,
-     "cost": {"resources": {"ore": 2, "stone": 1, "bricks": 1, "wood": 1}},
-     "effects": [{"type": "tally", "what": "colors", "scope": "neighbours",
-                  "colors": ["brown"], "vp_each": 1}]},
-    {"name": "Traders Guild", "color": "purple", "age": 3, "guild": true,
-     "cost": {"resources": {"linen": 1, "paper": 1, "glass": 1}},
-     "effects": [{"type": "tally", "what": "colors", "scope": "neighbours",
-                  "colors": ["yellow"], "vp_each": 1}]},
-    {"name": "Builders Guild", "color": "purple", "age": 3, "guild": true,
-     "cost": {"resources": {"stone": 2, "bricks": 2, "glass": 1}},
-     "effects": [{"type": "tally", "what": "wonder_stages", "scope": "both", "vp_each": 1}]},
-    {"name": "Strategists Guild", "color": "purple", "age": 3, "guild": true,
-     "cost": {"resources": {"ore": 2, "stone": 1, "linen": 1}},
-     "effects": [{"type": "tally", "what": "defeat_tokens", "scope": "neighbours", "vp_each": 1}]},
-    {"name": "Scientists Guild", "color": "purple", "age": 3, "guild": true,
-     "cost": {"resources": {"wood": 2, "ore": 2, "paper": 1}},
-     "effects": [{"type": "science_wild", "count": 1}]}
+    {
+      "name": "Lumber Yard",
+      "color": "brown",
+      "age": 1,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "wood"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Stone Pit",
+      "color": "brown",
+      "age": 1,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "stone"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Clay Pool",
+      "color": "brown",
+      "age": 1,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "bricks"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Ore Vein",
+      "color": "brown",
+      "age": 1,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "ore"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Tree Farm",
+      "color": "brown",
+      "age": 1,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "wood",
+            "bricks"
+          ]
+        }
+      ],
+      "at_players": [
+        6
+      ]
+    },
+    {
+      "name": "Excavation",
+      "color": "brown",
+      "age": 1,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "stone",
+            "bricks"
+          ]
+        }
+      ],
+      "at_players": [
+        4
+      ]
+    },
+    {
+      "name": "Clay Pit",
+      "color": "brown",
+      "age": 1,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "bricks",
+            "ore"
+          ]
+        }
+      ],
+      "at_players": [
+        3
+      ]
+    },
+    {
+      "name": "Timber Yard",
+      "color": "brown",
+      "age": 1,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "stone",
+            "wood"
+          ]
+        }
+      ],
+      "at_players": [
+        3
+      ]
+    },
+    {
+      "name": "Forest Cave",
+      "color": "brown",
+      "age": 1,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "wood",
+            "ore"
+          ]
+        }
+      ],
+      "at_players": [
+        5
+      ]
+    },
+    {
+      "name": "Mine",
+      "color": "brown",
+      "age": 1,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "ore",
+            "stone"
+          ]
+        }
+      ],
+      "at_players": [
+        6
+      ]
+    },
+    {
+      "name": "Loom",
+      "color": "grey",
+      "age": 1,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "linen"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Glassworks",
+      "color": "grey",
+      "age": 1,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "glass"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Press",
+      "color": "grey",
+      "age": 1,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "paper"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Pawnshop",
+      "color": "blue",
+      "age": 1,
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 3
+        }
+      ],
+      "at_players": [
+        4,
+        7
+      ]
+    },
+    {
+      "name": "Baths",
+      "color": "blue",
+      "age": 1,
+      "cost": {
+        "resources": {
+          "stone": 1
+        }
+      },
+      "chain_enables": [
+        "Aqueduct"
+      ],
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 3
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Altar",
+      "color": "blue",
+      "age": 1,
+      "chain_enables": [
+        "Temple"
+      ],
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Theater",
+      "color": "blue",
+      "age": 1,
+      "chain_enables": [
+        "Statue"
+      ],
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Tavern",
+      "color": "yellow",
+      "age": 1,
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 5
+        }
+      ],
+      "at_players": [
+        4,
+        5,
+        7
+      ]
+    },
+    {
+      "name": "East Trading Post",
+      "color": "yellow",
+      "age": 1,
+      "chain_enables": [
+        "Forum"
+      ],
+      "effects": [
+        {
+          "type": "trade",
+          "side": "right",
+          "category": "raw"
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "West Trading Post",
+      "color": "yellow",
+      "age": 1,
+      "chain_enables": [
+        "Forum"
+      ],
+      "effects": [
+        {
+          "type": "trade",
+          "side": "left",
+          "category": "raw"
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Marketplace",
+      "color": "yellow",
+      "age": 1,
+      "chain_enables": [
+        "Caravansery"
+      ],
+      "effects": [
+        {
+          "type": "trade",
+          "side": "both",
+          "category": "manufactured"
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Stockade",
+      "color": "red",
+      "age": 1,
+      "cost": {
+        "resources": {
+          "wood": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 1
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Barracks",
+      "color": "red",
+      "age": 1,
+      "cost": {
+        "resources": {
+          "ore": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 1
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Guard Tower",
+      "color": "red",
+      "age": 1,
+      "cost": {
+        "resources": {
+          "bricks": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 1
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Apothecary",
+      "color": "green",
+      "age": 1,
+      "cost": {
+        "resources": {
+          "linen": 1
+        }
+      },
+      "chain_enables": [
+        "Stables",
+        "Dispensary"
+      ],
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "compass"
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Workshop",
+      "color": "green",
+      "age": 1,
+      "cost": {
+        "resources": {
+          "glass": 1
+        }
+      },
+      "chain_enables": [
+        "Archery Range",
+        "Laboratory"
+      ],
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "gear"
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Scriptorium",
+      "color": "green",
+      "age": 1,
+      "cost": {
+        "resources": {
+          "paper": 1
+        }
+      },
+      "chain_enables": [
+        "Courthouse",
+        "Library"
+      ],
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "tablet"
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Sawmill",
+      "color": "brown",
+      "age": 2,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "wood"
+          ]
+        },
+        {
+          "type": "production",
+          "resources": [
+            "wood"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Quarry",
+      "color": "brown",
+      "age": 2,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "stone"
+          ]
+        },
+        {
+          "type": "production",
+          "resources": [
+            "stone"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Brickyard",
+      "color": "brown",
+      "age": 2,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "bricks"
+          ]
+        },
+        {
+          "type": "production",
+          "resources": [
+            "bricks"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Foundry",
+      "color": "brown",
+      "age": 2,
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "ore"
+          ]
+        },
+        {
+          "type": "production",
+          "resources": [
+            "ore"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Loom",
+      "color": "grey",
+      "age": 2,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "linen"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Glassworks",
+      "color": "grey",
+      "age": 2,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "glass"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Press",
+      "color": "grey",
+      "age": 2,
+      "effects": [
+        {
+          "type": "production",
+          "resources": [
+            "paper"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Aqueduct",
+      "color": "blue",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "stone": 3
+        }
+      },
+      "chain_requires": "Baths",
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 5
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Temple",
+      "color": "blue",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "bricks": 1,
+          "glass": 1
+        }
+      },
+      "chain_requires": "Altar",
+      "chain_enables": [
+        "Pantheon"
+      ],
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 3
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Statue",
+      "color": "blue",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "ore": 2
+        }
+      },
+      "chain_requires": "Theater",
+      "chain_enables": [
+        "Gardens"
+      ],
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Courthouse",
+      "color": "blue",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "bricks": 2,
+          "linen": 1
+        }
+      },
+      "chain_requires": "Scriptorium",
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Forum",
+      "color": "yellow",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "bricks": 2
+        }
+      },
+      "chain_enables": [
+        "Haven"
+      ],
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "glass",
+            "linen",
+            "paper"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        6,
+        7
+      ]
+    },
+    {
+      "name": "Caravansery",
+      "color": "yellow",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "wood": 2
+        }
+      },
+      "chain_requires": "Marketplace",
+      "chain_enables": [
+        "Lighthouse"
+      ],
+      "effects": [
+        {
+          "type": "production",
+          "choice": [
+            "wood",
+            "stone",
+            "ore",
+            "bricks"
+          ]
+        }
+      ],
+      "at_players": [
+        3,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "Vineyard",
+      "color": "yellow",
+      "age": 2,
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "both",
+          "colors": [
+            "brown"
+          ],
+          "coins_each": 1
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Bazar",
+      "color": "yellow",
+      "age": 2,
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "both",
+          "colors": [
+            "grey"
+          ],
+          "coins_each": 2
+        }
+      ],
+      "at_players": [
+        4,
+        7
+      ]
+    },
+    {
+      "name": "Walls",
+      "color": "red",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "stone": 3
+        }
+      },
+      "chain_enables": [
+        "Fortifications"
+      ],
+      "effects": [
+        {
+          "type": "military",
+          "shields": 2
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Training Ground",
+      "color": "red",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "ore": 2
+        }
+      },
+      "chain_enables": [
+        "Circus"
+      ],
+      "effects": [
+        {
+          "type": "military",
+          "shields": 2
+        }
+      ],
+      "at_players": [
+        4,
+        6,
+        7
+      ]
+    },
+    {
+      "name": "Stables",
+      "color": "red",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "ore": 1,
+          "bricks": 1,
+          "wood": 1
+        }
+      },
+      "chain_requires": "Apothecary",
+      "effects": [
+        {
+          "type": "military",
+          "shields": 2
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Archery Range",
+      "color": "red",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "ore": 1
+        }
+      },
+      "chain_requires": "Workshop",
+      "effects": [
+        {
+          "type": "military",
+          "shields": 2
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Dispensary",
+      "color": "green",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "ore": 2,
+          "glass": 1
+        }
+      },
+      "chain_requires": "Apothecary",
+      "chain_enables": [
+        "Arena",
+        "Lodge"
+      ],
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "compass"
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Laboratory",
+      "color": "green",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "bricks": 2,
+          "paper": 1
+        }
+      },
+      "chain_requires": "Workshop",
+      "chain_enables": [
+        "Siege Workshop",
+        "Observatory"
+      ],
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "gear"
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Library",
+      "color": "green",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "stone": 2,
+          "linen": 1
+        }
+      },
+      "chain_requires": "Scriptorium",
+      "chain_enables": [
+        "Senate",
+        "University"
+      ],
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "tablet"
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "School",
+      "color": "green",
+      "age": 2,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "paper": 1
+        }
+      },
+      "chain_enables": [
+        "Academy",
+        "Study"
+      ],
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "tablet"
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Pantheon",
+      "color": "blue",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "bricks": 2,
+          "ore": 1,
+          "glass": 1,
+          "paper": 1,
+          "linen": 1
+        }
+      },
+      "chain_requires": "Temple",
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 7
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Gardens",
+      "color": "blue",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "bricks": 2,
+          "wood": 1
+        }
+      },
+      "chain_requires": "Statue",
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 5
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Town Hall",
+      "color": "blue",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "stone": 2,
+          "ore": 1,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 6
+        }
+      ],
+      "at_players": [
+        3,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "Palace",
+      "color": "blue",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "stone": 1,
+          "bricks": 1,
+          "ore": 1,
+          "glass": 1,
+          "linen": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 8
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Senate",
+      "color": "blue",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "stone": 1,
+          "ore": 1
+        }
+      },
+      "chain_requires": "Library",
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 6
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Haven",
+      "color": "yellow",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "ore": 1,
+          "linen": 1
+        }
+      },
+      "chain_requires": "Forum",
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "brown"
+          ],
+          "vp_each": 1,
+          "coins_each": 1
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Lighthouse",
+      "color": "yellow",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "glass": 1
+        }
+      },
+      "chain_requires": "Caravansery",
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "yellow"
+          ],
+          "vp_each": 1,
+          "coins_each": 1
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Chamber of Commerce",
+      "color": "yellow",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "bricks": 2,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "grey"
+          ],
+          "vp_each": 2,
+          "coins_each": 2
+        }
+      ],
+      "at_players": [
+        4,
+        6
+      ]
+    },
+    {
+      "name": "Arena",
+      "color": "yellow",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "stone": 2,
+          "ore": 1
+        }
+      },
+      "chain_requires": "Dispensary",
+      "effects": [
+        {
+          "type": "tally",
+          "what": "wonder_stages",
+          "scope": "self",
+          "vp_each": 1,
+          "coins_each": 3
+        }
+      ],
+      "at_players": [
+        3,
+        5,
+        7
+      ]
+    },
+    {
+      "name": "Fortifications",
+      "color": "red",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "ore": 3
+        }
+      },
+      "chain_requires": "Walls",
+      "effects": [
+        {
+          "type": "military",
+          "shields": 3
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Circus",
+      "color": "red",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "stone": 3,
+          "ore": 1
+        }
+      },
+      "chain_requires": "Training Ground",
+      "effects": [
+        {
+          "type": "military",
+          "shields": 3
+        }
+      ],
+      "at_players": [
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "Arsenal",
+      "color": "red",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "ore": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 3
+        }
+      ],
+      "at_players": [
+        3,
+        4,
+        7
+      ]
+    },
+    {
+      "name": "Siege Workshop",
+      "color": "red",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "bricks": 3
+        }
+      },
+      "chain_requires": "Laboratory",
+      "effects": [
+        {
+          "type": "military",
+          "shields": 3
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Lodge",
+      "color": "green",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "bricks": 2,
+          "linen": 1,
+          "paper": 1
+        }
+      },
+      "chain_requires": "Dispensary",
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "compass"
+        }
+      ],
+      "at_players": [
+        3,
+        6
+      ]
+    },
+    {
+      "name": "Observatory",
+      "color": "green",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "ore": 2,
+          "glass": 1,
+          "linen": 1
+        }
+      },
+      "chain_requires": "Laboratory",
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "gear"
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "University",
+      "color": "green",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "paper": 1,
+          "glass": 1
+        }
+      },
+      "chain_requires": "Library",
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "tablet"
+        }
+      ],
+      "at_players": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Academy",
+      "color": "green",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "stone": 3,
+          "glass": 1
+        }
+      },
+      "chain_requires": "School",
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "compass"
+        }
+      ],
+      "at_players": [
+        3,
+        7
+      ]
+    },
+    {
+      "name": "Study",
+      "color": "green",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "paper": 1,
+          "linen": 1
+        }
+      },
+      "chain_requires": "School",
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "gear"
+        }
+      ],
+      "at_players": [
+        3,
+        5
+      ]
+    },
+    {
+      "name": "Workers Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "ore": 2,
+          "bricks": 1,
+          "stone": 1,
+          "wood": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "brown"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Craftsmens Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "ore": 2,
+          "stone": 2
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "grey"
+          ],
+          "vp_each": 2
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Traders Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "linen": 1,
+          "paper": 1,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "yellow"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Philosophers Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "bricks": 3,
+          "linen": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "green"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Spies Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "bricks": 3,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "red"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Strategists Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "ore": 2,
+          "stone": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "defeat_tokens",
+          "scope": "neighbours",
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Shipowners Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 3,
+          "glass": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "brown",
+            "grey",
+            "purple"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Scientists Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "ore": 2,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "science_wild",
+          "count": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Magistrates Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "wood": 3,
+          "stone": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "blue"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Builders Guild",
+      "color": "purple",
+      "age": 3,
+      "cost": {
+        "resources": {
+          "stone": 2,
+          "bricks": 2,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "wonder_stages",
+          "scope": "both",
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    }
   ]
 }

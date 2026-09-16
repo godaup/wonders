@@ -2,6 +2,8 @@
 
 import random
 
+import pytest
+
 from wonders.cards.base import Color
 from wonders.cards.base import Ressource as R
 from wonders.cards.base import ScienceSymbol as S
@@ -13,7 +15,25 @@ def test_load_base_content():
     content = load_content('base')
     assert content.card('Lumber Yard').color is Color.BROWN
     assert content.wonder('The Pyramids of Giza').starting_resource is R.STONE
-    assert len(content.guilds()) == 5
+    assert len(content.guilds()) == 10
+    assert len(content.wonders) == 14  # 7 wonders x A/B sides
+    assert content.card('Palace').effects[0].points == 8
+
+
+def test_wonder_sides_are_distinguishable():
+    content = load_content('base')
+    a = content.wonder('The Colossus of Rhodes', 'A')
+    b = content.wonder('The Colossus of Rhodes', 'B')
+    assert len(a.stages) == 3 and len(b.stages) == 2
+
+
+@pytest.mark.parametrize('n', [3, 4, 5, 6, 7])
+def test_age_decks_total_seven_times_players(n):
+    # The defining invariant of a correct base deck: every Age deals 7 cards each.
+    content = load_content('base')
+    for age in (1, 2, 3):
+        deck = build_age_deck(content, age, n, rng=random.Random(n))
+        assert len(deck) == 7 * n
 
 
 def test_card_effects_parsed_from_data():
