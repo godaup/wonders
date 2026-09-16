@@ -174,3 +174,25 @@ class Tally(Effect):
         if not self.vp_each:
             return 0
         return self.vp_each * self._count(ctx)
+
+
+@dataclass
+class Debt(Effect):
+    """Cities: impose debt tokens (each worth -1 VP at game end) on a scope of cities."""
+
+    amount: int
+    scope: str = 'self'
+
+    def on_build(self, ctx: Context) -> None:
+        for player in _targets(ctx, self.scope):
+            player.debt += self.amount
+
+
+@dataclass
+class Diplomacy(Effect):
+    """Cities: gain diplomacy tokens; each lets you sit out one Age's military conflict."""
+
+    count: int = 1
+
+    def on_build(self, ctx: Context) -> None:
+        ctx.player.diplomacy += self.count

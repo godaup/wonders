@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "expansion": "cities",
+    "description": "Representative slice of the Cities expansion: black cards shuffled into the Age decks, introducing debt and diplomacy tokens. NOT the official set — original placeholder cards exercising the mechanics.",
+    "note": "Adding black cards inflates an Age deck beyond 7*players; exact Cities deck-composition rules are approximated here."
+  },
+  "cards": [
+    {"name": "Militia Outpost", "color": "black", "age": 1, "at_players": [3, 5],
+     "cost": {"resources": {"ore": 1}}, "effects": [{"type": "military", "shields": 1}]},
+    {"name": "Black Market", "color": "black", "age": 1, "at_players": [3, 6],
+     "effects": [{"type": "coins", "amount": 4}]},
+    {"name": "Diplomatic Mission", "color": "black", "age": 2, "at_players": [3, 6],
+     "cost": {"resources": {"bricks": 1, "linen": 1}},
+     "effects": [{"type": "diplomacy", "count": 1}]},
+    {"name": "Debtors Court", "color": "black", "age": 2, "at_players": [4, 7],
+     "cost": {"resources": {"stone": 1}},
+     "effects": [{"type": "coins", "amount": 6}, {"type": "debt", "amount": 1, "scope": "neighbours"}]},
+    {"name": "Garrison", "color": "black", "age": 3, "at_players": [3, 5, 7],
+     "cost": {"resources": {"ore": 2, "stone": 1}}, "effects": [{"type": "military", "shields": 2}]},
+    {"name": "Consulate", "color": "black", "age": 3, "at_players": [3, 6],
+     "cost": {"resources": {"bricks": 2, "glass": 1}},
+     "effects": [{"type": "tally", "what": "colors", "scope": "neighbours",
+                  "colors": ["black"], "vp_each": 1}]}
+  ]
+}

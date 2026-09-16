@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "expansion": "leaders",
+    "description": "Representative slice of the Leaders expansion: white cards recruited for coins. NOT the official leader set — original placeholder cards exercising the mechanic. Starting treasury becomes 6.",
+    "note": "Leaders are drafted separately (not dealt into Ages); the full pre-game draft phase is a follow-up. Recruiting a leader is paying its coin cost."
+  },
+  "cards": [
+    {"name": "The Warlord", "color": "white", "expansion": "leaders",
+     "cost": {"coins": 2}, "effects": [{"type": "military", "shields": 1}]},
+    {"name": "The Sage", "color": "white", "expansion": "leaders",
+     "cost": {"coins": 3}, "effects": [{"type": "science_wild", "count": 1}]},
+    {"name": "The Trademaster", "color": "white", "expansion": "leaders",
+     "cost": {"coins": 3},
+     "effects": [{"type": "trade", "side": "both", "category": "both", "price": 1}]},
+    {"name": "The Treasurer", "color": "white", "expansion": "leaders",
+     "cost": {"coins": 1}, "effects": [{"type": "coins", "amount": 4}]},
+    {"name": "The Noble", "color": "white", "expansion": "leaders",
+     "cost": {"coins": 4}, "effects": [{"type": "victory_points", "points": 4}]},
+    {"name": "The Chronicler", "color": "white", "expansion": "leaders",
+     "cost": {"coins": 3},
+     "effects": [{"type": "tally", "what": "colors", "scope": "self",
+                  "colors": ["blue"], "vp_each": 1}]}
+  ]
+}

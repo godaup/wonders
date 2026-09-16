@@ -16,6 +16,8 @@ from wonders.cards.base import Card, Color, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.library import (
     Coins,
+    Debt,
+    Diplomacy,
     Military,
     MultiProduction,
     Production,
@@ -222,6 +224,11 @@ def _describe(effect) -> List[Row]:
         return [([('coin', GOLD)], f'+{effect.amount} Coins')]
     if isinstance(effect, Trade):
         return [([('trade', GOLD)], f'Buy {effect.category} ({effect.side}) {effect.price}c')]
+    if isinstance(effect, Debt):
+        return [([('coin', MILITARY)], f'{effect.amount} debt ({effect.scope})')]
+    if isinstance(effect, Diplomacy):
+        label = 'Diplomacy' + (f' x{effect.count}' if effect.count > 1 else '')
+        return [([('shield', CIVIC)], label)]
     if isinstance(effect, Special):
         return [([('special', GUILD)], effect.description or effect.power.replace('_', ' '))]
     if isinstance(effect, Tally):

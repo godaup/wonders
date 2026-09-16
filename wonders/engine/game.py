@@ -168,6 +168,7 @@ class Game:
         ctx = self.context(i)
         for effect in card.effects:
             player.coins += effect.coins_on_build(ctx)
+            effect.on_build(ctx)
 
     def _do_wonder(self, i: int, card: Card) -> None:
         result = self._stage_payment(i)
@@ -181,6 +182,7 @@ class Game:
         ctx = self.context(i)
         for effect in stage.effects:
             player.coins += effect.coins_on_build(ctx)
+            effect.on_build(ctx)
 
     def _do_discard(self, i: int, card: Card) -> None:
         self.players[i].coins += DISCARD_COINS
@@ -228,12 +230,21 @@ class Game:
         self.phase = Phase.CONFLICT
         value = CONFLICT_VALUE[age]
         shields = [p.shields() for p in self.players]
-        for i, player in enumerate(self.players):
-            for j in ((i + 1) % self.n, (i - 1) % self.n):
+        # Cities diplomacy: a player holding a diplomacy token sits this Age out and
+        # spends the token. Remaining ("active") players are adjacent around a ring
+        # with the diplomats removed, so their neighbours shift accordingly.
+        active = [i for i in range(self.n) if self.players[i].diplomacy <= 0]
+        for i in range(self.n):
+            if self.players[i].diplomacy > 0:
+                self.players[i].diplomacy -= 1
+        m = len(active)
+        for idx in range(m):
+            i = active[idx]
+            for j in {active[(idx + 1) % m], active[(idx - 1) % m]} - {i}:
                 if shields[i] > shields[j]:
-                    player.tokens.append(value)
+                    self.players[i].tokens.append(value)
                 elif shields[i] < shields[j]:
-                    player.tokens.append(DEFEAT_VALUE)
+                    self.players[i].tokens.append(DEFEAT_VALUE)
 
     # -- scoring -----------------------------------------------------------
     def score(self, i: int) -> ScoreBreakdown:
@@ -243,7 +254,7 @@ class Game:
         ctx = self.context(i)
         b = ScoreBreakdown()
         b.military = sum(p.tokens)
-        b.treasury = p.coins // 3
+        b.treasury = p.coins // 3 - p.debt  # Cities debt tokens are -1 VP each
         b.science = science_score(p.science(), p.science_wilds())
 
         # Wonder-stage victory points.

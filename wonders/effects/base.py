@@ -87,5 +87,12 @@ class Effect:
     def coins_on_build(self, ctx: Context) -> int:
         return 0
 
+    def on_build(self, ctx: Context) -> None:
+        """Arbitrary state change at build time (e.g. impose debt, grant diplomacy).
+
+        Runs in addition to ``coins_on_build``; may mutate ``ctx.player`` and its
+        neighbours. Default no-op.
+        """
+
     def victory_points(self, ctx: Context) -> int:
         return 0

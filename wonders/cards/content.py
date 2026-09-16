@@ -25,6 +25,8 @@ from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.base import Effect
 from wonders.effects.library import (
     Coins,
+    Debt,
+    Diplomacy,
     Military,
     MultiProduction,
     Production,
@@ -80,6 +82,8 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'victory_points': lambda s: VictoryPoints(s['points']),
     'tally': _tally,
     'special': lambda s: Special(s['power'], s.get('description', '')),
+    'debt': lambda s: Debt(s['amount'], s.get('scope', 'self')),
+    'diplomacy': lambda s: Diplomacy(s.get('count', 1)),
 }
 
 
@@ -158,6 +162,10 @@ class Content:
     def guilds(self) -> List[Card]:
         return [c for c in self.cards if c.guild]
 
+    def leaders(self) -> List[Card]:
+        """Leader cards (white) — drafted/recruited separately, not dealt into Ages."""
+        return [c for c in self.cards if c.color is Color.WHITE]
+
 
 def _read_expansion(expansion: str) -> dict:
     path = resources.files(DATA_PACKAGE).joinpath(DATA_DIR, f'{expansion}.json')
@@ -192,8 +200,8 @@ def build_age_deck(
     rng = rng or random.Random()
     deck: List[Card] = []
     for card in content.cards:
-        if card.guild or card.age != age:
-            continue
+        if card.guild or card.color is Color.WHITE or card.age != age:
+            continue  # guilds handled below; leaders (white) are drafted separately
         deck.extend([card] * card.copies_for(n_players))
 
     if age == 3:

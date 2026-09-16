@@ -21,6 +21,7 @@ from wonders.engine.actions import Action, ActionKind
 from wonders.engine.game import Game, Policy
 from wonders.engine.phase import Phase
 from wonders.engine.player import Player
+from wonders.ruleset import Ruleset
 
 _CODE = {ActionKind.BUILD: 'B', ActionKind.WONDER: 'W', ActionKind.DISCARD: 'D'}
 _KIND = {code: kind for kind, code in _CODE.items()}
@@ -87,7 +88,8 @@ class GameRecord:
     # -- replay ------------------------------------------------------------
     def replay(self, content: Content) -> Game:
         """Re-simulate the recorded decisions and return the finished game."""
-        players = [Player(s.name, content.wonder(s.wonder, s.side)) for s in self.players]
+        coins = Ruleset.of(*self.expansions).starting_coins
+        players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
         game = Game(players)
         for age in (1, 2, 3):
             deck = [content.card(name) for name in self.age_decks[age]]
@@ -140,7 +142,8 @@ def play_and_record(
     ``on_turn_extra`` (if given) is chained after recording each turn — used by the
     match runner to maintain an observation history.
     """
-    players = [Player(s.name, content.wonder(s.wonder, s.side)) for s in setups]
+    coins = Ruleset.of(*expansions).starting_coins
+    players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in setups]
     game = Game(players)
     builder = RecordBuilder(setups, tuple(expansions))
     for age in (1, 2, 3):

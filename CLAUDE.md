@@ -102,8 +102,22 @@ Design rules to preserve when extending:
   Observation partial-observability-correct (never leak hidden cards to opponents).
 
 `wonders/wonders.py` is now a thin public-API re-export (`from wonders.wonders import
-Game, Player, ...`). Expansions are anticipated but unimplemented: `Color.WHITE`
-(Leaders) and `Color.BLACK` (Cities) already exist in the enum.
+Game, Player, ...`).
+
+**Expansions are optional and combinable** (`wonders/ruleset.py`). A `Ruleset.of('leaders',
+'cities')` composes any set of expansion ids (`base` always implied); combining is a
+union. Content merges via `load_content('base', 'leaders', 'cities')` — each expansion is
+one `data/<id>.json` file. Rule tweaks are designed to be inert when the expansion is
+absent, so no special-casing: Leaders only raises the starting treasury (`Ruleset.starting_coins`,
+threaded through the `GameRecord`); Cities adds `Player.debt`/`Player.diplomacy` (both default
+0) consumed by scoring (debt = −1 VP) and military resolution (a diplomacy token removes a
+player from the conflict ring). Cities' new effects (`Debt`, `Diplomacy`) use the generic
+`Effect.on_build(ctx)` mutation hook. Leader (white) cards are drafted separately so
+`build_age_deck` excludes them (`Content.leaders()`); Cities (black) cards carry `at_players`
+and are dealt into the Ages. `armada`/`babel` are registered but flagged `implemented=False`
+(`Ruleset.unimplemented`) — their subsystems (naval, tower) are not mechanized. The shipped
+`leaders.json`/`cities.json` are **representative slices with original placeholder card names**
+(not the official cards); accurate full sets are follow-up data entry.
 
 ## Conventions
 

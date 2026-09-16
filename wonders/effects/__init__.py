@@ -3,6 +3,8 @@
 from wonders.effects.base import Context, Effect, TradeRule
 from wonders.effects.library import (
     Coins,
+    Debt,
+    Diplomacy,
     Military,
     MultiProduction,
     Production,

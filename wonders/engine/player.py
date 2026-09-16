@@ -27,6 +27,8 @@ class Player:
         self._names: set = set()  # built structure names, for chaining & duplicate checks
         self.stages_built: List[WonderStage] = []
         self.tokens: List[int] = []  # military tokens (+1/+3/+5 / -1)
+        self.debt = 0  # Cities: debt tokens, each -1 VP at game end
+        self.diplomacy = 0  # Cities: diplomacy tokens, each skips one Age's conflict
 
     # -- construction ------------------------------------------------------
     def has(self, name: str) -> bool:
