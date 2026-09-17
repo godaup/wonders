@@ -1,24 +1,571 @@
 {
   "meta": {
     "expansion": "leaders",
-    "description": "Representative slice of the Leaders expansion: white cards recruited for coins. NOT the official leader set — original placeholder cards exercising the mechanic. Starting treasury becomes 6.",
-    "note": "Leaders are drafted separately (not dealt into Ages); the full pre-game draft phase is a follow-up. Recruiting a leader is paying its coin cost."
+    "description": "Official Leaders (2011): 35 leaders (white cards recruited for coins). Starting treasury is 6.",
+    "note": "Leaders are drafted separately at game start (deal 4, pick-and-pass) and one is recruited per Age; the draft/recruit phase is not yet mechanized, so leaders are content-only here (buildable by paying their coin cost if in hand). Cost discounts, build-from-discard, copy, pay-for-any-good, on-trigger coin income, and set/science bonuses are flagged Special (not scored). The Rome wonder and the 4 Leaders guilds are omitted (board resource costs / guild costs unverified)."
   },
+  "wonders": [],
   "cards": [
-    {"name": "The Warlord", "color": "white", "expansion": "leaders",
-     "cost": {"coins": 2}, "effects": [{"type": "military", "shields": 1}]},
-    {"name": "The Sage", "color": "white", "expansion": "leaders",
-     "cost": {"coins": 3}, "effects": [{"type": "science_wild", "count": 1}]},
-    {"name": "The Trademaster", "color": "white", "expansion": "leaders",
-     "cost": {"coins": 3},
-     "effects": [{"type": "trade", "side": "both", "category": "both", "price": 1}]},
-    {"name": "The Treasurer", "color": "white", "expansion": "leaders",
-     "cost": {"coins": 1}, "effects": [{"type": "coins", "amount": 4}]},
-    {"name": "The Noble", "color": "white", "expansion": "leaders",
-     "cost": {"coins": 4}, "effects": [{"type": "victory_points", "points": 4}]},
-    {"name": "The Chronicler", "color": "white", "expansion": "leaders",
-     "cost": {"coins": 3},
-     "effects": [{"type": "tally", "what": "colors", "scope": "self",
-                  "colors": ["blue"], "vp_each": 1}]}
+    {
+      "name": "Sappho",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        }
+      ]
+    },
+    {
+      "name": "Zenobia",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 3
+        }
+      ]
+    },
+    {
+      "name": "Nefertiti",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        }
+      ]
+    },
+    {
+      "name": "Cleopatra",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 5
+        }
+      ]
+    },
+    {
+      "name": "Caesar",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 2
+        }
+      ]
+    },
+    {
+      "name": "Hannibal",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 1
+        }
+      ]
+    },
+    {
+      "name": "Euclid",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "compass"
+        }
+      ]
+    },
+    {
+      "name": "Ptolemy",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "tablet"
+        }
+      ]
+    },
+    {
+      "name": "Pythagoras",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "gear"
+        }
+      ]
+    },
+    {
+      "name": "Croesus",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "name": "Midas",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "coins",
+          "scope": "self",
+          "vp_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Amytis",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "wonder_stages",
+          "scope": "self",
+          "vp_each": 2
+        }
+      ]
+    },
+    {
+      "name": "Alexander",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "victory_tokens",
+          "scope": "self",
+          "vp_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Phidias",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "brown"
+          ],
+          "vp_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Varro",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "yellow"
+          ],
+          "vp_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Hypatia",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "green"
+          ],
+          "vp_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Nebuchadnezzar",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "blue"
+          ],
+          "vp_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Praxiteles",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "grey"
+          ],
+          "vp_each": 2
+        }
+      ]
+    },
+    {
+      "name": "Hiram",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "purple"
+          ],
+          "vp_each": 2
+        }
+      ]
+    },
+    {
+      "name": "Pericles",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 6
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "red"
+          ],
+          "vp_each": 2
+        }
+      ]
+    },
+    {
+      "name": "Aristotle",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "science_set_bonus",
+          "description": "+3 VP per completed set of 3 science symbols"
+        }
+      ]
+    },
+    {
+      "name": "Justinian",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "set_vp",
+          "description": "3 VP per set of one blue + one red + one green card"
+        }
+      ]
+    },
+    {
+      "name": "Plato",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "set_vp",
+          "description": "7 VP per set of all seven card colours"
+        }
+      ]
+    },
+    {
+      "name": "Nero",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "coins_on_victory",
+          "description": "+2 coins each time you gain a military victory token"
+        }
+      ]
+    },
+    {
+      "name": "Xenophon",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "coins_on_yellow",
+          "description": "+2 coins each time you build a yellow card"
+        }
+      ]
+    },
+    {
+      "name": "Vitruvius",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "coins_on_chain",
+          "description": "+2 coins each time you build a card free via a chain"
+        }
+      ]
+    },
+    {
+      "name": "Hatshepsut",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "trade_rebate",
+          "description": "+1 coin after buying resources from a neighbour"
+        }
+      ]
+    },
+    {
+      "name": "Bilkis",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "buy_from_bank",
+          "description": "once per turn buy any 1 resource from the bank for 1 coin"
+        }
+      ]
+    },
+    {
+      "name": "Maecenas",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "recruit_free",
+          "description": "recruit all your future leaders for free"
+        }
+      ]
+    },
+    {
+      "name": "Ramses",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "guilds_free",
+          "description": "build all your guild (purple) cards for free"
+        }
+      ]
+    },
+    {
+      "name": "Solomon",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "build_from_discard",
+          "description": "build one card from the discard pile for free"
+        }
+      ]
+    },
+    {
+      "name": "Archimedes",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "cost_discount",
+          "description": "green cards cost 1 fewer resource"
+        }
+      ]
+    },
+    {
+      "name": "Leonidas",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "cost_discount",
+          "description": "red cards cost 1 fewer resource"
+        }
+      ]
+    },
+    {
+      "name": "Hammurabi",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "cost_discount",
+          "description": "blue cards cost 1 fewer resource"
+        }
+      ]
+    },
+    {
+      "name": "Imhotep",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "cost_discount",
+          "description": "wonder stages cost 1 fewer resource"
+        }
+      ]
+    },
+    {
+      "name": "Tomyris",
+      "color": "white",
+      "expansion": "leaders",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "redirect_defeat",
+          "description": "your defeat tokens are given to the winning neighbour"
+        }
+      ]
+    }
   ]
 }

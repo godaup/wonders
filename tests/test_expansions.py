@@ -8,7 +8,7 @@ from wonders.agents.baselines import GreedyAgent, RandomAgent
 from wonders.agents.match import play_match
 from wonders.cards.base import Card, Color
 from wonders.cards.content import build_age_deck, load_content
-from wonders.effects.library import Debt, Military
+from wonders.effects.library import Debt, GainToken, Grant, Military, Plunder, Tally
 from wonders.engine.actions import Action
 from wonders.engine.game import Game
 from wonders.engine.player import Player
@@ -52,16 +52,16 @@ def test_unimplemented_and_unknown():
 # -- content combination --------------------------------------------------
 def test_content_merges_expansions():
     content = load_content('base', 'leaders', 'cities')
-    assert len(content.leaders()) == 6  # white cards
-    assert any(c.color is Color.BLACK for c in content.cards)  # cities black cards
+    assert len(content.leaders()) == 36  # official leader set (white cards)
+    assert sum(1 for c in content.cards if c.color is Color.BLACK) == 42  # Cities black cards
 
 
 def test_leaders_excluded_but_cities_included_in_age_decks():
     content = load_content('base', 'leaders', 'cities')
     deck = build_age_deck(content, 1, 3, rng=random.Random(0))
-    names = {c.name for c in deck}
     assert not any(c.color is Color.WHITE for c in deck)  # leaders drafted separately
-    assert 'Black Market' in names or 'Militia Outpost' in names  # black cards dealt in
+    assert sum(1 for c in deck if c.color is Color.BLACK) == 3  # n_players black cards dealt in
+    assert len(deck) == 8 * 3  # base 7*n + n black = one extra card per player
 
 
 def test_base_only_deck_unaffected_by_expansion_files():
@@ -89,6 +89,35 @@ def test_diplomacy_token_sits_out_military():
     # with P1 removed, P0 and P2 are adjacent: P0 (2 shields) beats P2 (0 shields)
     assert sum(g.players[0].tokens) == 1
     assert sum(g.players[2].tokens) == -1
+
+
+def test_plunder_takes_coins_and_overflows_to_debt():
+    g = _game()
+    g.players[1].coins = 1
+    g.players[2].coins = 5
+    g.apply(0, Action.build(Card('Raiders', Color.BLACK, effects=(Plunder(3, 'neighbours'),))))
+    assert g.players[1].coins == 0 and g.players[1].debt == 2  # only had 1; 2 unpaid -> debt
+    assert g.players[2].coins == 2 and g.players[2].debt == 0  # paid all 3
+
+
+def test_grant_gives_neighbours_coins():
+    g = _game()
+    before = [g.players[1].coins, g.players[2].coins]
+    g.apply(0, Action.build(Card('Largesse', Color.BLACK, effects=(Grant(2, 'neighbours'),))))
+    assert g.players[1].coins == before[0] + 2 and g.players[2].coins == before[1] + 2
+
+
+def test_gain_token_adds_a_military_token():
+    g = _game()
+    g.apply(0, Action.build(Card('Raid', Color.BLACK, effects=(GainToken(3),))))
+    assert g.players[0].tokens == [3]
+
+
+def test_tally_scores_per_three_coins():
+    g = _game()
+    g.players[0].coins = 9
+    g.players[0].add_card(Card('Midas', Color.WHITE, effects=(Tally('coins', 'self', vp_each=1),)))
+    assert g.score(0).commercial == 3  # 9 // 3, on top of the treasury's own 3
 
 
 # -- combined game end to end ---------------------------------------------

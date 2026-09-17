@@ -27,8 +27,11 @@ from wonders.effects.library import (
     Coins,
     Debt,
     Diplomacy,
+    GainToken,
+    Grant,
     Military,
     MultiProduction,
+    Plunder,
     Production,
     Science,
     ScienceWild,
@@ -64,6 +67,7 @@ def _tally(spec: dict) -> Effect:
         colors=[Color(c) for c in spec.get('colors', [])],
         coins_each=spec.get('coins_each', 0),
         vp_each=spec.get('vp_each', 0),
+        token_value=spec.get('token_value'),
     )
 
 
@@ -84,6 +88,9 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'special': lambda s: Special(s['power'], s.get('description', '')),
     'debt': lambda s: Debt(s['amount'], s.get('scope', 'self')),
     'diplomacy': lambda s: Diplomacy(s.get('count', 1)),
+    'plunder': lambda s: Plunder(s['amount'], s.get('scope', 'neighbours')),
+    'grant': lambda s: Grant(s['amount'], s.get('scope', 'neighbours')),
+    'gain_token': lambda s: GainToken(s['value']),
 }
 
 
@@ -200,14 +207,20 @@ def build_age_deck(
     rng = rng or random.Random()
     deck: List[Card] = []
     for card in content.cards:
-        if card.guild or card.color is Color.WHITE or card.age != age:
-            continue  # guilds handled below; leaders (white) are drafted separately
+        if card.guild or card.color in (Color.WHITE, Color.BLACK) or card.age != age:
+            continue  # guilds/black handled below; leaders (white) are drafted separately
         deck.extend([card] * card.copies_for(n_players))
 
     if age == 3:
         guilds = content.guilds()
         want = n_players + GUILDS_OVER_PLAYERS
         deck.extend(guilds if want >= len(guilds) else rng.sample(guilds, want))
+
+    # Cities: draw exactly n_players random black cards from this Age's pool (no
+    # per-card numerals). This adds one card per player per Age (deal 8 not 7).
+    black = [c for c in content.cards if c.color is Color.BLACK and c.age == age]
+    if black:
+        deck.extend(black if n_players >= len(black) else rng.sample(black, n_players))
 
     rng.shuffle(deck)
     return deck

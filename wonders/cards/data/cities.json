@@ -1,25 +1,866 @@
 {
   "meta": {
     "expansion": "cities",
-    "description": "Representative slice of the Cities expansion: black cards shuffled into the Age decks, introducing debt and diplomacy tokens. NOT the official set — original placeholder cards exercising the mechanics.",
-    "note": "Adding black cards inflates an Age deck beyond 7*players; exact Cities deck-composition rules are approximated here."
+    "description": "Official Cities (2012): 42 black cards, 14 per Age. Introduces debt, diplomacy, plunder and forced-gift coin swings.",
+    "note": "Cities uses no per-card player-count numerals: build_age_deck draws n_players random black cards from each Age (one extra card per player per Age). \"All other players\" is approximated as both neighbours (exact at 3 players). Plunder overflow becomes debt. Per-token/per-stage plunder, copy-science, build-from-discard, and wildcard production are flagged Special (not fully mechanized). The Byzantium/Petra wonders are omitted (stage data not compiled)."
   },
+  "wonders": [],
   "cards": [
-    {"name": "Militia Outpost", "color": "black", "age": 1, "at_players": [3, 5],
-     "cost": {"resources": {"ore": 1}}, "effects": [{"type": "military", "shields": 1}]},
-    {"name": "Black Market", "color": "black", "age": 1, "at_players": [3, 6],
-     "effects": [{"type": "coins", "amount": 4}]},
-    {"name": "Diplomatic Mission", "color": "black", "age": 2, "at_players": [3, 6],
-     "cost": {"resources": {"bricks": 1, "linen": 1}},
-     "effects": [{"type": "diplomacy", "count": 1}]},
-    {"name": "Debtors Court", "color": "black", "age": 2, "at_players": [4, 7],
-     "cost": {"resources": {"stone": 1}},
-     "effects": [{"type": "coins", "amount": 6}, {"type": "debt", "amount": 1, "scope": "neighbours"}]},
-    {"name": "Garrison", "color": "black", "age": 3, "at_players": [3, 5, 7],
-     "cost": {"resources": {"ore": 2, "stone": 1}}, "effects": [{"type": "military", "shields": 2}]},
-    {"name": "Consulate", "color": "black", "age": 3, "at_players": [3, 6],
-     "cost": {"resources": {"bricks": 2, "glass": 1}},
-     "effects": [{"type": "tally", "what": "colors", "scope": "neighbours",
-                  "colors": ["black"], "vp_each": 1}]}
+    {
+      "name": "Smugglers Cache",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": null,
+      "effects": [
+        {
+          "type": "special",
+          "power": "trade_starting",
+          "description": "buy your starting resource 1 cheaper from a neighbour"
+        }
+      ]
+    },
+    {
+      "name": "West Clandestine Wharf",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "trade",
+          "side": "left",
+          "category": "both",
+          "price": 1
+        }
+      ]
+    },
+    {
+      "name": "East Clandestine Wharf",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "trade",
+          "side": "right",
+          "category": "both",
+          "price": 1
+        }
+      ]
+    },
+    {
+      "name": "Secret Warehouse",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "extra_owned_production",
+          "description": "once/turn produce 1 extra of a resource you already produce"
+        }
+      ]
+    },
+    {
+      "name": "City Gates",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": {
+        "coins": 1,
+        "resources": {
+          "wood": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        }
+      ]
+    },
+    {
+      "name": "Customs",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": null,
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        },
+        {
+          "type": "grant",
+          "amount": 1,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Dive",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": null,
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 6
+        },
+        {
+          "type": "grant",
+          "amount": 1,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Opium Stash",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": null,
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 3
+        },
+        {
+          "type": "plunder",
+          "amount": 1,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Hideout",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": null,
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        },
+        {
+          "type": "plunder",
+          "amount": 1,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Raider Camp",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": null,
+      "effects": [
+        {
+          "type": "gain_token",
+          "value": 1
+        },
+        {
+          "type": "debt",
+          "amount": 1,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Cells",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": null,
+      "effects": [
+        {
+          "type": "tally",
+          "what": "victory_tokens",
+          "scope": "self",
+          "vp_each": 2,
+          "token_value": 1
+        }
+      ]
+    },
+    {
+      "name": "Militia",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 2
+        }
+      ]
+    },
+    {
+      "name": "Residence",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "bricks": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 1
+        },
+        {
+          "type": "diplomacy",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Pigeonhole",
+      "color": "black",
+      "age": 1,
+      "expansion": "cities",
+      "cost": {
+        "coins": 1,
+        "resources": {
+          "ore": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "copy_science",
+          "description": "at game end, copy one science symbol from a neighbour"
+        }
+      ]
+    },
+    {
+      "name": "Black Market",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "ore": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "produce_unowned",
+          "description": "once/turn produce 1 resource you do not already produce"
+        }
+      ]
+    },
+    {
+      "name": "Architect Firm",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 1,
+        "resources": {
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        },
+        {
+          "type": "special",
+          "power": "wonder_free_resources",
+          "description": "wonder stages cost no resources"
+        }
+      ]
+    },
+    {
+      "name": "Tabularium",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2,
+        "resources": {
+          "wood": 1,
+          "ore": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 6
+        }
+      ]
+    },
+    {
+      "name": "Trade Center",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "bricks": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 6
+        },
+        {
+          "type": "grant",
+          "amount": 2,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Gambling Den",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 9
+        },
+        {
+          "type": "grant",
+          "amount": 2,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Opium Den",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 4
+        },
+        {
+          "type": "plunder",
+          "amount": 3,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Lair",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 3
+        },
+        {
+          "type": "plunder",
+          "amount": 2,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Sepulcher",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "linen": 1,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        },
+        {
+          "type": "special",
+          "power": "plunder_per_token",
+          "description": "others lose 1 coin per military token they hold"
+        }
+      ]
+    },
+    {
+      "name": "Raider Fort",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 1,
+        "resources": {
+          "ore": 1,
+          "bricks": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "gain_token",
+          "value": 3
+        },
+        {
+          "type": "debt",
+          "amount": 1,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Guardhouse",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2,
+        "resources": {
+          "wood": 1,
+          "ore": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "victory_tokens",
+          "scope": "self",
+          "vp_each": 3,
+          "token_value": 3
+        }
+      ]
+    },
+    {
+      "name": "Mercenaries",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 4,
+        "resources": {
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 3
+        }
+      ]
+    },
+    {
+      "name": "Consulate",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "bricks": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        },
+        {
+          "type": "diplomacy",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Band of Spies",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2,
+        "resources": {
+          "stone": 1,
+          "bricks": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "copy_science",
+          "description": "at game end, copy one science symbol from a neighbour"
+        }
+      ]
+    },
+    {
+      "name": "Forging Agency",
+      "color": "black",
+      "age": 2,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "build_from_discard",
+          "description": "take the discard pile and build one card for free"
+        }
+      ]
+    },
+    {
+      "name": "Capitol",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2,
+        "resources": {
+          "stone": 2,
+          "bricks": 2,
+          "glass": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 8
+        }
+      ]
+    },
+    {
+      "name": "Mint",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "bricks": 1,
+          "glass": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 8
+        },
+        {
+          "type": "grant",
+          "amount": 3,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Opium Distillery",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 5
+        },
+        {
+          "type": "plunder",
+          "amount": 5,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Brotherhood",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "ore": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        },
+        {
+          "type": "plunder",
+          "amount": 3,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Chamber of Builders",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "bricks": 1,
+          "glass": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        },
+        {
+          "type": "special",
+          "power": "plunder_per_stage",
+          "description": "others lose 1 coin per wonder stage they have built"
+        }
+      ]
+    },
+    {
+      "name": "Cenotaph",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "bricks": 2,
+          "stone": 1,
+          "glass": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 5
+        },
+        {
+          "type": "special",
+          "power": "plunder_per_token",
+          "description": "others lose 1 coin per military token they hold"
+        }
+      ]
+    },
+    {
+      "name": "Secret Network",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "black"
+          ],
+          "vp_each": 1,
+          "coins_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Slave Market",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "wood": 2,
+          "ore": 2
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "victory_tokens",
+          "scope": "self",
+          "vp_each": 1,
+          "coins_each": 1
+        }
+      ]
+    },
+    {
+      "name": "Raider Garrison",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2,
+        "resources": {
+          "stone": 2,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "gain_token",
+          "value": 5
+        },
+        {
+          "type": "debt",
+          "amount": 1,
+          "scope": "neighbours"
+        }
+      ]
+    },
+    {
+      "name": "Prison",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "coins": 2,
+        "resources": {
+          "ore": 2,
+          "bricks": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "victory_tokens",
+          "scope": "self",
+          "vp_each": 4,
+          "token_value": 5
+        }
+      ]
+    },
+    {
+      "name": "Contingent",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "coins": 5,
+        "resources": {
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 5
+        }
+      ]
+    },
+    {
+      "name": "Embassy",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "paper": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        },
+        {
+          "type": "diplomacy",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Memorial",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "wood": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "cash_defeats",
+          "description": "gain 2 coins per defeat token, then discard all your defeat tokens"
+        }
+      ]
+    },
+    {
+      "name": "Torture Chamber",
+      "color": "black",
+      "age": 3,
+      "expansion": "cities",
+      "cost": {
+        "coins": 3,
+        "resources": {
+          "ore": 2,
+          "glass": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "special",
+          "power": "copy_science",
+          "description": "at game end, copy one science symbol from a neighbour"
+        }
+      ]
+    }
   ]
 }

@@ -8,7 +8,7 @@ end-game coin/VP-per-card) and purple guild scoring.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 
 from wonders.cards.base import Color, Ressource, ScienceSymbol
 from wonders.effects.base import Context, Effect, TradeRule
@@ -148,6 +148,7 @@ class Tally(Effect):
     colors: Iterable[Color] = field(default_factory=frozenset)
     coins_each: int = 0
     vp_each: int = 0
+    token_value: Optional[int] = None  # for what='victory_tokens': only count tokens of this value
 
     def __post_init__(self) -> None:
         self.colors = frozenset(self.colors)
@@ -159,6 +160,12 @@ class Tally(Effect):
             return player.wonder_stages_built
         if self.what == 'defeat_tokens':
             return sum(1 for t in player.tokens if t < 0)
+        if self.what == 'victory_tokens':  # positive military tokens (optionally of one Age's value)
+            if self.token_value is not None:
+                return sum(1 for t in player.tokens if t == self.token_value)
+            return sum(1 for t in player.tokens if t > 0)
+        if self.what == 'coins':  # 1 unit per 3 coins (Midas, Gamers' Guild)
+            return player.coins // 3
         raise ValueError(f'unknown tally target {self.what!r}')
 
     def _count(self, ctx: Context) -> int:
@@ -196,3 +203,42 @@ class Diplomacy(Effect):
 
     def on_build(self, ctx: Context) -> None:
         ctx.player.diplomacy += self.count
+
+
+@dataclass
+class Plunder(Effect):
+    """Cities: each target loses ``amount`` coins; any shortfall becomes debt.
+
+    Scope ``'neighbours'`` approximates "all other players" (exact for 3 players).
+    """
+
+    amount: int
+    scope: str = 'neighbours'
+
+    def on_build(self, ctx: Context) -> None:
+        for player in _targets(ctx, self.scope):
+            lost = min(self.amount, player.coins)
+            player.coins -= lost
+            player.debt += self.amount - lost
+
+
+@dataclass
+class Grant(Effect):
+    """Cities: each target *gains* coins (e.g. Customs, Mint force opponents to profit)."""
+
+    amount: int
+    scope: str = 'neighbours'
+
+    def on_build(self, ctx: Context) -> None:
+        for player in _targets(ctx, self.scope):
+            player.coins += self.amount
+
+
+@dataclass
+class GainToken(Effect):
+    """Cities Raider cards: immediately gain a military victory token of ``value`` (1/3/5)."""
+
+    value: int
+
+    def on_build(self, ctx: Context) -> None:
+        ctx.player.tokens.append(self.value)

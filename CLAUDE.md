@@ -120,13 +120,23 @@ one `data/<id>.json` file. Rule tweaks are designed to be inert when the expansi
 absent, so no special-casing: Leaders only raises the starting treasury (`Ruleset.starting_coins`,
 threaded through the `GameRecord`); Cities adds `Player.debt`/`Player.diplomacy` (both default
 0) consumed by scoring (debt = −1 VP) and military resolution (a diplomacy token removes a
-player from the conflict ring). Cities' new effects (`Debt`, `Diplomacy`) use the generic
-`Effect.on_build(ctx)` mutation hook. Leader (white) cards are drafted separately so
-`build_age_deck` excludes them (`Content.leaders()`); Cities (black) cards carry `at_players`
-and are dealt into the Ages. `armada`/`babel` are registered but flagged `implemented=False`
-(`Ruleset.unimplemented`) — their subsystems (naval, tower) are not mechanized. The shipped
-`leaders.json`/`cities.json` are **representative slices with original placeholder card names**
-(not the official cards); accurate full sets are follow-up data entry.
+player from the conflict ring). Cities' new effects use the generic `Effect.on_build(ctx)` mutation hook: `Debt`,
+`Diplomacy`, `Plunder` (others lose coins, overflow → debt), `Grant` (others gain
+coins), `GainToken` (immediate military token). `Tally` also gained `coins`
+(per 3 coins) and `victory_tokens` (with an optional `token_value` age filter)
+metrics. Leader (white) cards are drafted separately so `build_age_deck` excludes
+them (`Content.leaders()`); Cities (black) cards carry **no player-count numerals** —
+`build_age_deck` draws `n_players` random black cards per Age (one extra card per
+player, so Cities deals 8 not 7). `armada`/`babel` are registered but flagged
+`implemented=False` (`Ruleset.unimplemented`).
+
+`leaders.json` (36 leaders) and `cities.json` (42 black cards) hold the **official
+functional decks** (costs/effects/counts). What the effect model can't yet express is
+flagged `Special` and does not score: leader cost-discounts / on-trigger income /
+set & science bonuses / recruit-free; Cities per-token & per-stage plunder, copy-science,
+build-from-discard, and wildcard production. Also outstanding: the Leaders draft/recruit
+*phase* (leaders are currently content-only, buildable by paying coins if in hand), the
+4 Leaders guilds and the Rome/Byzantium/Petra wonder boards (cost data unverified).
 
 ## Conventions
 

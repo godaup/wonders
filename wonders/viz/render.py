@@ -18,8 +18,11 @@ from wonders.effects.library import (
     Coins,
     Debt,
     Diplomacy,
+    GainToken,
+    Grant,
     Military,
     MultiProduction,
+    Plunder,
     Production,
     Science,
     ScienceWild,
@@ -229,6 +232,12 @@ def _describe(effect) -> List[Row]:
     if isinstance(effect, Diplomacy):
         label = 'Diplomacy' + (f' x{effect.count}' if effect.count > 1 else '')
         return [([('shield', CIVIC)], label)]
+    if isinstance(effect, Plunder):
+        return [([('coin', MILITARY)], f'others -{effect.amount}c ({effect.scope})')]
+    if isinstance(effect, Grant):
+        return [([('coin', GOLD)], f'others +{effect.amount}c ({effect.scope})')]
+    if isinstance(effect, GainToken):
+        return [([('shield', MILITARY)], f'+war token ({effect.value})')]
     if isinstance(effect, Special):
         return [([('special', GUILD)], effect.description or effect.power.replace('_', ' '))]
     if isinstance(effect, Tally):
