@@ -1,3 +1,4 @@
 """Original, license-clean card visualizations rendered from game data."""
 
 from wonders.viz.render import card_svg, gallery_html, wonder_svg
+from wonders.viz.table import table_html, table_svg

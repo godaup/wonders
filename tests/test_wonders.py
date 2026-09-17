@@ -43,3 +43,12 @@ def test_gallery_command_writes_html(tmp_path):
     html = out.read_text(encoding='utf-8')
     assert html.startswith('<!doctype html>')
     assert 'Wonder boards' in html and '<svg' in html
+
+
+def test_table_command_plays_and_renders(tmp_path):
+    """The table command plays a game and writes the final stats view."""
+    out = tmp_path / 't.html'
+    result = CliRunner().invoke(cli.table, ['--out', str(out), '--seed', '1'])
+    assert result.exit_code == 0
+    html = out.read_text(encoding='utf-8')
+    assert html.startswith('<!doctype html>') and '<svg' in html

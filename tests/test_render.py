@@ -1,7 +1,30 @@
-"""Tests for the SVG card and wonder renderer."""
+"""Tests for the SVG card, wonder, and table renderer."""
 
 from wonders.cards.content import load_content
+from wonders.engine.game import Game
+from wonders.engine.player import Player
 from wonders.viz.render import card_svg, gallery_html, wonder_svg
+from wonders.viz.table import table_html, table_svg
+
+
+def _table_game():
+    content = load_content('base')
+    game = Game(
+        [
+            Player(n, content.wonder(w))
+            for n, w in [
+                ('Ada', 'The Pyramids of Giza'),
+                ('Bo', 'The Colossus of Rhodes'),
+                ('Cy', 'The Temple of Artemis in Ephesus'),
+            ]
+        ]
+    )
+    game.age = 2
+    game.players[0].add_card(content.card('Baths'))
+    game.players[0].add_card(content.card('Scriptorium'))
+    game.players[1].add_card(content.card('Stockade'))
+    game.players[1].tokens.append(1)
+    return game
 
 
 def test_card_svg_contains_name_and_effects():
@@ -61,3 +84,19 @@ def test_every_wonder_renders():
     content = load_content('base')
     for wonder in content.wonders:
         assert wonder_svg(wonder).count('<svg') == 1
+
+
+def test_table_svg_shows_every_player_and_age():
+    game = _table_game()
+    svg = table_svg(game)
+    assert svg.startswith('<svg') and svg.rstrip().endswith('</svg>')
+    for name in ('Ada', 'Bo', 'Cy'):
+        assert name in svg
+    assert 'Age 2' in svg
+    assert 'leader:' in svg  # the leader is highlighted/labelled
+
+
+def test_table_html_is_self_contained():
+    html = table_html(_table_game(), title='Mid-game')
+    assert html.startswith('<!doctype html>')
+    assert html.count('<svg') == 1 and 'Mid-game' in html
