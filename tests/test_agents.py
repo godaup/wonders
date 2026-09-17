@@ -2,8 +2,20 @@
 
 import random
 
-from wonders.agents.baselines import GreedyAgent, RandomAgent
+import pytest
+
+from wonders.agents.baselines import (
+    BuilderAgent,
+    CivicAgent,
+    DiscardAgent,
+    EconomistAgent,
+    GreedyAgent,
+    MilitaristAgent,
+    RandomAgent,
+    ScientistAgent,
+)
 from wonders.agents.encoders import DictEncoder, FlatEncoder
+from wonders.agents.heuristic import HeuristicAgent
 from wonders.agents.match import play_match
 from wonders.cards.content import build_age_deck, deal_hands, load_content
 from wonders.engine.actions import ActionKind
@@ -11,6 +23,18 @@ from wonders.engine.game import Game
 from wonders.engine.observation import build_observation
 from wonders.engine.player import Player
 from wonders.engine.record import PlayerSetup
+
+AGENT_FACTORIES = [
+    GreedyAgent,
+    MilitaristAgent,
+    ScientistAgent,
+    CivicAgent,
+    EconomistAgent,
+    BuilderAgent,
+    HeuristicAgent,
+    DiscardAgent,
+    lambda: RandomAgent(random.Random(3)),
+]
 
 SETUPS = [
     PlayerSetup('Alice', 'The Pyramids of Giza', 'A'),
@@ -103,3 +127,36 @@ def test_match_runs_and_is_reproducible():
     g2, r2 = run()
     assert r1.to_json() == r2.to_json()
     assert [g1.score(i).total for i in range(3)] == [g2.score(i).total for i in range(3)]
+
+
+@pytest.mark.parametrize('make', AGENT_FACTORIES)
+def test_every_agent_returns_a_legal_action(make):
+    _game, obs = _fresh_observation()
+    assert make().decide(obs) in obs.legal_actions
+
+
+def test_next_wonder_stage_exposed():
+    _game, obs = _fresh_observation()
+    assert obs.next_wonder_stage is not None
+    assert obs.next_wonder_stage.index == 1
+    assert obs.next_wonder_stage.effects  # Giza stage 1 grants 3 VP
+
+
+def test_heuristic_prefers_a_high_value_build():
+    content = load_content('base')
+    game = Game([Player(s.name, content.wonder(s.wonder, s.side)) for s in SETUPS])
+    game.age = 1
+    game.phase = game.phase.AGE_I
+    # Giza produces Stone, so Baths (1 stone -> 3 VP) is free to build here.
+    hand = [content.card('Baths'), content.card('Lumber Yard')]
+    obs = build_observation(game, 0, hand)
+    action = HeuristicAgent().decide(obs)
+    assert action.kind is ActionKind.BUILD and action.card.name == 'Baths'
+
+
+def test_diverse_agents_play_a_full_match():
+    content = load_content('base')
+    agents = [HeuristicAgent(), MilitaristAgent(), ScientistAgent()]
+    game, _record = play_match(content, SETUPS, agents, rng=random.Random(1))
+    assert game.phase.value == 'finished'
+    assert all(p.coins >= 0 for p in game.players)

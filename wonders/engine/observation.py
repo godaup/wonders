@@ -43,6 +43,11 @@ def effect_summary(effect, ctx: 'Context') -> Dict[str, object]:
     vp = effect.victory_points(ctx)
     if vp:
         out['victory_points'] = vp
+    coins = effect.coins_on_build(ctx)
+    if coins:
+        out['coins'] = coins
+    if effect.trade_rules():
+        out['trade'] = True
     return out
 
 
@@ -105,6 +110,19 @@ class MoveEvent:
 
 
 @dataclass
+class WonderStageView:
+    """The player's next unbuilt wonder stage (what a WONDER action would gain)."""
+
+    index: int  # 1-based stage number
+    cost: Dict[str, object]
+    effects: List[Dict[str, object]]
+    affordable: bool
+
+    def to_dict(self) -> Dict[str, object]:
+        return self.__dict__.copy()
+
+
+@dataclass
 class Observation:
     """Full per-seat environment state at a decision point."""
 
@@ -122,6 +140,7 @@ class Observation:
     table: List[CityView]  # every city (public), seat order
     history: List[MoveEvent]
     discard_count: int = 0
+    next_wonder_stage: Optional[WonderStageView] = None
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -139,6 +158,7 @@ class Observation:
             'table': [c.to_dict() for c in self.table],
             'history': [m.to_dict() for m in self.history],
             'discard_count': self.discard_count,
+            'next_wonder_stage': self.next_wonder_stage.to_dict() if self.next_wonder_stage else None,
         }
 
 
@@ -204,6 +224,16 @@ def build_observation(
     """
     table = [_city_view(game, i) for i in range(game.n)]
     stage_affordable = game._stage_payment(seat) is not None
+    stage = game.players[seat].next_stage
+    next_stage_view = None
+    if stage is not None:
+        ctx = game.context(seat)
+        next_stage_view = WonderStageView(
+            index=game.players[seat].wonder_stages_built + 1,
+            cost=_cost_dict(stage),
+            effects=[effect_summary(e, ctx) for e in stage.effects],
+            affordable=stage_affordable,
+        )
     return Observation(
         seat=seat,
         age=game.age,
@@ -219,4 +249,5 @@ def build_observation(
         table=table,
         history=_filter_history(history, seat),
         discard_count=len(game.discard_pile),
+        next_wonder_stage=next_stage_view,
     )

@@ -82,11 +82,16 @@ scoring categories). It is split into three packages under `wonders/`:
   `record.py` (`GameRecord`: a chess-PGN-style replayable notation — setup + ordered
   decks + every decision; `replay()` re-simulates deterministically without any RNG).
 - **`wonders/agents/`** — the agent layer over the engine. `base.Agent` is the shared
-  `decide(obs) -> Action` interface; `baselines.py` has `RandomAgent`/`GreedyAgent`;
-  `encoders.py` maps an `Observation` to a representation (`DictEncoder` structured,
-  `FlatEncoder` fixed-length vector with optional history) so representations can be
-  swapped without touching agents or the engine; `match.play_match` runs agents and
-  returns `(Game, GameRecord)`.
+  `decide(obs) -> Action` interface. `baselines.py` has `RandomAgent`, `GreedyAgent`,
+  `DiscardAgent`, and colour-focused `ArchetypeAgent`s (`MilitaristAgent`,
+  `ScientistAgent`, `CivicAgent`, `EconomistAgent`, `BuilderAgent`) — cheap, diverse
+  opponents for self-play. `heuristic.HeuristicAgent` is the stronger baseline: a
+  tunable value function over the Observation (VP, *marginal* science-set gain,
+  Age-scaled military, economy, chaining tempo, wonder progression) that builds-first
+  and is competitive with / beats greedy. All read only the `Observation`, so they
+  respect partial observability. `encoders.py` maps an `Observation` to a
+  representation (`DictEncoder` structured, `FlatEncoder` fixed-length vector with
+  optional history); `match.play_match` runs agents and returns `(Game, GameRecord)`.
 
 Design rules to preserve when extending:
 - **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;
