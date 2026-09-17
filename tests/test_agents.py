@@ -17,6 +17,7 @@ from wonders.agents.baselines import (
 from wonders.agents.encoders import DictEncoder, FlatEncoder
 from wonders.agents.heuristic import HeuristicAgent
 from wonders.agents.match import play_match
+from wonders.agents.strategies import BalancedAgent, BlockerAgent, OpportunistAgent, TableAgent
 from wonders.cards.content import build_age_deck, deal_hands, load_content
 from wonders.engine.actions import ActionKind
 from wonders.engine.game import Game
@@ -33,6 +34,10 @@ AGENT_FACTORIES = [
     BuilderAgent,
     HeuristicAgent,
     DiscardAgent,
+    OpportunistAgent,
+    BlockerAgent,
+    TableAgent,
+    BalancedAgent,
     lambda: RandomAgent(random.Random(3)),
 ]
 
@@ -160,3 +165,48 @@ def test_diverse_agents_play_a_full_match():
     game, _record = play_match(content, SETUPS, agents, rng=random.Random(1))
     assert game.phase.value == 'finished'
     assert all(p.coins >= 0 for p in game.players)
+
+
+def _obs_with(hand_names, own_cards=(), seat_wood=False):
+    content = load_content('base')
+    game = Game([Player(s.name, content.wonder(s.wonder, s.side)) for s in SETUPS])
+    game.age = 1
+    game.phase = game.phase.AGE_I
+    if seat_wood:
+        game.players[0].add_card(content.card('Lumber Yard'))  # so red/1-wood cards build
+    for name in own_cards:
+        game.players[0].add_card(content.card(name))
+    hand = [content.card(n) for n in hand_names]
+    return content, game, build_observation(game, 0, hand)
+
+
+def test_balanced_agent_fills_the_scarcest_colour():
+    # Own city skews blue; between a buildable red and blue card, pick the red.
+    _c, _g, obs = _obs_with(['Stockade', 'Pawnshop'], own_cards=['Altar', 'Theater'], seat_wood=True)
+    action = BalancedAgent().decide(obs)
+    assert action.kind is ActionKind.BUILD and action.card.name == 'Stockade'
+
+
+def test_table_agent_follows_its_value_table():
+    _c, _g, obs = _obs_with(['Theater', 'Pawnshop'])  # both blue and free
+    agent = TableAgent(values={'Pawnshop': 10.0, 'Theater': 1.0})
+    assert agent.decide(obs).card.name == 'Pawnshop'
+
+
+def test_blocker_targets_the_neighbours_most_wanted_card():
+    # Left neighbour (target in Age I) is science-focused; blocker goes for the science card.
+    _c, game, _obs = _obs_with(['Workshop', 'Altar'])
+    game.players[1].add_card(load_content('base').card('Scriptorium'))  # left neighbour: science
+    obs = build_observation(game, 0, [load_content('base').card(n) for n in ('Workshop', 'Altar')])
+    action = BlockerAgent().decide(obs)
+    assert action.card.name == 'Workshop'  # taken or trashed, but not left for them
+
+
+def test_opportunist_switches_focus_over_turns():
+    agent = OpportunistAgent(random.Random(0), switch_every=1)
+    _game, obs = _fresh_observation()
+    focuses = []
+    for _ in range(4):
+        agent.decide(obs)
+        focuses.append(agent._focus)
+    assert len(set(focuses)) > 1

@@ -88,8 +88,12 @@ scoring categories). It is split into three packages under `wonders/`:
   opponents for self-play. `heuristic.HeuristicAgent` is the stronger baseline: a
   tunable value function over the Observation (VP, *marginal* science-set gain,
   Age-scaled military, economy, chaining tempo, wonder progression) that builds-first
-  and is competitive with / beats greedy. All read only the `Observation`, so they
-  respect partial observability. `encoders.py` maps an `Observation` to a
+  and is competitive with / beats greedy. `strategies.py` has characterful policies:
+  `OpportunistAgent` (switches colour focus every few turns), `BlockerAgent`
+  (denies the downstream neighbour their most-wanted card — Ages I/III pass left,
+  Age II right), `TableAgent` (best affordable by a fixed value lookup table), and
+  `BalancedAgent` (fills the scarcest colour). All read only the `Observation`, so
+  they respect partial observability. `encoders.py` maps an `Observation` to a
   representation (`DictEncoder` structured, `FlatEncoder` fixed-length vector with
   optional history); `match.play_match` runs agents and returns `(Game, GameRecord)`.
 
