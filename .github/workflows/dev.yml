@@ -1,10 +1,11 @@
-# This is a basic workflow to help you get started with Actions
+# Main CI: run the test suite across the supported Python/OS matrix, plus
+# format/lint/build sanity checks on a single reference environment.
 
 name: dev workflow
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ master, main ]
   pull_request:
@@ -15,18 +16,15 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "test"
   test:
-    # The type of runner that the job will run on
     strategy:
+      fail-fast: false
       matrix:
         python-versions: ['3.10', '3.11', '3.12', '3.13']
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -41,10 +39,45 @@ jobs:
         run:
           tox
 
-      - name: list files
-        run: ls -l .
-
-      - uses: codecov/codecov-action@v4
+      - name: upload coverage report
+        if: matrix.os == 'ubuntu-latest' && matrix.python-versions == '3.12'
+        uses: actions/upload-artifact@v4
         with:
-          fail_ci_if_error: true
-          files: coverage.xml
+          name: coverage-xml
+          path: coverage.xml
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+
+      - name: check formatting and lint with tox
+        run:
+          tox -e format-check,lint
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+
+      - name: build package and docs with tox
+        run:
+          tox -e build

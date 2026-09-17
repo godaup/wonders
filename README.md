@@ -4,7 +4,6 @@
 [![pypi](https://img.shields.io/pypi/v/wonders.svg)](https://pypi.org/project/wonders/)
 [![python](https://img.shields.io/pypi/pyversions/wonders.svg)](https://pypi.org/project/wonders/)
 [![Build Status](https://github.com/Stabmixxer/wonders/actions/workflows/dev.yml/badge.svg)](https://github.com/Stabmixxer/wonders/actions/workflows/dev.yml)
-[![codecov](https://codecov.io/gh/Stabmixxer/wonders/branch/main/graphs/badge.svg)](https://codecov.io/github/Stabmixxer/wonders)
 
 
 
