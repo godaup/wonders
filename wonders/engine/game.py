@@ -79,6 +79,7 @@ class Game:
         self.phase = Phase.SETUP
         self.age = 0
         self.discard_pile: List[Card] = []
+        self._pending: List = []  # cross-player build effects queued until end of turn
 
     # -- neighbours --------------------------------------------------------
     def left_of(self, i: int) -> Player:
@@ -142,6 +143,16 @@ class Game:
 
     # -- actions -----------------------------------------------------------
     def apply(self, i: int, action: Action) -> None:
+        """Apply one action and immediately resolve its cross-player effects.
+
+        For a whole simultaneous turn use ``_dispatch`` per seat then
+        ``_flush_pending`` once, so end-of-turn effects (Cities plunder/grant/debt on
+        neighbours) do not change a later seat's affordability mid-turn.
+        """
+        self._dispatch(i, action)
+        self._flush_pending()
+
+    def _dispatch(self, i: int, action: Action) -> None:
         if action.kind is ActionKind.BUILD:
             self._do_build(i, action.card)
         elif action.kind is ActionKind.WONDER:
@@ -150,6 +161,12 @@ class Game:
             self._do_discard(i, action.card)
         else:  # pragma: no cover - exhaustive
             raise IllegalAction(f'unknown action {action.kind}')
+
+    def _flush_pending(self) -> None:
+        """Resolve queued cross-player build effects (end of turn: gains, then losses)."""
+        pending, self._pending = self._pending, []
+        for ctx, effect in pending:
+            effect.on_build(ctx)
 
     def _settle(self, i: int, coins_to_bank: int, pay: Payment) -> None:
         player = self.players[i]
@@ -167,8 +184,8 @@ class Game:
         player.add_card(card)
         ctx = self.context(i)
         for effect in card.effects:
-            player.coins += effect.coins_on_build(ctx)
-            effect.on_build(ctx)
+            player.coins += effect.coins_on_build(ctx)  # own coins: immediate
+            self._pending.append((ctx, effect))  # cross-player: deferred to end of turn
 
     def _do_wonder(self, i: int, card: Card) -> None:
         result = self._stage_payment(i)
@@ -182,7 +199,7 @@ class Game:
         ctx = self.context(i)
         for effect in stage.effects:
             player.coins += effect.coins_on_build(ctx)
-            effect.on_build(ctx)
+            self._pending.append((ctx, effect))
 
     def _do_discard(self, i: int, card: Card) -> None:
         self.players[i].coins += DISCARD_COINS
@@ -310,7 +327,8 @@ class Game:
                 on_turn(age, turn, actions)
             for i, action in enumerate(actions):
                 hands[i].remove(action.card)
-                self.apply(i, action)
+                self._dispatch(i, action)
+            self._flush_pending()  # cross-player effects resolve after all builds this turn
             hands = self._pass(hands, pass_left)
         for hand in hands:  # final card of each hand is discarded
             self.discard_pile.extend(hand)

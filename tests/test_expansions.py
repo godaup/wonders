@@ -130,3 +130,28 @@ def test_combined_expansion_game_runs_and_replays():
     replay = GameRecord.from_json(record.to_json()).replay(content)
     assert [replay.score(i).total for i in range(3)] == [game.score(i).total for i in range(3)]
     assert record.expansions == expansions
+
+
+# -- leaders draft phase --------------------------------------------------
+def test_leaders_are_drafted_recruited_and_replayed():
+    content = load_content('base', 'leaders')
+    agents = [GreedyAgent(), RandomAgent(random.Random(1)), GreedyAgent()]
+    game, record = play_match(content, SETUPS, agents, rng=random.Random(0), expansions=('base', 'leaders'))
+    # each seat drafted 4 leaders and recruited one per Age (3 recruits)
+    assert all(len(v) == 4 for v in record.leader_hands.values())
+    assert sorted(record.recruits) == [1, 2, 3]
+    for p in game.players:
+        recruited = [c for c in p.cards if c.color is Color.WHITE]
+        assert 0 < len(recruited) <= 3  # up to one recruit per Age
+    replay = GameRecord.from_json(record.to_json()).replay(content)
+    assert [replay.score(i).total for i in range(3)] == [game.score(i).total for i in range(3)]
+
+
+def test_cross_player_effects_resolve_after_all_builds_in_a_turn():
+    g = _game()
+    g.players[1].coins = 2
+    # _dispatch does not resolve the cross-player effect yet...
+    g._dispatch(0, Action.build(Card('Raid', Color.BLACK, effects=(Plunder(5, 'neighbours'),))))
+    assert g.players[1].coins == 2 and g.players[1].debt == 0
+    g._flush_pending()  # ...only the end-of-turn flush does
+    assert g.players[1].coins == 0 and g.players[1].debt == 3
