@@ -36,6 +36,8 @@ from wonders.agents.strategies import BalancedAgent, BlockerAgent, OpportunistAg
 from wonders.cards.content import Content, load_content
 from wonders.engine.record import PlayerSetup
 
+MIN_PLAYERS, MAX_PLAYERS = 3, 7  # the base deck has cards for 3-7 players
+
 CATEGORIES = ('military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science')
 
 
@@ -198,8 +200,8 @@ def run_bench(
     ``processes > 1`` games run in a multiprocessing pool (results are identical).
     """
     specs = tuple(AGENTS[s] if isinstance(s, str) else s for s in lineup)
-    if len(specs) < 2:
-        raise ValueError('need at least 2 seats')
+    if not MIN_PLAYERS <= len(specs) <= MAX_PLAYERS:
+        raise ValueError(f'need {MIN_PLAYERS}-{MAX_PLAYERS} seats, got {len(specs)}')
     jobs = [(g, seed, specs, tuple(expansions), sides) for g in range(n_games)]
     if processes > 1:
         with mp.get_context(context).Pool(processes) as pool:

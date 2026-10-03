@@ -32,7 +32,7 @@ def test_bench_parallel_matches_serial():
 
 def test_custom_agent_spec():
     spec = AgentSpec.of('timid', HeuristicAgent, weights={'military_gain': 0.0})
-    result = run_bench([spec, AGENTS['greedy']], n_games=4)
+    result = run_bench([spec, AGENTS['greedy'], 'random'], n_games=4)
     assert result.stats['timid'].games == 4
 
 
@@ -42,6 +42,6 @@ def test_wilson_interval():
     assert wilson_interval(0, 10)[0] == 0.0 and wilson_interval(0, 0) == (0.0, 1.0)
 
 
-def test_bench_rejects_single_seat():
+def test_bench_rejects_unsupported_player_counts():
     with pytest.raises(ValueError):
-        run_bench(['greedy'], n_games=1)
+        run_bench(['greedy', 'random'], n_games=1)  # the base deck needs 3+ players

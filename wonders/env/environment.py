@@ -71,6 +71,8 @@ class WondersEnv:
         self.ruleset = Ruleset.of(*expansions)
         if self.ruleset.uses('leaders'):
             raise NotImplementedError('WondersEnv does not support the Leaders draft/recruitment yet')
+        if not 3 <= n_players <= 7:
+            raise ValueError(f'the base deck supports 3-7 players, got {n_players}')
         if reward not in REWARD_MODES:
             raise ValueError(f'reward must be one of {REWARD_MODES}, got {reward!r}')
         if sides not in ('A', 'B', 'random'):

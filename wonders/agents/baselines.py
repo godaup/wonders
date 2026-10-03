@@ -118,21 +118,29 @@ class ArchetypeAgent(Agent):
 
 
 class MilitaristAgent(ArchetypeAgent):
+    """Builds red (military) cards first."""
+
     def __init__(self) -> None:
         super().__init__('militarist', {'red'})
 
 
 class ScientistAgent(ArchetypeAgent):
+    """Builds green (science) cards first."""
+
     def __init__(self) -> None:
         super().__init__('scientist', {'green'})
 
 
 class CivicAgent(ArchetypeAgent):
+    """Builds blue (civilian victory-point) cards first."""
+
     def __init__(self) -> None:
         super().__init__('civic', {'blue'})
 
 
 class EconomistAgent(ArchetypeAgent):
+    """Builds yellow, brown and grey (economy) cards first."""
+
     def __init__(self) -> None:
         super().__init__('economist', {'yellow', 'brown', 'grey'})
 
