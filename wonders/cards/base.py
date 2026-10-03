@@ -17,7 +17,21 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     from wonders.effects.base import Effect
 
 
-class Color(enum.Enum):
+class IdentityEnum(enum.Enum):
+    """An Enum hashed by identity.
+
+    Enum members are singletons compared by identity, so ``object.__hash__`` is a
+    valid hash — and it is C-level, unlike ``Enum.__hash__`` (a Python function
+    hashing the member name). These enums are hashed millions of times per batch of
+    games (resource Counters/frozensets in the payment solver), so this matters.
+    Hash values never leak into results: nothing iterates sets of them in a way that
+    affects play.
+    """
+
+    __hash__ = object.__hash__
+
+
+class Color(IdentityEnum):
     """Card categories. WHITE/BLACK are reserved for the Leaders/Cities expansions."""
 
     BROWN = 'brown'  # raw materials
@@ -31,7 +45,7 @@ class Color(enum.Enum):
     BLACK = 'black'  # Cities expansion
 
 
-class Ressource(enum.Enum):
+class Ressource(IdentityEnum):
     """Tradeable resources.
 
     Spelling kept as ``Ressource`` to match the original scaffold. ``GOLD`` models
@@ -61,7 +75,7 @@ RAW_MATERIALS = frozenset({Ressource.WOOD, Ressource.STONE, Ressource.ORE, Resso
 MANUFACTURED_GOODS = frozenset({Ressource.GLASS, Ressource.LINEN, Ressource.PAPER})
 
 
-class ScienceSymbol(enum.Enum):
+class ScienceSymbol(IdentityEnum):
     TABLET = 'tablet'
     GEAR = 'gear'
     COMPASS = 'compass'

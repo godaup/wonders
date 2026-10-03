@@ -85,6 +85,11 @@ class Game:
         self.decision = DecisionKind.PLAY  # what the current decision point asks for
         self.discard_pile: List[Card] = []
         self._pending: List = []  # cross-player build effects queued until end of turn
+        # Memoized payments. A result depends only on the seat's and its neighbours'
+        # built structures (Player.version) and the seat's coins, which form the key,
+        # so entries never go stale — even if callers mutate players directly.
+        self._payments: Dict[tuple, tuple] = {}
+        self.tick = 0  # bumped on every engine-driven state change (see ObservationBuilder)
 
     # -- neighbours --------------------------------------------------------
     def left_of(self, i: int) -> Player:
@@ -114,11 +119,24 @@ class Game:
     def can_build_card(self, i: int, card: Card) -> bool:
         return self._card_payment(i, card) is not None
 
+    def _state_key(self, i: int) -> tuple:
+        player = self.players[i]
+        return (i, player.version, self.left_of(i).version, self.right_of(i).version, player.coins)
+
     def _card_payment(self, i: int, card: Card):
         """Return (coins_to_bank, Payment) if buildable, else ``None``.
 
         Handles duplicates (illegal) and free chain builds.
         """
+        key = (id(card),) + self._state_key(i)
+        hit = self._payments.get(key)
+        if hit is not None and hit[0] is card:  # holding the card keeps its id from being reused
+            return hit[1]
+        result = self._compute_card_payment(i, card)
+        self._payments[key] = (card, result)
+        return result
+
+    def _compute_card_payment(self, i: int, card: Card):
         player = self.players[i]
         if player.has(card.name):
             return None  # cannot own two copies of the same structure
@@ -135,6 +153,14 @@ class Game:
         return (card.cost.coins, pay)
 
     def _stage_payment(self, i: int):
+        key = ('stage',) + self._state_key(i)
+        hit = self._payments.get(key)
+        if hit is None:
+            hit = (None, self._compute_stage_payment(i))
+            self._payments[key] = hit
+        return hit[1]
+
+    def _compute_stage_payment(self, i: int):
         player = self.players[i]
         stage = player.next_stage
         if stage is None:
@@ -174,6 +200,7 @@ class Game:
         pending, self._pending = self._pending, []
         for ctx, effect in pending:
             effect.on_build(ctx)
+        self.tick += 1
 
     def _settle(self, i: int, coins_to_bank: int, pay: Payment) -> None:
         player = self.players[i]
@@ -289,6 +316,7 @@ class Game:
     # -- military ----------------------------------------------------------
     def resolve_conflict(self, age: int) -> None:
         self.phase = Phase.CONFLICT
+        self.tick += 1
         value = CONFLICT_VALUE[age]
         shields = [p.shields() for p in self.players]
         # Cities diplomacy: a player holding a diplomacy token sits this Age out and
@@ -419,6 +447,7 @@ class Game:
 
     def _ask(self, kind: DecisionKind, options: Dict[int, List[Card]]) -> DecisionPoint:
         self.decision = kind
+        self.tick += 1
         return DecisionPoint(self.age, self.turn, kind, options)
 
     def _resolve(self, actions: Dict[int, Action], hands: Optional[List[List[Card]]] = None) -> None:

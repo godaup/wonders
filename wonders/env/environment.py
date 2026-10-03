@@ -28,7 +28,7 @@ from wonders.agents.encoders import CardEncoder, Encoder
 from wonders.cards.content import Content, build_age_deck, deal_hands, load_content
 from wonders.engine.actions import Action, DecisionKind, DecisionPoint
 from wonders.engine.game import Game
-from wonders.engine.observation import Observation, build_observation
+from wonders.engine.observation import Observation, ObservationBuilder
 from wonders.engine.phase import Phase
 from wonders.engine.player import Player
 from wonders.engine.record import GameRecord, PlayerSetup, RecordBuilder
@@ -90,7 +90,7 @@ class WondersEnv:
         self.game: Optional[Game] = None
         self._point: Optional[DecisionPoint] = None
         self._steps: Optional[Generator[DecisionPoint, Dict[int, Action], None]] = None
-        self._history: List[Tuple[int, int, List]] = []
+        self._observations = ObservationBuilder()
         self._builder: Optional[RecordBuilder] = None
         self._last_margin: List[float] = []
         self._obs_cache: Dict[int, Observation] = {}  # raw observations at the current decision
@@ -112,7 +112,7 @@ class WondersEnv:
         players = [Player(s.name, self.content.wonder(s.wonder, s.side), coins) for s in setups]
         self.game = Game(players)
         self._builder = RecordBuilder(setups, self.expansions)
-        self._history = []
+        self._observations = ObservationBuilder()
         self._last_margin = [0.0] * self.n_players
         self.agents = list(self.possible_agents)
         self._steps = self._run(rng)
@@ -153,9 +153,7 @@ class WondersEnv:
         if self._point is None or seat not in self._point.options:
             raise ValueError(f'seat {seat} is not acting')
         if seat not in self._obs_cache:
-            self._obs_cache[seat] = build_observation(
-                self._require_game(), seat, self._point.options[seat], self._history
-            )
+            self._obs_cache[seat] = self._observations.build(self._require_game(), seat, self._point.options[seat])
         return self._obs_cache[seat]
 
     def record(self) -> GameRecord:
@@ -199,11 +197,11 @@ class WondersEnv:
                 if point.kind is DecisionKind.PLAY:
                     ordered = [actions[i] for i in range(game.n)]
                     builder.add_turn(age, ordered)
-                    self._history.append((age, point.turn, [(a.kind, a.card.name) for a in ordered]))
+                    self._observations.record(age, point.turn, [(a.kind, a.card.name) for a in ordered])
                 else:
                     builder.add_extra(point, actions)
                     moves = [(actions[i].kind, actions[i].card.name) if i in actions else None for i in range(game.n)]
-                    self._history.append((age, point.turn, moves))
+                    self._observations.record(age, point.turn, moves)
                 try:
                     point = steps.send(actions)
                 except StopIteration:
