@@ -38,7 +38,7 @@ from wonders.engine.record import PlayerSetup
 
 MIN_PLAYERS, MAX_PLAYERS = 3, 7  # the base deck has cards for 3-7 players
 
-CATEGORIES = ('military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science')
+CATEGORIES = ('military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science', 'leaders', 'cities')
 
 
 @dataclass(frozen=True)

@@ -84,7 +84,7 @@ class FlatEncoder(Encoder):
 
 
 DECISIONS = ('play', 'last_card', 'discard_build')
-LEADERS_DECISIONS = DECISIONS + ('draft', 'recruit')  # with the Leaders expansion
+LEADERS_DECISIONS = DECISIONS + ('draft', 'recruit', 'leader_build', 'copy_leader')  # with Leaders
 
 
 class CardEncoder(Encoder):

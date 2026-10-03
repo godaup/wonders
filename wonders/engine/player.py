@@ -38,6 +38,9 @@ class Player:
         self.leaders_hand: List[Card] = []  # Leaders: drafted leaders not yet recruited
         self.free_builds_used = 0  # free builds from hand spent this Age (reset each Age)
         self.pending_discard_builds = 0  # free builds from the discard pile still owed
+        self.pending_extra_recruits = 0  # Rome B: extra leader recruits still owed
+        self.pending_leader_copies = 0  # Courtesans' Guild: neighbour leaders still to copy
+        self.copied_leaders: List[Card] = []  # Courtesans' Guild: copied (not owned) leaders
 
     # -- construction ------------------------------------------------------
     def has(self, name: str) -> bool:
@@ -66,17 +69,26 @@ class Player:
         return None
 
     # -- effect aggregation ------------------------------------------------
+    def add_copied_leader(self, card: Card) -> None:
+        """Courtesans' Guild: gain a neighbour leader's powers without owning the card."""
+        self.copied_leaders.append(card)
+        self._cache.clear()
+        self.version += 1
+
     def iter_effects(self) -> Iterator[Effect]:
+        yield from self.wonder.effects
         for card in self.cards:
             yield from card.effects
         for stage in self.stages_built:
             yield from stage.effects
+        for card in self.copied_leaders:
+            yield from card.effects
 
     def production_slots(self) -> List[frozenset]:
         """Every resource this city can produce, one choice-set per slot (do not mutate)."""
         slots = self._cache.get('slots')
         if slots is None:
-            slots = [self.wonder.starting_production]
+            slots = [self.wonder.starting_production] if self.wonder.starting_resource is not None else []
             for effect in self.iter_effects():
                 slots.extend(effect.production())
             self._cache['slots'] = slots
@@ -145,6 +157,13 @@ class Player:
 
     def redirects_defeats(self) -> bool:
         return any(effect.redirects_defeats() for effect in self.iter_effects())
+
+    def coin_discount(self, card: Card) -> int:
+        return sum(effect.coin_discount(card) for effect in self.iter_effects())
+
+    def neighbour_coin_discount(self, card: Card) -> int:
+        """Coins this city knocks off its *neighbours'* cost for ``card`` (Rome B)."""
+        return sum(effect.neighbour_coin_discount(card) for effect in self.iter_effects())
 
     def build_income(self, event: BuildEvent) -> int:
         return sum(effect.build_income(event) for effect in self.iter_effects())

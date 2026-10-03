@@ -55,12 +55,12 @@ def test_justinian_and_plato_score_colour_sets():
     for i, color in enumerate((Color.BLUE, Color.RED, Color.GREEN, Color.BLUE)):
         g.players[0].add_card(card(f'c{i}', color))
     own(g, 0, 'Justinian')
-    assert g.score(0).commercial == 3  # one blue+red+green set (leaders bucket with commercial)
+    assert g.score(0).leaders == 3  # one blue+red+green set, scored in the leaders column
     own(g, 0, 'Plato')
-    before = g.score(0).commercial
+    before = g.score(0).leaders
     for i, color in enumerate((Color.BROWN, Color.GREY, Color.YELLOW, Color.PURPLE)):
         g.players[0].add_card(card(f'd{i}', color))
-    assert g.score(0).commercial - before == 7  # one full set of seven colours (Justinian unchanged)
+    assert g.score(0).leaders - before == 7  # one full set of seven colours (Justinian unchanged)
 
 
 def test_science_copy_takes_a_neighbour_symbol():

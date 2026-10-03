@@ -61,6 +61,7 @@ class GameRecord:
     # Leaders expansion (empty for base games): the 4 leaders each seat drafted, and
     # the per-Age recruitment play (per-seat [code, leader_name] or None).
     leader_hands: Dict[int, List[str]] = field(default_factory=dict)
+    leader_box: List[str] = field(default_factory=list)  # undealt leaders, drawn from the end (Rome B)
     recruits: Dict[int, List[Optional[List[str]]]] = field(default_factory=dict)
     extras: Extras = field(default_factory=dict)
 
@@ -75,6 +76,7 @@ class GameRecord:
         }
         if self.leader_hands:
             out['leader_hands'] = {str(i): names for i, names in self.leader_hands.items()}
+            out['leader_box'] = list(self.leader_box)
             out['recruits'] = {str(a): plays for a, plays in self.recruits.items()}
         if any(self.extras.values()):
             out['extras'] = {str(a): entries for a, entries in self.extras.items()}
@@ -89,7 +91,15 @@ class GameRecord:
         recruits = {int(a): plays for a, plays in d.get('recruits', {}).items()}
         extras = {int(a): entries for a, entries in d.get('extras', {}).items()}
         return cls(
-            players, tuple(d['expansions']), age_decks, moves, d.get('version', '1'), leader_hands, recruits, extras
+            players,
+            tuple(d['expansions']),
+            age_decks,
+            moves,
+            version=d.get('version', '1'),
+            leader_hands=leader_hands,
+            leader_box=list(d.get('leader_box', [])),
+            recruits=recruits,
+            extras=extras,
         )
 
     def to_json(self, indent: Optional[int] = None) -> str:
@@ -123,12 +133,14 @@ class GameRecord:
         game = Game(players)
         for seat, names in self.leader_hands.items():
             players[seat].leaders_hand = [content.card(n) for n in names]
+        game.leader_box = [content.card(n) for n in self.leader_box]
         for age in (1, 2, 3):
-            if self.recruits.get(age):
-                drive(game.recruit_steps(age), _recorded_recruits(self.recruits[age]))
+            choose = self._chooser(age)  # one chooser: recruitment extras precede the Age's
+            if self.leader_hands:
+                drive(game.recruit_steps(age), choose)
             deck = [content.card(name) for name in self.age_decks[age]]
             hands = deal_hands(deck, game.n)
-            drive(game.age_steps(age, hands), self._chooser(age))
+            drive(game.age_steps(age, hands), choose)
         game.phase = Phase.FINISHED
         return game
 
@@ -146,6 +158,15 @@ class GameRecord:
             if point.kind is DecisionKind.PLAY:
                 row = self.moves[age][point.turn]
                 return {seat: pick(opts, *row[seat]) for seat, opts in point.options.items()}
+            if point.kind is DecisionKind.RECRUIT:
+                plays = self.recruits.get(age, [])
+                actions = {}
+                for seat, opts in point.options.items():
+                    entry = plays[seat] if seat < len(plays) else None
+                    if entry is None:
+                        raise ReplayError(f'Age {age}: no recorded recruitment for seat {seat}')
+                    actions[seat] = pick(opts, *entry)
+                return actions
             actions = {}
             for seat, opts in point.options.items():
                 entry = next(extras, None)
@@ -157,25 +178,6 @@ class GameRecord:
         return choose
 
 
-def _recorded_recruits(plays: List[Optional[List[str]]]) -> Callable[[DecisionPoint], Dict[int, Action]]:
-    """Answer a recruitment decision point from one Age's recorded plays."""
-
-    def choose(point: DecisionPoint) -> Dict[int, Action]:
-        actions = {}
-        for seat, options in point.options.items():
-            entry = plays[seat] if seat < len(plays) else None
-            if entry is None:
-                raise ReplayError(f'Age {point.age}: no recorded recruitment for seat {seat}')
-            code, name = entry
-            card = next((c for c in options if c.name == name), None)
-            if card is None:
-                raise ReplayError(f'Age {point.age}: recorded leader {name!r} is not in seat {seat}\'s hand')
-            actions[seat] = Action(_KIND[code], card)
-        return actions
-
-    return choose
-
-
 class RecordBuilder:
     """Accumulates decks and moves during a live game into a :class:`GameRecord`."""
 
@@ -185,6 +187,7 @@ class RecordBuilder:
         self.age_decks: Dict[int, List[str]] = {1: [], 2: [], 3: []}
         self.moves: Moves = {1: [], 2: [], 3: []}
         self.leader_hands: Dict[int, List[str]] = {}
+        self.leader_box: List[str] = []
         self.recruits: Dict[int, List[Optional[List[str]]]] = {}
         self.extras: Extras = {1: [], 2: [], 3: []}
 
@@ -199,6 +202,9 @@ class RecordBuilder:
             a = actions[seat]
             self.extras[point.age].append([point.turn, point.kind.value, seat, _CODE[a.kind], a.card.name])
 
+    def set_leader_box(self, box: Sequence[Card]) -> None:
+        self.leader_box = [c.name for c in box]
+
     def set_leader_hands(self, hands: Dict[int, List[Card]]) -> None:
         self.leader_hands = {i: [c.name for c in cards] for i, cards in hands.items()}
 
@@ -212,6 +218,7 @@ class RecordBuilder:
             self.age_decks,
             self.moves,
             leader_hands=self.leader_hands,
+            leader_box=self.leader_box,
             recruits=self.recruits,
             extras=self.extras,
         )
@@ -225,6 +232,7 @@ def play_and_record(
     expansions: Tuple[str, ...] = ('base',),
     on_turn_extra: Optional[Callable[[int, int, Sequence[Optional[Action]]], None]] = None,
     leader_draft: Optional[List[List[Card]]] = None,
+    leader_box: Sequence[Card] = (),
 ) -> Tuple[Game, GameRecord]:
     """Play a fresh game with ``policy`` and capture a :class:`GameRecord`.
 
@@ -235,6 +243,7 @@ def play_and_record(
     ``leader_draft`` (the dealt leader hands, see :func:`~wonders.cards.content.deal_leaders`)
     turns on the Leaders phases: ``policy`` drafts (``game.decision`` is ``DRAFT``) and,
     before each Age, recruits (``RECRUIT``) — the same coroutines the env drives.
+    ``leader_box`` holds the undealt leaders (Rome B draws from it).
     """
     coins = Ruleset.of(*expansions).starting_coins
     players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in setups]
@@ -244,7 +253,14 @@ def play_and_record(
     def choose(point: DecisionPoint) -> Dict[int, Action]:
         return {seat: policy(game, seat, options) for seat, options in point.options.items()}
 
+    def on_extra(point: DecisionPoint, actions: Dict[int, Action]) -> None:
+        builder.add_extra(point, actions)
+        if on_turn_extra is not None:
+            on_turn_extra(point.age, point.turn, [actions.get(i) for i in range(game.n)])
+
     if leader_draft is not None:
+        game.leader_box = list(leader_box)
+        builder.set_leader_box(leader_box)
         drive(game.draft_steps(leader_draft), choose)
         builder.set_leader_hands({i: list(p.leaders_hand) for i, p in enumerate(players)})
     for age in (1, 2, 3):
@@ -252,8 +268,12 @@ def play_and_record(
             recruited: Dict[int, Action] = {}
 
             def recruit(point: DecisionPoint, _recruited=recruited) -> Dict[int, Action]:
-                _recruited.update(choose(point))
-                return _recruited
+                actions = choose(point)
+                if point.kind is DecisionKind.RECRUIT:
+                    _recruited.update(actions)
+                else:  # a power resolved during recruitment (Solomon, Rome B, Courtesans)
+                    on_extra(point, actions)
+                return actions
 
             drive(game.recruit_steps(age), recruit)
             builder.add_recruits(age, [recruited.get(i) for i in range(game.n)])
@@ -265,11 +285,6 @@ def play_and_record(
             _builder.add_turn(a, actions)
             if on_turn_extra is not None:
                 on_turn_extra(a, t, actions)
-
-        def on_extra(point: DecisionPoint, actions: Dict[int, Action], _builder=builder) -> None:
-            _builder.add_extra(point, actions)
-            if on_turn_extra is not None:
-                on_turn_extra(point.age, point.turn, [actions.get(i) for i in range(game.n)])
 
         game.play_age(age, hands, policy, on_turn=on_turn, on_extra=on_extra)
     game.phase = Phase.FINISHED

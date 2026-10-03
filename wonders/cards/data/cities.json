@@ -4,7 +4,196 @@
     "description": "Official Cities (2012): 42 black cards, 14 per Age. Introduces debt, diplomacy, plunder and forced-gift coin swings.",
     "note": "Cities uses no per-card player-count numerals: build_age_deck draws n_players random black cards from each Age (one extra card per player per Age). \"All other players\" is approximated as both neighbours (exact at 3 players). Plunder overflow becomes debt. Per-token/per-stage plunder, copy-science, build-from-discard, and wildcard production are flagged Special (not fully mechanized). The Byzantium/Petra wonders are omitted (stage data not compiled)."
   },
-  "wonders": [],
+  "wonders": [
+    {
+      "name": "The Al-Khazneh of Petra",
+      "expansion": "cities",
+      "side": "A",
+      "starting_resource": "bricks",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 1,
+              "stone": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "coins": 7
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "wood": 1,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Al-Khazneh of Petra",
+      "expansion": "cities",
+      "side": "B",
+      "starting_resource": "bricks",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "ore": 2,
+              "bricks": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "plunder",
+              "amount": 2,
+              "scope": "others"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "coins": 14
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Hagia Sophia of Byzantium",
+      "expansion": "cities",
+      "side": "A",
+      "starting_resource": "stone",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "ore": 1,
+              "bricks": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 2,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "diplomacy",
+              "count": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 2
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "bricks": 2,
+              "glass": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Hagia Sophia of Byzantium",
+      "expansion": "cities",
+      "side": "B",
+      "starting_resource": "stone",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "paper": 1,
+              "glass": 1,
+              "wood": 1,
+              "ore": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "diplomacy",
+              "count": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "linen": 1,
+              "bricks": 1,
+              "ore": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "diplomacy",
+              "count": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "cards": [
     {
       "name": "Smugglers Cache",

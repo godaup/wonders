@@ -473,3 +473,57 @@ class PlunderPer(Effect):
             paid = min(owed, player.coins)
             player.coins -= paid
             player.debt += owed - paid
+
+
+@dataclass
+class CoinDiscount(Effect):
+    """Cards of ``colors`` cost the owner ``amount`` coins less, and neighbours ``neighbours_amount``.
+
+    Rome A recruits leaders free (use :class:`BuildFree`); Rome B: ``CoinDiscount({WHITE}, 2, 1)``.
+    """
+
+    colors: Iterable[Color]
+    amount: int = 0
+    neighbours_amount: int = 0
+
+    def __post_init__(self) -> None:
+        self.colors = frozenset(self.colors)
+
+    def coin_discount(self, card: Card) -> int:
+        return self.amount if card.color in self.colors else 0
+
+    def neighbour_coin_discount(self, card: Card) -> int:
+        return self.neighbours_amount if card.color in self.colors else 0
+
+
+@dataclass
+class LeaderDraw(Effect):
+    """Draw ``count`` leaders from the undealt leader deck into the owner's hand (Rome B)."""
+
+    count: int = 4
+
+    def leader_draws(self) -> int:
+        return self.count
+
+
+@dataclass
+class ExtraRecruit(Effect):
+    """Immediately recruit one more leader from hand, paying its (discounted) cost (Rome B)."""
+
+    count: int = 1
+
+    def extra_recruits(self) -> int:
+        return self.count
+
+
+@dataclass
+class CopyLeader(Effect):
+    """Copy one leader recruited by a neighbour: gain its powers, now and later (Courtesans' Guild).
+
+    The copy is not a leader card of the owner (it doesn't count for the Diplomats' Guild).
+    """
+
+    count: int = 1
+
+    def leader_copies(self) -> int:
+        return self.count

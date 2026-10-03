@@ -18,7 +18,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass, field
 from importlib import resources
-from typing import Callable, Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card, Color, Cost, Ressource, ScienceSymbol
 from wonders.cards.wonder import Wonder, WonderStage
@@ -29,14 +29,18 @@ from wonders.effects.library import (
     BuildFromDiscard,
     BuildIncome,
     CashDefeats,
+    CoinDiscount,
     Coins,
     ColorSets,
     CopyGuild,
+    CopyLeader,
     Debt,
     Diplomacy,
+    ExtraRecruit,
     FreeBuildPerAge,
     GainToken,
     Grant,
+    LeaderDraw,
     Military,
     MultiProduction,
     PlayLastCard,
@@ -130,6 +134,12 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'starting_resource_discount': lambda s: StartingResourceDiscount(s.get('amount', 1)),
     'cash_defeats': lambda s: CashDefeats(s.get('coins_each', 2)),
     'plunder_per': lambda s: PlunderPer(s['what'], s.get('amount', 1), s.get('scope', 'others')),
+    'coin_discount': lambda s: CoinDiscount(
+        [Color(c) for c in s['colors']], s.get('amount', 0), s.get('neighbours_amount', 0)
+    ),
+    'leader_draw': lambda s: LeaderDraw(s.get('count', 4)),
+    'extra_recruit': lambda s: ExtraRecruit(s.get('count', 1)),
+    'copy_leader': lambda s: CopyLeader(s.get('count', 1)),
 }
 
 
@@ -178,11 +188,13 @@ def build_wonder(spec: dict) -> Wonder:
         )
         for stage in spec['stages']
     )
+    start = spec.get('starting_resource')
     return Wonder(
         name=spec['name'],
-        starting_resource=Ressource(spec['starting_resource']),
+        starting_resource=Ressource(start) if start else None,
         stages=stages,
         side=spec.get('side', 'A'),
+        effects=tuple(build_effect(e) for e in spec.get('effects', [])),
     )
 
 
@@ -271,13 +283,17 @@ def build_age_deck(
 LEADERS_PER_PLAYER = 4
 
 
-def deal_leaders(content: 'Content', n_players: int, rng: random.Random) -> List[List[Card]]:
-    """Shuffle the leader deck and deal ``LEADERS_PER_PLAYER`` leaders to each seat (for the draft)."""
+def deal_leaders(content: 'Content', n_players: int, rng: random.Random) -> Tuple[List[List[Card]], List[Card]]:
+    """Shuffle the leaders; deal ``LEADERS_PER_PLAYER`` to each seat for the draft.
+
+    Returns ``(hands, box)``: ``box`` is the undealt rest, drawn from its end (Rome B).
+    """
     deck = list(content.leaders())
     rng.shuffle(deck)
     if len(deck) < LEADERS_PER_PLAYER * n_players:
         raise ValueError(f'not enough leaders for {n_players} players')
-    return [[deck.pop() for _ in range(LEADERS_PER_PLAYER)] for _ in range(n_players)]
+    hands = [[deck.pop() for _ in range(LEADERS_PER_PLAYER)] for _ in range(n_players)]
+    return hands, deck
 
 
 def deal_hands(deck: Sequence[Card], n_players: int) -> List[List[Card]]:

@@ -35,7 +35,7 @@ def play_match(
 
     # Running public history + per-decision shared table, filtered per viewer on demand.
     observations = ObservationBuilder()
-    draft = deal_leaders(content, len(setups), rng) if Ruleset.of(*expansions).uses('leaders') else None
+    draft, box = deal_leaders(content, len(setups), rng) if Ruleset.of(*expansions).uses('leaders') else (None, [])
 
     def policy(game: Game, seat: int, hand) -> Action:
         return agents[seat].act(observations.build(game, seat, hand), hand)
@@ -43,4 +43,4 @@ def play_match(
     def on_turn_extra(age: int, turn: int, actions: Sequence[Optional[Action]]) -> None:
         observations.record(age, turn, [None if a is None else (a.kind, a.card.name) for a in actions])
 
-    return play_and_record(content, setups, policy, rng, expansions, on_turn_extra, leader_draft=draft)
+    return play_and_record(content, setups, policy, rng, expansions, on_turn_extra, leader_draft=draft, leader_box=box)

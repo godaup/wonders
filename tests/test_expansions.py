@@ -117,7 +117,7 @@ def test_tally_scores_per_three_coins():
     g = _game()
     g.players[0].coins = 9
     g.players[0].add_card(Card('Midas', Color.WHITE, effects=(Tally('coins', 'self', vp_each=1),)))
-    assert g.score(0).commercial == 3  # 9 // 3, on top of the treasury's own 3
+    assert g.score(0).leaders == 3  # 9 // 3 in the leaders column, on top of the treasury own 3
 
 
 # -- combined game end to end ---------------------------------------------

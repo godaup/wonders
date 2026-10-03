@@ -30,6 +30,8 @@ BREAKDOWN: List[Tuple[str, str]] = [
     ('commercial', '#d99a1c'),
     ('guilds', '#7a4fb0'),
     ('science', SCIENCE),
+    ('leaders', '#c9c2a8'),
+    ('cities', '#2b2b2b'),
 ]
 CATEGORY_COLORS = [
     ('brown', CARD_FILL[Color.BROWN]),

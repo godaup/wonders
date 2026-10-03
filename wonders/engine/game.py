@@ -68,12 +68,12 @@ class ScoreBreakdown:
     commercial: int = 0
     guilds: int = 0
     science: int = 0
+    leaders: int = 0  # white cards (and leaders copied with the Courtesans' Guild)
+    cities: int = 0  # black cards (the official scorecard adds these to the leaders row)
 
     @property
     def total(self) -> int:
-        return (
-            self.military + self.treasury + self.wonders + self.civilian + self.commercial + self.guilds + self.science
-        )
+        return sum(self.__dict__.values())
 
     def as_dict(self) -> Dict[str, int]:
         d = self.__dict__.copy()
@@ -101,6 +101,7 @@ class Game:
         # built structures (Player.version) and the seat's coins, which form the key,
         # so entries never go stale — even if callers mutate players directly.
         self._payments: Dict[tuple, tuple] = {}
+        self.leader_box: List[Card] = []  # Leaders: undealt leaders, drawn from the end (Rome B)
         self.tick = 0  # bumped on every engine-driven state change (see ObservationBuilder)
 
     # -- neighbours --------------------------------------------------------
@@ -165,9 +166,16 @@ class Game:
         pay = self.payment_for(i, card.cost, waivers=player.resource_discount(card.color.value))
         if pay is None:
             return None
-        if card.cost.coins + pay.total > player.coins:
+        coins = self._coin_cost(i, card)
+        if coins + pay.total > player.coins:
             return None
-        return (card.cost.coins, pay)
+        return (coins, pay)
+
+    def _coin_cost(self, i: int, card: Card) -> int:
+        """The card's coin cost after discounts from the seat and its neighbours (Rome B)."""
+        discount = self.players[i].coin_discount(card)
+        discount += self.left_of(i).neighbour_coin_discount(card) + self.right_of(i).neighbour_coin_discount(card)
+        return max(0, card.cost.coins - discount)
 
     def _chained(self, i: int, card: Card) -> bool:
         """Whether an owned structure unlocks ``card`` for free (chaining)."""
@@ -251,6 +259,11 @@ class Game:
         for effect in effects:
             player.coins += effect.coins_on_build(ctx)  # own coins: immediate
             player.pending_discard_builds += effect.discard_builds()  # resolved at end of turn
+            player.pending_extra_recruits += effect.extra_recruits()  # resolved at end of turn
+            player.pending_leader_copies += effect.leader_copies()  # resolved at end of turn
+            for _ in range(effect.leader_draws()):  # Rome B: draw leaders from the box now
+                if self.leader_box:
+                    player.leaders_hand.append(self.leader_box.pop())
             self._pending.append((ctx, effect))  # cross-player: deferred to end of turn
 
     def _do_wonder(self, i: int, card: Card) -> None:
@@ -299,8 +312,10 @@ class Game:
     def legal_actions(self, i: int, hand: List[Card]) -> List[Action]:
         """Legal actions for seat ``i`` choosing from ``hand`` at the current decision."""
         actions: List[Action] = []
-        if self.decision is DecisionKind.DRAFT:  # keep a leader: "build" stands for "take"
+        if self.decision in (DecisionKind.DRAFT, DecisionKind.COPY_LEADER):  # "build" = take / pick
             return [Action.build(card) for card in hand]
+        if self.decision is DecisionKind.LEADER_BUILD:  # Rome B: only recruiting is allowed
+            return [Action.build(card) for card in hand if self.can_build_card(i, card)]
         if self.decision is DecisionKind.DISCARD_BUILD:
             seen = set()
             for card in hand:
@@ -397,8 +412,14 @@ class Game:
                 b.civilian += vp
             elif card.color is Color.PURPLE:
                 b.guilds += vp
+            elif card.color is Color.WHITE:
+                b.leaders += vp
+            elif card.color is Color.BLACK:
+                b.cities += vp
             else:
                 b.commercial += vp
+        for card in p.copied_leaders:  # Courtesans' Guild copies score as leaders
+            b.leaders += sum(effect.victory_points(ctx) for effect in card.effects)
         return b
 
     def _copy_guilds(self, i: int, symbols: Counter, wilds: int) -> Tuple[int, Counter, int]:
@@ -493,7 +514,7 @@ class Game:
                 for hand in hands:  # remaining leftovers are discarded
                     self.discard_pile.extend(hand)
                     hand.clear()
-            yield from self._discard_builds()
+            yield from self._power_steps()
             hands = self._pass(hands, pass_left)
         self.decision = DecisionKind.PLAY
         self.resolve_conflict(age)
@@ -527,6 +548,7 @@ class Game:
             for i in sorted(actions):
                 self.players[i].leaders_hand.remove(actions[i].card)
             self._resolve(actions)
+            yield from self._power_steps()  # e.g. Solomon / a Rome B stage built with a leader
         self.decision = DecisionKind.PLAY
 
     def _ask(self, kind: DecisionKind, options: Dict[int, List[Card]]) -> DecisionPoint:
@@ -542,16 +564,45 @@ class Game:
             self._dispatch(i, actions[i])
         self._flush_pending()
 
-    def _discard_builds(self) -> AgeSteps:
-        """Let each seat owed a discard-pile build pick its card (Halicarnassus)."""
-        for i in range(self.n):
-            player = self.players[i]
-            while player.pending_discard_builds > 0:
-                options = [c for c in self.discard_pile if not player.has(c.name)]
-                if not options:
-                    player.pending_discard_builds = 0  # nothing to build: the power fizzles
-                    break
-                self._resolve((yield self._ask(DecisionKind.DISCARD_BUILD, {i: options})))
+    def _power_steps(self) -> AgeSteps:
+        """Resolve owed power decisions one seat at a time, until none are left.
+
+        Halicarnassus / Solomon: build a discarded card for free. Courtesans' Guild: copy a
+        neighbour's leader. Rome B: recruit an extra leader. A power with no possible
+        choice fizzles. Resolving one power can grant another (e.g. copying Solomon), so
+        this loops until nothing is owed.
+        """
+        progress = True
+        while progress:
+            progress = False
+            for i in range(self.n):
+                player = self.players[i]
+                while player.pending_discard_builds > 0:
+                    options = [c for c in self.discard_pile if not player.has(c.name)]
+                    if not options:
+                        player.pending_discard_builds = 0  # nothing to build: the power fizzles
+                        break
+                    self._resolve((yield self._ask(DecisionKind.DISCARD_BUILD, {i: options})))
+                    progress = True
+                while player.pending_leader_copies > 0:
+                    player.pending_leader_copies -= 1
+                    options = [
+                        c for nb in (self.left_of(i), self.right_of(i)) for c in nb.cards if c.color is Color.WHITE
+                    ]
+                    if options:
+                        card = (yield self._ask(DecisionKind.COPY_LEADER, {i: options}))[i].card
+                        player.add_copied_leader(card)
+                        self._activate(i, card.effects)
+                        self._flush_pending()
+                        progress = True
+                while player.pending_extra_recruits > 0:
+                    player.pending_extra_recruits -= 1
+                    self.decision = DecisionKind.LEADER_BUILD
+                    if any(self.can_build_card(i, c) for c in player.leaders_hand):
+                        actions = yield self._ask(DecisionKind.LEADER_BUILD, {i: player.leaders_hand})
+                        player.leaders_hand.remove(actions[i].card)
+                        self._resolve(actions)
+                        progress = True
         self.decision = DecisionKind.PLAY
 
     def play_age(

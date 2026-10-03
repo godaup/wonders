@@ -199,14 +199,20 @@ class WondersEnv:
         builder = self._builder
         assert builder is not None
         if self.leaders:  # draft picks are private; only the resulting hands are recorded
-            yield from self._relay(game.draft_steps(deal_leaders(self.content, game.n, rng)))
+            hands, box = deal_leaders(self.content, game.n, rng)
+            game.leader_box = list(box)
+            builder.set_leader_box(box)
+            yield from self._relay(game.draft_steps(hands))
             builder.set_leader_hands({i: list(p.leaders_hand) for i, p in enumerate(game.players)})
         for age in (1, 2, 3):
             if self.leaders:
                 recruited: Dict[int, Action] = {}
 
-                def keep(_point: DecisionPoint, actions: Dict[int, Action], _r=recruited) -> None:
-                    _r.update(actions)
+                def keep(point: DecisionPoint, actions: Dict[int, Action], _r=recruited) -> None:
+                    if point.kind is DecisionKind.RECRUIT:
+                        _r.update(actions)
+                    else:  # a power resolved during recruitment is recorded like other extras
+                        self._record_turn(point, actions)
 
                 yield from self._relay(game.recruit_steps(age), keep)
                 builder.add_recruits(age, [recruited.get(i) for i in range(game.n)])

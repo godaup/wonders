@@ -4,7 +4,132 @@
     "description": "Official Leaders (2011): 35 leaders (white cards recruited for coins). Starting treasury is 6.",
     "note": "Leaders are drafted separately at game start (deal 4, pick-and-pass) and one is recruited per Age; the draft/recruit phase is not yet mechanized, so leaders are content-only here (buildable by paying their coin cost if in hand). Cost discounts, build-from-discard, copy, pay-for-any-good, on-trigger coin income, and set/science bonuses are flagged Special (not scored). The Rome wonder and the 4 Leaders guilds are omitted (board resource costs / guild costs unverified)."
   },
-  "wonders": [],
+  "wonders": [
+    {
+      "name": "The Colosseum of Rome",
+      "expansion": "leaders",
+      "side": "A",
+      "starting_resource": null,
+      "effects": [
+        {
+          "type": "build_free",
+          "colors": [
+            "white"
+          ],
+          "description": "recruit leaders for free"
+        }
+      ],
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "bricks": 1,
+              "wood": 1,
+              "ore": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 4
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "bricks": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Colosseum of Rome",
+      "expansion": "leaders",
+      "side": "B",
+      "starting_resource": null,
+      "effects": [
+        {
+          "type": "coin_discount",
+          "colors": [
+            "white"
+          ],
+          "amount": 2,
+          "neighbours_amount": 1,
+          "description": "leaders cost 2 less here, 1 less for neighbours"
+        }
+      ],
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 1,
+              "bricks": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "coins",
+              "amount": 5
+            },
+            {
+              "type": "leader_draw",
+              "count": 4,
+              "description": "draw 4 leaders from the box"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 1,
+              "bricks": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "extra_recruit",
+              "count": 1,
+              "description": "recruit an extra leader now"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "extra_recruit",
+              "count": 1,
+              "description": "recruit an extra leader now"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "cards": [
     {
       "name": "Sappho",
@@ -588,6 +713,104 @@
           "description": "your defeat tokens are given to the winning neighbour"
         }
       ]
+    },
+    {
+      "name": "Gamers Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "bricks": 1,
+          "wood": 1,
+          "ore": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "coins",
+          "scope": "self",
+          "vp_each": 1,
+          "description": "1 VP per 3 coins"
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Courtesans Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "bricks": 1,
+          "glass": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "copy_leader",
+          "count": 1,
+          "description": "copy a leader recruited by a neighbour"
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Diplomats Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "wood": 1,
+          "glass": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "white"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Architects Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "ore": 3,
+          "bricks": 1,
+          "paper": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "purple"
+          ],
+          "vp_each": 3
+        }
+      ],
+      "guild": true
     }
   ]
 }

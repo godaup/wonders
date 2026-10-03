@@ -35,6 +35,11 @@ Leaders / Cities powers:
     * ``bank_purchases()``      -> resources buyable from the bank per build (Bilkis)
     * ``private_production(p)`` -> own-use production slots, given produced resources ``p``
     * ``trade_reduction(...)``  -> coins off a neighbour purchase (Smugglers Cache)
+    * ``coin_discount(card)``   -> coins off the owner's own card cost (Rome B: leaders)
+    * ``neighbour_coin_discount(card)`` -> coins off the *neighbours'* card cost (Rome B)
+    * ``leader_draws()``        -> leaders drawn from the box when built (Rome B stage 1)
+    * ``extra_recruits()``      -> extra leaders the owner may recruit when built (Rome B)
+    * ``leader_copies()``       -> neighbour leaders copied when built (Courtesans' Guild)
 """
 
 from __future__ import annotations
@@ -179,4 +184,19 @@ class Effect:
         return ()
 
     def trade_reduction(self, player: 'Player', side: str, resource: Ressource) -> int:
+        return 0
+
+    def coin_discount(self, card: 'Card') -> int:
+        return 0
+
+    def neighbour_coin_discount(self, card: 'Card') -> int:
+        return 0
+
+    def leader_draws(self) -> int:
+        return 0
+
+    def extra_recruits(self) -> int:
+        return 0
+
+    def leader_copies(self) -> int:
         return 0
