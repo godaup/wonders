@@ -393,9 +393,7 @@
           },
           "effects": [
             {
-              "type": "special",
-              "power": "play_seventh_card",
-              "description": "Play the last card of each Age instead of discarding it"
+              "type": "play_last_card"
             }
           ]
         },
@@ -442,9 +440,7 @@
           },
           "effects": [
             {
-              "type": "special",
-              "power": "free_build_per_age",
-              "description": "Once per Age, build a card from your hand for free"
+              "type": "free_build"
             }
           ]
         },
@@ -505,9 +501,7 @@
           },
           "effects": [
             {
-              "type": "special",
-              "power": "copy_guild",
-              "description": "At game end, copy one guild built by a neighbor"
+              "type": "copy_guild"
             }
           ]
         }
@@ -540,9 +534,7 @@
           },
           "effects": [
             {
-              "type": "special",
-              "power": "build_from_discard",
-              "description": "Build one card from the discard pile for free"
+              "type": "build_from_discard"
             }
           ]
         },
@@ -579,9 +571,7 @@
               "points": 2
             },
             {
-              "type": "special",
-              "power": "build_from_discard",
-              "description": "Build one card from the discard pile for free"
+              "type": "build_from_discard"
             }
           ]
         },
@@ -597,9 +587,7 @@
               "points": 1
             },
             {
-              "type": "special",
-              "power": "build_from_discard",
-              "description": "Build one card from the discard pile for free"
+              "type": "build_from_discard"
             }
           ]
         },
@@ -613,9 +601,7 @@
           },
           "effects": [
             {
-              "type": "special",
-              "power": "build_from_discard",
-              "description": "Build one card from the discard pile for free"
+              "type": "build_from_discard"
             }
           ]
         }

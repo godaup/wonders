@@ -102,7 +102,7 @@ class MoveEvent:
     age: int
     turn: int
     seat: int
-    kind: str  # 'build' | 'wonder' | 'discard'
+    kind: str  # 'build' | 'wonder' | 'discard' | 'free'
     card: Optional[str]  # None when hidden (opponent wonder/discard)
 
     def to_dict(self) -> Dict[str, object]:
@@ -141,6 +141,8 @@ class Observation:
     history: List[MoveEvent]
     discard_count: int = 0
     next_wonder_stage: Optional[WonderStageView] = None
+    decision: str = 'play'  # 'play' | 'last_card' | 'discard_build' (see DecisionKind)
+    free_builds_left: int = 0  # Olympia: free builds from hand still available this Age
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -159,6 +161,8 @@ class Observation:
             'history': [m.to_dict() for m in self.history],
             'discard_count': self.discard_count,
             'next_wonder_stage': self.next_wonder_stage.to_dict() if self.next_wonder_stage else None,
+            'decision': self.decision,
+            'free_builds_left': self.free_builds_left,
         }
 
 
@@ -204,8 +208,11 @@ def _card_view(game: 'Game', seat: int, card: Card) -> CardView:
 def _filter_history(raw: Sequence, viewer: int) -> List[MoveEvent]:
     events: List[MoveEvent] = []
     for age, turn, moves in raw:
-        for seat, (kind, card_name) in enumerate(moves):
-            visible = seat == viewer or kind is ActionKind.BUILD
+        for seat, move in enumerate(moves):
+            if move is None:  # seat did not act (extra decisions are single-seat)
+                continue
+            kind, card_name = move
+            visible = seat == viewer or kind in (ActionKind.BUILD, ActionKind.FREE)
             events.append(MoveEvent(age, turn, seat, kind.value, card_name if visible else None))
     return events
 
@@ -219,8 +226,8 @@ def build_observation(
     """Assemble the Observation for ``seat`` given its current ``hand``.
 
     ``history`` is the raw public log: a sequence of ``(age, turn, moves)`` where
-    ``moves`` is a per-seat list of ``(ActionKind, card_name)``; it gets filtered so
-    the viewer only sees what it may legally know.
+    ``moves`` is a per-seat list of ``(ActionKind, card_name)`` (``None`` for a seat
+    that did not act); it gets filtered so the viewer only sees what it may know.
     """
     table = [_city_view(game, i) for i in range(game.n)]
     stage_affordable = game._stage_payment(seat) is not None
@@ -237,7 +244,7 @@ def build_observation(
     return Observation(
         seat=seat,
         age=game.age,
-        turn=len([1 for age, _t, _m in history if age == game.age]),
+        turn=game.turn,
         phase=game.phase.value,
         n_players=game.n,
         hand=[_card_view(game, seat, c) for c in hand],
@@ -250,4 +257,6 @@ def build_observation(
         history=_filter_history(history, seat),
         discard_count=len(game.discard_pile),
         next_wonder_stage=next_stage_view,
+        decision=game.decision.value,
+        free_builds_left=max(0, game.players[seat].free_builds_left),
     )

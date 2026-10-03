@@ -30,6 +30,8 @@ class Player:
         self.debt = 0  # Cities: debt tokens, each -1 VP at game end
         self.diplomacy = 0  # Cities: diplomacy tokens, each skips one Age's conflict
         self.leaders_hand: List[Card] = []  # Leaders: drafted leaders not yet recruited
+        self.free_builds_used = 0  # free builds from hand spent this Age (reset each Age)
+        self.pending_discard_builds = 0  # free builds from the discard pile still owed
 
     # -- construction ------------------------------------------------------
     def has(self, name: str) -> bool:
@@ -80,6 +82,16 @@ class Player:
 
     def science_wilds(self) -> int:
         return sum(effect.science_wild() for effect in self.iter_effects())
+
+    def plays_last_card(self) -> bool:
+        return any(effect.plays_last_card() for effect in self.iter_effects())
+
+    @property
+    def free_builds_left(self) -> int:
+        return sum(effect.free_builds_per_age() for effect in self.iter_effects()) - self.free_builds_used
+
+    def guild_copies(self) -> int:
+        return sum(effect.guild_copies() for effect in self.iter_effects())
 
     def buy_price(self, side: str, resource: Ressource) -> int:
         """Coins to buy one ``resource`` from the neighbour on ``side``."""

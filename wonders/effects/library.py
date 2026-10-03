@@ -117,6 +117,44 @@ class Special(Effect):
     description: str = ''
 
 
+@dataclass
+class PlayLastCard(Effect):
+    """Babylon B: play the 7th card of each Age instead of discarding it."""
+
+    def plays_last_card(self) -> bool:
+        return True
+
+
+@dataclass
+class FreeBuildPerAge(Effect):
+    """Olympia A: once per Age, build a structure from hand without paying its cost."""
+
+    count: int = 1
+
+    def free_builds_per_age(self) -> int:
+        return self.count
+
+
+@dataclass
+class BuildFromDiscard(Effect):
+    """Halicarnassus: at the end of the turn, build one discarded card for free."""
+
+    count: int = 1
+
+    def discard_builds(self) -> int:
+        return self.count
+
+
+@dataclass
+class CopyGuild(Effect):
+    """Olympia B: at game end, copy one guild built by a neighbour."""
+
+    count: int = 1
+
+    def guild_copies(self) -> int:
+        return self.count
+
+
 def _targets(ctx: Context, scope: str):
     if scope == 'self':
         return (ctx.player,)

@@ -66,8 +66,8 @@ def play_match(
         obs = build_observation(game, seat, hand, history)
         return agents[seat].decide(obs)
 
-    def on_turn_extra(age: int, turn: int, actions: List[Action]) -> None:
-        history.append((age, turn, [(a.kind, a.card.name) for a in actions]))
+    def on_turn_extra(age: int, turn: int, actions: Sequence[Optional[Action]]) -> None:
+        history.append((age, turn, [None if a is None else (a.kind, a.card.name) for a in actions]))
 
     return play_and_record(
         content,

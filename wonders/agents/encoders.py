@@ -72,9 +72,9 @@ class FlatEncoder(Encoder):
         return vec
 
     def _history(self, obs: Observation) -> List[float]:
-        # For each seat: how many builds / wonders / discards it has visibly made.
-        counts = {seat: [0.0, 0.0, 0.0] for seat in range(obs.n_players)}
-        kinds = {'build': 0, 'wonder': 1, 'discard': 2}
+        # For each seat: how many builds / wonders / discards / free builds it has visibly made.
+        counts = {seat: [0.0, 0.0, 0.0, 0.0] for seat in range(obs.n_players)}
+        kinds = {'build': 0, 'wonder': 1, 'discard': 2, 'free': 3}
         for move in obs.history:
             counts[move.seat][kinds[move.kind]] += 1.0
         out: List[float] = []

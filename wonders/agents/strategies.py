@@ -18,7 +18,7 @@ from functools import lru_cache
 from typing import Dict, List, Optional, Tuple
 
 from wonders.agents.base import Agent
-from wonders.agents.baselines import _builds, _card_points, _first
+from wonders.agents.baselines import _builds, _card_points, _fallback
 from wonders.cards.base import Card
 from wonders.cards.content import load_content
 from wonders.effects.library import (
@@ -72,7 +72,7 @@ class OpportunistAgent(Agent):
         pool = preferred or builds
         if pool:
             return max(pool, key=lambda a: _card_points(views[a.card.name]))
-        return _first(obs, ActionKind.WONDER) or _first(obs, ActionKind.DISCARD)
+        return _fallback(obs)
 
 
 def _num(value: object) -> float:
@@ -107,14 +107,12 @@ class BlockerAgent(Agent):
         views = {c.name: c for c in obs.hand}
         target = obs.left if obs.age in (1, 3) else obs.right
         best_name = max(views, key=lambda n: _appeal_to(views[n], target))
-        build = next(
-            (a for a in obs.legal_actions if a.kind is ActionKind.BUILD and a.card.name == best_name),
-            None,
-        )
+        build = next((a for a in _builds(obs) if a.card.name == best_name), None)
         if build is not None:
             return build  # take it for yourself — they never see it
         return next(
-            a for a in obs.legal_actions if a.kind is ActionKind.DISCARD and a.card.name == best_name
+            (a for a in obs.legal_actions if a.kind is ActionKind.DISCARD and a.card.name == best_name),
+            obs.legal_actions[0],
         )  # trash it so nobody gets it
 
 
@@ -163,7 +161,7 @@ class TableAgent(Agent):
         builds = _builds(obs)
         if builds:
             return max(builds, key=lambda a: self.values.get(a.card.name, 0.0))
-        return _first(obs, ActionKind.WONDER) or _first(obs, ActionKind.DISCARD)
+        return _fallback(obs)
 
 
 class BalancedAgent(Agent):
@@ -182,4 +180,4 @@ class BalancedAgent(Agent):
                 return (-counts.get(cv.color, 0), _card_points(cv))
 
             return max(builds, key=key)
-        return _first(obs, ActionKind.WONDER) or _first(obs, ActionKind.DISCARD)
+        return _fallback(obs)

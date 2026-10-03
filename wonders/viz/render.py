@@ -15,13 +15,17 @@ from typing import Iterable, List, Sequence, Tuple
 from wonders.cards.base import Card, Color, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.library import (
+    BuildFromDiscard,
     Coins,
+    CopyGuild,
     Debt,
     Diplomacy,
+    FreeBuildPerAge,
     GainToken,
     Grant,
     Military,
     MultiProduction,
+    PlayLastCard,
     Plunder,
     Production,
     Science,
@@ -211,6 +215,15 @@ def _resource_rows(effect) -> List[Row]:
     return rows
 
 
+# Wonder powers that change the turn structure, rendered as a single labelled row.
+_POWER_LABELS = {
+    PlayLastCard: 'Play the 7th card of each Age',
+    FreeBuildPerAge: 'Once per Age: build a card for free',
+    BuildFromDiscard: 'Build a discarded card for free',
+    CopyGuild: "Copy a neighbour's guild",
+}
+
+
 def _describe(effect) -> List[Row]:
     if isinstance(effect, (Production, MultiProduction)):
         return _resource_rows(effect)
@@ -238,6 +251,8 @@ def _describe(effect) -> List[Row]:
         return [([('coin', GOLD)], f'others +{effect.amount}c ({effect.scope})')]
     if isinstance(effect, GainToken):
         return [([('shield', MILITARY)], f'+war token ({effect.value})')]
+    if type(effect) in _POWER_LABELS:
+        return [([('special', GUILD)], _POWER_LABELS[type(effect)])]
     if isinstance(effect, Special):
         return [([('special', GUILD)], effect.description or effect.power.replace('_', ' '))]
     if isinstance(effect, Tally):
