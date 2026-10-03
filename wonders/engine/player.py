@@ -8,7 +8,7 @@ query one object rather than walking cards itself.
 from __future__ import annotations
 
 from collections import Counter
-from typing import Iterator, List
+from typing import Dict, Iterator, List
 
 from wonders.cards.base import Card, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
@@ -26,6 +26,10 @@ class Player:
         self.cards: List[Card] = []
         self._names: set = set()  # built structure names, for chaining & duplicate checks
         self.stages_built: List[WonderStage] = []
+        # Aggregates derived from built cards/stages (production, trade prices, ...).
+        # Only add_card/add_stage change those, and both clear this cache.
+        self._cache: Dict[object, object] = {}
+        self.version = 0  # bumped whenever a card or stage is added (cache key for the game)
         self.tokens: List[int] = []  # military tokens (+1/+3/+5 / -1)
         self.debt = 0  # Cities: debt tokens, each -1 VP at game end
         self.diplomacy = 0  # Cities: diplomacy tokens, each skips one Age's conflict
@@ -40,9 +44,13 @@ class Player:
     def add_card(self, card: Card) -> None:
         self.cards.append(card)
         self._names.add(card.name)
+        self._cache.clear()
+        self.version += 1
 
     def add_stage(self, stage: WonderStage) -> None:
         self.stages_built.append(stage)
+        self._cache.clear()
+        self.version += 1
 
     @property
     def wonder_stages_built(self) -> int:
@@ -63,11 +71,14 @@ class Player:
             yield from stage.effects
 
     def production_slots(self) -> List[frozenset]:
-        """Every resource this city can produce, one choice-set per slot."""
-        slots = [self.wonder.starting_production]
-        for effect in self.iter_effects():
-            slots.extend(effect.production())
-        return slots
+        """Every resource this city can produce, one choice-set per slot (do not mutate)."""
+        slots = self._cache.get('slots')
+        if slots is None:
+            slots = [self.wonder.starting_production]
+            for effect in self.iter_effects():
+                slots.extend(effect.production())
+            self._cache['slots'] = slots
+        return slots  # type: ignore[return-value]
 
     def shields(self) -> int:
         return sum(effect.shields() for effect in self.iter_effects())
@@ -88,16 +99,25 @@ class Player:
 
     @property
     def free_builds_left(self) -> int:
-        return sum(effect.free_builds_per_age() for effect in self.iter_effects()) - self.free_builds_used
+        allowance = self._cache.get('free_builds')
+        if allowance is None:
+            allowance = sum(effect.free_builds_per_age() for effect in self.iter_effects())
+            self._cache['free_builds'] = allowance
+        return allowance - self.free_builds_used  # type: ignore[operator]
 
     def guild_copies(self) -> int:
         return sum(effect.guild_copies() for effect in self.iter_effects())
 
     def buy_price(self, side: str, resource: Ressource) -> int:
         """Coins to buy one ``resource`` from the neighbour on ``side``."""
+        key = (side, resource)
+        cached = self._cache.get(key)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
         price = DEFAULT_TRADE_PRICE
         for effect in self.iter_effects():
             for rule in effect.trade_rules():
                 if rule.applies(side, resource):
                     price = min(price, rule.price)
+        self._cache[key] = price
         return price

@@ -205,16 +205,26 @@ def _card_view(game: 'Game', seat: int, card: Card) -> CardView:
     )
 
 
-def _filter_history(raw: Sequence, viewer: int) -> List[MoveEvent]:
+def _filter_entry(entry, viewer: int) -> List[MoveEvent]:
+    """One raw history entry ``(age, turn, moves)`` as ``viewer`` may see it."""
+    age, turn, moves = entry
     events: List[MoveEvent] = []
-    for age, turn, moves in raw:
-        for seat, move in enumerate(moves):
-            if move is None:  # seat did not act (extra decisions are single-seat)
-                continue
-            kind, card_name = move
-            visible = seat == viewer or kind in (ActionKind.BUILD, ActionKind.FREE)
-            events.append(MoveEvent(age, turn, seat, kind.value, card_name if visible else None))
+    for seat, move in enumerate(moves):
+        if move is None:  # seat did not act (extra decisions are single-seat)
+            continue
+        kind, card_name = move
+        visible = seat == viewer or kind in (ActionKind.BUILD, ActionKind.FREE)
+        events.append(MoveEvent(age, turn, seat, kind.value, card_name if visible else None))
     return events
+
+
+def _filter_history(raw: Sequence, viewer: int) -> List[MoveEvent]:
+    return [event for entry in raw for event in _filter_entry(entry, viewer)]
+
+
+def public_table(game: 'Game') -> List[CityView]:
+    """Every city's public view, in seat order (identical for every viewer)."""
+    return [_city_view(game, i) for i in range(game.n)]
 
 
 def build_observation(
@@ -222,14 +232,24 @@ def build_observation(
     seat: int,
     hand: List[Card],
     history: Sequence = (),
+    *,
+    table: Optional[List[CityView]] = None,
+    events: Optional[List[MoveEvent]] = None,
 ) -> Observation:
     """Assemble the Observation for ``seat`` given its current ``hand``.
 
     ``history`` is the raw public log: a sequence of ``(age, turn, moves)`` where
     ``moves`` is a per-seat list of ``(ActionKind, card_name)`` (``None`` for a seat
     that did not act); it gets filtered so the viewer only sees what it may know.
+
+    ``table`` (from :func:`public_table`) and ``events`` (the already-filtered history
+    for ``seat``) let a caller reuse work across seats and turns — see
+    :class:`ObservationBuilder`; when given, ``history`` is ignored.
     """
-    table = [_city_view(game, i) for i in range(game.n)]
+    if table is None:
+        table = public_table(game)
+    if events is None:
+        events = _filter_history(history, seat)
     stage_affordable = game._stage_payment(seat) is not None
     stage = game.players[seat].next_stage
     next_stage_view = None
@@ -254,9 +274,55 @@ def build_observation(
         left=table[(seat + 1) % game.n],
         right=table[(seat - 1) % game.n],
         table=table,
-        history=_filter_history(history, seat),
+        history=events,
         discard_count=len(game.discard_pile),
         next_wonder_stage=next_stage_view,
         decision=game.decision.value,
         free_builds_left=max(0, game.players[seat].free_builds_left),
     )
+
+
+class ObservationBuilder:
+    """Builds Observations for a running game, reusing work between calls.
+
+    Equivalent to calling :func:`build_observation` with the full raw history, but:
+
+    * the public table (every city's view and score) is computed once per engine
+      state (``Game.tick``) and shared by all seats deciding at that point, instead of
+      once per seat (n² city views per turn);
+    * each viewer's filtered history is extended incrementally instead of re-filtered
+      from the start of the game on every decision.
+
+    Feed it every decision with :meth:`record` (the raw ``(age, turn, moves)`` entry).
+    Only use it while the game is advanced by the engine — mutating players directly
+    does not bump ``Game.tick`` and would leave the cached table stale. Observations
+    built at the same decision share their :class:`CityView` objects: treat them as
+    read-only.
+    """
+
+    def __init__(self) -> None:
+        self.history: List[Tuple[int, int, List]] = []
+        self._events: Dict[int, List[MoveEvent]] = {}  # per viewer, filtered so far
+        self._consumed: Dict[int, int] = {}  # per viewer, raw history entries filtered
+        self._table: Optional[List[CityView]] = None
+        self._table_key: Optional[Tuple[int, int]] = None
+
+    def record(self, age: int, turn: int, moves: List) -> None:
+        self.history.append((age, turn, moves))
+
+    def table(self, game: 'Game') -> List[CityView]:
+        key = (id(game), game.tick)
+        if self._table is None or self._table_key != key:
+            self._table = public_table(game)
+            self._table_key = key
+        return self._table
+
+    def events(self, seat: int) -> List[MoveEvent]:
+        events = self._events.setdefault(seat, [])
+        for entry in self.history[self._consumed.get(seat, 0) :]:
+            events.extend(_filter_entry(entry, seat))
+        self._consumed[seat] = len(self.history)
+        return events
+
+    def build(self, game: 'Game', seat: int, hand: List[Card]) -> Observation:
+        return build_observation(game, seat, hand, table=self.table(game), events=list(self.events(seat)))

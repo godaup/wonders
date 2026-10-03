@@ -14,7 +14,7 @@ from wonders.cards.base import Card
 from wonders.cards.content import Content
 from wonders.engine.actions import Action
 from wonders.engine.game import Game
-from wonders.engine.observation import build_observation
+from wonders.engine.observation import ObservationBuilder
 from wonders.engine.record import GameRecord, PlayerSetup, play_and_record
 from wonders.ruleset import Ruleset
 
@@ -48,8 +48,8 @@ def play_match(
         raise ValueError('need one agent per seat')
     n = len(setups)
 
-    # Raw public history: list of (age, turn, [(ActionKind, card_name), ...]).
-    history: List[Tuple[int, int, List]] = []
+    # Running public history + per-decision shared table, filtered per viewer on demand.
+    observations = ObservationBuilder()
 
     leader_hands: Optional[Dict[int, List[Card]]] = None
     if Ruleset.of(*expansions).uses('leaders'):
@@ -59,15 +59,15 @@ def play_match(
         leaders = game.players[seat].leaders_hand
         if not leaders:
             return None
-        obs = build_observation(game, seat, leaders, history)
+        obs = observations.build(game, seat, leaders)
         return agents[seat].recruit(leaders, obs)
 
     def policy(game: Game, seat: int, hand) -> Action:
-        obs = build_observation(game, seat, hand, history)
+        obs = observations.build(game, seat, hand)
         return agents[seat].decide(obs)
 
     def on_turn_extra(age: int, turn: int, actions: Sequence[Optional[Action]]) -> None:
-        history.append((age, turn, [None if a is None else (a.kind, a.card.name) for a in actions]))
+        observations.record(age, turn, [None if a is None else (a.kind, a.card.name) for a in actions])
 
     return play_and_record(
         content,

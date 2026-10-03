@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import enum
 from dataclasses import dataclass
 from typing import Dict, List
 
-from wonders.cards.base import Card
+from wonders.cards.base import Card, IdentityEnum
 
 
-class ActionKind(enum.Enum):
+class ActionKind(IdentityEnum):
     BUILD = 'build'  # build the structure into your city
     WONDER = 'wonder'  # bury the card to build your next wonder stage
     DISCARD = 'discard'  # discard for 3 coins
@@ -38,7 +37,7 @@ class Action:
         return cls(ActionKind.FREE, card)
 
 
-class DecisionKind(enum.Enum):
+class DecisionKind(IdentityEnum):
     """Why the engine is asking for a decision."""
 
     PLAY = 'play'  # the regular simultaneous turn: every seat plays a card from hand
