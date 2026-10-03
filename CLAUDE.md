@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`wonders` is a Python implementation of a "7 Wonders"-style card game, intended to be **optimized for Deep Learning integration** (i.e., the game engine should expose clean, machine-consumable state/action interfaces rather than being human-UI-driven). The project is in early Pre-Alpha: the domain model is being scaffolded and most classes are stubs.
+`wonders` is a Python implementation of a "7 Wonders"-style card game, intended to be **optimized for Deep Learning integration** (i.e., the game engine should expose clean, machine-consumable state/action interfaces rather than being human-UI-driven). The base game is fully playable (all cards, wonders and wonder powers), with agents, a replayable game notation, training environments and a benchmark; expansions are partially mechanized. PyPI metadata still says Pre-Alpha.
 
 ## Tooling & Commands
 
@@ -32,13 +32,13 @@ Run a single test:
 pytest tests/test_wonders.py::test_command_line_interface
 ```
 
-Multi-version testing (py36–py39) is done via `tox`, which mirrors CI.
+Multi-version testing (py310–py313) is done via `tox`, which mirrors CI.
 
-The console entry point `wonders` maps to `wonders.cli:main` (Click-based).
+The console entry point `wonders` maps to `wonders.cli:main`, a Click group: `wonders play` (one game, transcript + scores, `--record` saves JSON), `wonders replay <record.json>`, `wonders bench` (win rates with CIs, `-p` processes), `wonders agents`, `wonders gallery`, `wonders table`. `wonders-gallery` / `wonders-table` remain as aliases.
 
 ## CI / Release
 
-- CI (`.github/workflows/dev.yml`, `preview.yml`) runs the tox matrix across Python 3.6–3.9 plus format/lint/build stages defined in `setup.cfg`.
+- CI (`.github/workflows/dev.yml`, `pre-commit.yml`) runs the tox matrix across Python 3.10–3.13 on Linux/macOS/Windows plus format/lint/build stages defined in `setup.cfg`. CI installs the package (not editable), so a file git does not track fails there — check `git status` for new files.
 - Releasing is tag-driven: bump with `bump2version {major|minor|patch}` (updates `pyproject.toml` and `wonders/__init__.py`, commits, and tags per `.bumpversion.cfg`), then `git push --tags`. `release.yml` builds with `python -m build` and deploys to PyPI on passing tests. Add a `CHANGELOG.md` entry before bumping.
 
 ## Architecture
@@ -59,9 +59,8 @@ scoring categories). It is split into three packages under `wonders/`:
   a deck honouring per-card copy counts (`at_players` thresholds ≤ N) and drawing
   `n_players + 2` guilds into Age III. To add a card, edit JSON; to add a *mechanic*,
   add an effect + register it. `library.py` is now thin loader-backed accessors for
-  tests/demos. The shipped `data/base.json` is a *representative slice* with
-  provisional `at_players` — the full deck + expansions (WHITE/BLACK) are the main
-  outstanding data-entry. JSON is bundled via `[tool.setuptools.package-data]` and
+  tests/demos. `data/base.json` is the complete base deck (68 cards,
+  10 guilds, 7 wonders with A/B sides); the base deck supports 3–7 players. JSON is bundled via `[tool.setuptools.package-data]` and
   read with `importlib.resources`.
 - **`wonders/effects/`** — what a card or wonder stage *does*. `base.py` defines the
   hook-based `Effect` (every effect answers the same uniform hooks —
@@ -100,7 +99,7 @@ scoring categories). It is split into three packages under `wonders/`:
   opponents for self-play. `heuristic.HeuristicAgent` is the stronger baseline: a
   tunable value function over the Observation (VP, *marginal* science-set gain,
   Age-scaled military, economy, chaining tempo, wonder progression) that builds-first
-  and is competitive with / beats greedy. `strategies.py` has characterful policies:
+  and clearly beats greedy and builder (weights tuned with `bench.py`). `strategies.py` has characterful policies:
   `OpportunistAgent` (switches colour focus every few turns), `BlockerAgent`
   (denies the downstream neighbour their most-wanted card — Ages I/III pass left,
   Age II right), `TableAgent` (best affordable by a fixed value lookup table), and
@@ -108,7 +107,9 @@ scoring categories). It is split into three packages under `wonders/`:
   they respect partial observability. `encoders.py` maps an `Observation` to a
   representation (`DictEncoder` structured, `FlatEncoder` small fixed-length vector with
   optional history, `CardEncoder` multi-hot hand + tableaus over the card vocabulary);
-  `match.play_match` runs agents and returns `(Game, GameRecord)`.
+  `match.play_match` runs agents and returns `(Game, GameRecord)`. `bench.run_bench` plays a
+  lineup of picklable `AgentSpec`s (registry `AGENTS`) over many seeded games with rotating
+  seats, reporting win rates with 95% Wilson intervals, mean score/rank and category means.
 - **`wonders/env/`** — training environments. `ActionSpace` is a fixed discrete space
   (card name × `ActionKind`, index = `card * 4 + kind`) with `mask(legal)` /
   `to_action(index, legal)`. `WondersEnv` is a PettingZoo-`ParallelEnv`-style
@@ -167,13 +168,13 @@ functional decks** (costs/effects/counts). What the effect model can't yet expre
 flagged `Special` and does not score: leader cost-discounts / on-trigger income /
 set & science bonuses / recruit-free; Cities per-token & per-stage plunder, copy-science,
 and wildcard production. (Solomon / Forging Agency use the real `BuildFromDiscard`; a
-recruited Solomon resolves it after the first turn of that Age.) Also outstanding: the Leaders draft/recruit
-*phase* (leaders are currently content-only, buildable by paying coins if in hand), the
+recruited Solomon resolves it after the first turn of that Age.) The Leaders draft (pick-and-pass of 4) and per-Age recruitment
+are implemented in `match.play_match` (`Agent.draft_leader` / `Agent.recruit`). Outstanding: the
 4 Leaders guilds and the Rome/Byzantium/Petra wonder boards (cost data unverified).
 
 ## Conventions
 
 - `black` and `isort` are authoritative for formatting (line length 120, `skip-string-normalization`). Google-style docstrings; `flake8` ignores `E203, E266, W503`.
 - Type annotations are expected — `mypy` runs in the lint gate (over `wonders` and `tests`).
-- The engine uses `dataclasses` and `from __future__ import annotations`, so it needs **Python 3.7+** in practice even though `pyproject.toml` classifiers still list 3.6.
+- Python **3.10+** (`requires-python` in `pyproject.toml`).
 - Pre-commit hooks (`.pre-commit-config.yaml`) enforce the above plus CRLF/whitespace fixes; run `make pre-commit` to check all files.
