@@ -267,6 +267,9 @@ def _describe(effect) -> List[Row]:
         ]
         icon = ('vp', GUILD) if effect.vp_each else ('coin', GUILD)
         return [([icon], f'{" +".join(parts)} / {target} ({SCOPE.get(effect.scope, effect.scope)})')]
+    description = getattr(effect, 'label', None)  # data-driven description (Leaders / Cities powers)
+    if description:
+        return [([('special', GUILD)], description)]
     return [([('coin', MUTED)], type(effect).__name__)]
 
 

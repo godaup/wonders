@@ -12,10 +12,11 @@ from typing import Dict, Iterator, List
 
 from wonders.cards.base import Card, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
-from wonders.effects.base import Effect
+from wonders.effects.base import BuildEvent, Effect
 
 STARTING_COINS = 3
 DEFAULT_TRADE_PRICE = 2
+SCIENCE_SET_VALUE = 7  # points per complete set of the three science symbols
 
 
 class Player:
@@ -108,6 +109,42 @@ class Player:
     def guild_copies(self) -> int:
         return sum(effect.guild_copies() for effect in self.iter_effects())
 
+    # -- Leaders / Cities powers ---------------------------------------------
+    def private_production_slots(self) -> List[frozenset]:
+        """Production only this city may use (Black Market, Secret Warehouse; do not mutate)."""
+        slots = self._cache.get('private_slots')
+        if slots is None:
+            produced = frozenset().union(*self.production_slots())
+            slots = [slot for effect in self.iter_effects() for slot in effect.private_production(produced)]
+            self._cache['private_slots'] = slots
+        return slots  # type: ignore[return-value]
+
+    def resource_discount(self, target: str) -> int:
+        """Resource units waived when paying for ``target`` (a card colour value or 'wonder')."""
+        return sum(effect.resource_discount(target) for effect in self.iter_effects())
+
+    def builds_free(self, card: Card) -> bool:
+        return any(effect.builds_free(card) for effect in self.iter_effects())
+
+    def bank_purchases(self) -> int:
+        return sum(effect.bank_purchases() for effect in self.iter_effects())
+
+    def science_set_value(self) -> int:
+        """Points per complete science set: 7, plus bonuses (Aristotle)."""
+        return SCIENCE_SET_VALUE + sum(effect.science_set_bonus() for effect in self.iter_effects())
+
+    def science_copies(self) -> int:
+        return sum(effect.science_copies() for effect in self.iter_effects())
+
+    def coins_per_victory(self) -> int:
+        return sum(effect.coins_per_victory() for effect in self.iter_effects())
+
+    def redirects_defeats(self) -> bool:
+        return any(effect.redirects_defeats() for effect in self.iter_effects())
+
+    def build_income(self, event: BuildEvent) -> int:
+        return sum(effect.build_income(event) for effect in self.iter_effects())
+
     def buy_price(self, side: str, resource: Ressource) -> int:
         """Coins to buy one ``resource`` from the neighbour on ``side``."""
         key = (side, resource)
@@ -119,5 +156,6 @@ class Player:
             for rule in effect.trade_rules():
                 if rule.applies(side, resource):
                     price = min(price, rule.price)
+        price = max(0, price - sum(effect.trade_reduction(self, side, resource) for effect in self.iter_effects()))
         self._cache[key] = price
         return price

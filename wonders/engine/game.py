@@ -8,15 +8,16 @@ matters for the direction hands are passed and for side-specific trade discounts
 
 from __future__ import annotations
 
+import itertools
 from collections import Counter
 from dataclasses import dataclass
-from typing import Callable, Dict, Generator, List, Optional, Tuple
+from typing import Callable, Dict, Generator, Iterable, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card, Color, Cost, ScienceSymbol
-from wonders.effects.base import Context
+from wonders.effects.base import BuildEvent, Context
 from wonders.engine.actions import Action, ActionKind, DecisionKind, DecisionPoint
 from wonders.engine.phase import Phase
-from wonders.engine.player import Player
+from wonders.engine.player import SCIENCE_SET_VALUE, Player
 from wonders.engine.trade import Payment, cheapest_payment
 
 DISCARD_COINS = 3
@@ -30,20 +31,33 @@ Policy = Callable[["Game", int, List[Card]], Action]
 AgeSteps = Generator[DecisionPoint, Dict[int, Action], None]
 
 
-def science_score(counts: Counter, wilds: int = 0) -> int:
-    """Σ (per-symbol count)² + 7 × (complete sets), maximising over wild symbols."""
-    base = [
-        counts.get(ScienceSymbol.TABLET, 0),
-        counts.get(ScienceSymbol.GEAR, 0),
-        counts.get(ScienceSymbol.COMPASS, 0),
-    ]
+_SYMBOL_ORDER = (ScienceSymbol.TABLET, ScienceSymbol.GEAR, ScienceSymbol.COMPASS)
+
+
+def science_score(
+    counts: Counter,
+    wilds: int = 0,
+    set_value: int = SCIENCE_SET_VALUE,
+    copies: Sequence[Iterable[ScienceSymbol]] = (),
+) -> int:
+    """Σ (per-symbol count)² + ``set_value`` × (complete sets), maximised over choices.
+
+    ``wilds`` may each become any symbol; each entry of ``copies`` may become one of
+    the symbols it lists (copying a neighbour's symbol). Copies with no options are
+    ignored.
+    """
+    base = [counts.get(symbol, 0) for symbol in _SYMBOL_ORDER]
+    choices = [[_SYMBOL_ORDER.index(s) for s in options] for options in copies]
     best = 0
-    for t in range(wilds + 1):
-        for g in range(wilds - t + 1):
-            c = wilds - t - g
-            vals = (base[0] + t, base[1] + g, base[2] + c)
-            score = sum(v * v for v in vals) + 7 * min(vals)
-            best = max(best, score)
+    for picks in itertools.product(*[c for c in choices if c]):
+        counted = list(base)
+        for k in picks:
+            counted[k] += 1
+        for t in range(wilds + 1):
+            for g in range(wilds - t + 1):
+                c = wilds - t - g
+                vals = (counted[0] + t, counted[1] + g, counted[2] + c)
+                best = max(best, sum(v * v for v in vals) + set_value * min(vals))
     return best
 
 
@@ -99,21 +113,26 @@ class Game:
         return self.players[(i - 1) % self.n]
 
     def context(self, i: int) -> Context:
-        return Context(self.players[i], self.left_of(i), self.right_of(i))
+        return Context(self.players[i], self.left_of(i), self.right_of(i), tuple(self.players))
 
     # -- payment -----------------------------------------------------------
-    def payment_for(self, i: int, cost: Cost) -> Optional[Payment]:
+    def payment_for(self, i: int, cost: Cost, waivers: int = 0) -> Optional[Payment]:
         """Cheapest trade payment for ``cost``'s resources, or ``None`` if impossible.
 
         Only the resource part is considered here; ``cost.coins`` is added by callers.
+        ``waivers`` resource units are discounted away (Leaders cost discounts); the
+        seat's private production and bank purchases (Cities / Bilkis) are included.
         """
         player = self.players[i]
+        private = player.private_production_slots()
         return cheapest_payment(
             cost.resources,
-            player.production_slots(),
+            player.production_slots() + private if private else player.production_slots(),
             self.left_of(i).production_slots(),
             self.right_of(i).production_slots(),
             player.buy_price,
+            waivers=waivers,
+            bank=player.bank_purchases(),
         )
 
     def can_build_card(self, i: int, card: Card) -> bool:
@@ -143,14 +162,18 @@ class Game:
         # Free via chaining: any owned structure that unlocks this one. Using the
         # owners' chain_enables (rather than this card's chain_requires) naturally
         # handles cards unlocked by more than one prerequisite (e.g. Forum).
-        if any(card.name in owned.chain_enables for owned in player.cards):
+        if self._chained(i, card) or player.builds_free(card):  # Ramses / Maecenas build free
             return (0, Payment(0, 0, 0))
-        pay = self.payment_for(i, card.cost)
+        pay = self.payment_for(i, card.cost, waivers=player.resource_discount(card.color.value))
         if pay is None:
             return None
         if card.cost.coins + pay.total > player.coins:
             return None
         return (card.cost.coins, pay)
+
+    def _chained(self, i: int, card: Card) -> bool:
+        """Whether an owned structure unlocks ``card`` for free (chaining)."""
+        return any(card.name in owned.chain_enables for owned in self.players[i].cards)
 
     def _stage_payment(self, i: int):
         key = ('stage',) + self._state_key(i)
@@ -165,7 +188,7 @@ class Game:
         stage = player.next_stage
         if stage is None:
             return None
-        pay = self.payment_for(i, stage.cost)
+        pay = self.payment_for(i, stage.cost, waivers=player.resource_discount('wonder'))
         if pay is None:
             return None
         if stage.cost.coins + pay.total > player.coins:
@@ -213,9 +236,15 @@ class Game:
         if result is None:
             raise IllegalAction(f'{self.players[i].name} cannot build {card.name}')
         coins_to_bank, pay = result
+        via_chain = self._chained(i, card)
         self._settle(i, coins_to_bank, pay)
         self.players[i].add_card(card)
         self._activate(i, card.effects)
+        self._income(i, BuildEvent(card.color.value, via_chain=via_chain, traded=pay.traded))
+
+    def _income(self, i: int, event: BuildEvent) -> None:
+        """Coins the owner's effects pay out for a build (Xenophon, Vitruvius, Hatshepsut)."""
+        self.players[i].coins += self.players[i].build_income(event)
 
     def _activate(self, i: int, effects) -> None:
         """Trigger the build-time effects of a newly built card or wonder stage."""
@@ -236,6 +265,7 @@ class Game:
         player.add_stage(stage)
         self.discard_pile.append(card)  # the card itself is buried, effect ignored
         self._activate(i, stage.effects)
+        self._income(i, BuildEvent(None, traded=pay.traded))
 
     def _do_discard(self, i: int, card: Card) -> None:
         self.players[i].coins += DISCARD_COINS
@@ -257,6 +287,7 @@ class Game:
             player.free_builds_used += 1
         player.add_card(card)
         self._activate(i, card.effects)
+        self._income(i, BuildEvent(card.color.value))
 
     def _can_build_free(self, i: int, card: Card) -> bool:
         """Olympia's once-per-Age free build: offered only where it saves something."""
@@ -329,11 +360,14 @@ class Game:
         m = len(active)
         for idx in range(m):
             i = active[idx]
-            for j in {active[(idx + 1) % m], active[(idx - 1) % m]} - {i}:
+            for j in sorted({active[(idx + 1) % m], active[(idx - 1) % m]} - {i}):
                 if shields[i] > shields[j]:
                     self.players[i].tokens.append(value)
+                    self.players[i].coins += self.players[i].coins_per_victory()  # Nero
                 elif shields[i] < shields[j]:
-                    self.players[i].tokens.append(DEFEAT_VALUE)
+                    # Tomyris: the loser's defeat token goes to the neighbour who won.
+                    loser = self.players[j] if self.players[i].redirects_defeats() else self.players[i]
+                    loser.tokens.append(DEFEAT_VALUE)
 
     # -- scoring -----------------------------------------------------------
     def score(self, i: int) -> ScoreBreakdown:
@@ -343,11 +377,11 @@ class Game:
         b.military = sum(p.tokens)
         b.treasury = p.coins // 3 - p.debt  # Cities debt tokens are -1 VP each
         symbols, wilds = p.science(), p.science_wilds()
-        b.science = science_score(symbols, wilds)
+        b.science = self._science(i, symbols, wilds)
         if p.guild_copies():
             copied_vp, symbols, wilds = self._copy_guilds(i, symbols, wilds)
             b.guilds += copied_vp
-            b.science = science_score(symbols, wilds)
+            b.science = self._science(i, symbols, wilds)
 
         # Wonder-stage victory points.
         for stage in p.stages_built:
@@ -384,13 +418,13 @@ class Game:
         ]
         vp_total = 0
         for _ in range(p.guild_copies()):
-            current = science_score(symbols, wilds)
+            current = self._science(i, symbols, wilds)
             best = None
             for card in candidates:
                 vp = sum(e.victory_points(ctx) for e in card.effects)
                 sym = symbols + Counter(e.science() for e in card.effects if e.science() is not None)
                 w = wilds + sum(e.science_wild() for e in card.effects)
-                gain = vp + science_score(sym, w) - current
+                gain = vp + self._science(i, sym, w) - current
                 if best is None or gain > best[0]:
                     best = (gain, vp, card, sym, w)
             if best is None:
@@ -399,6 +433,17 @@ class Game:
             candidates.remove(card)
             vp_total += vp
         return vp_total, symbols, wilds
+
+    def _science(self, i: int, symbols: Counter, wilds: int) -> int:
+        """Science points for seat ``i``, with its set bonus and neighbour-symbol copies."""
+        p = self.players[i]
+        copies: List[frozenset] = []
+        if p.science_copies():
+            copyable = frozenset(
+                symbol for nb in (self.left_of(i), self.right_of(i)) for symbol, n in nb.science().items() if n > 0
+            )
+            copies = [copyable] * p.science_copies()
+        return science_score(symbols, wilds, p.science_set_value(), copies)
 
     def winner(self) -> int:
         """Seat index of the winner: most points, ties broken by coins."""

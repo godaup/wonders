@@ -336,8 +336,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "science_set_bonus",
+          "type": "science_set_bonus",
+          "points": 3,
           "description": "+3 VP per completed set of 3 science symbols"
         }
       ]
@@ -351,8 +351,13 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "set_vp",
+          "type": "color_sets",
+          "colors": [
+            "blue",
+            "red",
+            "green"
+          ],
+          "vp_each": 3,
           "description": "3 VP per set of one blue + one red + one green card"
         }
       ]
@@ -366,8 +371,17 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "set_vp",
+          "type": "color_sets",
+          "colors": [
+            "brown",
+            "grey",
+            "blue",
+            "yellow",
+            "red",
+            "green",
+            "purple"
+          ],
+          "vp_each": 7,
           "description": "7 VP per set of all seven card colours"
         }
       ]
@@ -381,8 +395,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "coins_on_victory",
+          "type": "victory_income",
+          "coins": 2,
           "description": "+2 coins each time you gain a military victory token"
         }
       ]
@@ -396,8 +410,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "coins_on_yellow",
+          "type": "build_income",
+          "coins": 2,
+          "color": "yellow",
           "description": "+2 coins each time you build a yellow card"
         }
       ]
@@ -411,8 +426,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "coins_on_chain",
+          "type": "build_income",
+          "coins": 2,
+          "via_chain": true,
           "description": "+2 coins each time you build a card free via a chain"
         }
       ]
@@ -426,8 +442,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "trade_rebate",
+          "type": "build_income",
+          "coins": 1,
+          "after_trade": true,
           "description": "+1 coin after buying resources from a neighbour"
         }
       ]
@@ -441,8 +458,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "buy_from_bank",
+          "type": "bank_purchase",
+          "count": 1,
           "description": "once per turn buy any 1 resource from the bank for 1 coin"
         }
       ]
@@ -456,8 +473,10 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "recruit_free",
+          "type": "build_free",
+          "colors": [
+            "white"
+          ],
           "description": "recruit all your future leaders for free"
         }
       ]
@@ -471,8 +490,10 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "guilds_free",
+          "type": "build_free",
+          "colors": [
+            "purple"
+          ],
           "description": "build all your guild (purple) cards for free"
         }
       ]
@@ -499,8 +520,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "green",
+          "amount": 1,
           "description": "green cards cost 1 fewer resource"
         }
       ]
@@ -514,8 +536,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "red",
+          "amount": 1,
           "description": "red cards cost 1 fewer resource"
         }
       ]
@@ -529,8 +552,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "blue",
+          "amount": 1,
           "description": "blue cards cost 1 fewer resource"
         }
       ]
@@ -544,8 +568,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "wonder",
+          "amount": 1,
           "description": "wonder stages cost 1 fewer resource"
         }
       ]
@@ -559,8 +584,7 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "redirect_defeat",
+          "type": "redirect_defeats",
           "description": "your defeat tokens are given to the winning neighbour"
         }
       ]

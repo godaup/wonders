@@ -14,8 +14,8 @@
       "cost": null,
       "effects": [
         {
-          "type": "special",
-          "power": "trade_starting",
+          "type": "starting_resource_discount",
+          "amount": 1,
           "description": "buy your starting resource 1 cheaper from a neighbour"
         }
       ]
@@ -64,8 +64,7 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "extra_owned_production",
+          "type": "produce_owned",
           "description": "once/turn produce 1 extra of a resource you already produce"
         }
       ]
@@ -102,7 +101,7 @@
         {
           "type": "grant",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -120,7 +119,7 @@
         {
           "type": "grant",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -138,7 +137,7 @@
         {
           "type": "plunder",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -156,7 +155,7 @@
         {
           "type": "plunder",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -243,8 +242,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "copy_science",
+          "type": "science_copy",
+          "count": 1,
           "description": "at game end, copy one science symbol from a neighbour"
         }
       ]
@@ -262,8 +261,7 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "produce_unowned",
+          "type": "produce_unowned",
           "description": "once/turn produce 1 resource you do not already produce"
         }
       ]
@@ -285,8 +283,9 @@
           "points": 2
         },
         {
-          "type": "special",
-          "power": "wonder_free_resources",
+          "type": "resource_discount",
+          "target": "wonder",
+          "amount": 99,
           "description": "wonder stages cost no resources"
         }
       ]
@@ -331,7 +330,7 @@
         {
           "type": "grant",
           "amount": 2,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -351,7 +350,7 @@
         {
           "type": "grant",
           "amount": 2,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -373,7 +372,7 @@
         {
           "type": "plunder",
           "amount": 3,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -396,7 +395,7 @@
         {
           "type": "plunder",
           "amount": 2,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -418,8 +417,10 @@
           "points": 4
         },
         {
-          "type": "special",
-          "power": "plunder_per_token",
+          "type": "plunder_per",
+          "what": "tokens",
+          "amount": 1,
+          "scope": "others",
           "description": "others lose 1 coin per military token they hold"
         }
       ]
@@ -524,8 +525,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "copy_science",
+          "type": "science_copy",
+          "count": 1,
           "description": "at game end, copy one science symbol from a neighbour"
         }
       ]
@@ -586,7 +587,7 @@
         {
           "type": "grant",
           "amount": 3,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -609,7 +610,7 @@
         {
           "type": "plunder",
           "amount": 5,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -633,7 +634,7 @@
         {
           "type": "plunder",
           "amount": 3,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -656,8 +657,10 @@
           "points": 4
         },
         {
-          "type": "special",
-          "power": "plunder_per_stage",
+          "type": "plunder_per",
+          "what": "wonder_stages",
+          "amount": 1,
+          "scope": "others",
           "description": "others lose 1 coin per wonder stage they have built"
         }
       ]
@@ -681,8 +684,10 @@
           "points": 5
         },
         {
-          "type": "special",
-          "power": "plunder_per_token",
+          "type": "plunder_per",
+          "what": "tokens",
+          "amount": 1,
+          "scope": "others",
           "description": "others lose 1 coin per military token they hold"
         }
       ]
@@ -834,8 +839,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cash_defeats",
+          "type": "cash_defeats",
+          "coins_each": 2,
           "description": "gain 2 coins per defeat token, then discard all your defeat tokens"
         }
       ]
@@ -854,8 +859,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "copy_science",
+          "type": "science_copy",
+          "count": 1,
           "description": "at game end, copy one science symbol from a neighbour"
         }
       ]
