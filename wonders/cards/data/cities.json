@@ -418,10 +418,10 @@
         },
         {
           "type": "plunder_per",
-          "what": "tokens",
+          "what": "victory_tokens",
           "amount": 1,
           "scope": "others",
-          "description": "others lose 1 coin per military token they hold"
+          "description": "other players lose 1 coin per Victory token they hold"
         }
       ]
     },
@@ -685,10 +685,10 @@
         },
         {
           "type": "plunder_per",
-          "what": "tokens",
+          "what": "victory_tokens",
           "amount": 1,
           "scope": "others",
-          "description": "others lose 1 coin per military token they hold"
+          "description": "other players lose 1 coin per Victory token they hold"
         }
       ]
     },

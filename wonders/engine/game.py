@@ -11,7 +11,7 @@ from __future__ import annotations
 import itertools
 from collections import Counter
 from dataclasses import dataclass
-from typing import Callable, Dict, Generator, Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, Generator, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card, Color, Cost, ScienceSymbol
 from wonders.effects.base import BuildEvent, Context
@@ -38,21 +38,19 @@ def science_score(
     counts: Counter,
     wilds: int = 0,
     set_value: int = SCIENCE_SET_VALUE,
-    copies: Sequence[Iterable[ScienceSymbol]] = (),
+    copies: Sequence[Sequence[ScienceSymbol]] = (),
 ) -> int:
-    """Σ (per-symbol count)² + ``set_value`` × (complete sets), maximised over choices.
+    """Σ (per-symbol count)² + ``set_value`` × (complete sets), maximised over wilds.
 
-    ``wilds`` may each become any symbol; each entry of ``copies`` may become one of
-    the symbols it lists (copying a neighbour's symbol). Copies with no options are
-    ignored.
+    ``wilds`` may each become any symbol. ``copies`` lists alternative extra symbol
+    multisets (e.g. which neighbour green cards the Cities masks copy); the best one is
+    used. Each wild/copy choice is maximised independently of the others' order.
     """
-    base = [counts.get(symbol, 0) for symbol in _SYMBOL_ORDER]
-    choices = [[_SYMBOL_ORDER.index(s) for s in options] for options in copies]
     best = 0
-    for picks in itertools.product(*[c for c in choices if c]):
-        counted = list(base)
-        for k in picks:
-            counted[k] += 1
+    for extra in copies or ((),):
+        counted = [counts.get(symbol, 0) for symbol in _SYMBOL_ORDER]
+        for symbol in extra:
+            counted[_SYMBOL_ORDER.index(symbol)] += 1
         for t in range(wilds + 1):
             for g in range(wilds - t + 1):
                 c = wilds - t - g
@@ -240,7 +238,7 @@ class Game:
         self._settle(i, coins_to_bank, pay)
         self.players[i].add_card(card)
         self._activate(i, card.effects)
-        self._income(i, BuildEvent(card.color.value, via_chain=via_chain, traded=pay.traded))
+        self._income(i, BuildEvent(card.color.value, via_chain, pay.traded, _sides(pay)))
 
     def _income(self, i: int, event: BuildEvent) -> None:
         """Coins the owner's effects pay out for a build (Xenophon, Vitruvius, Hatshepsut)."""
@@ -265,7 +263,7 @@ class Game:
         player.add_stage(stage)
         self.discard_pile.append(card)  # the card itself is buried, effect ignored
         self._activate(i, stage.effects)
-        self._income(i, BuildEvent(None, traded=pay.traded))
+        self._income(i, BuildEvent(None, traded=pay.traded, neighbours_traded=_sides(pay)))
 
     def _do_discard(self, i: int, card: Card) -> None:
         self.players[i].coins += DISCARD_COINS
@@ -439,13 +437,21 @@ class Game:
     def _science(self, i: int, symbols: Counter, wilds: int) -> int:
         """Science points for seat ``i``, with its set bonus and neighbour-symbol copies."""
         p = self.players[i]
-        copies: List[frozenset] = []
+        options: List[Tuple[ScienceSymbol, ...]] = []
         if p.science_copies():
-            copyable = frozenset(
-                symbol for nb in (self.left_of(i), self.right_of(i)) for symbol, n in nb.science().items() if n > 0
-            )
-            copies = [copyable] * p.science_copies()
-        return science_score(symbols, wilds, p.science_set_value(), copies)
+            # Each mask copies the symbol of a *different* green card in a neighbouring city.
+            pool = [
+                symbol
+                for nb in (self.left_of(i), self.right_of(i))
+                for card in nb.cards
+                if card.color is Color.GREEN
+                for symbol in (e.science() for e in card.effects)
+                if symbol is not None
+            ]
+            pool.sort(key=_SYMBOL_ORDER.index)
+            # De-duplicate (keeping order) the possible multisets of copied symbols.
+            options = list(dict.fromkeys(itertools.combinations(pool, min(len(pool), p.science_copies()))))
+        return science_score(symbols, wilds, p.science_set_value(), options)
 
     def winner(self) -> int:
         """Seat index of the winner: most points, ties broken by coins."""
@@ -587,6 +593,11 @@ class Game:
         for age in (1, 2, 3):
             self.play_age(age, deal(age), policy)
         self.phase = Phase.FINISHED
+
+
+def _sides(pay: Payment) -> int:
+    """How many neighbours a payment bought from (Hatshepsut pays per neighbour)."""
+    return int(pay.left > 0) + int(pay.right > 0)
 
 
 def drive(steps: AgeSteps, choose: Callable[[DecisionPoint], Dict[int, Action]]) -> None:

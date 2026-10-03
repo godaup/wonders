@@ -10,13 +10,14 @@ from __future__ import annotations
 from collections import Counter
 from typing import Dict, Iterator, List
 
-from wonders.cards.base import Card, Ressource
+from wonders.cards.base import Card, Color, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.base import BuildEvent, Effect
 
 STARTING_COINS = 3
 DEFAULT_TRADE_PRICE = 2
 SCIENCE_SET_VALUE = 7  # points per complete set of the three science symbols
+BASIC_COLORS = frozenset({Color.BROWN, Color.GREY})  # raw-material / manufactured cards
 
 
 class Player:
@@ -114,7 +115,10 @@ class Player:
         """Production only this city may use (Black Market, Secret Warehouse; do not mutate)."""
         slots = self._cache.get('private_slots')
         if slots is None:
-            produced = frozenset().union(*self.production_slots())
+            # Black Market / Secret Warehouse look only at brown/grey cards and the board.
+            basic = [self.wonder.starting_production]
+            basic += [s for c in self.cards if c.color in BASIC_COLORS for e in c.effects for s in e.production()]
+            produced = frozenset().union(*basic)
             slots = [slot for effect in self.iter_effects() for slot in effect.private_production(produced)]
             self._cache['private_slots'] = slots
         return slots  # type: ignore[return-value]

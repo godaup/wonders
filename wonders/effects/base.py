@@ -81,6 +81,7 @@ class BuildEvent:
     color: Optional[str]  # card colour value, or None for a wonder stage
     via_chain: bool = False  # built for free through a chain
     traded: int = 0  # coins paid to neighbours for resources
+    neighbours_traded: int = 0  # how many neighbours (0-2) resources were bought from
 
 
 @dataclass(frozen=True)

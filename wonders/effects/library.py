@@ -286,6 +286,8 @@ class GainToken(Effect):
 
     def on_build(self, ctx: Context) -> None:
         ctx.player.tokens.append(self.value)
+        if self.value > 0:  # a victory token: Nero pays for every one gained
+            ctx.player.coins += ctx.player.coins_per_victory()
 
 
 # --- Leaders / Cities powers ------------------------------------------------
@@ -332,7 +334,7 @@ class BuildIncome(Effect):
 
     * Xenophon: ``BuildIncome(2, color='yellow')``
     * Vitruvius: ``BuildIncome(2, via_chain=True)``
-    * Hatshepsut: ``BuildIncome(1, after_trade=True)``
+    * Hatshepsut: ``BuildIncome(1, after_trade=True)`` — paid per neighbour bought from
     """
 
     coins: int
@@ -345,8 +347,8 @@ class BuildIncome(Effect):
             return 0
         if self.via_chain and not event.via_chain:
             return 0
-        if self.after_trade and event.traded <= 0:
-            return 0
+        if self.after_trade:
+            return self.coins * event.neighbours_traded
         return self.coins
 
 
@@ -409,7 +411,10 @@ class BankPurchase(Effect):
 
 @dataclass
 class ProduceUnowned(Effect):
-    """One extra unit per build of a resource the owner does not produce (Black Market)."""
+    """One extra unit per build of a resource the owner does not produce (Black Market).
+
+    "Produce" counts only brown/grey cards and the board's starting resource.
+    """
 
     def private_production(self, produced: frozenset) -> Tuple[frozenset, ...]:
         options = TRADEABLE - produced
@@ -418,7 +423,10 @@ class ProduceUnowned(Effect):
 
 @dataclass
 class ProduceOwned(Effect):
-    """One extra unit per build of a resource the owner already produces (Secret Warehouse)."""
+    """One extra unit per build of a resource the owner already produces (Secret Warehouse).
+
+    "Produces" counts only brown/grey cards and the board's starting resource.
+    """
 
     def private_production(self, produced: frozenset) -> Tuple[frozenset, ...]:
         options = produced & TRADEABLE

@@ -96,6 +96,52 @@ def test_xenophon_vitruvius_hatshepsut_income():
     assert g.players[0].coins == 4 - 2 + 1  # paid 2 for wood, Hatshepsut refunds 1
 
 
+def test_hatshepsut_pays_per_neighbour_bought_from():
+    g = game()
+    own(g, 0, 'Hatshepsut')
+    g.players[0].coins = 4
+    g.players[1].add_card(card('Mine', Color.BROWN, effects=(Production(R.WOOD),)))
+    g.players[2].add_card(card('Pit', Color.BROWN, effects=(Production(R.GLASS),)))
+    g.apply(0, Action.build(card('Hall', cost=Cost.of(R.WOOD, R.GLASS))))
+    assert g.players[0].coins == 4 - 4 + 2  # bought from both neighbours: 1 coin each
+
+
+def test_nero_pays_for_raider_tokens_too():
+    g = game()
+    own(g, 0, 'Nero')
+    coins = g.players[0].coins
+    g.apply(0, Action.build(card('Raid', Color.BLACK, effects=CONTENT.card('Raider Camp').effects)))
+    assert g.players[0].coins == coins + 2 and any(t > 0 for t in g.players[0].tokens)
+
+
+def test_masks_copy_distinct_neighbour_green_cards():
+    g = game()
+    own(g, 0, 'Pigeonhole')
+    own(g, 0, 'Band of Spies')
+    # One gear card in the neighbourhood: only one mask can copy it.
+    g.players[1].add_card(card('g', Color.GREEN, effects=(Science(S.GEAR),)))
+    assert g.score(0).science == 1
+    # Several different choices: two masks over tablet/gear/compass cards complete a set.
+    g.players[0].add_card(card('t0', Color.GREEN, effects=(Science(S.TABLET),)))
+    g.players[2].add_card(card('c', Color.GREEN, effects=(Science(S.COMPASS),)))
+    g.players[2].add_card(card('t', Color.GREEN, effects=(Science(S.TABLET),)))
+    assert g.score(0).science == 3 + 7  # own tablet + copied gear + copied compass
+    # A gear from a leader (not a green card) cannot be copied.
+    h = game()
+    own(h, 0, 'Pigeonhole')
+    own(h, 1, 'Ptolemy')
+    assert h.score(0).science == 0
+
+
+def test_black_market_ignores_yellow_production():
+    g = game()
+    own(g, 0, 'Black Market')
+    forum = card('Forum', Color.YELLOW, effects=(Production(choice=[R.GLASS, R.LINEN, R.PAPER]),))
+    g.players[0].add_card(forum)
+    # Glass is still "not produced" (yellow cards don't count), so the market may make it.
+    assert frozenset({R.GLASS}) <= g.players[0].private_production_slots()[0]
+
+
 # -- military ---------------------------------------------------------------------
 
 
@@ -208,7 +254,8 @@ def test_plunder_per_hits_every_other_player():
     g.players[1].tokens = [1, -1]
     g.players[2].tokens = [3, 3, 5, 5]
     g.apply(0, Action.build(card('Sepulcher', Color.BLACK, effects=CONTENT.card('Sepulcher').effects)))
-    assert g.players[1].coins == 1 and g.players[2].coins == 0 and g.players[2].debt == 1
+    # Only *victory* tokens count (Cities rulebook): seat 1 holds one, seat 2 four.
+    assert g.players[1].coins == 2 and g.players[2].coins == 0 and g.players[2].debt == 1
     assert g.players[0].coins == 3 and g.players[3].coins == 3
 
 
