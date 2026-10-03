@@ -51,7 +51,8 @@ def test_infos_drop_raw_observation_unless_asked():
 
 def test_subproc_matches_sync_exactly():
     sync_trace, sync_finals = run(SyncVectorEnv([FACTORY] * 3), steps=25, seed=11)
-    with SubprocVectorEnv([FACTORY] * 3, context='fork', envs_per_worker=2) as vec:  # uneven groups: 2 + 1
+    # Platform-default start method (spawn on Windows/macOS); groups are uneven: 2 + 1.
+    with SubprocVectorEnv([FACTORY] * 3, envs_per_worker=2) as vec:
         proc_trace, proc_finals = run(vec, steps=25, seed=11)
     assert proc_trace == sync_trace
     assert [f['scores'] for f in proc_finals] == [f['scores'] for f in sync_finals]
