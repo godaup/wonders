@@ -540,9 +540,7 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "build_from_discard",
-          "description": "take the discard pile and build one card for free"
+          "type": "build_from_discard"
         }
       ]
     },

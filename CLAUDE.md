@@ -73,14 +73,26 @@ scoring categories). It is split into three packages under `wonders/`:
   shields / science / trade-prices from all built effects), `trade.py`
   (`cheapest_payment`: the min-coin resource-payment solver — the core piece,
   own production free + neighbours priced, each slot used once per build),
-  `game.py` (`Game`: payment, the three actions, legality, military resolution,
-  scoring, the `play`/`play_age` draft loop — `play_age` takes an optional `on_turn`
-  observer for recording), `actions.py`, `phase.py`, plus the DL/interface layer:
+  `game.py` (`Game`: payment, the actions, legality, military resolution, scoring,
+  and the draft loop. **`Game.age_steps(age, hands)` is the single source of truth for
+  turn order**: a coroutine that yields `DecisionPoint`s (`PLAY` for every seat, plus
+  single-seat `LAST_CARD` / `DISCARD_BUILD` granted by wonder powers) and receives
+  `{seat: Action}`; `play_age` (callback policies + `on_turn`/`on_extra` observers),
+  `GameRecord.replay` and the env all drive it via `drive()`. `Game.decision` tells
+  `legal_actions` which kind of decision is open), `actions.py` (`ActionKind`
+  BUILD/WONDER/DISCARD/FREE, `DecisionKind`, `DecisionPoint`), `phase.py`, plus the
+  DL/interface layer:
   `observation.py` (`build_observation` → a per-seat `Observation`: full public
   tableaus, own hand, legal actions, and a **history filtered for partial
   observability** — opponents' buried/discarded card identities are hidden) and
   `record.py` (`GameRecord`: a chess-PGN-style replayable notation — setup + ordered
-  decks + every decision; `replay()` re-simulates deterministically without any RNG).
+  decks + every decision, with power-granted decisions in `extras`; `replay()`
+  re-simulates deterministically without any RNG).
+  The base-game wonder powers are real effects with their own hooks: `PlayLastCard`
+  (Babylon B), `FreeBuildPerAge` (Olympia A, played as `ActionKind.FREE`, offered only
+  when it saves coins), `CopyGuild` (Olympia B, best neighbour guild at scoring, incl.
+  science) and `BuildFromDiscard` (Halicarnassus; resolved after the turn, so it sees
+  that turn's discards and the end-of-Age leftovers).
 - **`wonders/agents/`** — the agent layer over the engine. `base.Agent` is the shared
   `decide(obs) -> Action` interface. `baselines.py` has `RandomAgent`, `GreedyAgent`,
   `DiscardAgent`, and colour-focused `ArchetypeAgent`s (`MilitaristAgent`,
@@ -94,8 +106,17 @@ scoring categories). It is split into three packages under `wonders/`:
   Age II right), `TableAgent` (best affordable by a fixed value lookup table), and
   `BalancedAgent` (fills the scarcest colour). All read only the `Observation`, so
   they respect partial observability. `encoders.py` maps an `Observation` to a
-  representation (`DictEncoder` structured, `FlatEncoder` fixed-length vector with
-  optional history); `match.play_match` runs agents and returns `(Game, GameRecord)`.
+  representation (`DictEncoder` structured, `FlatEncoder` small fixed-length vector with
+  optional history, `CardEncoder` multi-hot hand + tableaus over the card vocabulary);
+  `match.play_match` runs agents and returns `(Game, GameRecord)`.
+- **`wonders/env/`** — training environments. `ActionSpace` is a fixed discrete space
+  (card name × `ActionKind`, index = `card * 4 + kind`) with `mask(legal)` /
+  `to_action(index, legal)`. `WondersEnv` is a PettingZoo-`ParallelEnv`-style
+  multi-agent env (no dependency): `reset(seed)` / `step({seat: index})` return
+  per-acting-seat `{'observation', 'action_mask'}` (raw `Observation` in
+  `infos[seat]['obs']`), rewards `margin`/`win`/`score`/`dense`, and `record()` gives
+  the `GameRecord`. `SingleAgentEnv` is the Gym-style wrapper (one learner seat,
+  `Agent` opponents). Leaders is not supported by the env yet.
 
 Design rules to preserve when extending:
 - **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;
@@ -134,7 +155,8 @@ player, so Cities deals 8 not 7). `armada`/`babel` are registered but flagged
 functional decks** (costs/effects/counts). What the effect model can't yet express is
 flagged `Special` and does not score: leader cost-discounts / on-trigger income /
 set & science bonuses / recruit-free; Cities per-token & per-stage plunder, copy-science,
-build-from-discard, and wildcard production. Also outstanding: the Leaders draft/recruit
+and wildcard production. (Solomon / Forging Agency use the real `BuildFromDiscard`; a
+recruited Solomon resolves it after the first turn of that Age.) Also outstanding: the Leaders draft/recruit
 *phase* (leaders are currently content-only, buildable by paying coins if in hand), the
 4 Leaders guilds and the Rome/Byzantium/Petra wonder boards (cost data unverified).
 
