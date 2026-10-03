@@ -14,11 +14,11 @@ worker processes); :data:`AGENTS` names the built-in ones.
 from __future__ import annotations
 
 import math
-import multiprocessing as mp
 import random
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
+from wonders._mp import get_context, init_worker
 from wonders.agents.base import Agent
 from wonders.agents.baselines import (
     BuilderAgent,
@@ -56,8 +56,8 @@ class AgentSpec:
     seeded: bool = False
 
     @classmethod
-    def of(cls, name: str, agent_cls: Type[Agent], seeded: bool = False, **kwargs: Any) -> 'AgentSpec':
-        return cls(name, agent_cls, tuple(sorted(kwargs.items())), seeded)
+    def of(cls, spec_name: str, agent_cls: Type[Agent], /, seeded: bool = False, **kwargs: Any) -> 'AgentSpec':
+        return cls(spec_name, agent_cls, tuple(sorted(kwargs.items())), seeded)
 
     def build(self, rng: random.Random) -> Agent:
         kwargs = dict(self.kwargs)
@@ -204,7 +204,7 @@ def run_bench(
         raise ValueError(f'need {MIN_PLAYERS}-{MAX_PLAYERS} seats, got {len(specs)}')
     jobs = [(g, seed, specs, tuple(expansions), sides) for g in range(n_games)]
     if processes > 1:
-        with mp.get_context(context).Pool(processes) as pool:
+        with get_context(context).Pool(processes, initializer=init_worker) as pool:
             results = pool.map(_play_one, jobs, chunksize=max(1, n_games // (processes * 8)))
     else:
         results = [_play_one(job) for job in jobs]
