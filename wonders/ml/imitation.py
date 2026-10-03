@@ -1,0 +1,201 @@
+"""Imitation learning: clone a teacher agent's decisions into a :class:`PolicyValueNet`.
+
+:func:`collect` plays seeded games (optionally across processes) and records, for each
+decision a *teacher* seat makes, the encoded observation, the legal-action mask, the
+teacher's action index and a value target. :func:`train_imitation` fits the policy head
+with cross-entropy on the teacher's actions and the value head on that target.
+
+The value target is the seat's *remaining* score margin: final ``(own VP − mean
+opponent VP)`` minus the same margin at decision time (computed from the public
+table). That is exactly the return of the env's ``'dense'`` reward, so a cloned
+network starts PPO with a useful critic. Targets are multiplied by ``VALUE_SCALE``.
+"""
+
+from __future__ import annotations
+
+import random
+from array import array
+from dataclasses import dataclass
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
+
+import torch
+from torch import nn
+
+from wonders._mp import get_context, init_worker
+from wonders.agents.base import Agent
+from wonders.agents.bench import AGENTS, AgentSpec
+from wonders.agents.encoders import CardEncoder
+from wonders.agents.match import play_match
+from wonders.cards.content import load_content
+from wonders.engine.actions import Action
+from wonders.engine.observation import Observation
+from wonders.engine.record import PlayerSetup
+from wonders.env.action_space import ActionSpace
+from wonders.ml.model import PolicyValueNet
+
+VALUE_SCALE = 0.1  # VP margins (~±30) -> roughly unit-scale value targets / rewards
+
+# Default teacher setups: all-heuristic tables plus heuristic against varied baselines.
+DEFAULT_LINEUPS: Tuple[Tuple[str, ...], ...] = (
+    ('heuristic', 'heuristic', 'heuristic'),
+    ('heuristic', 'heuristic', 'heuristic', 'heuristic'),
+    ('heuristic', 'greedy', 'builder'),
+    ('heuristic', 'heuristic', 'greedy', 'civic', 'scientist'),
+)
+
+
+def _margin(obs: Observation) -> float:
+    others = [c.score for c in obs.table if c.seat != obs.seat]
+    return obs.me.score - sum(others) / len(others)
+
+
+class _Recorder(Agent):
+    """Wraps a teacher agent and records each decision it makes."""
+
+    def __init__(self, teacher: Agent, encoder: CardEncoder, space: ActionSpace):
+        self.teacher = teacher
+        self.encoder = encoder
+        self.space = space
+        self.name = teacher.name
+        self.rows: List[Tuple[List[float], List[bool], int, float]] = []
+
+    def decide(self, obs: Observation) -> Action:
+        action = self.teacher.decide(obs)
+        self.rows.append(
+            (self.encoder.encode(obs), self.space.mask(obs.legal_actions), self.space.index(action), _margin(obs))
+        )
+        return action
+
+
+@dataclass
+class Dataset:
+    """Recorded teacher decisions as tensors."""
+
+    obs: torch.Tensor  # [N, obs_size] float32
+    mask: torch.Tensor  # [N, n_actions] bool
+    action: torch.Tensor  # [N] int64
+    value: torch.Tensor  # [N] float32 (scaled remaining margin)
+
+    def __len__(self) -> int:
+        return int(self.action.shape[0])
+
+
+def _collect_game(
+    job: Tuple[int, int, Tuple[AgentSpec, ...], Tuple[str, ...]],
+) -> Tuple[bytes, bytes, List[int], List[float]]:
+    index, seed, lineup, teachers = job
+    content = load_content('base')
+    space = ActionSpace.from_content(content)
+    encoder = CardEncoder(space.card_names)
+    rng = random.Random(seed * 1_000_003 + index)
+    n = len(lineup)
+    seats = [lineup[(i + index) % n] for i in range(n)]
+    names = list(dict.fromkeys(w.name for w in content.wonders))
+    setups = [
+        PlayerSetup(f'{s.name}-{i}', w, rng.choice('AB')) for i, (s, w) in enumerate(zip(seats, rng.sample(names, n)))
+    ]
+    agents: List[Agent] = []
+    recorders: Dict[int, _Recorder] = {}
+    for i, spec in enumerate(seats):
+        agent = spec.build(random.Random(rng.random()))
+        if spec.name in teachers:
+            recorders[i] = _Recorder(agent, encoder, space)
+            agent = recorders[i]
+        agents.append(agent)
+    game, _record = play_match(content, setups, agents, rng=rng)
+    finals = [game.score(i).total for i in range(n)]
+    obs_buf, mask_buf = array('f'), bytearray()
+    actions: List[int] = []
+    values: List[float] = []
+    for i, rec in recorders.items():
+        final_margin = finals[i] - (sum(finals) - finals[i]) / (n - 1)
+        for x, m, a, margin in rec.rows:
+            obs_buf.extend(x)
+            mask_buf.extend(bytes(m))
+            actions.append(a)
+            values.append((final_margin - margin) * VALUE_SCALE)
+    return obs_buf.tobytes(), bytes(mask_buf), actions, values
+
+
+def collect(
+    n_games: int,
+    lineups: Sequence[Sequence[str]] = DEFAULT_LINEUPS,
+    teachers: Sequence[str] = ('heuristic',),
+    seed: int = 0,
+    processes: int = 1,
+) -> Dataset:
+    """Play ``n_games`` (cycling through ``lineups``) and record every ``teachers`` decision."""
+    space = ActionSpace.from_content(load_content('base'))
+    obs_size = CardEncoder(space.card_names).size
+    specs = [tuple(AGENTS[name] for name in lineup) for lineup in lineups]
+    jobs = [(g, seed, specs[g % len(specs)], tuple(teachers)) for g in range(n_games)]
+    if processes > 1:
+        with get_context().Pool(processes, initializer=init_worker) as pool:
+            parts = pool.map(_collect_game, jobs, chunksize=max(1, n_games // (processes * 8)))
+    else:
+        parts = [_collect_game(job) for job in jobs]
+    obs = torch.frombuffer(bytearray(b''.join(p[0] for p in parts)), dtype=torch.float32).view(-1, obs_size)
+    mask = torch.frombuffer(bytearray(b''.join(p[1] for p in parts)), dtype=torch.uint8).view(-1, space.n).bool()
+    action = torch.tensor([a for p in parts for a in p[2]], dtype=torch.int64)
+    value = torch.tensor([v for p in parts for v in p[3]], dtype=torch.float32)
+    return Dataset(obs.clone(), mask, action, value)
+
+
+def new_model(hidden: int = 256, layers: int = 2) -> Tuple[PolicyValueNet, List[str]]:
+    """A fresh network sized for the base-game action space, plus its card vocabulary."""
+    space = ActionSpace.from_content(load_content('base'))
+    model = PolicyValueNet(CardEncoder(space.card_names).size, space.n, hidden=hidden, layers=layers)
+    return model, space.card_names
+
+
+def train_imitation(
+    model: PolicyValueNet,
+    data: Dataset,
+    epochs: int = 10,
+    batch_size: int = 512,
+    lr: float = 1e-3,
+    value_coef: float = 0.5,
+    val_fraction: float = 0.1,
+    seed: int = 0,
+    log: Optional[Callable[[str], None]] = print,
+) -> Dict[str, float]:
+    """Fit ``model`` to ``data``; returns final train loss and held-out accuracy / value MSE."""
+    gen = torch.Generator().manual_seed(seed)
+    order = torch.randperm(len(data), generator=gen)
+    n_val = max(1, int(len(data) * val_fraction))
+    val, train = order[:n_val], order[n_val:]
+    model.set_normalization(data.obs[train])
+    opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
+    ce = nn.CrossEntropyLoss()
+    metrics: Dict[str, float] = {}
+    for epoch in range(epochs):
+        model.train()
+        perm = train[torch.randperm(len(train), generator=gen)]
+        total, batches = 0.0, 0
+        for start in range(0, len(perm), batch_size):
+            idx = perm[start : start + batch_size]
+            logits, value = model(data.obs[idx], data.mask[idx])
+            loss = ce(logits, data.action[idx]) + value_coef * nn.functional.mse_loss(value, data.value[idx])
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
+            total += loss.item()
+            batches += 1
+        metrics = {'train_loss': total / max(1, batches), **evaluate(model, data, val)}
+        if log is not None:
+            log(
+                f'epoch {epoch + 1}/{epochs}: loss {metrics["train_loss"]:.3f}  '
+                f'val acc {metrics["val_accuracy"]:.3f}  val value mse {metrics["val_value_mse"]:.3f}'
+            )
+    model.eval()
+    return metrics
+
+
+def evaluate(model: PolicyValueNet, data: Dataset, idx: torch.Tensor) -> Dict[str, float]:
+    """Accuracy of the greedy policy vs the teacher, and value MSE, on rows ``idx``."""
+    model.eval()
+    with torch.inference_mode():
+        logits, value = model(data.obs[idx], data.mask[idx])
+    accuracy = float((logits.argmax(dim=1) == data.action[idx]).float().mean())
+    mse = float(nn.functional.mse_loss(value, data.value[idx]))
+    return {'val_accuracy': accuracy, 'val_value_mse': mse}

@@ -46,6 +46,26 @@ jobs:
           name: coverage-xml
           path: coverage.xml
 
+  ml:
+    # The learned agent (wonders.ml) needs PyTorch, which the main matrix does not
+    # install; tests/test_ml.py is skipped there and runs here on CPU-only torch.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install ".[test]"
+
+      - name: test the learned agent
+        run: pytest -v tests/test_ml.py
+
   lint:
     runs-on: ubuntu-latest
 

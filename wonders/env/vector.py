@@ -18,12 +18,12 @@ is reproducible regardless of timing.
 from __future__ import annotations
 
 import copy
-import multiprocessing as mp
 import random
 from dataclasses import dataclass, field
 from multiprocessing.connection import Connection
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
+from wonders._mp import get_context, init_worker
 from wonders.agents.base import Agent
 from wonders.env.environment import EnvObs, SingleAgentEnv
 
@@ -116,6 +116,7 @@ class SyncVectorEnv:
 def _worker(remote: Connection, parent_remote: Connection, env_fns: Sequence[EnvFn], keep_obs: bool) -> None:
     """Host a group of envs; each command carries one argument per hosted env."""
     parent_remote.close()
+    init_worker()
     envs = [_AutoResetEnv(fn(), keep_obs) for fn in env_fns]
     try:
         while True:
@@ -149,7 +150,8 @@ class SubprocVectorEnv:
             :class:`SingleAgentEnvFactory` or a ``functools.partial`` rather than a lambda.
         keep_obs: See :class:`SyncVectorEnv`.
         context: Multiprocessing start method (``'fork'``, ``'spawn'``,
-            ``'forkserver'``); defaults to the platform default.
+            ``'forkserver'``); defaults to the platform default, or ``forkserver`` once
+            torch is loaded (see :mod:`wonders._mp`).
         envs_per_worker: How many consecutive envs each worker process hosts.
 
     Use as a context manager (or call :meth:`close`) to shut the workers down.
@@ -164,7 +166,7 @@ class SubprocVectorEnv:
     ):
         if envs_per_worker < 1:
             raise ValueError('envs_per_worker must be at least 1')
-        ctx = mp.get_context(context)
+        ctx = get_context(context)
         self.num_envs = len(env_fns)
         groups = [list(env_fns[k : k + envs_per_worker]) for k in range(0, self.num_envs, envs_per_worker)]
         self._sizes = [len(g) for g in groups]

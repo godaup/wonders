@@ -62,6 +62,29 @@ print(info['scores'])
 For throughput, batch games across processes with `wonders.env.SubprocVectorEnv` and a
 `SingleAgentEnvFactory`.
 
+## Learned agent (optional, PyTorch)
+
+```
+pip install -e ".[ml]"          # CPU wheels: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+wonders play -a neural,heuristic,greedy                 # the bundled trained network
+wonders bench -a neural,heuristic,greedy -n 600 -p 6
+
+wonders train imitate -n 3000 -p 6 -o imitation.pt      # clone HeuristicAgent (~20 s)
+wonders train ppo --init imitation.pt -n 150 -o ppo.pt  # fine-tune with PPO (~5 min on 6 cores)
+wonders bench -a neural:ppo.pt,heuristic,greedy
+```
+
+The bundled network (`wonders/ml/pretrained/ppo_base_3p.pt`) was trained exactly like
+that. Benchmarked over 900 held-out games each (fair share 33% / 25%):
+
+| lineup | win rate |
+|---|---|
+| neural vs heuristic + greedy | 87.9% |
+| neural vs heuristic + heuristic | 80.2% |
+| neural vs greedy + random | 89.9% |
+| neural vs heuristic + builder + civic (4 players, unseen in training) | 55.7% |
+
 ## Credits
 
 This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [waynerv/cookiecutter-pypackage](https://github.com/waynerv/cookiecutter-pypackage) project template.

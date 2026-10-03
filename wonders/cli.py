@@ -1,22 +1,54 @@
 """Console scripts for wonders."""
 
+import os
 import random
 
 import click
 
-AGENT_HELP = "Comma-separated agent names, one per seat (see 'wonders agents')."
+AGENT_HELP = (
+    "Comma-separated agents, one per seat: built-in names (see 'wonders agents'), "
+    "'neural' for the bundled trained network or 'neural:<checkpoint.pt>' (needs PyTorch)."
+)
+ML_MISSING = "this needs PyTorch: pip install 'wonders[ml]'"
+
+
+def _ml():
+    """Import :mod:`wonders.ml`, turning a missing PyTorch into a clean CLI error."""
+    try:
+        import wonders.ml as ml
+    except ImportError as exc:
+        raise click.ClickException(ML_MISSING) from exc
+    return ml
 
 
 def _lineup(agents: str):
-    from wonders.agents.bench import AGENTS, MAX_PLAYERS, MIN_PLAYERS
+    """Parse a lineup into agent specs (built-in names or ``neural:<path>``)."""
+    from wonders.agents.bench import AGENTS, MAX_PLAYERS, MIN_PLAYERS, AgentSpec
 
-    names = [a.strip() for a in agents.split(',') if a.strip()]
-    unknown = [n for n in names if n not in AGENTS]
-    if unknown:
-        raise click.BadParameter(f"unknown agent(s) {', '.join(unknown)}; choose from {', '.join(AGENTS)}")
-    if not MIN_PLAYERS <= len(names) <= MAX_PLAYERS:
-        raise click.BadParameter(f'need {MIN_PLAYERS}-{MAX_PLAYERS} agents (one per seat), got {len(names)}')
-    return names
+    specs = []
+    for entry in (a.strip() for a in agents.split(',')):
+        if not entry:
+            continue
+        if entry == 'neural' or entry.startswith('neural:'):
+            path = entry[len('neural:') :] if entry != 'neural' else _ml().pretrained_path()
+            if not os.path.isfile(path):
+                raise click.BadParameter(f'no checkpoint at {path!r}')
+            label = f'neural:{os.path.splitext(os.path.basename(path))[0]}'
+            specs.append(AgentSpec.of(label, _ml().NeuralAgent, checkpoint=os.path.abspath(path), name=label))
+        elif entry in AGENTS:
+            specs.append(AGENTS[entry])
+        else:
+            raise click.BadParameter(f"unknown agent {entry!r}; choose from {', '.join(AGENTS)} or neural:<path>")
+    if not MIN_PLAYERS <= len(specs) <= MAX_PLAYERS:
+        raise click.BadParameter(f'need {MIN_PLAYERS}-{MAX_PLAYERS} agents (one per seat), got {len(specs)}')
+    # Seats are pooled by name, so two *different* checkpoints must not share a label.
+    checkpoints: dict = {}
+    for spec in specs:
+        if spec.name.startswith('neural:'):
+            path = dict(spec.kwargs)['checkpoint']
+            if checkpoints.setdefault(spec.name, path) != path:
+                raise click.BadParameter('give different checkpoints distinct file names')
+    return specs
 
 
 def _score_table(game) -> str:
@@ -63,22 +95,21 @@ def agents():
 @click.option('--quiet', '-q', is_flag=True, help='Only print the final scores.')
 def play(agents, seed, expansion, side, record_path, quiet):
     """Play one game between agents and print the transcript and scores."""
-    from wonders.agents.bench import AGENTS
     from wonders.agents.match import play_match
     from wonders.cards.content import load_content
     from wonders.engine.record import PlayerSetup
 
-    names = _lineup(agents)
+    specs = _lineup(agents)
     rng = random.Random(seed)
     content = load_content(*expansion)
     wonders = list(dict.fromkeys(w.name for w in content.wonders))
-    if len(names) > len(wonders):
+    if len(specs) > len(wonders):
         raise click.BadParameter(f'at most {len(wonders)} players with these expansions')
     setups = [
-        PlayerSetup(f'{name}-{i}', wonder, rng.choice('AB') if side == 'random' else side)
-        for i, (name, wonder) in enumerate(zip(names, rng.sample(wonders, len(names))))
+        PlayerSetup(f'{spec.name}-{i}', wonder, rng.choice('AB') if side == 'random' else side)
+        for i, (spec, wonder) in enumerate(zip(specs, rng.sample(wonders, len(specs))))
     ]
-    seats = [AGENTS[name].build(random.Random(rng.random())) for name in names]
+    seats = [spec.build(random.Random(rng.random())) for spec in specs]
     game, record = play_match(content, setups, seats, rng=rng, expansions=tuple(expansion))
     if not quiet:
         click.echo(record.text())
@@ -129,6 +160,63 @@ def bench(agents, games, seed, expansion, side, processes):
         _lineup(agents), n_games=games, seed=seed, expansions=tuple(expansion), sides=side, processes=processes
     )
     click.echo(result.table())
+
+
+@main.group()
+def train():
+    """Train a neural agent (needs PyTorch: pip install 'wonders[ml]')."""
+
+
+@train.command()
+@click.option('--games', '-n', default=3000, type=int, show_default=True, help='Teacher games to record.')
+@click.option('--epochs', default=12, type=int, show_default=True)
+@click.option('--hidden', default=256, type=int, show_default=True, help='Hidden layer width.')
+@click.option('--seed', default=0, type=int, show_default=True)
+@click.option('--processes', '-p', default=1, type=int, show_default=True, help='Processes for game collection.')
+@click.option('--out', '-o', default='imitation.pt', show_default=True, type=click.Path(dir_okay=False))
+def imitate(games, epochs, hidden, seed, processes, out):
+    """Clone HeuristicAgent's play into a network (behaviour cloning)."""
+    ml = _ml()
+    from wonders.ml.imitation import collect, new_model, train_imitation
+
+    data = collect(games, seed=seed, processes=processes)
+    click.echo(f'recorded {len(data)} decisions from {games} games')
+    model, names = new_model(hidden=hidden)
+    metrics = train_imitation(model, data, epochs=epochs, seed=seed, log=click.echo)
+    ml.save_checkpoint(out, model, names, source='imitation', games=games, **metrics)
+    click.echo(f'saved {out}')
+
+
+@train.command()
+@click.option('--init', 'init_path', type=click.Path(exists=True, dir_okay=False), help='Start from a checkpoint.')
+@click.option('--iterations', '-n', default=100, type=int, show_default=True)
+@click.option('--opponents', default='heuristic,greedy', show_default=True, help='Built-in opponent names.')
+@click.option('--envs', default=24, type=int, show_default=True, help='Parallel games.')
+@click.option('--envs-per-worker', default=4, type=int, show_default=True, help='0 = no worker processes.')
+@click.option('--lr', default=1e-4, type=float, show_default=True)
+@click.option('--seed', default=0, type=int, show_default=True)
+@click.option('--out', '-o', default='ppo.pt', show_default=True, type=click.Path(dir_okay=False))
+def ppo(init_path, iterations, opponents, envs, envs_per_worker, lr, seed, out):
+    """Improve a network with PPO against built-in opponents."""
+    ml = _ml()
+    from wonders.agents.bench import AGENTS, MAX_PLAYERS, MIN_PLAYERS
+    from wonders.ml.imitation import new_model
+    from wonders.ml.ppo import PPOConfig, train_ppo
+
+    names = [n.strip() for n in opponents.split(',') if n.strip()]
+    unknown = [n for n in names if n not in AGENTS]
+    if unknown or not MIN_PLAYERS <= len(names) + 1 <= MAX_PLAYERS:
+        raise click.BadParameter(f'need {MIN_PLAYERS - 1}-{MAX_PLAYERS - 1} built-in opponents; unknown: {unknown}')
+    if init_path:
+        model, card_names, _meta = ml.load_checkpoint(init_path)
+    else:
+        model, card_names = new_model()
+    config = PPOConfig(
+        opponents=tuple(names), n_envs=envs, envs_per_worker=envs_per_worker, iterations=iterations, lr=lr, seed=seed
+    )
+    train_ppo(model, config, log=click.echo)
+    ml.save_checkpoint(out, model, card_names, source='ppo', init=init_path or '', opponents=opponents)
+    click.echo(f'saved {out}')
 
 
 @main.command()

@@ -123,6 +123,19 @@ scoring categories). It is split into three packages under `wonders/`:
   ~1 worker per physical core). Build envs from a picklable `SingleAgentEnvFactory`
   (deep-copies opponent factories per env).
 
+- **`wonders/ml/`** — the optional learned agent (PyTorch, `[ml]` extra; nothing else
+  imports it, so the core stays dependency-free and `tests/test_ml.py` skips without
+  torch; a separate `ml` CI job installs CPU torch). `model.PolicyValueNet` is a masked
+  policy + value MLP over `CardEncoder` features with stored input normalization;
+  checkpoints carry the card vocabulary. `agent.NeuralAgent` plays it (picklable via a
+  checkpoint path). `imitation.py` records teacher (`HeuristicAgent`) decisions in worker
+  processes and clones them; its value target is the remaining score margin, i.e. the
+  return of the env's `dense` reward × `VALUE_SCALE`, which `ppo.py` (PPO on
+  `SubprocVectorEnv`, learner seat rotating) also uses. `pretrained/ppo_base_3p.pt` is
+  the bundled model (`pretrained_path()`, CLI `-a neural`). **Never fork after torch has
+  run**: `wonders/_mp.get_context()` switches pools to forkserver/spawn once torch is
+  imported and `init_worker` pins workers to one thread — use these for any new pool.
+
 Design rules to preserve when extending:
 - **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;
   the engine introspects effects only through the uniform `Effect` hooks and never

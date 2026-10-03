@@ -13,6 +13,8 @@
 * Replayable `GameRecord` notation (version 2 adds power-granted decisions).
 * About 2.8x faster engine and observations, behaviour verified unchanged by a golden test.
 * CLI: `wonders play | replay | bench | agents | gallery | table`.
+* Optional learned agent (`pip install wonders[ml]`): policy/value network, imitation
+  learning, PPO, a bundled pretrained model and `wonders train imitate | ppo`.
 * Requires Python 3.10+.
 
 ## 0.1.0 (2022-01-21)
