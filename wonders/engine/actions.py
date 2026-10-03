@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
+from typing import Dict, List
 
 from wonders.cards.base import Card
 
@@ -12,6 +13,7 @@ class ActionKind(enum.Enum):
     BUILD = 'build'  # build the structure into your city
     WONDER = 'wonder'  # bury the card to build your next wonder stage
     DISCARD = 'discard'  # discard for 3 coins
+    FREE = 'free'  # build without paying: Olympia's free build, or Halicarnassus from the discard pile
 
 
 @dataclass(frozen=True)
@@ -30,3 +32,29 @@ class Action:
     @classmethod
     def discard(cls, card: Card) -> 'Action':
         return cls(ActionKind.DISCARD, card)
+
+    @classmethod
+    def free(cls, card: Card) -> 'Action':
+        return cls(ActionKind.FREE, card)
+
+
+class DecisionKind(enum.Enum):
+    """Why the engine is asking for a decision."""
+
+    PLAY = 'play'  # the regular simultaneous turn: every seat plays a card from hand
+    LAST_CARD = 'last_card'  # Babylon B: play the 7th card instead of discarding it
+    DISCARD_BUILD = 'discard_build'  # Halicarnassus: pick a discarded card to build for free
+
+
+@dataclass
+class DecisionPoint:
+    """A request for actions: each seat in ``options`` chooses one card from its list.
+
+    For ``PLAY`` and ``LAST_CARD`` the options are the seat's hand; for
+    ``DISCARD_BUILD`` they are the buildable cards in the discard pile.
+    """
+
+    age: int
+    turn: int
+    kind: DecisionKind
+    options: Dict[int, List[Card]]

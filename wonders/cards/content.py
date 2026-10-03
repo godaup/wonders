@@ -24,13 +24,17 @@ from wonders.cards.base import Card, Color, Cost, Ressource, ScienceSymbol
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.base import Effect
 from wonders.effects.library import (
+    BuildFromDiscard,
     Coins,
+    CopyGuild,
     Debt,
     Diplomacy,
+    FreeBuildPerAge,
     GainToken,
     Grant,
     Military,
     MultiProduction,
+    PlayLastCard,
     Plunder,
     Production,
     Science,
@@ -91,6 +95,10 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'plunder': lambda s: Plunder(s['amount'], s.get('scope', 'neighbours')),
     'grant': lambda s: Grant(s['amount'], s.get('scope', 'neighbours')),
     'gain_token': lambda s: GainToken(s['value']),
+    'play_last_card': lambda s: PlayLastCard(),
+    'free_build': lambda s: FreeBuildPerAge(s.get('count', 1)),
+    'build_from_discard': lambda s: BuildFromDiscard(s.get('count', 1)),
+    'copy_guild': lambda s: CopyGuild(s.get('count', 1)),
 }
 
 

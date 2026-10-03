@@ -94,7 +94,7 @@ def test_flat_encoder_is_fixed_length():
     v2 = plain.encode(obs)
     assert len(v1) == len(v2) and all(isinstance(x, float) for x in v1)
     # history adds 3 counts per player
-    assert len(with_history.encode(obs)) == len(v1) + 3 * obs.n_players
+    assert len(with_history.encode(obs)) == len(v1) + 4 * obs.n_players
 
 
 def test_history_is_filtered_for_opponents():

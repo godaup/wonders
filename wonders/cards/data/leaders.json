@@ -486,9 +486,7 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "build_from_discard",
-          "description": "build one card from the discard pile for free"
+          "type": "build_from_discard"
         }
       ]
     },

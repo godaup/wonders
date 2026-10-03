@@ -21,12 +21,34 @@ def _card_points(card: CardView) -> tuple:
     return (points, -(card.build_coin_cost or 0))
 
 
+# A free build (Olympia) is only worth spending on a card costing at least this many coins.
+FREE_BUILD_MIN_COST = 2
+
+
 def _builds(obs: Observation):
-    return [a for a in obs.legal_actions if a.kind is ActionKind.BUILD]
+    """One build action per buildable card, using a free build where it pays off.
+
+    A FREE action replaces the paid BUILD of the same card when the card is otherwise
+    unaffordable or would cost at least ``FREE_BUILD_MIN_COST`` coins. During a
+    discard-pile build every legal action is FREE, so they are all kept.
+    """
+    views = {c.name: c for c in obs.hand}
+    paid = {a.card.name: a for a in obs.legal_actions if a.kind is ActionKind.BUILD}
+    for a in obs.legal_actions:
+        if a.kind is ActionKind.FREE:
+            cost = views[a.card.name].build_coin_cost
+            if obs.decision == 'discard_build' or cost is None or cost >= FREE_BUILD_MIN_COST:
+                paid[a.card.name] = a
+    return list(paid.values())
 
 
 def _first(obs: Observation, kind: ActionKind):
     return next((a for a in obs.legal_actions if a.kind is kind), None)
+
+
+def _fallback(obs: Observation) -> Action:
+    """Advance the wonder, else discard, else (discard-pile build) the first option."""
+    return _first(obs, ActionKind.WONDER) or _first(obs, ActionKind.DISCARD) or obs.legal_actions[0]
 
 
 class RandomAgent(Agent):
@@ -46,7 +68,7 @@ class DiscardAgent(Agent):
     name = 'hoarder'
 
     def decide(self, obs: Observation) -> Action:
-        return _first(obs, ActionKind.DISCARD)
+        return _first(obs, ActionKind.DISCARD) or obs.legal_actions[0]
 
 
 class GreedyAgent(Agent):
@@ -63,7 +85,7 @@ class GreedyAgent(Agent):
         builds = _builds(obs)
         if builds:
             return max(builds, key=lambda a: _card_points(views[a.card.name]))
-        return _first(obs, ActionKind.WONDER) or _first(obs, ActionKind.DISCARD)
+        return _fallback(obs)
 
 
 class ArchetypeAgent(Agent):
@@ -92,7 +114,7 @@ class ArchetypeAgent(Agent):
                 return wonder
         if builds:
             return max(builds, key=lambda a: _card_points(views[a.card.name]))
-        return _first(obs, ActionKind.WONDER) or _first(obs, ActionKind.DISCARD)
+        return _fallback(obs)
 
 
 class MilitaristAgent(ArchetypeAgent):

@@ -14,6 +14,14 @@ Hooks:
     * ``trade_rules()``     -> trade-price modifiers
     * ``coins_on_build()``  -> coins gained from the bank when the card is built
     * ``victory_points()``  -> end-game victory points
+
+Turn-structure powers (the special wonder stages) are hooks too, so the engine asks
+every effect the same questions instead of switching on concrete classes:
+
+    * ``plays_last_card()``     -> may play the 7th card of each Age (Babylon B)
+    * ``free_builds_per_age()`` -> free builds from hand allowed each Age (Olympia A)
+    * ``discard_builds()``      -> free builds from the discard pile, granted once on build
+    * ``guild_copies()``        -> neighbour guilds copied at scoring (Olympia B)
 """
 
 from __future__ import annotations
@@ -95,4 +103,16 @@ class Effect:
         """
 
     def victory_points(self, ctx: Context) -> int:
+        return 0
+
+    def plays_last_card(self) -> bool:
+        return False
+
+    def free_builds_per_age(self) -> int:
+        return 0
+
+    def discard_builds(self) -> int:
+        return 0
+
+    def guild_copies(self) -> int:
         return 0

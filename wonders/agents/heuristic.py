@@ -37,6 +37,7 @@ DEFAULT_WEIGHTS: Dict[str, float] = {
     'chain': 0.7,  # each structure this unlocks is a potential future free build
     'wonder_bonus': 0.75,  # tempo value of advancing the wonder at all
     'discard': 1.0,  # = the 3 coins a discard yields (fallback only)
+    'free_build': 1.5,  # opportunity cost of spending Olympia's once-per-Age free build
 }
 
 _SYMBOLS = {'tablet': ScienceSymbol.TABLET, 'gear': ScienceSymbol.GEAR, 'compass': ScienceSymbol.COMPASS}
@@ -68,7 +69,11 @@ class HeuristicAgent(Agent):
         def value(action: Action) -> float:
             if action.kind is ActionKind.WONDER:
                 return self._wonder_value(obs)
-            return self._card_value(obs, views[action.card.name])
+            card = views[action.card.name]
+            if action.kind is ActionKind.FREE:
+                spent = 0.0 if obs.decision == 'discard_build' else self.w['free_build']
+                return self._card_value(obs, card) + (card.build_coin_cost or 0) * self.w['coin'] - spent
+            return self._card_value(obs, card)
 
         return max(candidates, key=value)
 
