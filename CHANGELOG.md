@@ -5,7 +5,8 @@
 * Complete base game: full deck and wonders, with the special wonder powers mechanized
   (Babylon B, Olympia A/B, Halicarnassus).
 * Optional, combinable expansions: Leaders (official deck, draft and recruitment) and
-  Cities (official deck).
+  Cities (official deck), with every leader and black-card power mechanized; the
+  training env supports the Leaders draft and recruitment.
 * Agents: baselines, strategy agents and a tuned `HeuristicAgent`; `wonders.agents.bench`
   for win rates with confidence intervals.
 * Training environments: fixed `ActionSpace` with masks, `WondersEnv` (multi-agent),

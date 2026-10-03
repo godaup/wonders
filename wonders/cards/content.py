@@ -268,6 +268,18 @@ def build_age_deck(
     return deck
 
 
+LEADERS_PER_PLAYER = 4
+
+
+def deal_leaders(content: 'Content', n_players: int, rng: random.Random) -> List[List[Card]]:
+    """Shuffle the leader deck and deal ``LEADERS_PER_PLAYER`` leaders to each seat (for the draft)."""
+    deck = list(content.leaders())
+    rng.shuffle(deck)
+    if len(deck) < LEADERS_PER_PLAYER * n_players:
+        raise ValueError(f'not enough leaders for {n_players} players')
+    return [[deck.pop() for _ in range(LEADERS_PER_PLAYER)] for _ in range(n_players)]
+
+
 def deal_hands(deck: Sequence[Card], n_players: int) -> List[List[Card]]:
     """Split a deck into ``n_players`` equal hands (drops any remainder)."""
     size = len(deck) // n_players

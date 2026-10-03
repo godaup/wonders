@@ -117,7 +117,8 @@ scoring categories). It is split into three packages under `wonders/`:
   per-acting-seat `{'observation', 'action_mask'}` (raw `Observation` in
   `infos[seat]['obs']`), rewards `margin`/`win`/`score`/`dense`, and `record()` gives
   the `GameRecord`. `SingleAgentEnv` is the Gym-style wrapper (one learner seat,
-  `Agent` opponents). Leaders is not supported by the env yet. `vector.py` batches
+  `Agent` opponents). With Leaders the env also yields `draft` / `recruit` decisions
+  (`CardEncoder(..., LEADERS_DECISIONS)` is chosen automatically). `vector.py` batches
   `SingleAgentEnv`s Gymnasium-style with auto-reset: `SyncVectorEnv` (in-process) and
   `SubprocVectorEnv` (worker processes; `envs_per_worker` amortizes lockstep rounds —
   ~1 worker per physical core). Build envs from a picklable `SingleAgentEnvFactory`
@@ -177,13 +178,24 @@ player, so Cities deals 8 not 7). `armada`/`babel` are registered but flagged
 `implemented=False` (`Ruleset.unimplemented`).
 
 `leaders.json` (36 leaders) and `cities.json` (42 black cards) hold the **official
-functional decks** (costs/effects/counts). What the effect model can't yet express is
-flagged `Special` and does not score: leader cost-discounts / on-trigger income /
-set & science bonuses / recruit-free; Cities per-token & per-stage plunder, copy-science,
-and wildcard production. (Solomon / Forging Agency use the real `BuildFromDiscard`; a
-recruited Solomon resolves it after the first turn of that Age.) The Leaders draft (pick-and-pass of 4) and per-Age recruitment
-are implemented in `match.play_match` (`Agent.draft_leader` / `Agent.recruit`). Outstanding: the
-4 Leaders guilds and the Rome/Byzantium/Petra wonder boards (cost data unverified).
+functional decks** (costs/effects/counts), and **every power is mechanized** — no
+`Special` placeholders remain (`Special` stays available for future content). The
+Leaders/Cities powers are uniform hooks too: `science_set_bonus` / `science_copies`
+(scoring), `build_income(BuildEvent)`, `coins_per_victory`, `redirects_defeats`,
+`resource_discount(target)` (the payment solver waives the dearest units),
+`builds_free(card)`, `bank_purchases` (solver bank slots), `private_production(produced)`
+(own-use slots neighbours cannot buy) and `trade_reduction`. `Context.table` gives effects
+every player, so the `'others'` scope hits *all* other players (Cities plunder/grant use
+it). Effects built from JSON keep the spec's `description` as `effect.label` for the card
+renderer. A recruited Solomon resolves his discard build after the first turn of that Age.
+
+The Leaders draft (pick-and-pass of 4) and each Age's recruitment are engine coroutines
+(`Game.draft_steps` / `Game.recruit_steps`, decision kinds `DRAFT` / `RECRUIT`) driven by
+`play_and_record` (via `match.play_match`), replay and the env alike. A draft pick is
+expressed as `Action.build(leader)` so the action space is unchanged; `Agent.act(obs,
+options)` routes draft/recruit decisions to `Agent.draft_leader` / `Agent.recruit`.
+Outstanding: the 4 Leaders guilds and the Rome/Byzantium/Petra wonder boards (cost data
+unverified). Leader VP is bucketed under `commercial` in `ScoreBreakdown`.
 
 ## Conventions
 

@@ -301,6 +301,8 @@ class Game:
     def legal_actions(self, i: int, hand: List[Card]) -> List[Action]:
         """Legal actions for seat ``i`` choosing from ``hand`` at the current decision."""
         actions: List[Action] = []
+        if self.decision is DecisionKind.DRAFT:  # keep a leader: "build" stands for "take"
+            return [Action.build(card) for card in hand]
         if self.decision is DecisionKind.DISCARD_BUILD:
             seen = set()
             for card in hand:
@@ -489,6 +491,37 @@ class Game:
             hands = self._pass(hands, pass_left)
         self.decision = DecisionKind.PLAY
         self.resolve_conflict(age)
+
+    def draft_steps(self, hands: List[List[Card]]) -> AgeSteps:
+        """Leaders draft as a coroutine: keep one leader per round, pass hands left.
+
+        ``hands`` are the dealt leader hands (one per seat, equal size). Each round every
+        seat keeps one card (``Action.build`` of it) and passes the rest to the left;
+        the kept cards become each player's ``leaders_hand``.
+        """
+        kept: List[List[Card]] = [[] for _ in range(self.n)]
+        hands = [list(h) for h in hands]
+        for round_ in range(len(hands[0])):
+            self.turn = round_
+            actions = yield self._ask(DecisionKind.DRAFT, {i: hands[i] for i in range(self.n)})
+            for i in range(self.n):
+                hands[i].remove(actions[i].card)
+                kept[i].append(actions[i].card)
+            hands = [hands[(i - 1) % self.n] for i in range(self.n)]  # seat i receives from i-1
+        for player, cards in zip(self.players, kept):
+            player.leaders_hand = cards
+        self.decision = DecisionKind.PLAY
+
+    def recruit_steps(self, age: int) -> AgeSteps:
+        """Leaders recruitment before ``age``: each seat holding leaders plays one, simultaneously."""
+        self.age, self.turn = age, 0
+        seats = {i: p.leaders_hand for i, p in enumerate(self.players) if p.leaders_hand}
+        if seats:
+            actions = yield self._ask(DecisionKind.RECRUIT, seats)
+            for i in sorted(actions):
+                self.players[i].leaders_hand.remove(actions[i].card)
+            self._resolve(actions)
+        self.decision = DecisionKind.PLAY
 
     def _ask(self, kind: DecisionKind, options: Dict[int, List[Card]]) -> DecisionPoint:
         self.decision = kind

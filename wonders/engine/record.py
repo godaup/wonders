@@ -28,9 +28,6 @@ from wonders.engine.phase import Phase
 from wonders.engine.player import Player
 from wonders.ruleset import Ruleset
 
-# A per-seat recruit decision at the start of an Age: (game, seat) -> Action | None.
-RecruitFn = Callable[[Game, int], Optional[Action]]
-
 _CODE = {ActionKind.BUILD: 'B', ActionKind.WONDER: 'W', ActionKind.DISCARD: 'D', ActionKind.FREE: 'F'}
 _KIND = {code: kind for kind, code in _CODE.items()}
 
@@ -127,7 +124,8 @@ class GameRecord:
         for seat, names in self.leader_hands.items():
             players[seat].leaders_hand = [content.card(n) for n in names]
         for age in (1, 2, 3):
-            _apply_recruits(game, self.recruits.get(age))
+            if self.recruits.get(age):
+                drive(game.recruit_steps(age), _recorded_recruits(self.recruits[age]))
             deck = [content.card(name) for name in self.age_decks[age]]
             hands = deal_hands(deck, game.n)
             drive(game.age_steps(age, hands), self._chooser(age))
@@ -159,18 +157,23 @@ class GameRecord:
         return choose
 
 
-def _apply_recruits(game: Game, plays: Optional[List[Optional[List[str]]]]) -> None:
-    """Apply one Age's recorded leader recruitment (per-seat play or None)."""
-    if not plays:
-        return
-    for seat, entry in enumerate(plays):
-        if entry is None:
-            continue
-        code, name = entry
-        player = game.players[seat]
-        card = next(c for c in player.leaders_hand if c.name == name)
-        player.leaders_hand.remove(card)
-        game.apply(seat, Action(_KIND[code], card))
+def _recorded_recruits(plays: List[Optional[List[str]]]) -> Callable[[DecisionPoint], Dict[int, Action]]:
+    """Answer a recruitment decision point from one Age's recorded plays."""
+
+    def choose(point: DecisionPoint) -> Dict[int, Action]:
+        actions = {}
+        for seat, options in point.options.items():
+            entry = plays[seat] if seat < len(plays) else None
+            if entry is None:
+                raise ReplayError(f'Age {point.age}: no recorded recruitment for seat {seat}')
+            code, name = entry
+            card = next((c for c in options if c.name == name), None)
+            if card is None:
+                raise ReplayError(f'Age {point.age}: recorded leader {name!r} is not in seat {seat}\'s hand')
+            actions[seat] = Action(_KIND[code], card)
+        return actions
+
+    return choose
 
 
 class RecordBuilder:
@@ -221,33 +224,39 @@ def play_and_record(
     rng,
     expansions: Tuple[str, ...] = ('base',),
     on_turn_extra: Optional[Callable[[int, int, Sequence[Optional[Action]]], None]] = None,
-    leader_hands: Optional[Dict[int, List[Card]]] = None,
-    recruit: Optional[RecruitFn] = None,
+    leader_draft: Optional[List[List[Card]]] = None,
 ) -> Tuple[Game, GameRecord]:
     """Play a fresh game with ``policy`` and capture a :class:`GameRecord`.
 
     ``on_turn_extra`` (if given) is chained after recording each turn — used by the
     match runner to maintain an observation history. It also sees the extra decisions
-    granted by wonder powers, as a per-seat list with ``None`` for seats not acting. ``leader_hands`` (already
-    drafted, per seat) and ``recruit`` (called before each Age) drive the Leaders
-    recruitment phase.
+    granted by wonder powers, as a per-seat list with ``None`` for seats not acting.
+
+    ``leader_draft`` (the dealt leader hands, see :func:`~wonders.cards.content.deal_leaders`)
+    turns on the Leaders phases: ``policy`` drafts (``game.decision`` is ``DRAFT``) and,
+    before each Age, recruits (``RECRUIT``) — the same coroutines the env drives.
     """
     coins = Ruleset.of(*expansions).starting_coins
     players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in setups]
     game = Game(players)
     builder = RecordBuilder(setups, tuple(expansions))
-    if leader_hands:
-        for seat, cards in leader_hands.items():
-            players[seat].leaders_hand = list(cards)
-        builder.set_leader_hands(leader_hands)
+
+    def choose(point: DecisionPoint) -> Dict[int, Action]:
+        return {seat: policy(game, seat, options) for seat, options in point.options.items()}
+
+    if leader_draft is not None:
+        drive(game.draft_steps(leader_draft), choose)
+        builder.set_leader_hands({i: list(p.leaders_hand) for i, p in enumerate(players)})
     for age in (1, 2, 3):
-        if recruit is not None:  # recruitment phase precedes the Age's card play
-            plays = [recruit(game, seat) for seat in range(game.n)]
-            for seat, action in enumerate(plays):
-                if action is not None:
-                    players[seat].leaders_hand.remove(action.card)
-                    game.apply(seat, action)
-            builder.add_recruits(age, plays)
+        if leader_draft is not None:  # recruitment phase precedes the Age's card play
+            recruited: Dict[int, Action] = {}
+
+            def recruit(point: DecisionPoint, _recruited=recruited) -> Dict[int, Action]:
+                _recruited.update(choose(point))
+                return _recruited
+
+            drive(game.recruit_steps(age), recruit)
+            builder.add_recruits(age, [recruited.get(i) for i in range(game.n)])
         deck = build_age_deck(content, age, game.n, rng)
         builder.set_deck(age, [c.name for c in deck])
         hands = deal_hands(deck, game.n)

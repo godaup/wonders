@@ -43,6 +43,8 @@ class DecisionKind(IdentityEnum):
     PLAY = 'play'  # the regular simultaneous turn: every seat plays a card from hand
     LAST_CARD = 'last_card'  # Babylon B: play the 7th card instead of discarding it
     DISCARD_BUILD = 'discard_build'  # Halicarnassus: pick a discarded card to build for free
+    DRAFT = 'draft'  # Leaders: keep one leader from the passed hand (expressed as BUILD of it)
+    RECRUIT = 'recruit'  # Leaders: start of an Age, play one leader (recruit / wonder / discard)
 
 
 @dataclass
