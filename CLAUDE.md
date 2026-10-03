@@ -116,7 +116,11 @@ scoring categories). It is split into three packages under `wonders/`:
   per-acting-seat `{'observation', 'action_mask'}` (raw `Observation` in
   `infos[seat]['obs']`), rewards `margin`/`win`/`score`/`dense`, and `record()` gives
   the `GameRecord`. `SingleAgentEnv` is the Gym-style wrapper (one learner seat,
-  `Agent` opponents). Leaders is not supported by the env yet.
+  `Agent` opponents). Leaders is not supported by the env yet. `vector.py` batches
+  `SingleAgentEnv`s Gymnasium-style with auto-reset: `SyncVectorEnv` (in-process) and
+  `SubprocVectorEnv` (worker processes; `envs_per_worker` amortizes lockstep rounds —
+  ~1 worker per physical core). Build envs from a picklable `SingleAgentEnvFactory`
+  (deep-copies opponent factories per env).
 
 Design rules to preserve when extending:
 - **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;
@@ -130,6 +134,13 @@ Design rules to preserve when extending:
   `GameRecord` is the canonical serialized game. `Game.legal_actions`/`observe`/`score`
   remain the low-level primitives. Keep state explicit, serializable, and keep the
   Observation partial-observability-correct (never leak hidden cards to opponents).
+- **Performance caches have invariants** (games must stay bit-identical —
+  `tests/test_determinism.py` holds a golden digest; only update it for deliberate
+  rule/agent changes): `Player._cache` (production, trade prices, free-build allowance)
+  is cleared only by `add_card`/`add_stage`, so never mutate `cards`/`stages_built`
+  directly; `Game._payments` is keyed by the seat's and neighbours' `Player.version`
+  plus coins; `ObservationBuilder` reuses the public table per `Game.tick`, which the
+  engine bumps on every state change it makes. Hot enums derive from `IdentityEnum`.
 
 `wonders/wonders.py` is now a thin public-API re-export (`from wonders.wonders import
 Game, Player, ...`).
