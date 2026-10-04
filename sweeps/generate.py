@@ -148,6 +148,7 @@ def cli() -> None:
     for name, spec in (('pilot', pilot()), ('main', main_sweep(hp)), ('league', league_sweep(hp))):
         with open(os.path.join(HERE, f'{name}.json'), 'w', encoding='utf-8') as fh:
             json.dump(spec, fh, indent=1)
+            fh.write("\n")
         print(f"{name}.json: {len(spec['runs'])} run entries")
 
 
