@@ -1,0 +1,182 @@
+{
+ "out": "runs/main",
+ "runs": [
+  {
+   "name": "league-ppo-C-256x2-s0",
+   "kind": "ppo",
+   "init": "ppo-C-256x2-s0",
+   "steps": 10000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 40,
+    "envs_per_worker": 7,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.003,
+    "seed": 7,
+    "league": true,
+    "snapshot_every": 50,
+    "league_size": 6
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  }
+ ]
+}

@@ -8,7 +8,7 @@ from typing import List, Optional, Sequence
 import torch
 
 from wonders.agents.base import Agent
-from wonders.agents.encoders import CardEncoder
+from wonders.agents.encoders import DECISIONS, CardEncoder
 from wonders.engine.actions import Action
 from wonders.engine.observation import Observation
 from wonders.env.action_space import ActionSpace
@@ -27,6 +27,7 @@ class NeuralAgent(Agent):
         checkpoint: Path to a checkpoint from :func:`~wonders.ml.model.save_checkpoint`.
         model: An in-memory network (alternative to ``checkpoint``).
         card_names: The model's card vocabulary (required with ``model``).
+        decisions: The model's decision kinds (stored in checkpoints; defaults to the base kinds).
         sample: Sample from the policy instead of taking the most likely action.
         rng: Random source for sampling (seeded for reproducibility).
         name: Display name.
@@ -40,18 +41,20 @@ class NeuralAgent(Agent):
         *,
         model: Optional[PolicyValueNet] = None,
         card_names: Optional[Sequence[str]] = None,
+        decisions: Optional[Sequence[str]] = None,
         sample: bool = False,
         rng: Optional[random.Random] = None,
         name: str = 'neural',
     ):
         if checkpoint is not None:
-            model, loaded_names, _meta = load_checkpoint(checkpoint)
+            model, loaded_names, meta = load_checkpoint(checkpoint)
             card_names = loaded_names
+            decisions = meta.get('decisions', decisions)
         if model is None or card_names is None:
             raise ValueError('give a checkpoint path, or both model and card_names')
         self.model = model.eval()
         self.action_space = ActionSpace(card_names)
-        self.encoder = CardEncoder(self.action_space.card_names)
+        self.encoder = CardEncoder(self.action_space.card_names, tuple(decisions or DECISIONS))
         if self.model.config['obs_size'] != self.encoder.size or self.model.config['n_actions'] != self.action_space.n:
             raise ValueError('model shape does not match the card vocabulary')
         self.sample = sample

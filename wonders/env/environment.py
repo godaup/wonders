@@ -59,6 +59,9 @@ class WondersEnv:
             winner, ``-1/(n-1)`` to the others), ``'score'`` (final own VP), or ``'dense'``
             (each step: change in own VP minus the opponents' mean; sums to the final margin
             over the mean).
+        card_names: Fix the action-space / encoder vocabulary (e.g. :func:`~wonders.env.vocab.
+            universal_vocab`), so one network fits games of any expansion combination.
+        decisions: Decision kinds the encoder one-hots (defaults to this game's kinds).
     """
 
     def __init__(
@@ -70,6 +73,8 @@ class WondersEnv:
         setups: Optional[Sequence[PlayerSetup]] = None,
         sides: str = 'random',
         reward: str = 'margin',
+        card_names: Optional[Sequence[str]] = None,
+        decisions: Optional[Sequence[str]] = None,
     ):
         self.ruleset = Ruleset.of(*expansions)
         if not 3 <= n_players <= 7:
@@ -82,9 +87,16 @@ class WondersEnv:
             raise ValueError('need one setup per seat')
         self.expansions = tuple(expansions)
         self.content = content if content is not None else load_content(*self.ruleset.content_expansions)
-        self.action_space = ActionSpace.from_content(self.content)
+        if card_names is not None:  # a fixed (e.g. universal) vocabulary, shared across games
+            missing = {c.name for c in self.content.cards} - set(card_names)
+            if missing:
+                raise ValueError(f'card_names lacks {len(missing)} cards of this content, e.g. {sorted(missing)[:3]}')
+            self.action_space = ActionSpace(card_names)
+        else:
+            self.action_space = ActionSpace.from_content(self.content)
         self.leaders = self.ruleset.uses('leaders')
-        decisions = LEADERS_DECISIONS if self.leaders else DECISIONS
+        if decisions is None:
+            decisions = LEADERS_DECISIONS if self.leaders else DECISIONS
         self.encoder = encoder if encoder is not None else CardEncoder(self.action_space.card_names, decisions)
         self.n_players = n_players
         self.setups = list(setups) if setups is not None else None
