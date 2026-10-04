@@ -117,7 +117,8 @@ scoring categories). It is split into three packages under `wonders/`:
   per-acting-seat `{'observation', 'action_mask'}` (raw `Observation` in
   `infos[seat]['obs']`), rewards `margin`/`win`/`score`/`dense`, and `record()` gives
   the `GameRecord`. `SingleAgentEnv` is the Gym-style wrapper (one learner seat,
-  `Agent` opponents). Leaders is not supported by the env yet. `vector.py` batches
+  `Agent` opponents). With Leaders the env also yields `draft` / `recruit` decisions
+  (`CardEncoder(..., LEADERS_DECISIONS)` is chosen automatically). `vector.py` batches
   `SingleAgentEnv`s Gymnasium-style with auto-reset: `SyncVectorEnv` (in-process) and
   `SubprocVectorEnv` (worker processes; `envs_per_worker` amortizes lockstep rounds —
   ~1 worker per physical core). Build envs from a picklable `SingleAgentEnvFactory`
@@ -177,13 +178,40 @@ player, so Cities deals 8 not 7). `armada`/`babel` are registered but flagged
 `implemented=False` (`Ruleset.unimplemented`).
 
 `leaders.json` (36 leaders) and `cities.json` (42 black cards) hold the **official
-functional decks** (costs/effects/counts). What the effect model can't yet express is
-flagged `Special` and does not score: leader cost-discounts / on-trigger income /
-set & science bonuses / recruit-free; Cities per-token & per-stage plunder, copy-science,
-and wildcard production. (Solomon / Forging Agency use the real `BuildFromDiscard`; a
-recruited Solomon resolves it after the first turn of that Age.) The Leaders draft (pick-and-pass of 4) and per-Age recruitment
-are implemented in `match.play_match` (`Agent.draft_leader` / `Agent.recruit`). Outstanding: the
-4 Leaders guilds and the Rome/Byzantium/Petra wonder boards (cost data unverified).
+functional decks** (costs/effects/counts), and **every power is mechanized** — no
+`Special` placeholders remain (`Special` stays available for future content). The
+Leaders/Cities powers are uniform hooks too: `science_set_bonus` / `science_copies`
+(scoring), `build_income(BuildEvent)`, `coins_per_victory`, `redirects_defeats`,
+`resource_discount(target)` (the payment solver waives the dearest units),
+`builds_free(card)`, `bank_purchases` (solver bank slots), `private_production(produced)`
+(own-use slots neighbours cannot buy) and `trade_reduction`. `Context.table` gives effects
+every player, so the `'others'` scope hits *all* other players (Cities plunder/grant use
+it). Effects built from JSON keep the spec's `description` as `effect.label` for the card
+renderer. Power decisions (Halicarnassus / Solomon discard builds, Courtesans' leader copy,
+Rome B extra recruits) are resolved by `Game._power_steps`, after every turn *and* during
+recruitment. Powers were checked against the official Leaders and Cities rulebooks
+(Sepulcher/Cenotaph count victory tokens; Nero pays for every victory token incl. raider
+tokens; Hatshepsut pays per neighbour bought from; Black Market / Secret Warehouse look only at
+brown/grey cards + the board resource; masks copy distinct neighbour *green cards*). Our card
+names are paraphrased (e.g. Pigeonhole = Pigeon Loft, Chamber of Builders = Builders' Union,
+Architect Firm = Architect Cabinet); Smugglers Cache has no counterpart in the 1st-edition
+Cities rulebook (East/West Clandestine Wharf are the official trade-rebate cards).
+
+The Leaders draft (pick-and-pass of 4) and each Age's recruitment are engine coroutines
+(`Game.draft_steps` / `Game.recruit_steps`, decision kinds `DRAFT` / `RECRUIT`) driven by
+`play_and_record` (via `match.play_match`), replay and the env alike. A draft pick is
+expressed as `Action.build(leader)` so the action space is unchanged; `Agent.act(obs,
+options)` routes draft/recruit decisions to `Agent.draft_leader` / `Agent.recruit`.
+Leaders also adds 4 guilds (Gamers, Courtesans, Diplomats, Architects — mixed into Age III's
+guild draw) and Rome; Cities adds Petra and Byzantium. Costs/effects come from the official
+rulebooks (Rome's and Byzantium B's stage costs were read off the rulebook board images).
+`Wonder.starting_resource` may be `None` (Rome) and `Wonder.effects` holds passive board powers
+(Rome A: free leaders; Rome B: `CoinDiscount` 2 for self / 1 for neighbours). Rome B stage 1
+draws from `Game.leader_box` (the undealt leaders, recorded in `GameRecord.leader_box` so
+replays are exact); stages 2–3 grant a `LEADER_BUILD` decision. The Courtesans' Guild grants a
+`COPY_LEADER` decision; the copy lives in `Player.copied_leaders` (powers apply, but it is not a
+leader card for the Diplomats' Guild). `ScoreBreakdown` has `leaders` (white cards + copies)
+and `cities` (black cards) columns; the official scorecard adds both on one row.
 
 ## Conventions
 

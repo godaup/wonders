@@ -4,7 +4,132 @@
     "description": "Official Leaders (2011): 35 leaders (white cards recruited for coins). Starting treasury is 6.",
     "note": "Leaders are drafted separately at game start (deal 4, pick-and-pass) and one is recruited per Age; the draft/recruit phase is not yet mechanized, so leaders are content-only here (buildable by paying their coin cost if in hand). Cost discounts, build-from-discard, copy, pay-for-any-good, on-trigger coin income, and set/science bonuses are flagged Special (not scored). The Rome wonder and the 4 Leaders guilds are omitted (board resource costs / guild costs unverified)."
   },
-  "wonders": [],
+  "wonders": [
+    {
+      "name": "The Colosseum of Rome",
+      "expansion": "leaders",
+      "side": "A",
+      "starting_resource": null,
+      "effects": [
+        {
+          "type": "build_free",
+          "colors": [
+            "white"
+          ],
+          "description": "recruit leaders for free"
+        }
+      ],
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "bricks": 1,
+              "wood": 1,
+              "ore": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 4
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "bricks": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Colosseum of Rome",
+      "expansion": "leaders",
+      "side": "B",
+      "starting_resource": null,
+      "effects": [
+        {
+          "type": "coin_discount",
+          "colors": [
+            "white"
+          ],
+          "amount": 2,
+          "neighbours_amount": 1,
+          "description": "leaders cost 2 less here, 1 less for neighbours"
+        }
+      ],
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 1,
+              "bricks": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "coins",
+              "amount": 5
+            },
+            {
+              "type": "leader_draw",
+              "count": 4,
+              "description": "draw 4 leaders from the box"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 1,
+              "bricks": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "extra_recruit",
+              "count": 1,
+              "description": "recruit an extra leader now"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "extra_recruit",
+              "count": 1,
+              "description": "recruit an extra leader now"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "cards": [
     {
       "name": "Sappho",
@@ -336,8 +461,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "science_set_bonus",
+          "type": "science_set_bonus",
+          "points": 3,
           "description": "+3 VP per completed set of 3 science symbols"
         }
       ]
@@ -351,8 +476,13 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "set_vp",
+          "type": "color_sets",
+          "colors": [
+            "blue",
+            "red",
+            "green"
+          ],
+          "vp_each": 3,
           "description": "3 VP per set of one blue + one red + one green card"
         }
       ]
@@ -366,8 +496,17 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "set_vp",
+          "type": "color_sets",
+          "colors": [
+            "brown",
+            "grey",
+            "blue",
+            "yellow",
+            "red",
+            "green",
+            "purple"
+          ],
+          "vp_each": 7,
           "description": "7 VP per set of all seven card colours"
         }
       ]
@@ -381,8 +520,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "coins_on_victory",
+          "type": "victory_income",
+          "coins": 2,
           "description": "+2 coins each time you gain a military victory token"
         }
       ]
@@ -396,8 +535,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "coins_on_yellow",
+          "type": "build_income",
+          "coins": 2,
+          "color": "yellow",
           "description": "+2 coins each time you build a yellow card"
         }
       ]
@@ -411,8 +551,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "coins_on_chain",
+          "type": "build_income",
+          "coins": 2,
+          "via_chain": true,
           "description": "+2 coins each time you build a card free via a chain"
         }
       ]
@@ -426,8 +567,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "trade_rebate",
+          "type": "build_income",
+          "coins": 1,
+          "after_trade": true,
           "description": "+1 coin after buying resources from a neighbour"
         }
       ]
@@ -441,8 +583,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "buy_from_bank",
+          "type": "bank_purchase",
+          "count": 1,
           "description": "once per turn buy any 1 resource from the bank for 1 coin"
         }
       ]
@@ -456,8 +598,10 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "recruit_free",
+          "type": "build_free",
+          "colors": [
+            "white"
+          ],
           "description": "recruit all your future leaders for free"
         }
       ]
@@ -471,8 +615,10 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "guilds_free",
+          "type": "build_free",
+          "colors": [
+            "purple"
+          ],
           "description": "build all your guild (purple) cards for free"
         }
       ]
@@ -499,8 +645,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "green",
+          "amount": 1,
           "description": "green cards cost 1 fewer resource"
         }
       ]
@@ -514,8 +661,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "red",
+          "amount": 1,
           "description": "red cards cost 1 fewer resource"
         }
       ]
@@ -529,8 +677,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "blue",
+          "amount": 1,
           "description": "blue cards cost 1 fewer resource"
         }
       ]
@@ -544,8 +693,9 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cost_discount",
+          "type": "resource_discount",
+          "target": "wonder",
+          "amount": 1,
           "description": "wonder stages cost 1 fewer resource"
         }
       ]
@@ -559,11 +709,108 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "redirect_defeat",
+          "type": "redirect_defeats",
           "description": "your defeat tokens are given to the winning neighbour"
         }
       ]
+    },
+    {
+      "name": "Gamers Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "bricks": 1,
+          "wood": 1,
+          "ore": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "coins",
+          "scope": "self",
+          "vp_each": 1,
+          "description": "1 VP per 3 coins"
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Courtesans Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "wood": 1,
+          "bricks": 1,
+          "glass": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "copy_leader",
+          "count": 1,
+          "description": "copy a leader recruited by a neighbour"
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Diplomats Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "stone": 1,
+          "wood": 1,
+          "glass": 1,
+          "paper": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "white"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "guild": true
+    },
+    {
+      "name": "Architects Guild",
+      "color": "purple",
+      "age": 3,
+      "expansion": "leaders",
+      "cost": {
+        "resources": {
+          "ore": 3,
+          "bricks": 1,
+          "paper": 1,
+          "linen": 1
+        }
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "neighbours",
+          "colors": [
+            "purple"
+          ],
+          "vp_each": 3
+        }
+      ],
+      "guild": true
     }
   ]
 }

@@ -122,7 +122,7 @@ def test_discard_build_after_the_turn_sees_this_turns_discards():
 def test_discard_build_fizzles_on_empty_pile():
     g = two_players()
     g.apply(0, Action.build(Card('Mausoleum', Color.BLUE, effects=(BuildFromDiscard(),))))
-    steps = g._discard_builds()
+    steps = g._power_steps()
     with pytest.raises(StopIteration):
         next(steps)
     assert g.players[0].pending_discard_builds == 0

@@ -113,8 +113,6 @@ def test_reward_modes(mode):
 
 
 def test_env_rejects_bad_input():
-    with pytest.raises(NotImplementedError):
-        WondersEnv(expansions=('leaders',))
     with pytest.raises(ValueError):
         WondersEnv(reward='elo')
     env = WondersEnv(n_players=3)
@@ -155,3 +153,34 @@ def test_card_encoder_marks_hand_and_tableau():
     assert ActionKind.BUILD in {
         env.action_space.describe(i)[1] for i, ok in enumerate(observations[0]['action_mask']) if ok
     }
+
+
+@pytest.mark.parametrize('expansions', [('leaders',), ('leaders', 'cities')])
+def test_env_plays_leaders_draft_and_recruitment(expansions):
+    env = WondersEnv(n_players=4, expansions=expansions)
+    rng = random.Random(0)
+    observations, infos = env.reset(seed=3)
+    assert {info['decision'] for info in infos.values()} == {'draft'}
+    first = infos[0]['obs']
+    assert len(first.hand) == 4 and all(a.kind is ActionKind.BUILD for a in first.legal_actions)
+    seen = set()
+    while observations:
+        seen |= {info['decision'] for info in infos.values()}
+        actions = {s: random_index(o['action_mask'], rng) for s, o in observations.items()}
+        observations, _rewards, _terms, _truncs, infos = env.step(actions)
+    assert {'draft', 'recruit', 'play'} <= seen
+    record = env.record()
+    assert all(len(hand) == 4 for hand in record.leader_hands.values())
+    assert sorted(record.recruits) == [1, 2, 3]
+    replayed = record.replay(env.content)
+    assert [replayed.score(i).total for i in range(4)] == env.scores()
+
+
+def test_single_agent_env_with_leaders_routes_opponent_hooks():
+    env = SingleAgentEnv([HeuristicAgent(), GreedyAgent()], learner=0, expansions=('leaders',))
+    obs, info = env.reset(seed=1)
+    assert info['decision'] == 'draft'
+    done, rng = False, random.Random(1)
+    while not done:
+        obs, _reward, done, _trunc, info = env.step(random_index(obs['action_mask'], rng))
+    assert len(info['record'].leader_hands) == 3

@@ -267,6 +267,9 @@ def _describe(effect) -> List[Row]:
         ]
         icon = ('vp', GUILD) if effect.vp_each else ('coin', GUILD)
         return [([icon], f'{" +".join(parts)} / {target} ({SCOPE.get(effect.scope, effect.scope)})')]
+    description = getattr(effect, 'label', None)  # data-driven description (Leaders / Cities powers)
+    if description:
+        return [([('special', GUILD)], description)]
     return [([('coin', MUTED)], type(effect).__name__)]
 
 
@@ -408,8 +411,11 @@ def wonder_svg(wonder: Wonder) -> str:
     )
     parts.append(f'<text x="20" y="{_WH - 44}" font-size="10" letter-spacing="1.2" fill="#9fb2c7">PRODUCES</text>')
     res = wonder.starting_resource
-    parts.append(_icon(RES_ICON[res], 20, _WH - 38, 24, '#e7edf3', RES_NAME[res]))
-    parts.append(f'<text x="50" y="{_WH - 20}" font-size="13" fill="#e7edf3">{escape(RES_NAME[res])}</text>')
+    if res is not None:
+        parts.append(_icon(RES_ICON[res], 20, _WH - 38, 24, '#e7edf3', RES_NAME[res]))
+        parts.append(f'<text x="50" y="{_WH - 20}" font-size="13" fill="#e7edf3">{escape(RES_NAME[res])}</text>')
+    else:
+        parts.append(f'<text x="20" y="{_WH - 20}" font-size="13" fill="#e7edf3">nothing</text>')
     for i, stage in enumerate(wonder.stages, 1):
         parts.append(_stage_panel(stage, i, _WLEFT + (i - 1) * _WSTAGE))
     parts.append('</svg>')

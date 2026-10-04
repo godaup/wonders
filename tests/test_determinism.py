@@ -20,7 +20,7 @@ from wonders.cards.content import load_content
 from wonders.engine.record import PlayerSetup
 from wonders.env import WondersEnv
 
-EXPECTED = 'b1badfb7543aa7d31660ff6fae5e1dc25de7360471bd10c61e2d63bca9ee9697'  # HeuristicAgent retuned
+EXPECTED = '3ca32f4058bb28e16a77f75b7b746aaed98ad42456d45e25af35a3d68efd5b8e'  # + leaders/cities score keys
 
 
 def _digest() -> str:

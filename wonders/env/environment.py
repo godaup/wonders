@@ -21,11 +21,12 @@ the others played by agents.
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Tuple
 
 from wonders.agents.base import Agent
-from wonders.agents.encoders import CardEncoder, Encoder
-from wonders.cards.content import Content, build_age_deck, deal_hands, load_content
+from wonders.agents.encoders import DECISIONS, LEADERS_DECISIONS, CardEncoder, Encoder
+from wonders.cards.base import Card
+from wonders.cards.content import Content, build_age_deck, deal_hands, deal_leaders, load_content
 from wonders.engine.actions import Action, DecisionKind, DecisionPoint
 from wonders.engine.game import Game
 from wonders.engine.observation import Observation, ObservationBuilder
@@ -46,7 +47,9 @@ class WondersEnv:
 
     Args:
         n_players: Seats at the table (3-7 for the base deck).
-        expansions: Expansion ids; Leaders is not supported yet (no draft/recruit steps).
+        expansions: Expansion ids. With Leaders, the draft and each Age's recruitment
+            are decision points too (``infos[seat]['decision']`` is ``'draft'`` /
+            ``'recruit'``; a draft pick is the ``BUILD`` index of the leader kept).
         content: Pre-loaded content (defaults to ``load_content(*expansions)``).
         encoder: Turns an Observation into the ``'observation'`` entry. Defaults to a
             :class:`CardEncoder` over the action-space vocabulary.
@@ -69,8 +72,6 @@ class WondersEnv:
         reward: str = 'margin',
     ):
         self.ruleset = Ruleset.of(*expansions)
-        if self.ruleset.uses('leaders'):
-            raise NotImplementedError('WondersEnv does not support the Leaders draft/recruitment yet')
         if not 3 <= n_players <= 7:
             raise ValueError(f'the base deck supports 3-7 players, got {n_players}')
         if reward not in REWARD_MODES:
@@ -82,7 +83,9 @@ class WondersEnv:
         self.expansions = tuple(expansions)
         self.content = content if content is not None else load_content(*self.ruleset.content_expansions)
         self.action_space = ActionSpace.from_content(self.content)
-        self.encoder = encoder if encoder is not None else CardEncoder(self.action_space.card_names)
+        self.leaders = self.ruleset.uses('leaders')
+        decisions = LEADERS_DECISIONS if self.leaders else DECISIONS
+        self.encoder = encoder if encoder is not None else CardEncoder(self.action_space.card_names, decisions)
         self.n_players = n_players
         self.setups = list(setups) if setups is not None else None
         self.sides = sides
@@ -158,6 +161,12 @@ class WondersEnv:
             self._obs_cache[seat] = self._observations.build(self._require_game(), seat, self._point.options[seat])
         return self._obs_cache[seat]
 
+    def options(self, seat: int) -> List[Card]:
+        """The cards an acting ``seat`` is choosing from (hand, discard pile or leaders)."""
+        if self._point is None or seat not in self._point.options:
+            raise ValueError(f'seat {seat} is not acting')
+        return list(self._point.options[seat])
+
     def record(self) -> GameRecord:
         """The replayable record of the game so far."""
         if self._builder is None:
@@ -189,26 +198,60 @@ class WondersEnv:
         game = self._require_game()
         builder = self._builder
         assert builder is not None
+        if self.leaders:  # draft picks are private; only the resulting hands are recorded
+            hands, box = deal_leaders(self.content, game.n, rng)
+            game.leader_box = list(box)
+            builder.set_leader_box(box)
+            yield from self._relay(game.draft_steps(hands))
+            builder.set_leader_hands({i: list(p.leaders_hand) for i, p in enumerate(game.players)})
         for age in (1, 2, 3):
+            if self.leaders:
+                recruited: Dict[int, Action] = {}
+
+                def keep(point: DecisionPoint, actions: Dict[int, Action], _r=recruited) -> None:
+                    if point.kind is DecisionKind.RECRUIT:
+                        _r.update(actions)
+                    else:  # a power resolved during recruitment is recorded like other extras
+                        self._record_turn(point, actions)
+
+                yield from self._relay(game.recruit_steps(age), keep)
+                builder.add_recruits(age, [recruited.get(i) for i in range(game.n)])
             deck = build_age_deck(self.content, age, game.n, rng)
             builder.set_deck(age, [c.name for c in deck])
-            steps = game.age_steps(age, deal_hands(deck, game.n))
-            point = next(steps)
-            while True:
-                actions = yield point
-                if point.kind is DecisionKind.PLAY:
-                    ordered = [actions[i] for i in range(game.n)]
-                    builder.add_turn(age, ordered)
-                    self._observations.record(age, point.turn, [(a.kind, a.card.name) for a in ordered])
-                else:
-                    builder.add_extra(point, actions)
-                    moves = [(actions[i].kind, actions[i].card.name) if i in actions else None for i in range(game.n)]
-                    self._observations.record(age, point.turn, moves)
-                try:
-                    point = steps.send(actions)
-                except StopIteration:
-                    break
+            yield from self._relay(game.age_steps(age, deal_hands(deck, game.n)), self._record_turn)
         game.phase = Phase.FINISHED
+
+    def _relay(
+        self,
+        steps: Generator[DecisionPoint, Dict[int, Action], None],
+        record: Optional[Callable[[DecisionPoint, Dict[int, Action]], None]] = None,
+    ) -> Generator[DecisionPoint, Dict[int, Action], None]:
+        """Pass an engine coroutine's decision points through, calling ``record`` per answer."""
+        try:
+            point = next(steps)
+        except StopIteration:
+            return
+        while True:
+            actions = yield point
+            if record is not None:
+                record(point, actions)
+            try:
+                point = steps.send(actions)
+            except StopIteration:
+                return
+
+    def _record_turn(self, point: DecisionPoint, actions: Dict[int, Action]) -> None:
+        """Record a card-play decision in the GameRecord and the public history."""
+        builder, n = self._builder, self.n_players
+        assert builder is not None
+        if point.kind is DecisionKind.PLAY:
+            ordered = [actions[i] for i in range(n)]
+            builder.add_turn(point.age, ordered)
+            self._observations.record(point.age, point.turn, [(a.kind, a.card.name) for a in ordered])
+        else:
+            builder.add_extra(point, actions)
+            moves = [(actions[i].kind, actions[i].card.name) if i in actions else None for i in range(n)]
+            self._observations.record(point.age, point.turn, moves)
 
     def _observe(self) -> Tuple[Dict[int, EnvObs], Dict[int, Dict[str, Any]]]:
         observations: Dict[int, EnvObs] = {}
@@ -291,7 +334,8 @@ class SingleAgentEnv:
                     index = None
                 else:
                     obs = self.env.observation(seat)
-                    actions[seat] = self.action_space.index(self.agents[seat].decide(obs))
+                    options = self.env.options(seat)
+                    actions[seat] = self.action_space.index(self.agents[seat].act(obs, options))
             observations, rewards, _term, _trunc, infos = self.env.step(actions)
             reward += rewards[self.learner]
         return observations, infos, reward

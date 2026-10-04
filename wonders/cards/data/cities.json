@@ -4,7 +4,196 @@
     "description": "Official Cities (2012): 42 black cards, 14 per Age. Introduces debt, diplomacy, plunder and forced-gift coin swings.",
     "note": "Cities uses no per-card player-count numerals: build_age_deck draws n_players random black cards from each Age (one extra card per player per Age). \"All other players\" is approximated as both neighbours (exact at 3 players). Plunder overflow becomes debt. Per-token/per-stage plunder, copy-science, build-from-discard, and wildcard production are flagged Special (not fully mechanized). The Byzantium/Petra wonders are omitted (stage data not compiled)."
   },
-  "wonders": [],
+  "wonders": [
+    {
+      "name": "The Al-Khazneh of Petra",
+      "expansion": "cities",
+      "side": "A",
+      "starting_resource": "bricks",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 1,
+              "stone": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "coins": 7
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "wood": 1,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Al-Khazneh of Petra",
+      "expansion": "cities",
+      "side": "B",
+      "starting_resource": "bricks",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "ore": 2,
+              "bricks": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "plunder",
+              "amount": 2,
+              "scope": "others"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "coins": 14
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 14
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Hagia Sophia of Byzantium",
+      "expansion": "cities",
+      "side": "A",
+      "starting_resource": "stone",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "ore": 1,
+              "bricks": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 2,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "diplomacy",
+              "count": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 2
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "bricks": 2,
+              "glass": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Hagia Sophia of Byzantium",
+      "expansion": "cities",
+      "side": "B",
+      "starting_resource": "stone",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "paper": 1,
+              "glass": 1,
+              "wood": 1,
+              "ore": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "diplomacy",
+              "count": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "linen": 1,
+              "bricks": 1,
+              "ore": 2
+            }
+          },
+          "effects": [
+            {
+              "type": "diplomacy",
+              "count": 1
+            },
+            {
+              "type": "victory_points",
+              "points": 4
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "cards": [
     {
       "name": "Smugglers Cache",
@@ -14,8 +203,8 @@
       "cost": null,
       "effects": [
         {
-          "type": "special",
-          "power": "trade_starting",
+          "type": "starting_resource_discount",
+          "amount": 1,
           "description": "buy your starting resource 1 cheaper from a neighbour"
         }
       ]
@@ -64,8 +253,7 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "extra_owned_production",
+          "type": "produce_owned",
           "description": "once/turn produce 1 extra of a resource you already produce"
         }
       ]
@@ -102,7 +290,7 @@
         {
           "type": "grant",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -120,7 +308,7 @@
         {
           "type": "grant",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -138,7 +326,7 @@
         {
           "type": "plunder",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -156,7 +344,7 @@
         {
           "type": "plunder",
           "amount": 1,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -243,8 +431,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "copy_science",
+          "type": "science_copy",
+          "count": 1,
           "description": "at game end, copy one science symbol from a neighbour"
         }
       ]
@@ -262,8 +450,7 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "produce_unowned",
+          "type": "produce_unowned",
           "description": "once/turn produce 1 resource you do not already produce"
         }
       ]
@@ -285,8 +472,9 @@
           "points": 2
         },
         {
-          "type": "special",
-          "power": "wonder_free_resources",
+          "type": "resource_discount",
+          "target": "wonder",
+          "amount": 99,
           "description": "wonder stages cost no resources"
         }
       ]
@@ -331,7 +519,7 @@
         {
           "type": "grant",
           "amount": 2,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -351,7 +539,7 @@
         {
           "type": "grant",
           "amount": 2,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -373,7 +561,7 @@
         {
           "type": "plunder",
           "amount": 3,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -396,7 +584,7 @@
         {
           "type": "plunder",
           "amount": 2,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -418,9 +606,11 @@
           "points": 4
         },
         {
-          "type": "special",
-          "power": "plunder_per_token",
-          "description": "others lose 1 coin per military token they hold"
+          "type": "plunder_per",
+          "what": "victory_tokens",
+          "amount": 1,
+          "scope": "others",
+          "description": "other players lose 1 coin per Victory token they hold"
         }
       ]
     },
@@ -524,8 +714,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "copy_science",
+          "type": "science_copy",
+          "count": 1,
           "description": "at game end, copy one science symbol from a neighbour"
         }
       ]
@@ -586,7 +776,7 @@
         {
           "type": "grant",
           "amount": 3,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -609,7 +799,7 @@
         {
           "type": "plunder",
           "amount": 5,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -633,7 +823,7 @@
         {
           "type": "plunder",
           "amount": 3,
-          "scope": "neighbours"
+          "scope": "others"
         }
       ]
     },
@@ -656,8 +846,10 @@
           "points": 4
         },
         {
-          "type": "special",
-          "power": "plunder_per_stage",
+          "type": "plunder_per",
+          "what": "wonder_stages",
+          "amount": 1,
+          "scope": "others",
           "description": "others lose 1 coin per wonder stage they have built"
         }
       ]
@@ -681,9 +873,11 @@
           "points": 5
         },
         {
-          "type": "special",
-          "power": "plunder_per_token",
-          "description": "others lose 1 coin per military token they hold"
+          "type": "plunder_per",
+          "what": "victory_tokens",
+          "amount": 1,
+          "scope": "others",
+          "description": "other players lose 1 coin per Victory token they hold"
         }
       ]
     },
@@ -834,8 +1028,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "cash_defeats",
+          "type": "cash_defeats",
+          "coins_each": 2,
           "description": "gain 2 coins per defeat token, then discard all your defeat tokens"
         }
       ]
@@ -854,8 +1048,8 @@
       },
       "effects": [
         {
-          "type": "special",
-          "power": "copy_science",
+          "type": "science_copy",
+          "count": 1,
           "description": "at game end, copy one science symbol from a neighbour"
         }
       ]

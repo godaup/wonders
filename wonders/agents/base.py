@@ -25,6 +25,20 @@ class Agent(ABC):
         """Return the action to take for ``obs.seat`` (must be a legal action)."""
         raise NotImplementedError
 
+    def act(self, obs: Observation, options: List[Card]) -> Action:
+        """Answer any decision point: routes Leaders draft / recruitment to their hooks.
+
+        ``options`` are the cards being chosen from (``obs.hand`` as cards). Regular
+        turns and wonder-power decisions go to :meth:`decide`.
+        """
+        if obs.decision == 'draft':
+            return Action.build(self.draft_leader(options))
+        if obs.decision == 'recruit':
+            action = self.recruit(options, obs)
+            if action is not None:
+                return action
+        return self.decide(obs)
+
     # -- Leaders expansion hooks (sane defaults; override for smarter play) --
     def draft_leader(self, options: List[Card]) -> Card:
         """Pick one leader to keep from ``options`` during the pre-game draft.

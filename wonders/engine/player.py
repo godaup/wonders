@@ -10,12 +10,14 @@ from __future__ import annotations
 from collections import Counter
 from typing import Dict, Iterator, List
 
-from wonders.cards.base import Card, Ressource
+from wonders.cards.base import Card, Color, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
-from wonders.effects.base import Effect
+from wonders.effects.base import BuildEvent, Effect
 
 STARTING_COINS = 3
 DEFAULT_TRADE_PRICE = 2
+SCIENCE_SET_VALUE = 7  # points per complete set of the three science symbols
+BASIC_COLORS = frozenset({Color.BROWN, Color.GREY})  # raw-material / manufactured cards
 
 
 class Player:
@@ -36,6 +38,9 @@ class Player:
         self.leaders_hand: List[Card] = []  # Leaders: drafted leaders not yet recruited
         self.free_builds_used = 0  # free builds from hand spent this Age (reset each Age)
         self.pending_discard_builds = 0  # free builds from the discard pile still owed
+        self.pending_extra_recruits = 0  # Rome B: extra leader recruits still owed
+        self.pending_leader_copies = 0  # Courtesans' Guild: neighbour leaders still to copy
+        self.copied_leaders: List[Card] = []  # Courtesans' Guild: copied (not owned) leaders
 
     # -- construction ------------------------------------------------------
     def has(self, name: str) -> bool:
@@ -64,17 +69,26 @@ class Player:
         return None
 
     # -- effect aggregation ------------------------------------------------
+    def add_copied_leader(self, card: Card) -> None:
+        """Courtesans' Guild: gain a neighbour leader's powers without owning the card."""
+        self.copied_leaders.append(card)
+        self._cache.clear()
+        self.version += 1
+
     def iter_effects(self) -> Iterator[Effect]:
+        yield from self.wonder.effects
         for card in self.cards:
             yield from card.effects
         for stage in self.stages_built:
             yield from stage.effects
+        for card in self.copied_leaders:
+            yield from card.effects
 
     def production_slots(self) -> List[frozenset]:
         """Every resource this city can produce, one choice-set per slot (do not mutate)."""
         slots = self._cache.get('slots')
         if slots is None:
-            slots = [self.wonder.starting_production]
+            slots = [self.wonder.starting_production] if self.wonder.starting_resource is not None else []
             for effect in self.iter_effects():
                 slots.extend(effect.production())
             self._cache['slots'] = slots
@@ -108,6 +122,52 @@ class Player:
     def guild_copies(self) -> int:
         return sum(effect.guild_copies() for effect in self.iter_effects())
 
+    # -- Leaders / Cities powers ---------------------------------------------
+    def private_production_slots(self) -> List[frozenset]:
+        """Production only this city may use (Black Market, Secret Warehouse; do not mutate)."""
+        slots = self._cache.get('private_slots')
+        if slots is None:
+            # Black Market / Secret Warehouse look only at brown/grey cards and the board.
+            basic = [self.wonder.starting_production]
+            basic += [s for c in self.cards if c.color in BASIC_COLORS for e in c.effects for s in e.production()]
+            produced = frozenset().union(*basic)
+            slots = [slot for effect in self.iter_effects() for slot in effect.private_production(produced)]
+            self._cache['private_slots'] = slots
+        return slots  # type: ignore[return-value]
+
+    def resource_discount(self, target: str) -> int:
+        """Resource units waived when paying for ``target`` (a card colour value or 'wonder')."""
+        return sum(effect.resource_discount(target) for effect in self.iter_effects())
+
+    def builds_free(self, card: Card) -> bool:
+        return any(effect.builds_free(card) for effect in self.iter_effects())
+
+    def bank_purchases(self) -> int:
+        return sum(effect.bank_purchases() for effect in self.iter_effects())
+
+    def science_set_value(self) -> int:
+        """Points per complete science set: 7, plus bonuses (Aristotle)."""
+        return SCIENCE_SET_VALUE + sum(effect.science_set_bonus() for effect in self.iter_effects())
+
+    def science_copies(self) -> int:
+        return sum(effect.science_copies() for effect in self.iter_effects())
+
+    def coins_per_victory(self) -> int:
+        return sum(effect.coins_per_victory() for effect in self.iter_effects())
+
+    def redirects_defeats(self) -> bool:
+        return any(effect.redirects_defeats() for effect in self.iter_effects())
+
+    def coin_discount(self, card: Card) -> int:
+        return sum(effect.coin_discount(card) for effect in self.iter_effects())
+
+    def neighbour_coin_discount(self, card: Card) -> int:
+        """Coins this city knocks off its *neighbours'* cost for ``card`` (Rome B)."""
+        return sum(effect.neighbour_coin_discount(card) for effect in self.iter_effects())
+
+    def build_income(self, event: BuildEvent) -> int:
+        return sum(effect.build_income(event) for effect in self.iter_effects())
+
     def buy_price(self, side: str, resource: Ressource) -> int:
         """Coins to buy one ``resource`` from the neighbour on ``side``."""
         key = (side, resource)
@@ -119,5 +179,6 @@ class Player:
             for rule in effect.trade_rules():
                 if rule.applies(side, resource):
                     price = min(price, rule.price)
+        price = max(0, price - sum(effect.trade_reduction(self, side, resource) for effect in self.iter_effects()))
         self._cache[key] = price
         return price

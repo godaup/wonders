@@ -10,8 +10,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Iterable, Optional, Tuple
 
-from wonders.cards.base import Color, Ressource, ScienceSymbol
-from wonders.effects.base import Context, Effect, TradeRule
+from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Ressource, ScienceSymbol
+from wonders.effects.base import BuildEvent, Context, Effect, TradeRule
+
+TRADEABLE = RAW_MATERIALS | MANUFACTURED_GOODS
 
 
 class Production(Effect):
@@ -162,6 +164,8 @@ def _targets(ctx: Context, scope: str):
         return (ctx.left, ctx.right)
     if scope == 'both':
         return (ctx.player, ctx.left, ctx.right)
+    if scope == 'others':  # every other player at the table
+        return ctx.others
     raise ValueError(f'unknown scope {scope!r}')
 
 
@@ -198,6 +202,8 @@ class Tally(Effect):
             return player.wonder_stages_built
         if self.what == 'defeat_tokens':
             return sum(1 for t in player.tokens if t < 0)
+        if self.what == 'tokens':  # every military token, victory or defeat
+            return len(player.tokens)
         if self.what == 'victory_tokens':  # positive military tokens (optionally of one Age's value)
             if self.token_value is not None:
                 return sum(1 for t in player.tokens if t == self.token_value)
@@ -247,11 +253,11 @@ class Diplomacy(Effect):
 class Plunder(Effect):
     """Cities: each target loses ``amount`` coins; any shortfall becomes debt.
 
-    Scope ``'neighbours'`` approximates "all other players" (exact for 3 players).
+    The default scope ``'others'`` is every other player at the table.
     """
 
     amount: int
-    scope: str = 'neighbours'
+    scope: str = 'others'
 
     def on_build(self, ctx: Context) -> None:
         for player in _targets(ctx, self.scope):
@@ -265,7 +271,7 @@ class Grant(Effect):
     """Cities: each target *gains* coins (e.g. Customs, Mint force opponents to profit)."""
 
     amount: int
-    scope: str = 'neighbours'
+    scope: str = 'others'
 
     def on_build(self, ctx: Context) -> None:
         for player in _targets(ctx, self.scope):
@@ -280,3 +286,244 @@ class GainToken(Effect):
 
     def on_build(self, ctx: Context) -> None:
         ctx.player.tokens.append(self.value)
+        if self.value > 0:  # a victory token: Nero pays for every one gained
+            ctx.player.coins += ctx.player.coins_per_victory()
+
+
+# --- Leaders / Cities powers ------------------------------------------------
+
+
+@dataclass
+class ColorSets(Effect):
+    """End VP per complete set of one card of each of ``colors`` (Justinian, Plato)."""
+
+    colors: Iterable[Color]
+    vp_each: int
+
+    def __post_init__(self) -> None:
+        self.colors = frozenset(self.colors)
+
+    def victory_points(self, ctx: Context) -> int:
+        counts = [sum(1 for c in ctx.player.cards if c.color is color) for color in self.colors]
+        return self.vp_each * min(counts, default=0)
+
+
+@dataclass
+class ScienceSetBonus(Effect):
+    """Each complete science set (tablet + gear + compass) is worth ``points`` more (Aristotle)."""
+
+    points: int = 3
+
+    def science_set_bonus(self) -> int:
+        return self.points
+
+
+@dataclass
+class ScienceCopy(Effect):
+    """At game end, copy one science symbol a neighbour has (Pigeonhole, Band of Spies, ...)."""
+
+    count: int = 1
+
+    def science_copies(self) -> int:
+        return self.count
+
+
+@dataclass
+class BuildIncome(Effect):
+    """Coins whenever the owner builds something matching every given condition.
+
+    * Xenophon: ``BuildIncome(2, color='yellow')``
+    * Vitruvius: ``BuildIncome(2, via_chain=True)``
+    * Hatshepsut: ``BuildIncome(1, after_trade=True)`` — paid per neighbour bought from
+    """
+
+    coins: int
+    color: Optional[str] = None
+    via_chain: bool = False
+    after_trade: bool = False
+
+    def build_income(self, event: BuildEvent) -> int:
+        if self.color is not None and event.color != self.color:
+            return 0
+        if self.via_chain and not event.via_chain:
+            return 0
+        if self.after_trade:
+            return self.coins * event.neighbours_traded
+        return self.coins
+
+
+@dataclass
+class VictoryIncome(Effect):
+    """Coins each time the owner wins a military conflict token (Nero)."""
+
+    coins: int = 2
+
+    def coins_per_victory(self) -> int:
+        return self.coins
+
+
+@dataclass
+class RedirectDefeats(Effect):
+    """The owner's defeat tokens go to the neighbour who beat them (Tomyris)."""
+
+    def redirects_defeats(self) -> bool:
+        return True
+
+
+@dataclass
+class ResourceDiscount(Effect):
+    """Pay ``amount`` fewer resource units for ``target`` (a card colour value or ``'wonder'``).
+
+    Archimedes / Leonidas / Hammurabi: 1 off green / red / blue cards; Imhotep: 1 off
+    wonder stages; Architect Firm: wonder stages need no resources (a large amount).
+    The payment solver waives whichever units are dearest.
+    """
+
+    target: str
+    amount: int = 1
+
+    def resource_discount(self, target: str) -> int:
+        return self.amount if target == self.target else 0
+
+
+@dataclass
+class BuildFree(Effect):
+    """Build cards of ``colors`` without paying anything (Ramses: guilds, Maecenas: leaders)."""
+
+    colors: Iterable[Color]
+
+    def __post_init__(self) -> None:
+        self.colors = frozenset(self.colors)
+
+    def builds_free(self, card: Card) -> bool:
+        return card.color in self.colors
+
+
+@dataclass
+class BankPurchase(Effect):
+    """Once per build, buy any one resource from the bank for 1 coin (Bilkis)."""
+
+    count: int = 1
+
+    def bank_purchases(self) -> int:
+        return self.count
+
+
+@dataclass
+class ProduceUnowned(Effect):
+    """One extra unit per build of a resource the owner does not produce (Black Market).
+
+    "Produce" counts only brown/grey cards and the board's starting resource.
+    """
+
+    def private_production(self, produced: frozenset) -> Tuple[frozenset, ...]:
+        options = TRADEABLE - produced
+        return (frozenset(options),) if options else ()
+
+
+@dataclass
+class ProduceOwned(Effect):
+    """One extra unit per build of a resource the owner already produces (Secret Warehouse).
+
+    "Produces" counts only brown/grey cards and the board's starting resource.
+    """
+
+    def private_production(self, produced: frozenset) -> Tuple[frozenset, ...]:
+        options = produced & TRADEABLE
+        return (frozenset(options),) if options else ()
+
+
+@dataclass
+class StartingResourceDiscount(Effect):
+    """Buy your wonder's starting resource ``amount`` coins cheaper (Smugglers Cache)."""
+
+    amount: int = 1
+
+    def trade_reduction(self, player, side: str, resource: Ressource) -> int:
+        return self.amount if resource is player.wonder.starting_resource else 0
+
+
+@dataclass
+class CashDefeats(Effect):
+    """Gain ``coins_each`` per defeat token, then discard them all (Memorial)."""
+
+    coins_each: int = 2
+
+    def on_build(self, ctx: Context) -> None:
+        defeats = sum(1 for t in ctx.player.tokens if t < 0)
+        ctx.player.coins += self.coins_each * defeats
+        ctx.player.tokens = [t for t in ctx.player.tokens if t >= 0]
+
+
+@dataclass
+class PlunderPer(Effect):
+    """Each target loses ``amount`` coins per unit of a :class:`Tally` metric; shortfall is debt.
+
+    Sepulcher / Cenotaph: per military token; Chamber of Builders: per wonder stage.
+    """
+
+    what: str
+    amount: int = 1
+    scope: str = 'others'
+
+    def on_build(self, ctx: Context) -> None:
+        metric = Tally(self.what, 'self')
+        for player in _targets(ctx, self.scope):
+            owed = self.amount * metric._metric(player)
+            paid = min(owed, player.coins)
+            player.coins -= paid
+            player.debt += owed - paid
+
+
+@dataclass
+class CoinDiscount(Effect):
+    """Cards of ``colors`` cost the owner ``amount`` coins less, and neighbours ``neighbours_amount``.
+
+    Rome A recruits leaders free (use :class:`BuildFree`); Rome B: ``CoinDiscount({WHITE}, 2, 1)``.
+    """
+
+    colors: Iterable[Color]
+    amount: int = 0
+    neighbours_amount: int = 0
+
+    def __post_init__(self) -> None:
+        self.colors = frozenset(self.colors)
+
+    def coin_discount(self, card: Card) -> int:
+        return self.amount if card.color in self.colors else 0
+
+    def neighbour_coin_discount(self, card: Card) -> int:
+        return self.neighbours_amount if card.color in self.colors else 0
+
+
+@dataclass
+class LeaderDraw(Effect):
+    """Draw ``count`` leaders from the undealt leader deck into the owner's hand (Rome B)."""
+
+    count: int = 4
+
+    def leader_draws(self) -> int:
+        return self.count
+
+
+@dataclass
+class ExtraRecruit(Effect):
+    """Immediately recruit one more leader from hand, paying its (discounted) cost (Rome B)."""
+
+    count: int = 1
+
+    def extra_recruits(self) -> int:
+        return self.count
+
+
+@dataclass
+class CopyLeader(Effect):
+    """Copy one leader recruited by a neighbour: gain its powers, now and later (Courtesans' Guild).
+
+    The copy is not a leader card of the owner (it doesn't count for the Diplomats' Guild).
+    """
+
+    count: int = 1
+
+    def leader_copies(self) -> int:
+        return self.count

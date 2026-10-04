@@ -18,30 +18,48 @@ import random
 from collections import Counter
 from dataclasses import dataclass, field
 from importlib import resources
-from typing import Callable, Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card, Color, Cost, Ressource, ScienceSymbol
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.base import Effect
 from wonders.effects.library import (
+    BankPurchase,
+    BuildFree,
     BuildFromDiscard,
+    BuildIncome,
+    CashDefeats,
+    CoinDiscount,
     Coins,
+    ColorSets,
     CopyGuild,
+    CopyLeader,
     Debt,
     Diplomacy,
+    ExtraRecruit,
     FreeBuildPerAge,
     GainToken,
     Grant,
+    LeaderDraw,
     Military,
     MultiProduction,
     PlayLastCard,
     Plunder,
+    PlunderPer,
+    ProduceOwned,
+    ProduceUnowned,
     Production,
+    RedirectDefeats,
+    ResourceDiscount,
     Science,
+    ScienceCopy,
+    ScienceSetBonus,
     ScienceWild,
     Special,
+    StartingResourceDiscount,
     Tally,
     Trade,
+    VictoryIncome,
     VictoryPoints,
 )
 
@@ -92,13 +110,36 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'special': lambda s: Special(s['power'], s.get('description', '')),
     'debt': lambda s: Debt(s['amount'], s.get('scope', 'self')),
     'diplomacy': lambda s: Diplomacy(s.get('count', 1)),
-    'plunder': lambda s: Plunder(s['amount'], s.get('scope', 'neighbours')),
-    'grant': lambda s: Grant(s['amount'], s.get('scope', 'neighbours')),
+    'plunder': lambda s: Plunder(s['amount'], s.get('scope', 'others')),
+    'grant': lambda s: Grant(s['amount'], s.get('scope', 'others')),
     'gain_token': lambda s: GainToken(s['value']),
     'play_last_card': lambda s: PlayLastCard(),
     'free_build': lambda s: FreeBuildPerAge(s.get('count', 1)),
     'build_from_discard': lambda s: BuildFromDiscard(s.get('count', 1)),
     'copy_guild': lambda s: CopyGuild(s.get('count', 1)),
+    # Leaders / Cities powers
+    'color_sets': lambda s: ColorSets([Color(c) for c in s['colors']], s['vp_each']),
+    'science_set_bonus': lambda s: ScienceSetBonus(s.get('points', 3)),
+    'science_copy': lambda s: ScienceCopy(s.get('count', 1)),
+    'build_income': lambda s: BuildIncome(
+        s['coins'], color=s.get('color'), via_chain=s.get('via_chain', False), after_trade=s.get('after_trade', False)
+    ),
+    'victory_income': lambda s: VictoryIncome(s.get('coins', 2)),
+    'redirect_defeats': lambda s: RedirectDefeats(),
+    'resource_discount': lambda s: ResourceDiscount(s['target'], s.get('amount', 1)),
+    'build_free': lambda s: BuildFree([Color(c) for c in s['colors']]),
+    'bank_purchase': lambda s: BankPurchase(s.get('count', 1)),
+    'produce_unowned': lambda s: ProduceUnowned(),
+    'produce_owned': lambda s: ProduceOwned(),
+    'starting_resource_discount': lambda s: StartingResourceDiscount(s.get('amount', 1)),
+    'cash_defeats': lambda s: CashDefeats(s.get('coins_each', 2)),
+    'plunder_per': lambda s: PlunderPer(s['what'], s.get('amount', 1), s.get('scope', 'others')),
+    'coin_discount': lambda s: CoinDiscount(
+        [Color(c) for c in s['colors']], s.get('amount', 0), s.get('neighbours_amount', 0)
+    ),
+    'leader_draw': lambda s: LeaderDraw(s.get('count', 4)),
+    'extra_recruit': lambda s: ExtraRecruit(s.get('count', 1)),
+    'copy_leader': lambda s: CopyLeader(s.get('count', 1)),
 }
 
 
@@ -108,7 +149,10 @@ def build_effect(spec: dict) -> Effect:
         builder = EFFECT_BUILDERS[spec['type']]
     except KeyError:
         raise ValueError(f"unknown effect type {spec.get('type')!r}") from None
-    return builder(spec)
+    effect = builder(spec)
+    if 'description' in spec and not isinstance(effect, Special):
+        effect.label = spec['description']  # type: ignore[attr-defined]  # shown by the card renderer
+    return effect
 
 
 # --- parsing -------------------------------------------------------------
@@ -144,11 +188,13 @@ def build_wonder(spec: dict) -> Wonder:
         )
         for stage in spec['stages']
     )
+    start = spec.get('starting_resource')
     return Wonder(
         name=spec['name'],
-        starting_resource=Ressource(spec['starting_resource']),
+        starting_resource=Ressource(start) if start else None,
         stages=stages,
         side=spec.get('side', 'A'),
+        effects=tuple(build_effect(e) for e in spec.get('effects', [])),
     )
 
 
@@ -232,6 +278,22 @@ def build_age_deck(
 
     rng.shuffle(deck)
     return deck
+
+
+LEADERS_PER_PLAYER = 4
+
+
+def deal_leaders(content: 'Content', n_players: int, rng: random.Random) -> Tuple[List[List[Card]], List[Card]]:
+    """Shuffle the leaders; deal ``LEADERS_PER_PLAYER`` to each seat for the draft.
+
+    Returns ``(hands, box)``: ``box`` is the undealt rest, drawn from its end (Rome B).
+    """
+    deck = list(content.leaders())
+    rng.shuffle(deck)
+    if len(deck) < LEADERS_PER_PLAYER * n_players:
+        raise ValueError(f'not enough leaders for {n_players} players')
+    hands = [[deck.pop() for _ in range(LEADERS_PER_PLAYER)] for _ in range(n_players)]
+    return hands, deck
 
 
 def deal_hands(deck: Sequence[Card], n_players: int) -> List[List[Card]]:

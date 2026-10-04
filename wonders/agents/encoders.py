@@ -83,7 +83,8 @@ class FlatEncoder(Encoder):
         return out
 
 
-_DECISIONS = ('play', 'last_card', 'discard_build')
+DECISIONS = ('play', 'last_card', 'discard_build')
+LEADERS_DECISIONS = DECISIONS + ('draft', 'recruit', 'leader_build', 'copy_leader')  # with Leaders
 
 
 class CardEncoder(Encoder):
@@ -96,20 +97,22 @@ class CardEncoder(Encoder):
     * a multi-hot over ``vocab`` of the cards in hand (the options being chosen from);
     * per hand card name: cost to build it now in coins (0 if not buildable);
     * turn context: Age one-hot, turn, hand size, discard count, wonder stage
-      affordable, free builds left, and a one-hot of the decision kind.
+      affordable, free builds left, and a one-hot of the decision kind (``decisions``;
+      pass :data:`LEADERS_DECISIONS` when the Leaders draft/recruitment can occur).
 
     The size depends only on the vocabulary, not on the player count.
     """
 
-    def __init__(self, vocab: Sequence[str]):
+    def __init__(self, vocab: Sequence[str], decisions: Sequence[str] = DECISIONS):
         self.vocab = list(vocab)
+        self.decisions = tuple(decisions)
         self._index: Dict[str, int] = {name: i for i, name in enumerate(self.vocab)}
         self._flat = FlatEncoder()
 
     @property
     def size(self) -> int:
         city = 5 + len(_SYMBOLS) + len(_COLORS) + len(self.vocab)
-        return 3 * city + 2 * len(self.vocab) + 3 + 5 + len(_DECISIONS)
+        return 3 * city + 2 * len(self.vocab) + 3 + 5 + len(self.decisions)
 
     def _multi_hot(self, names) -> List[float]:
         vec = [0.0] * len(self.vocab)
@@ -136,5 +139,5 @@ class CardEncoder(Encoder):
             1.0 if obs.wonder_stage_affordable else 0.0,
             float(obs.free_builds_left),
         ]
-        vec += [1.0 if obs.decision == d else 0.0 for d in _DECISIONS]
+        vec += [1.0 if obs.decision == d else 0.0 for d in self.decisions]
         return vec
