@@ -41,7 +41,13 @@ wonders play -a heuristic,greedy,random --record game.json   # one game, transcr
 wonders replay game.json                                      # re-simulate a record
 wonders bench -a heuristic,greedy,builder -n 500 -p 4         # win rates with 95% CIs
 wonders agents                                                # list built-in agents
+wonders gui                                                   # play against agents in your browser
 ```
+
+`wonders gui` serves a local page (http://127.0.0.1:8765, nothing leaves your machine): pick
+expansions, opponents per seat and your wonder in the menu, then play with card renderings,
+build costs incl. trade, neighbours' cities and a move log; the record can be downloaded at
+any time. Add `--checkpoint model.pt` to offer your own trained network as an opponent.
 
 Training against baseline opponents:
 
