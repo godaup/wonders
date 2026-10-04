@@ -1,0 +1,5711 @@
+{
+ "out": "runs/main",
+ "runs": [
+  {
+   "name": "imit-C-256x2",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 12000,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-C-256x2-s0",
+   "kind": "ppo",
+   "init": "imit-C-256x2",
+   "steps": 20000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 40,
+    "envs_per_worker": 7,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-C-256x2-s1",
+   "kind": "ppo",
+   "init": "imit-C-256x2",
+   "steps": 20000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 40,
+    "envs_per_worker": 7,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-C-256x2-s2",
+   "kind": "ppo",
+   "init": "imit-C-256x2",
+   "steps": 20000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 40,
+    "envs_per_worker": 7,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 2
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-C-512x3",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 12000,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 512,
+   "layers": 3,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-C-512x3-s0",
+   "kind": "ppo",
+   "init": "imit-C-512x3",
+   "steps": 20000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 40,
+    "envs_per_worker": 7,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-C-512x3-s1",
+   "kind": "ppo",
+   "init": "imit-C-512x3",
+   "steps": 20000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 40,
+    "envs_per_worker": 7,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-C-512x3-s2",
+   "kind": "ppo",
+   "init": "imit-C-512x3",
+   "steps": 20000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 40,
+    "envs_per_worker": 7,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 2
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-B-base",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 6000,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-B-base-s0",
+   "kind": "ppo",
+   "init": "imit-B-base",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-B-base-s1",
+   "kind": "ppo",
+   "init": "imit-B-base",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-B-leaders",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 6000,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-B-leaders-s0",
+   "kind": "ppo",
+   "init": "imit-B-leaders",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-B-leaders-s1",
+   "kind": "ppo",
+   "init": "imit-B-leaders",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-B-cities",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 6000,
+   "tables": [
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-B-cities-s0",
+   "kind": "ppo",
+   "init": "imit-B-cities",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-B-cities-s1",
+   "kind": "ppo",
+   "init": "imit-B-cities",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-B-leaders+cities",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 6000,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-B-leaders+cities-s0",
+   "kind": "ppo",
+   "init": "imit-B-leaders+cities",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-B-leaders+cities-s1",
+   "kind": "ppo",
+   "init": "imit-B-leaders+cities",
+   "steps": 6000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 30,
+    "envs_per_worker": 5,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-base-3p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 3000,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-base-3p-s0",
+   "kind": "ppo",
+   "init": "imit-A-base-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-base-3p-s1",
+   "kind": "ppo",
+   "init": "imit-A-base-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-base-4p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 2250,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-base-4p-s0",
+   "kind": "ppo",
+   "init": "imit-A-base-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-base-4p-s1",
+   "kind": "ppo",
+   "init": "imit-A-base-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-base-5p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1800,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-base-5p-s0",
+   "kind": "ppo",
+   "init": "imit-A-base-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-base-5p-s1",
+   "kind": "ppo",
+   "init": "imit-A-base-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-base-6p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1500,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-base-6p-s0",
+   "kind": "ppo",
+   "init": "imit-A-base-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-base-6p-s1",
+   "kind": "ppo",
+   "init": "imit-A-base-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-base-7p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1285,
+   "tables": [
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-base-7p-s0",
+   "kind": "ppo",
+   "init": "imit-A-base-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-base-7p-s1",
+   "kind": "ppo",
+   "init": "imit-A-base-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders-3p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 3000,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders-3p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders-3p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders-4p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 2250,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders-4p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders-4p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders-5p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1800,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders-5p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders-5p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders-6p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1500,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders-6p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders-6p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders-7p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1285,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders-7p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders-7p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-cities-3p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 3000,
+   "tables": [
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-cities-3p-s0",
+   "kind": "ppo",
+   "init": "imit-A-cities-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-cities-3p-s1",
+   "kind": "ppo",
+   "init": "imit-A-cities-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-cities-4p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 2250,
+   "tables": [
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-cities-4p-s0",
+   "kind": "ppo",
+   "init": "imit-A-cities-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-cities-4p-s1",
+   "kind": "ppo",
+   "init": "imit-A-cities-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-cities-5p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1800,
+   "tables": [
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-cities-5p-s0",
+   "kind": "ppo",
+   "init": "imit-A-cities-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-cities-5p-s1",
+   "kind": "ppo",
+   "init": "imit-A-cities-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-cities-6p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1500,
+   "tables": [
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-cities-6p-s0",
+   "kind": "ppo",
+   "init": "imit-A-cities-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-cities-6p-s1",
+   "kind": "ppo",
+   "init": "imit-A-cities-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-cities-7p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1285,
+   "tables": [
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-cities-7p-s0",
+   "kind": "ppo",
+   "init": "imit-A-cities-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-cities-7p-s1",
+   "kind": "ppo",
+   "init": "imit-A-cities-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders+cities-3p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 3000,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders+cities-3p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders+cities-3p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-3p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders+cities-4p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 2250,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders+cities-4p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders+cities-4p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-4p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders+cities-5p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1800,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders+cities-5p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders+cities-5p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-5p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders+cities-6p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1500,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders+cities-6p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders+cities-6p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-6p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "imit-A-leaders+cities-7p",
+   "kind": "imitate",
+   "universal": true,
+   "teachers": [
+    "board",
+    "board-focus"
+   ],
+   "games": 1285,
+   "tables": [
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board",
+      "board"
+     ]
+    ],
+    [
+     [
+      "base",
+      "leaders",
+      "cities"
+     ],
+     [
+      "board",
+      "heuristic",
+      "greedy",
+      "civic",
+      "scientist",
+      "builder",
+      "militarist"
+     ]
+    ]
+   ],
+   "hidden": 256,
+   "layers": 2,
+   "epochs": 12
+  },
+  {
+   "name": "ppo-A-leaders+cities-7p-s0",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "ppo-A-leaders+cities-7p-s1",
+   "kind": "ppo",
+   "init": "imit-A-leaders+cities-7p",
+   "steps": 2000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "heuristic",
+     "board",
+     "board-focus",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist"
+    ],
+    "universal": true,
+    "n_envs": 24,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  }
+ ]
+}

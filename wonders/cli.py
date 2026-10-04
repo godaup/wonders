@@ -219,6 +219,42 @@ def ppo(init_path, iterations, opponents, envs, envs_per_worker, lr, seed, out):
     click.echo(f'saved {out}')
 
 
+@train.command()
+@click.argument('spec', type=click.Path(exists=True, dir_okay=False))
+@click.option('--only', multiple=True, help='Only runs whose name starts with this (repeatable).')
+@click.option('--processes', '-p', default=6, type=int, show_default=True, help='Worker processes.')
+@click.option('--dry-run', is_flag=True, help='List the runs without executing them.')
+def sweep(spec, only, processes, dry_run):
+    """Run a training sweep spec (JSON); finished runs are skipped, interrupted ones resume."""
+    _ml()
+    from wonders.ml.sweep import run_sweep
+
+    run_sweep(spec, only=only, processes=processes, dry_run=dry_run, log=click.echo)
+
+
+@train.command(name='eval')
+@click.argument('checkpoint', type=click.Path(exists=True, dir_okay=False))
+@click.option('--cells', default='all', show_default=True, help="'all' or e.g. base/3p,leaders+cities/5p")
+@click.option('--lineups', default='heuristic,board', show_default=True, help='Reference lineups.')
+@click.option('--games', '-n', default=600, type=int, show_default=True)
+@click.option('--seed', default=4242, type=int, show_default=True)
+@click.option('--processes', '-p', default=6, type=int, show_default=True)
+def evaluate_command(checkpoint, cells, lineups, games, seed, processes):
+    """Evaluate a checkpoint per expansion combination and player count (win rate × players)."""
+    _ml()
+    from wonders.ml.evaluate import evaluate, parse_cells, summary_table
+
+    results = evaluate(
+        checkpoint,
+        cells=parse_cells(cells),
+        lineups=tuple(x.strip() for x in lineups.split(',')),
+        games=games,
+        seed=seed,
+        processes=processes,
+    )
+    click.echo(summary_table(results, checkpoint))
+
+
 @main.command()
 @click.option("--out", "-o", default="cards.html", help="Output HTML file.")
 @click.option("--expansion", "-e", multiple=True, default=("base",), help="Expansions to include.")

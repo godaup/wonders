@@ -23,15 +23,17 @@ from torch import nn
 
 from wonders._mp import get_context, init_worker
 from wonders.agents.base import Agent
-from wonders.agents.bench import AGENTS, AgentSpec
+from wonders.agents.bench import AGENTS, AgentSpec, _content
 from wonders.agents.encoders import CardEncoder
 from wonders.agents.match import play_match
-from wonders.cards.content import load_content
+from wonders.cards.base import Card
 from wonders.engine.actions import Action
 from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
 from wonders.env.action_space import ActionSpace
+from wonders.env.vocab import Vocab, vocab_for
 from wonders.ml.model import PolicyValueNet
+from wonders.ruleset import Ruleset
 
 VALUE_SCALE = 0.1  # VP margins (~±30) -> roughly unit-scale value targets / rewards
 
@@ -50,7 +52,7 @@ def _margin(obs: Observation) -> float:
 
 
 class _Recorder(Agent):
-    """Wraps a teacher agent and records each decision it makes."""
+    """Wraps a teacher agent and records each decision it makes (draft and recruit included)."""
 
     def __init__(self, teacher: Agent, encoder: CardEncoder, space: ActionSpace):
         self.teacher = teacher
@@ -59,12 +61,17 @@ class _Recorder(Agent):
         self.name = teacher.name
         self.rows: List[Tuple[List[float], List[bool], int, float]] = []
 
-    def decide(self, obs: Observation) -> Action:
-        action = self.teacher.decide(obs)
+    def _record(self, obs: Observation, action: Action) -> Action:
         self.rows.append(
             (self.encoder.encode(obs), self.space.mask(obs.legal_actions), self.space.index(action), _margin(obs))
         )
         return action
+
+    def decide(self, obs: Observation) -> Action:
+        return self._record(obs, self.teacher.decide(obs))
+
+    def act(self, obs: Observation, options: List[Card]) -> Action:
+        return self._record(obs, self.teacher.act(obs, options))
 
 
 @dataclass
@@ -80,13 +87,18 @@ class Dataset:
         return int(self.action.shape[0])
 
 
+# One collection table: (expansions, agent names per seat).
+Table = Tuple[Tuple[str, ...], Tuple[str, ...]]
+
+
 def _collect_game(
-    job: Tuple[int, int, Tuple[AgentSpec, ...], Tuple[str, ...]],
+    job: Tuple[int, int, Tuple[str, ...], Tuple[AgentSpec, ...], Tuple[str, ...], Vocab],
 ) -> Tuple[bytes, bytes, List[int], List[float]]:
-    index, seed, lineup, teachers = job
-    content = load_content('base')
-    space = ActionSpace.from_content(content)
-    encoder = CardEncoder(space.card_names)
+    index, seed, expansions, lineup, teachers, vocab = job
+    expansions = Ruleset.of(*expansions).content_expansions
+    content = _content(expansions)
+    space = vocab.action_space()
+    encoder = vocab.encoder()
     rng = random.Random(seed * 1_000_003 + index)
     n = len(lineup)
     seats = [lineup[(i + index) % n] for i in range(n)]
@@ -102,7 +114,7 @@ def _collect_game(
             recorders[i] = _Recorder(agent, encoder, space)
             agent = recorders[i]
         agents.append(agent)
-    game, _record = play_match(content, setups, agents, rng=rng)
+    game, _record = play_match(content, setups, agents, rng=rng, expansions=expansions)
     finals = [game.score(i).total for i in range(n)]
     obs_buf, mask_buf = array('f'), bytearray()
     actions: List[int] = []
@@ -123,12 +135,23 @@ def collect(
     teachers: Sequence[str] = ('heuristic',),
     seed: int = 0,
     processes: int = 1,
+    tables: Optional[Sequence[Table]] = None,
+    vocab: Optional[Vocab] = None,
 ) -> Dataset:
-    """Play ``n_games`` (cycling through ``lineups``) and record every ``teachers`` decision."""
-    space = ActionSpace.from_content(load_content('base'))
-    obs_size = CardEncoder(space.card_names).size
-    specs = [tuple(AGENTS[name] for name in lineup) for lineup in lineups]
-    jobs = [(g, seed, specs[g % len(specs)], tuple(teachers)) for g in range(n_games)]
+    """Play ``n_games`` and record every decision a ``teachers`` seat makes.
+
+    Games cycle through ``tables`` — ``(expansions, lineup)`` pairs, any expansion
+    combination and player count — or, by default, through base-game ``lineups``.
+    Observations are encoded in ``vocab`` (default: the union of the tables' expansions).
+    """
+    if tables is None:
+        tables = [(('base',), tuple(lineup)) for lineup in lineups]
+    if vocab is None:
+        vocab = vocab_for(tuple(sorted({e for expansions, _ in tables for e in expansions})))
+    space = vocab.action_space()
+    obs_size = vocab.obs_size
+    specs = [(tuple(expansions), tuple(AGENTS[name] for name in lineup)) for expansions, lineup in tables]
+    jobs = [(g, seed, *specs[g % len(specs)], tuple(teachers), vocab) for g in range(n_games)]
     if processes > 1:
         with get_context().Pool(processes, initializer=init_worker) as pool:
             parts = pool.map(_collect_game, jobs, chunksize=max(1, n_games // (processes * 8)))
@@ -141,11 +164,11 @@ def collect(
     return Dataset(obs.clone(), mask, action, value)
 
 
-def new_model(hidden: int = 256, layers: int = 2) -> Tuple[PolicyValueNet, List[str]]:
-    """A fresh network sized for the base-game action space, plus its card vocabulary."""
-    space = ActionSpace.from_content(load_content('base'))
-    model = PolicyValueNet(CardEncoder(space.card_names).size, space.n, hidden=hidden, layers=layers)
-    return model, space.card_names
+def new_model(hidden: int = 256, layers: int = 2, vocab: Optional[Vocab] = None) -> Tuple[PolicyValueNet, List[str]]:
+    """A fresh network sized for ``vocab`` (default: the base game), plus its card names."""
+    vocab = vocab or vocab_for(('base',))
+    model = PolicyValueNet(vocab.obs_size, vocab.n_actions, hidden=hidden, layers=layers)
+    return model, list(vocab.card_names)
 
 
 def train_imitation(
