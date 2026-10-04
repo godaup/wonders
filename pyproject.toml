@@ -69,6 +69,7 @@ exclude = ["tests*"]
 [tool.setuptools.package-data]
 "wonders.cards" = ["data/*.json"]
 "wonders.ml" = ["pretrained/*.pt"]
+"wonders.play" = ["static/*.html"]
 
 [tool.black]
 line-length = 120

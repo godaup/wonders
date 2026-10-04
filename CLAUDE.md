@@ -34,7 +34,7 @@ pytest tests/test_wonders.py::test_command_line_interface
 
 Multi-version testing (py310–py313) is done via `tox`, which mirrors CI.
 
-The console entry point `wonders` maps to `wonders.cli:main`, a Click group: `wonders play` (one game, transcript + scores, `--record` saves JSON), `wonders replay <record.json>`, `wonders bench` (win rates with CIs, `-p` processes), `wonders agents`, `wonders gallery`, `wonders table`. `wonders-gallery` / `wonders-table` remain as aliases.
+The console entry point `wonders` maps to `wonders.cli:main`, a Click group: `wonders play` (one game, transcript + scores, `--record` saves JSON), `wonders replay <record.json>`, `wonders bench` (win rates with CIs, `-p` processes), `wonders agents`, `wonders gallery`, `wonders table`, `wonders gui` (local browser play). `wonders-gallery` / `wonders-table` remain as aliases.
 
 ## CI / Release
 
@@ -131,6 +131,13 @@ scoring categories). It is split into three packages under `wonders/`:
   `SubprocVectorEnv` (worker processes; `envs_per_worker` amortizes lockstep rounds —
   ~1 worker per physical core). Build envs from a picklable `SingleAgentEnvFactory`
   (deep-copies opponent factories per env).
+
+- **`wonders/play/`** — local human play (stdlib only). `session.HumanSession` wraps a
+  `WondersEnv` with exactly one human seat: agent seats are played out until the human must
+  decide, and `state()` is a JSON view built only from the human's `Observation` (final scores
+  of all seats once done). `GameConfig` is what the menu picks (expansions, seats, wonder/side,
+  seed); neural opponents are checked against their checkpoint vocabulary. `server.py` serves
+  `static/index.html` (vanilla JS single page) and a JSON API on 127.0.0.1 (`wonders gui`).
 
 - **`wonders/ml/`** — the optional learned agent (PyTorch, `[ml]` extra; nothing else
   imports it, so the core stays dependency-free and `tests/test_ml.py` skips without

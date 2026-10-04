@@ -296,5 +296,22 @@ def table(out, seed, expansion):
     click.echo(f"Wrote final table ({game.players[game.winner()].name} won) to {out}")
 
 
+@main.command()
+@click.option('--port', default=8765, type=int, show_default=True, help='Local port (0 = any free port).')
+@click.option('--no-browser', is_flag=True, help='Do not open a browser window.')
+@click.option(
+    '--checkpoint',
+    'checkpoints',
+    multiple=True,
+    type=click.Path(exists=True, dir_okay=False),
+    help='Offer this trained network as an opponent too (repeatable; needs PyTorch).',
+)
+def gui(port, no_browser, checkpoints):
+    """Play against agents in your browser: pick expansions, opponents and wonders in the menu."""
+    from wonders.play.server import serve
+
+    serve(port=port, open_browser=not no_browser, checkpoints=checkpoints)
+
+
 if __name__ == "__main__":
     main()  # pragma: no cover

@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wonders Table</title>
+<style>
+:root {
+  --bg: #eef1f4; --panel: #ffffff; --panel-2: #f6f8fa; --ink: #1f2a37; --muted: #6b7684; --line: #dde3e9;
+  --accent: #2f6fb0; --accent-ink: #ffffff; --gold: #c8951a; --red: #b23b3b; --green: #2f7d46;
+  --shadow: 0 1px 2px rgba(20, 30, 45, .06), 0 4px 14px rgba(20, 30, 45, .06);
+  --c-brown: #8a5a2b; --c-grey: #7c828a; --c-blue: #2f6fb0; --c-yellow: #d99a1c; --c-red: #b23b3b;
+  --c-green: #3f9e5a; --c-purple: #7a4fb0; --c-white: #c8ccd2; --c-black: #2b2f36; --c-unknown: #9aa3ad;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161c; --panel: #1b2129; --panel-2: #222a33; --ink: #e6ebf1; --muted: #98a3b0; --line: #2e3742;
+    --accent: #5b9be0; --accent-ink: #0d1117; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161c; --panel: #1b2129; --panel-2: #222a33; --ink: #e6ebf1; --muted: #98a3b0; --line: #2e3742;
+  --accent: #5b9be0; --accent-ink: #0d1117; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.45 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 12px; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+select, input[type=text], input[type=number] { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+h1, h2, h3 { margin: 0; }
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+
+header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 16px; padding: 10px 16px;
+  background: var(--panel); border-bottom: 1px solid var(--line); }
+header h1 { font-size: 17px; letter-spacing: .3px; }
+header .status { flex: 1; color: var(--muted); }
+header .status b { color: var(--ink); }
+header .tools { display: flex; gap: 8px; }
+
+main { max-width: 1400px; margin: 0 auto; padding: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px; }
+.section-title { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+
+/* menu */
+#menu { max-width: 760px; margin: 24px auto; display: grid; gap: 16px; }
+#menu .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.expansions { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--panel-2); }
+.chip-toggle.disabled { opacity: .5; }
+.seat-row { display: grid; grid-template-columns: 34px 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 6px; }
+.seat-row .num { color: var(--muted); font-variant-numeric: tabular-nums; }
+.blurb { font-size: 12px; color: var(--muted); grid-column: 2 / 4; margin: -2px 0 4px; }
+.field { display: grid; gap: 4px; }
+.field label { font-size: 12px; color: var(--muted); }
+.error { color: var(--red); font-weight: 600; }
+
+/* game */
+#game { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+#game > * { min-width: 0; }
+.opponents { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.city { padding: 12px 14px; }
+.city.neighbour { border-color: var(--accent); }
+.city-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.city-head h3 { font-size: 15px; }
+.score { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tag { font-size: 11px; color: var(--accent); font-weight: 600; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; font-variant-numeric: tabular-nums; }
+.stat { display: inline-flex; gap: 4px; align-items: center; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.tableau { display: flex; flex-wrap: wrap; gap: 4px; }
+.cardchip { font-size: 11px; padding: 2px 7px; border-radius: 6px; color: #fff; border: 0; cursor: pointer; line-height: 1.5; }
+.cardchip.white { color: #1f2a37; }
+.cardchip.black { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
+.me { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+.board img { width: 100%; border-radius: 10px; display: block; }
+.stages { display: flex; gap: 6px; margin-top: 8px; }
+.stage { flex: 1; text-align: center; font-size: 12px; padding: 4px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); }
+.stage.built { background: var(--green); color: #fff; border-color: var(--green); }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+.decision { padding: 10px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); margin-bottom: 12px; }
+.decision b { color: var(--accent); }
+.hand { display: flex; flex-wrap: wrap; gap: 14px; }
+.handcard { width: 168px; display: grid; gap: 6px; }
+.handcard img { width: 168px; border-radius: 10px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
+.handcard .acts { display: grid; gap: 4px; }
+.handcard .acts button { font-size: 12px; padding: 5px 6px; text-align: left; }
+.handcard .acts small { color: var(--muted); float: right; }
+.handcard .acts button.primary small { color: inherit; opacity: .85; }
+.log { max-height: calc(100vh - 120px); overflow: auto; position: sticky; top: 70px; }
+.log ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; font-size: 13px; }
+.log li.turn { margin-top: 8px; font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.log li.mine { font-weight: 600; }
+.busy { position: fixed; right: 16px; bottom: 16px; padding: 8px 14px; border-radius: 999px; background: var(--ink); color: var(--bg); }
+
+/* results */
+#result table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+#result th, #result td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+#result th:first-child, #result td:first-child { text-align: left; }
+#result tr.winner td { font-weight: 700; }
+#result tr.you td:first-child::after { content: " (you)"; color: var(--muted); font-weight: 400; }
+#result .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* viewer */
+#viewer { position: fixed; inset: 0; background: rgba(10, 14, 20, .6); display: grid; place-items: center; z-index: 20; }
+#viewer img { max-width: min(92vw, 520px); max-height: 88vh; border-radius: 14px; }
+
+@media (max-width: 900px) {
+  main { padding: 12px; }
+  #game { grid-template-columns: minmax(0, 1fr); }
+  .me { grid-template-columns: minmax(0, 1fr); }
+  .opponents { grid-template-columns: minmax(0, 1fr); }
+  .hand { gap: 10px; }
+  .handcard { width: calc(50% - 5px); }
+  .handcard img { width: 100%; }
+  header { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+  header .tools button { padding: 5px 9px; font-size: 13px; }
+  .log { position: static; max-height: 320px; }
+  #menu .grid { grid-template-columns: 1fr; }
+  header .status { display: none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Wonders</h1>
+  <div class="status" id="status"></div>
+  <div class="tools">
+    <button id="btn-theme" title="Toggle light/dark">◐</button>
+    <button id="btn-record" class="hidden">Download record</button>
+    <button id="btn-menu" class="hidden">New game</button>
+  </div>
+</header>
+
+<main>
+  <section id="menu" class="hidden">
+    <div class="panel">
+      <p class="section-title">Expansions</p>
+      <div class="expansions" id="m-expansions"></div>
+    </div>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <p class="section-title" style="margin:0">Players</p>
+        <div>
+          <button id="m-remove" title="Remove a seat">−</button>
+          <span id="m-count" style="display:inline-block;min-width:24px;text-align:center"></span>
+          <button id="m-add" title="Add a seat">+</button>
+        </div>
+      </div>
+      <div id="m-seats"></div>
+      <p class="muted" style="font-size:12px;margin:6px 0 0">Seat order is table order: your left neighbour sits after you, your right neighbour before you.</p>
+    </div>
+    <div class="panel grid">
+      <div class="field"><label for="m-wonder">Your wonder</label><select id="m-wonder"></select></div>
+      <div class="field"><label for="m-side">Your side</label><select id="m-side"></select></div>
+      <div class="field"><label for="m-oside">Opponents' sides</label><select id="m-oside"></select></div>
+      <div class="field"><label for="m-seed">Seed (blank = random)</label><input id="m-seed" type="number" min="0" placeholder="random"></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <button class="primary" id="m-start">Start game</button>
+      <button id="m-resume" class="hidden">Resume game</button>
+      <span class="error" id="m-error"></span>
+    </div>
+  </section>
+
+  <section id="game" class="hidden">
+    <div>
+      <div class="opponents" id="g-opponents"></div>
+      <div class="me">
+        <div class="panel board">
+          <p class="section-title">Your wonder</p>
+          <img id="g-board" alt="Your wonder board">
+          <div class="stages" id="g-stages"></div>
+        </div>
+        <div class="panel">
+          <div class="city-head"><h3 id="g-name"></h3><span class="score" id="g-score"></span></div>
+          <div class="stats" id="g-stats"></div>
+          <dl class="kv" id="g-kv"></dl>
+          <p class="section-title" style="margin-top:12px">Your city</p>
+          <div class="tableau" id="g-tableau"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="decision" id="g-decision"></div>
+        <div class="hand" id="g-hand"></div>
+      </div>
+    </div>
+    <aside class="panel log"><p class="section-title">Moves</p><ol id="g-log"></ol></aside>
+  </section>
+
+  <section id="result" class="hidden panel" style="max-width:980px;margin:24px auto">
+    <h2 id="r-title" style="margin-bottom:12px"></h2>
+    <div style="overflow-x:auto"><table id="r-table"></table></div>
+    <div class="actions">
+      <button class="primary" id="r-again">Play again (same settings)</button>
+      <button id="r-menu">Back to menu</button>
+      <button id="r-record">Download record</button>
+    </div>
+    <p class="section-title" style="margin-top:18px">Final cities</p>
+    <div class="opponents" id="r-cities"></div>
+  </section>
+</main>
+
+<div id="viewer" class="hidden"><img alt=""></div>
+<div id="busy" class="busy hidden">Opponents are thinking…</div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...children) => {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') node.className = v;
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else if (v !== undefined && v !== null && v !== false) node.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of children.flat()) if (c !== null && c !== undefined) node.append(c);
+  return node;
+};
+const store = {
+  get(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : JSON.parse(v); } catch (e) { return fallback; } },
+  set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ } },
+};
+
+const COLORS = ['brown', 'grey', 'yellow', 'red', 'blue', 'green', 'purple', 'white', 'black'];
+const RES = { wood: 'Wood', stone: 'Stone', ore: 'Ore', bricks: 'Clay', glass: 'Glass', linen: 'Loom', paper: 'Papyrus' };
+const SCI = { tablet: 'Tablet', gear: 'Gear', compass: 'Compass' };
+const AGES = ['', 'I', 'II', 'III'];
+const DECISIONS = {
+  play: 'Choose a card: <b>build</b> it, use it for a <b>wonder stage</b>, or <b>discard</b> it for 3 coins. The rest of the hand passes on.',
+  last_card: '<b>Babylon:</b> you may also play the last card of this Age.',
+  discard_build: '<b>Halicarnassus:</b> build one card from the discard pile for free.',
+  draft: '<b>Leaders draft:</b> keep one leader and pass the rest.',
+  recruit: '<b>Recruit</b> a leader for this Age, use one for a wonder stage, or discard one for 3 coins.',
+  leader_build: '<b>Rome:</b> recruit an extra leader right away.',
+  copy_leader: "<b>Courtesans' Guild:</b> copy one of your neighbours' leaders.",
+};
+
+let options = null;   // /api/options
+let state = null;     // current game state
+let menu = null;      // menu config being edited
+
+async function api(path, body) {
+  const init = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+  const res = await fetch(path, init);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name);
+const wonderUrl = (name, side) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side;
+const show = (id) => ['menu', 'game', 'result'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
+function viewCard(name) { $('viewer').querySelector('img').src = cardUrl(name); $('viewer').querySelector('img').alt = name; $('viewer').classList.remove('hidden'); }
+$('viewer').addEventListener('click', () => $('viewer').classList.add('hidden'));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('viewer').classList.add('hidden'); });
+
+/* ---------- theme ---------- */
+function applyTheme(theme) { if (theme) document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme; }
+applyTheme(store.get('theme', null));
+$('btn-theme').addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme === 'dark' ||
+    (!document.documentElement.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  const next = dark ? 'light' : 'dark';
+  applyTheme(next); store.set('theme', next);
+});
+
+/* ---------- menu ---------- */
+function agentLabel(id) { const a = options.agents.find((x) => x.id === id); return a ? a.label : id; }
+function availableWonders() {
+  const ids = new Set(['base', ...menu.expansions]);
+  return options.expansions.filter((e) => ids.has(e.id)).flatMap((e) => e.wonders);
+}
+function renderMenu() {
+  const exps = $('m-expansions'); exps.replaceChildren();
+  for (const e of options.expansions) {
+    const fixed = e.id === 'base';
+    const box = el('input', { type: 'checkbox', checked: fixed || menu.expansions.includes(e.id), disabled: fixed || !e.implemented,
+      onchange: (ev) => {
+        menu.expansions = ev.target.checked ? [...menu.expansions, e.id] : menu.expansions.filter((x) => x !== e.id);
+        renderMenu();
+      } });
+    exps.append(el('label', { class: 'chip-toggle' + (e.implemented ? '' : ' disabled'), title: e.note || '' }, box, e.name,
+      e.implemented ? null : el('span', { class: 'muted' }, ' (coming)')));
+  }
+  const seats = $('m-seats'); seats.replaceChildren();
+  menu.seats.forEach((seat, i) => {
+    const sel = el('select', { onchange: (ev) => {
+      if (ev.target.value === 'human') menu.seats.forEach((s, j) => { if (j !== i && s.player === 'human') s.player = 'heuristic'; });
+      else if (seat.player === 'human') { ev.target.value = 'human'; return; }  // keep exactly one human
+      seat.player = ev.target.value; renderMenu();
+    } }, el('option', { value: 'human', selected: seat.player === 'human' }, 'You'),
+      options.agents.map((a) => el('option', { value: a.id, selected: seat.player === a.id }, a.label)));
+    const name = el('input', { type: 'text', value: seat.name, placeholder: seat.player === 'human' ? 'You' : agentLabel(seat.player),
+      oninput: (ev) => { seat.name = ev.target.value; } });
+    seats.append(el('div', { class: 'seat-row' }, el('span', { class: 'num' }, '#' + (i + 1)), sel, name));
+    const blurb = seat.player === 'human' ? 'Your seat.' : (options.agents.find((a) => a.id === seat.player) || {}).blurb;
+    if (blurb) seats.append(el('div', { class: 'seat-row' }, el('span'), el('div', { class: 'blurb' }, blurb)));
+  });
+  $('m-count').textContent = menu.seats.length;
+  $('m-remove').disabled = menu.seats.length <= options.min_players;
+  $('m-add').disabled = menu.seats.length >= options.max_players;
+  const wonders = availableWonders();
+  if (menu.wonder !== 'random' && !wonders.includes(menu.wonder)) menu.wonder = 'random';
+  $('m-wonder').replaceChildren(el('option', { value: 'random' }, 'Random'),
+    wonders.map((w) => el('option', { value: w, selected: menu.wonder === w }, w)));
+  for (const [id, key] of [['m-side', 'side'], ['m-oside', 'opponent_sides']]) {
+    $(id).replaceChildren(...options.sides.map((s) => el('option', { value: s, selected: menu[key] === s }, s === 'random' ? 'Random' : 'Side ' + s)));
+  }
+  $('m-seed').value = menu.seed === null || menu.seed === undefined ? '' : menu.seed;
+}
+$('m-wonder').addEventListener('change', (e) => { menu.wonder = e.target.value; });
+$('m-side').addEventListener('change', (e) => { menu.side = e.target.value; });
+$('m-oside').addEventListener('change', (e) => { menu.opponent_sides = e.target.value; });
+$('m-seed').addEventListener('input', (e) => { menu.seed = e.target.value === '' ? null : Number(e.target.value); });
+$('m-add').addEventListener('click', () => { menu.seats.push({ player: 'heuristic', name: '' }); renderMenu(); });
+$('m-remove').addEventListener('click', () => {
+  let drop = menu.seats.length - 1;
+  if (menu.seats[drop].player === 'human') drop -= 1;
+  menu.seats.splice(drop, 1); renderMenu();
+});
+$('m-start').addEventListener('click', () => startGame(menu));
+$('m-resume').addEventListener('click', render);
+function openMenu() { $('m-error').textContent = ''; renderMenu(); show('menu'); setHeader(); }
+
+async function startGame(config) {
+  $('m-error').textContent = '';
+  store.set('menu', config);
+  setBusy(true, 'Dealing…');
+  try { state = (await api('/api/new', config)).state; render(); }
+  catch (e) { $('m-error').textContent = e.message; show('menu'); }
+  finally { setBusy(false); }
+}
+
+/* ---------- game ---------- */
+function setBusy(on, text) { $('busy').textContent = text || 'Opponents are thinking…'; $('busy').classList.toggle('hidden', !on);
+  document.querySelectorAll('.handcard button').forEach((b) => { b.disabled = on || b.dataset.locked === '1'; }); }
+function playerName(seat) { return state.players[seat].name; }
+function chip(name) {
+  const info = (state.cards || {})[name] || { color: 'unknown' };
+  return el('button', { class: 'cardchip ' + info.color, style: `background:var(--c-${info.color})`, title: name, onclick: () => viewCard(name) }, name);
+}
+function tableau(names) {
+  const color = (n) => COLORS.indexOf(((state.cards || {})[n] || {}).color);
+  return [...names].sort((a, b) => color(a) - color(b) || a.localeCompare(b)).map(chip);
+}
+function tokenSum(tokens) { return (tokens || []).reduce((a, b) => a + b, 0); }
+function stats(city) {
+  const out = [
+    el('span', { class: 'stat', title: 'Coins' }, el('span', { class: 'dot', style: 'background:var(--gold)' }), String(city.coins)),
+    el('span', { class: 'stat', title: 'Shields' }, el('span', { class: 'dot', style: 'background:var(--red)' }), String(city.shields) + ' ⛨'),
+    el('span', { class: 'stat', title: 'Military tokens' }, '⚔ ' + (tokenSum(city.tokens) >= 0 ? '+' : '') + tokenSum(city.tokens)),
+    el('span', { class: 'stat', title: 'Wonder stages' }, '▲ ' + city.stages_built + '/' + city.stages_total),
+  ];
+  const sci = Object.entries(city.science || {}).filter(([, n]) => n > 0).map(([s, n]) => SCI[s] + ' ' + n);
+  if (city.science_wilds) sci.push('Any ' + city.science_wilds);
+  if (sci.length) out.push(el('span', { class: 'stat', title: 'Science' }, el('span', { class: 'dot', style: 'background:var(--green)' }), sci.join(' · ')));
+  if (city.debt) out.push(el('span', { class: 'stat', title: 'Debt tokens' }, 'Debt ' + city.debt));
+  if (city.diplomacy) out.push(el('span', { class: 'stat', title: 'Diplomacy tokens' }, 'Diplomacy ' + city.diplomacy));
+  return out;
+}
+function production(slots) {
+  if (!slots || !slots.length) return 'none';
+  const counts = {};
+  for (const slot of slots) { const k = slot.map((r) => RES[r] || r).join('/'); counts[k] = (counts[k] || 0) + 1; }
+  return Object.entries(counts).map(([k, n]) => (n > 1 ? n + '× ' : '') + k).join(', ');
+}
+function prices(side) {
+  const p = state.observation.buy_prices[side] || {};
+  const groups = {};
+  for (const [r, c] of Object.entries(p)) (groups[c] = groups[c] || []).push(RES[r] || r);
+  return Object.entries(groups).map(([c, rs]) => rs.join('/') + ' ' + c).join(' · ') || '—';
+}
+
+function renderOpponents(obs) {
+  const box = $('g-opponents'); box.replaceChildren();
+  const n = obs.n_players;
+  // Show the table clockwise starting at the left neighbour, so both neighbours flank the list.
+  for (let k = 1; k < n; k++) {
+    const seat = (obs.seat + k) % n;
+    const city = obs.table[seat];
+    const p = state.players[seat];
+    const tag = seat === obs.left.seat ? '← left neighbour' : seat === obs.right.seat ? 'right neighbour →' : '';
+    box.append(el('div', { class: 'panel city' + (tag ? ' neighbour' : '') },
+      el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted', style: 'font-size:12px' }, agentLabel(p.agent) + ' · ' + city.wonder + ' (' + city.wonder_side + ')')),
+        el('span', { class: 'score', title: 'Current score' }, String(city.score))),
+      tag ? el('div', { class: 'tag' }, tag) : null,
+      el('div', { class: 'stats' }, stats(city)),
+      el('div', { class: 'tableau' }, tableau(city.cards))));
+  }
+}
+
+function renderMe(obs) {
+  const me = obs.me;
+  $('g-name').textContent = me.name + ' — ' + me.wonder + ' (' + me.wonder_side + ')';
+  $('g-score').textContent = me.score;
+  const src = wonderUrl(me.wonder, me.wonder_side);
+  if ($('g-board').getAttribute('src') !== src) $('g-board').src = src;
+  const board = obs.wonder_board;
+  $('g-stages').replaceChildren(...(board ? board.stages : []).map((s) => el('div', { class: 'stage' + (s.built ? ' built' : '') }, 'Stage ' + s.index + (s.built ? ' ✓' : ''))));
+  $('g-stats').replaceChildren(...stats(me));
+  const kv = $('g-kv'); kv.replaceChildren();
+  const add = (k, v) => kv.append(el('dt', {}, k), el('dd', {}, v));
+  add('Produces', production(obs.production));
+  add('Buy left', prices('left'));
+  add('Buy right', prices('right'));
+  if (obs.leaders_hand && obs.leaders_hand.length) add('Leaders in hand', obs.leaders_hand.join(', '));
+  if (obs.free_builds_left) add('Free builds', obs.free_builds_left + ' left this Age');
+  add('Discard pile', obs.discard_count + ' cards');
+  $('g-tableau').replaceChildren(...tableau(me.cards));
+}
+
+function actionLabel(a, decision) {
+  if (a.kind === 'build') {
+    const verb = { draft: 'Keep', recruit: 'Recruit', leader_build: 'Recruit', copy_leader: 'Copy' }[decision] || 'Build';
+    let cost = 'free';
+    if (a.chain) cost = 'chain';
+    else if (a.coins) cost = a.coins + ' coin' + (a.coins === 1 ? '' : 's') + (a.trade ? ' (' + a.trade + ' trade)' : '');
+    return [verb, decision === 'draft' || decision === 'copy_leader' ? '' : cost];
+  }
+  if (a.kind === 'wonder') return ['Wonder stage', ''];
+  if (a.kind === 'discard') return ['Discard', '+3 coins'];
+  return ['Build free', decision === 'discard_build' ? 'from discards' : 'board power'];
+}
+
+function renderHand(obs) {
+  $('g-decision').innerHTML = (DECISIONS[obs.decision] || 'Your move.') +
+    (obs.decision === 'play' ? ` <span class="muted">Hands pass ${obs.pass_left ? 'left (clockwise)' : 'right (counter-clockwise)'}.</span>` : '');
+  const byCard = new Map();
+  for (const a of obs.actions) { if (!byCard.has(a.card)) byCard.set(a.card, []); byCard.get(a.card).push(a); }
+  const hand = $('g-hand'); hand.replaceChildren();
+  const names = obs.hand.map((c) => c.name);
+  for (const name of byCard.keys()) if (!names.includes(name)) names.push(name);
+  for (const name of names) {
+    const acts = (byCard.get(name) || []).sort((x, y) => ['build', 'free', 'wonder', 'discard'].indexOf(x.kind) - ['build', 'free', 'wonder', 'discard'].indexOf(y.kind));
+    hand.append(el('div', { class: 'handcard' },
+      el('img', { src: cardUrl(name), alt: name, title: name, onclick: () => viewCard(name) }),
+      el('div', { class: 'acts' }, acts.length ? acts.map((a) => {
+        const [label, detail] = actionLabel(a, obs.decision);
+        return el('button', { class: a.kind === 'build' || a.kind === 'free' ? 'primary' : '', onclick: () => play(a.index) },
+          label, detail ? el('small', {}, detail) : null);
+      }) : el('button', { disabled: true, 'data-locked': '1' }, 'Not playable'))));
+  }
+}
+
+function describe(e, obs) {
+  const who = e.seat === obs.seat ? 'You' : playerName(e.seat);
+  const card = e.card;
+  switch (e.kind) {
+    case 'build': return who + ' built ' + card;
+    case 'free': return who + ' built ' + card + ' for free';
+    case 'wonder': return who + ' built a wonder stage' + (card ? ' with ' + card : '');
+    case 'discard': return who + ' discarded ' + (card || 'a card');
+    default: return who + ' ' + e.kind + (card ? ' ' + card : '');
+  }
+}
+function renderLog(obs) {
+  const log = $('g-log'); log.replaceChildren();
+  let last = '';
+  const events = [...obs.history].reverse();
+  for (const e of events) {
+    const key = e.age + ':' + e.turn;
+    if (key !== last) { log.append(el('li', { class: 'turn' }, 'Age ' + AGES[e.age] + ' · turn ' + (e.turn + 1))); last = key; }
+    log.append(el('li', { class: e.seat === obs.seat ? 'mine' : '' }, describe(e, obs)));
+  }
+  if (!events.length) log.append(el('li', { class: 'muted' }, 'No moves yet.'));
+}
+
+function setHeader() {
+  const inMenu = !$('menu').classList.contains('hidden');
+  $('btn-menu').classList.toggle('hidden', !state || inMenu);
+  $('btn-record').classList.toggle('hidden', !state || inMenu);
+  $('m-resume').classList.toggle('hidden', !state || state.done);
+  if (!state || inMenu) { $('status').textContent = ''; return; }
+  if (state.done) { $('status').innerHTML = '<b>Game over</b>'; return; }
+  const obs = state.observation;
+  const phase = { draft: 'Leaders draft', recruit: 'Recruitment' }[obs.decision];
+  $('status').innerHTML = (phase ? `<b>${phase}</b>${obs.age ? ' · before Age ' + AGES[obs.age] : ''}` :
+    `<b>Age ${AGES[obs.age]}</b> · turn ${obs.turn + 1}`) + ' · ' + state.expansions.join(' + ');
+}
+
+function renderResult() {
+  const r = state.result;
+  const cats = r.categories.filter((c) => r.scores.some((s) => s[c] !== 0));
+  const order = state.players.map((p, i) => i).sort((a, b) => r.scores[b].total - r.scores[a].total);
+  const human = state.human;
+  const won = r.winner === human;
+  const rank = order.indexOf(human) + 1;
+  $('r-title').textContent = won ? 'You won!' : `${playerName(r.winner)} wins — you finished #${rank} of ${order.length}`;
+  const head = el('tr', {}, el('th', {}, 'Player'), cats.map((c) => el('th', {}, c[0].toUpperCase() + c.slice(1))), el('th', {}, 'Total'));
+  const rows = order.map((i) => el('tr', { class: (i === r.winner ? 'winner ' : '') + (i === human ? 'you' : '') },
+    el('td', {}, playerName(i) + ' · ' + state.players[i].wonder + ' (' + state.players[i].side + ')'),
+    cats.map((c) => el('td', {}, String(r.scores[i][c]))), el('td', {}, String(r.scores[i].total))));
+  $('r-table').replaceChildren(el('thead', {}, head), el('tbody', {}, rows));
+  $('r-cities').replaceChildren(...state.cities.map((c) => el('div', { class: 'panel city' },
+    el('div', { class: 'city-head' }, el('h3', {}, playerName(c.seat)), el('span', { class: 'score' }, String(r.scores[c.seat].total))),
+    el('div', { class: 'muted', style: 'font-size:12px;margin-bottom:6px' }, agentLabel(state.players[c.seat].agent) + ' · ' + c.coins + ' coins · ' + c.stages_built + ' stages'),
+    el('div', { class: 'tableau' }, tableau(c.cards)))));
+}
+
+function render() {
+  if (!state) { openMenu(); return; }
+  if (state.done) { renderResult(); show('result'); }
+  else { const obs = state.observation; renderOpponents(obs); renderMe(obs); renderHand(obs); renderLog(obs); show('game'); }
+  setHeader();
+}
+
+async function play(index) {
+  setBusy(true);
+  try { state = (await api('/api/act', { index })).state; render(); }
+  catch (e) { alert(e.message); }
+  finally { setBusy(false); }
+}
+
+$('btn-menu').addEventListener('click', () => { if (!state || state.done || confirm('Abandon this game and return to the menu?')) openMenu(); });
+const download = () => { window.location.href = '/api/record'; };
+$('btn-record').addEventListener('click', download);
+$('r-record').addEventListener('click', download);
+$('r-menu').addEventListener('click', openMenu);
+$('r-again').addEventListener('click', () => startGame(Object.assign({}, state.config, { seed: null })));
+
+(async function init() {
+  options = await api('/api/options');
+  menu = store.get('menu', null) || JSON.parse(JSON.stringify(options.defaults));
+  if (!menu.seats || !menu.seats.some((s) => s.player === 'human')) menu = JSON.parse(JSON.stringify(options.defaults));
+  menu.seats = menu.seats.filter((s) => s.player === 'human' || options.agents.some((a) => a.id === s.player));
+  state = (await api('/api/state')).state;
+  render();
+})();
+</script>
+</body>
+</html>
