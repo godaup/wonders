@@ -137,13 +137,21 @@ class Player:
 
     def resource_discount(self, target: str) -> int:
         """Resource units waived when paying for ``target`` (a card colour value or 'wonder')."""
-        return sum(effect.resource_discount(target) for effect in self.iter_effects())
+        key = ('resource_discount', target)
+        if key not in self._cache:
+            self._cache[key] = sum(effect.resource_discount(target) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def builds_free(self, card: Card) -> bool:
-        return any(effect.builds_free(card) for effect in self.iter_effects())
+        key = ('builds_free', card.name)  # a card's identity is its name
+        if key not in self._cache:
+            self._cache[key] = any(effect.builds_free(card) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def bank_purchases(self) -> int:
-        return sum(effect.bank_purchases() for effect in self.iter_effects())
+        if 'bank' not in self._cache:
+            self._cache['bank'] = sum(effect.bank_purchases() for effect in self.iter_effects())
+        return self._cache['bank']  # type: ignore[return-value]
 
     def science_set_value(self) -> int:
         """Points per complete science set: 7, plus bonuses (Aristotle)."""

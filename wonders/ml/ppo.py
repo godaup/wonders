@@ -178,10 +178,12 @@ def train_ppo(
     learner_seat = [i % n for i, (_exp, n) in enumerate(tables)]
     opt = torch.optim.Adam(model.parameters(), lr=config.lr, eps=1e-5)
     start_iteration = 1
+    steps_done = 0  # cumulative learner steps (survives changes of n_envs / rollout_steps on resume)
     pool = list(config.opponent_pool or config.opponents)
     if state:
         opt.load_state_dict(state['optimizer'])
         start_iteration = int(state['iteration']) + 1
+        steps_done = int(state.get('steps', 0))
         pool = list(state.get('pool', pool))
     history: List[Dict[str, float]] = []
     rollouts = _Rollouts(config, pool, start_iteration, device, tables, learner_seat)
@@ -212,10 +214,12 @@ def train_ppo(
                 'win_rate': stats['wins'] / games if games else 0.0,
                 'margin': stats['margins'] / games if games else 0.0,
                 'win_rel': stats['rel'] / games if games else 0.0,
+                'steps': float(steps_done + config.rollout_steps * config.n_envs),
                 'steps_per_sec': config.rollout_steps * config.n_envs / (time.time() - start),
                 **losses,
                 **{f'win_rel/{key}': r / g for key, (r, g) in sorted(rollouts.per_table.items())},
             }
+            steps_done += config.rollout_steps * config.n_envs
             history.append(metrics)
             if log is not None:
                 log(
@@ -229,7 +233,10 @@ def train_ppo(
             if config.snapshot_every and iteration % config.snapshot_every == 0:
                 pool = _snapshot(model, config, vocab, iteration, pool)
                 if on_snapshot is not None:
-                    on_snapshot(iteration, {'optimizer': opt.state_dict(), 'iteration': iteration, 'pool': pool})
+                    on_snapshot(
+                        iteration,
+                        {'optimizer': opt.state_dict(), 'iteration': iteration, 'pool': pool, 'steps': steps_done},
+                    )
                 if config.league and iteration < config.iterations:  # new opponents: rebuild the envs
                     rollouts.close()
                     rollouts = _Rollouts(config, pool, iteration, device, tables, learner_seat)

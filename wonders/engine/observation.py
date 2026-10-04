@@ -27,8 +27,29 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     from wonders.engine.player import Player
 
 
+# Context-independent parts of effect summaries, per effect object (effects are immutable
+# content shared by every game, so this is safe to keep for the process lifetime).
+_STATIC_SUMMARY: Dict[int, Tuple[object, Dict[str, object]]] = {}
+
+
 def effect_summary(effect, ctx: 'Context') -> Dict[str, object]:
     """Structured, JSON-able summary of one effect (from the uniform hooks)."""
+    hit = _STATIC_SUMMARY.get(id(effect))
+    if hit is None or hit[0] is not effect:  # holding the effect keeps its id from being reused
+        hit = (effect, _static_summary(effect))
+        _STATIC_SUMMARY[id(effect)] = hit
+    out = dict(hit[1])
+    vp = effect.victory_points(ctx)
+    if vp:
+        out['victory_points'] = vp
+    coins = effect.coins_on_build(ctx)
+    if coins:
+        out['coins'] = coins
+    return out
+
+
+def _static_summary(effect) -> Dict[str, object]:
+    """The summary keys that don't depend on the game state."""
     out: Dict[str, object] = {'type': type(effect).__name__}
     production = effect.production()
     if production:
@@ -40,12 +61,6 @@ def effect_summary(effect, ctx: 'Context') -> Dict[str, object]:
         out['science'] = symbol.value
     if effect.science_wild():
         out['science_wild'] = effect.science_wild()
-    vp = effect.victory_points(ctx)
-    if vp:
-        out['victory_points'] = vp
-    coins = effect.coins_on_build(ctx)
-    if coins:
-        out['coins'] = coins
     if effect.trade_rules():
         out['trade'] = True
     # Turn-structure / expansion powers (uniform hooks), so agents can value them too.
