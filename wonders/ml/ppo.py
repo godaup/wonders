@@ -59,6 +59,7 @@ class PPOConfig:
     league_size: int = 4  # most recent snapshots kept in the pool
     league_dir: str = ''  # where snapshots are written
     device: str = 'auto'  # torch device for the learner: 'auto' (CUDA if available), 'cuda', 'cpu'
+    encoder: str = 'card-v1'  # observation encoder: 'card-v1' or 'table-v2'
     pipeline: int = 2  # env groups stepped in turn: one simulates while the learner acts for another
     n_envs: int = 24
     envs_per_worker: int = 4  # 0 = run in-process (SyncVectorEnv)
@@ -79,9 +80,9 @@ class PPOConfig:
 def config_vocab(config: PPOConfig) -> Vocab:
     """The vocabulary a model trained with ``config`` must have."""
     if config.universal:
-        return universal_vocab()
+        return universal_vocab(config.encoder)
     expansions = {e for exp, _n in config.tables for e in exp} or {'base'}
-    return vocab_for(tuple(sorted(expansions)))
+    return vocab_for(tuple(sorted(expansions)), config.encoder)
 
 
 def opponent_spec(entry: str) -> AgentSpec:
@@ -123,6 +124,7 @@ def make_vector_env(
             'expansions': tuple(expansions),
             'card_names': vocab.card_names,
             'decisions': vocab.decisions,
+            'encoder': vocab.encoder(),
         }
         fns.append(SingleAgentEnvFactory(opponents, learner=i % n_players, env_kwargs=env_kwargs))
     if config.envs_per_worker <= 0:
@@ -355,7 +357,7 @@ def _snapshot(model: PolicyValueNet, config: PPOConfig, vocab: Vocab, iteration:
     directory = config.league_dir or '.'
     os.makedirs(directory, exist_ok=True)
     path = os.path.join(directory, f'snapshot-{iteration:06d}.pt')
-    save_checkpoint(path, model, vocab.card_names, decisions=list(vocab.decisions), iteration=iteration)
+    save_checkpoint(path, model, vocab.card_names, iteration=iteration, **vocab.meta())
     scripted = [p for p in pool if not p.startswith('neural:')]
     neural = [p for p in pool if p.startswith('neural:')] + [f'neural:{path}']
     return scripted + neural[-config.league_size :]

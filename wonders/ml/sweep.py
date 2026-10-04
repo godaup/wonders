@@ -85,9 +85,9 @@ def ppo_config(run: Dict[str, Any], run_dir: str) -> PPOConfig:
 
 def _imitate(run: Dict[str, Any], run_dir: str, processes: int, log: Log) -> str:
     tables = _tables(run['tables'])
-    vocab = (
-        universal_vocab() if run.get('universal') else vocab_for(tuple(sorted({e for exp, _ in tables for e in exp})))
-    )
+    encoder = run.get('encoder', 'card-v1')  # 'card-v1' or 'table-v2'
+    expansions = tuple(sorted({e for exp, _ in tables for e in exp}))
+    vocab = universal_vocab(encoder) if run.get('universal') else vocab_for(expansions, encoder)
     data = collect(
         int(run.get('games', 3000)),
         tables=tables,
@@ -100,7 +100,7 @@ def _imitate(run: Dict[str, Any], run_dir: str, processes: int, log: Log) -> str
     model, names = new_model(int(run.get('hidden', 256)), int(run.get('layers', 2)), vocab)
     metrics = train_imitation(model, data, epochs=int(run.get('epochs', 12)), seed=int(run.get('seed', 0)), log=log)
     final = os.path.join(run_dir, 'final.pt')
-    save_checkpoint(final, model, names, decisions=list(vocab.decisions), source='imitation', **metrics)
+    save_checkpoint(final, model, names, source='imitation', **vocab.meta(), **metrics)
     return final
 
 
@@ -121,9 +121,9 @@ def _ppo(run: Dict[str, Any], run_dir: str, out: str, log: Log, previous: Option
             config.iterations = iteration + max(0, -(-(int(run['steps']) - steps_done) // batch))
         log(f"{run['name']}: resuming after iteration {iteration} ({steps_done:,} steps done)")
     elif run.get('init'):
-        model, names, _meta = load_checkpoint(os.path.join(out, run['init'], 'final.pt'))
-        if tuple(names) != vocab.card_names:
-            raise ValueError(f"run {run['name']}: init checkpoint vocabulary differs from the PPO tables'")
+        model, names, meta = load_checkpoint(os.path.join(out, run['init'], 'final.pt'))
+        if tuple(names) != vocab.card_names or meta.get('encoder', 'card-v1') != vocab.encoder_kind:
+            raise ValueError(f"run {run['name']}: init checkpoint vocabulary / encoder differs from the PPO config")
     else:
         model, _names = new_model(int(run.get('hidden', 256)), int(run.get('layers', 2)), vocab)
     metrics_path = os.path.join(run_dir, 'metrics.jsonl')
@@ -139,7 +139,7 @@ def _ppo(run: Dict[str, Any], run_dir: str, out: str, log: Log, previous: Option
 
     train_ppo(model, config, log=log, on_iteration=on_iteration, on_snapshot=on_snapshot, state=state)
     final = os.path.join(run_dir, 'final.pt')
-    save_checkpoint(final, model, vocab.card_names, decisions=list(vocab.decisions), source='ppo', run=run['name'])
+    save_checkpoint(final, model, vocab.card_names, source='ppo', run=run['name'], **vocab.meta())
     return final
 
 

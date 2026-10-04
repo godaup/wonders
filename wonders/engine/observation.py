@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
-from wonders.cards.base import Card
+from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card
 from wonders.engine.actions import Action, ActionKind
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -30,6 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 # Context-independent parts of effect summaries, per effect object (effects are immutable
 # content shared by every game, so this is safe to keep for the process lifetime).
 _STATIC_SUMMARY: Dict[int, Tuple[object, Dict[str, object]]] = {}
+_TRADEABLE = sorted(RAW_MATERIALS | MANUFACTURED_GOODS, key=lambda r: r.value)
 
 
 def effect_summary(effect, ctx: 'Context') -> Dict[str, object]:
@@ -100,6 +101,9 @@ class CardView:
     effects: List[Dict[str, object]]
     can_build: bool
     build_coin_cost: Optional[int]  # coins (bank + trade) to build now, if affordable
+    chain_free: bool = False  # buildable for free through a chain
+    bank_coins: int = 0  # of build_coin_cost: coins paid to the bank (card cost, Bilkis)
+    trade_coins: int = 0  # of build_coin_cost: coins paid to neighbours
 
     def to_dict(self) -> Dict[str, object]:
         return self.__dict__.copy()
@@ -122,6 +126,15 @@ class CityView:
     cards_by_color: Dict[str, int]
     science: Dict[str, int]
     score: int
+    tokens: List[int] = field(default_factory=list)  # military tokens (1/3/5 victories, -1 defeats)
+    debt: int = 0  # Cities debt tokens
+    diplomacy: int = 0  # Cities diplomacy tokens held
+    science_wilds: int = 0  # choose-any science symbols
+    production: List[List[str]] = field(default_factory=list)  # public production slots (options each)
+    private_slots: int = 0  # own-use production slots (Black Market / Secret Warehouse)
+    score_breakdown: Dict[str, int] = field(default_factory=dict)  # ScoreBreakdown.as_dict()
+    copied_leaders: List[str] = field(default_factory=list)  # Courtesans' Guild copies
+    next_stage_cost: Optional[Dict[str, object]] = None  # cost of the next unbuilt wonder stage
 
     def to_dict(self) -> Dict[str, object]:
         return self.__dict__.copy()
@@ -191,6 +204,11 @@ class Observation:
     free_builds_left: int = 0  # Olympia: free builds from hand still available this Age
     wonder_board: Optional[WonderBoardView] = None  # the seat's full board, for board-aware agents
     production: List[List[str]] = field(default_factory=list)  # own production slots (resource options)
+    leaders_hand: List[str] = field(default_factory=list)  # own unplayed leaders (private)
+    seen_cards: List[str] = field(default_factory=list)  # cards seen in earlier hands this Age, now elsewhere
+    buy_prices: Dict[str, Dict[str, int]] = field(default_factory=dict)  # {'left'/'right': {resource: coins}}
+    expansions: List[str] = field(default_factory=list)  # expansions in play
+    pass_left: bool = True  # this Age's hands pass to the left (clockwise)
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -213,13 +231,21 @@ class Observation:
             'free_builds_left': self.free_builds_left,
             'wonder_board': self.wonder_board.to_dict() if self.wonder_board else None,
             'production': self.production,
+            'leaders_hand': self.leaders_hand,
+            'seen_cards': self.seen_cards,
+            'buy_prices': self.buy_prices,
+            'expansions': self.expansions,
+            'pass_left': self.pass_left,
         }
 
 
-def _city_view(game: 'Game', seat: int, total: Optional[int] = None) -> CityView:
+def _city_view(game: 'Game', seat: int, breakdown: Optional[Dict[str, int]] = None) -> CityView:
     from collections import Counter
 
     p: 'Player' = game.players[seat]
+    if breakdown is None:
+        breakdown = game.score(seat).as_dict()
+    stage = p.next_stage
     return CityView(
         seat=seat,
         name=p.name,
@@ -233,7 +259,16 @@ def _city_view(game: 'Game', seat: int, total: Optional[int] = None) -> CityView
         cards=[c.name for c in p.cards],
         cards_by_color=dict(Counter(c.color.value for c in p.cards)),
         science={s.value: n for s, n in p.science().items()},
-        score=game.score(seat).total if total is None else total,
+        score=breakdown['total'],
+        tokens=list(p.tokens),
+        debt=p.debt,
+        diplomacy=p.diplomacy,
+        science_wilds=p.science_wilds(),
+        production=[sorted(r.value for r in slot) for slot in p.production_slots()],
+        private_slots=len(p.private_production_slots()),
+        score_breakdown=dict(breakdown),
+        copied_leaders=[c.name for c in p.copied_leaders],
+        next_stage_cost=_cost_dict(stage) if stage is not None else None,
     )
 
 
@@ -241,8 +276,11 @@ def _card_view(game: 'Game', seat: int, card: Card) -> CardView:
     ctx = game.context(seat)
     payment = game._card_payment(seat, card)  # (coins_to_bank, Payment) | None
     build_coin_cost = None
+    bank = trade = 0
     if payment is not None:
         build_coin_cost = payment[0] + payment[1].total
+        trade = payment[1].traded
+        bank = build_coin_cost - trade
     return CardView(
         name=card.name,
         color=card.color.value,
@@ -252,6 +290,9 @@ def _card_view(game: 'Game', seat: int, card: Card) -> CardView:
         effects=[effect_summary(e, ctx) for e in card.effects],
         can_build=payment is not None,
         build_coin_cost=build_coin_cost,
+        chain_free=payment is not None and not game.players[seat].has(card.name) and game._chained(seat, card),
+        bank_coins=bank,
+        trade_coins=trade,
     )
 
 
@@ -272,9 +313,9 @@ def _filter_history(raw: Sequence, viewer: int) -> List[MoveEvent]:
     return [event for entry in raw for event in _filter_entry(entry, viewer)]
 
 
-def public_table(game: 'Game', totals: Optional[Sequence[int]] = None) -> List[CityView]:
+def public_table(game: 'Game', breakdowns: Optional[Sequence[Dict[str, int]]] = None) -> List[CityView]:
     """Every city's public view, in seat order (identical for every viewer)."""
-    return [_city_view(game, i, None if totals is None else totals[i]) for i in range(game.n)]
+    return [_city_view(game, i, None if breakdowns is None else breakdowns[i]) for i in range(game.n)]
 
 
 def build_observation(
@@ -285,6 +326,7 @@ def build_observation(
     *,
     table: Optional[List[CityView]] = None,
     events: Optional[List[MoveEvent]] = None,
+    seen_cards: Sequence[str] = (),
 ) -> Observation:
     """Assemble the Observation for ``seat`` given its current ``hand``.
 
@@ -334,6 +376,13 @@ def build_observation(
             sorted(r.value for r in slot)
             for slot in game.players[seat].production_slots() + game.players[seat].private_production_slots()
         ],
+        leaders_hand=[c.name for c in game.players[seat].leaders_hand],
+        seen_cards=list(seen_cards),
+        buy_prices={
+            side: {r.value: game.players[seat].buy_price(side, r) for r in _TRADEABLE} for side in ('left', 'right')
+        },
+        expansions=list(game.expansions),
+        pass_left=game.phase.pass_left if game.age else True,
     )
 
 
@@ -382,6 +431,7 @@ class ObservationBuilder:
         self._consumed: Dict[int, int] = {}  # per viewer, raw history entries filtered
         self._table: Optional[List[CityView]] = None
         self._table_key: Optional[Tuple[int, int]] = None
+        self._hands: Dict[Tuple[int, int], Dict[int, List[str]]] = {}  # (seat, age) -> turn -> hand
 
     def record(self, age: int, turn: int, moves: List) -> None:
         self.history.append((age, turn, moves))
@@ -389,7 +439,7 @@ class ObservationBuilder:
     def table(self, game: 'Game') -> List[CityView]:
         key = (id(game), game.tick)
         if self._table is None or self._table_key != key:
-            self._table = public_table(game, game.cached_totals())
+            self._table = public_table(game, game.cached_breakdowns())
             self._table_key = key
         return self._table
 
@@ -400,5 +450,32 @@ class ObservationBuilder:
         self._consumed[seat] = len(self.history)
         return events
 
+    def seen_cards(self, game: 'Game', seat: int, hand: List[Card]) -> List[str]:
+        """Cards ``seat`` held earlier this Age that are now in other hands (card counting).
+
+        Each regular-turn hand is remembered; the seen cards are those earlier hands minus
+        the seat's current hand and the cards it played itself. Only what this seat saw.
+        """
+        from collections import Counter
+
+        if game.decision.value != 'play' or not game.age:
+            return []
+        hands = self._hands.setdefault((seat, game.age), {})
+        hands.setdefault(game.turn, [c.name for c in hand])
+        seen: Counter = Counter()
+        for turn, names in hands.items():
+            if turn < game.turn:
+                seen.update(names)
+        seen.subtract(c.name for c in hand)
+        seen.subtract(e.card for e in self.events(seat) if e.seat == seat and e.age == game.age and e.card)
+        return sorted(name for name, n in seen.items() for _ in range(max(0, n)))
+
     def build(self, game: 'Game', seat: int, hand: List[Card]) -> Observation:
-        return build_observation(game, seat, hand, table=self.table(game), events=list(self.events(seat)))
+        return build_observation(
+            game,
+            seat,
+            hand,
+            table=self.table(game),
+            events=list(self.events(seat)),
+            seen_cards=self.seen_cards(game, seat, hand),
+        )
