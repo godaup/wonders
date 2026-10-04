@@ -30,6 +30,7 @@ from wonders.agents.baselines import (
     RandomAgent,
     ScientistAgent,
 )
+from wonders.agents.board import BoardAwareAgent, BoardFocusAgent
 from wonders.agents.heuristic import HeuristicAgent
 from wonders.agents.match import play_match
 from wonders.agents.strategies import BalancedAgent, BlockerAgent, OpportunistAgent, TableAgent
@@ -82,6 +83,8 @@ AGENTS: Dict[str, AgentSpec] = {
         AgentSpec.of('blocker', BlockerAgent),
         AgentSpec.of('table', TableAgent),
         AgentSpec.of('balanced', BalancedAgent),
+        AgentSpec.of('board', BoardAwareAgent),
+        AgentSpec.of('board-focus', BoardFocusAgent),
     )
 }
 

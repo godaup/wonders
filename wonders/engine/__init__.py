@@ -8,6 +8,7 @@ from wonders.engine.observation import (
     MoveEvent,
     Observation,
     ObservationBuilder,
+    WonderBoardView,
     WonderStageView,
     build_observation,
     public_table,

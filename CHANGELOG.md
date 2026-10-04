@@ -9,6 +9,8 @@
   checked against the official rulebooks; the Leaders guilds and the Rome, Petra and
   Byzantium boards; the training env supports the Leaders draft and recruitment.
 * Score breakdown gains `leaders` and `cities` columns.
+* Wonder-board-aware agents (`BoardAwareAgent`, `BoardFocusAgent`); observations expose the
+  whole wonder board and own production.
 * Agents: baselines, strategy agents and a tuned `HeuristicAgent`; `wonders.agents.bench`
   for win rates with confidence intervals.
 * Training environments: fixed `ActionSpace` with masks, `WondersEnv` (multi-agent),
