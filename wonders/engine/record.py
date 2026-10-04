@@ -130,7 +130,7 @@ class GameRecord:
         """Re-simulate the recorded decisions and return the finished game."""
         coins = Ruleset.of(*self.expansions).starting_coins
         players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
-        game = Game(players)
+        game = Game(players, expansions=self.expansions)
         for seat, names in self.leader_hands.items():
             players[seat].leaders_hand = [content.card(n) for n in names]
         game.leader_box = [content.card(n) for n in self.leader_box]
@@ -247,7 +247,7 @@ def play_and_record(
     """
     coins = Ruleset.of(*expansions).starting_coins
     players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in setups]
-    game = Game(players)
+    game = Game(players, expansions=tuple(expansions))
     builder = RecordBuilder(setups, tuple(expansions))
 
     def choose(point: DecisionPoint) -> Dict[int, Action]:

@@ -203,3 +203,51 @@ def test_resume_finishes_the_step_budget_after_a_batch_size_change(tmp_path):
     assert any('24 steps done' in line for line in logs)
     lines = (run_dir / 'metrics.jsonl').read_text().splitlines()
     assert len(lines) == 1 and json.loads(lines[0])['steps'] == 72
+
+
+def test_sweep_with_the_v2_encoder_end_to_end(tmp_path):
+    from wonders.ml.model import load_checkpoint
+
+    spec = {
+        'out': str(tmp_path / 'runs'),
+        'runs': [
+            {
+                'name': 'imit',
+                'kind': 'imitate',
+                'games': 2,
+                'epochs': 1,
+                'hidden': 16,
+                'universal': True,
+                'encoder': 'table-v2',
+                'tables': [[['base', 'leaders'], ['board', 'heuristic', 'greedy']]],
+                'teachers': ['board'],
+            },
+            {
+                'name': 'ppo',
+                'kind': 'ppo',
+                'init': 'imit',
+                'steps': 24,
+                'ppo': {
+                    'tables': [[['base', 'leaders'], 3]],
+                    'opponent_pool': ['heuristic'],
+                    'universal': True,
+                    'encoder': 'table-v2',
+                    **TINY,
+                },
+                'eval': {'cells': 'leaders/3p', 'games': 3, 'lineups': ['heuristic']},
+            },
+        ],
+    }
+    path = tmp_path / 'spec.json'
+    path.write_text(json.dumps(spec))
+    run_sweep(str(path), processes=1, log=lambda line: None)
+    model, names, meta = load_checkpoint(str(tmp_path / 'runs' / 'ppo' / 'final.pt'))
+    assert meta['encoder'] == 'table-v2' and model.config['obs_size'] == universal_vocab('table-v2').obs_size
+    agent = NeuralAgent(str(tmp_path / 'runs' / 'ppo' / 'final.pt'))
+    assert agent.encoder.size == model.config['obs_size']
+    assert json.loads((tmp_path / 'runs' / 'ppo' / 'eval.json').read_text())[0]['games'] == 3
+    bad = dict(spec['runs'][1], name='bad', ppo=dict(spec['runs'][1]['ppo'], encoder='card-v1'))
+    with pytest.raises(ValueError):  # a v2 init checkpoint cannot seed a v1 PPO run
+        from wonders.ml.sweep import run_one
+
+        run_one(bad, spec['out'], processes=1, log=lambda line: None)

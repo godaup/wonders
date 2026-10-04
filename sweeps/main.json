@@ -5,6 +5,7 @@
    "name": "imit-C-256x2",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -1062,6 +1063,7 @@
    "name": "imit-C-512x3",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -2119,6 +2121,7 @@
    "name": "imit-B-base",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -2382,6 +2385,7 @@
    "name": "imit-B-leaders",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -2665,6 +2669,7 @@
    "name": "imit-B-cities",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -2948,6 +2953,7 @@
    "name": "imit-B-leaders+cities",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -3251,6 +3257,7 @@
    "name": "imit-A-base-3p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -3366,6 +3373,7 @@
    "name": "imit-A-base-4p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -3483,6 +3491,7 @@
    "name": "imit-A-base-5p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -3602,6 +3611,7 @@
    "name": "imit-A-base-6p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -3723,6 +3733,7 @@
    "name": "imit-A-base-7p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -3846,6 +3857,7 @@
    "name": "imit-A-leaders-3p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -3965,6 +3977,7 @@
    "name": "imit-A-leaders-4p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4086,6 +4099,7 @@
    "name": "imit-A-leaders-5p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4209,6 +4223,7 @@
    "name": "imit-A-leaders-6p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4334,6 +4349,7 @@
    "name": "imit-A-leaders-7p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4461,6 +4477,7 @@
    "name": "imit-A-cities-3p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4580,6 +4597,7 @@
    "name": "imit-A-cities-4p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4701,6 +4719,7 @@
    "name": "imit-A-cities-5p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4824,6 +4843,7 @@
    "name": "imit-A-cities-6p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -4949,6 +4969,7 @@
    "name": "imit-A-cities-7p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -5076,6 +5097,7 @@
    "name": "imit-A-leaders+cities-3p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -5199,6 +5221,7 @@
    "name": "imit-A-leaders+cities-4p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -5324,6 +5347,7 @@
    "name": "imit-A-leaders+cities-5p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -5451,6 +5475,7 @@
    "name": "imit-A-leaders+cities-6p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -5580,6 +5605,7 @@
    "name": "imit-A-leaders+cities-7p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"

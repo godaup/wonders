@@ -88,10 +88,11 @@ class IllegalAction(Exception):
 
 
 class Game:
-    def __init__(self, players: List[Player]):
+    def __init__(self, players: List[Player], expansions: Sequence[str] = ('base',)):
         if len(players) < 2:
             raise ValueError('need at least 2 players')
         self.players = players
+        self.expansions: Tuple[str, ...] = tuple(expansions)  # informational (observations)
         self.n = len(players)
         self.phase = Phase.SETUP
         self.age = 0
@@ -105,7 +106,7 @@ class Game:
         self._payments: Dict[tuple, tuple] = {}
         self.leader_box: List[Card] = []  # Leaders: undealt leaders, drawn from the end (Rome B)
         self.tick = 0  # bumped on every engine-driven state change (see ObservationBuilder)
-        self._totals: Optional[Tuple[int, List[int]]] = None  # (tick, score totals) cache
+        self._totals: Optional[Tuple[int, List[Dict[str, int]]]] = None  # (tick, breakdowns) cache
 
     # -- neighbours --------------------------------------------------------
     def left_of(self, i: int) -> Player:
@@ -501,8 +502,15 @@ class Game:
         :class:`~wonders.engine.observation.ObservationBuilder`): mutating players directly
         does not bump ``tick``. Use :meth:`score` otherwise.
         """
+        return [b['total'] for b in self.cached_breakdowns()]
+
+    def cached_breakdowns(self) -> List[Dict[str, int]]:
+        """Every seat's score breakdown (``ScoreBreakdown.as_dict``), cached per ``tick``.
+
+        Same validity caveat as :meth:`cached_totals`.
+        """
         if self._totals is None or self._totals[0] != self.tick:
-            self._totals = (self.tick, [self.score(i).total for i in range(self.n)])
+            self._totals = (self.tick, [self.score(i).as_dict() for i in range(self.n)])
         return self._totals[1]
 
     def winner(self) -> int:

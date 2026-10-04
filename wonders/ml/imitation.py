@@ -24,14 +24,13 @@ from torch import nn
 from wonders._mp import get_context, init_worker
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, AgentSpec, _content
-from wonders.agents.encoders import CardEncoder
 from wonders.agents.match import play_match
 from wonders.cards.base import Card
 from wonders.engine.actions import Action
 from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
 from wonders.env.action_space import ActionSpace
-from wonders.env.vocab import Vocab, vocab_for
+from wonders.env.vocab import VectorEncoder, Vocab, vocab_for
 from wonders.ml.model import PolicyValueNet
 from wonders.ruleset import Ruleset
 
@@ -54,7 +53,7 @@ def _margin(obs: Observation) -> float:
 class _Recorder(Agent):
     """Wraps a teacher agent and records each decision it makes (draft and recruit included)."""
 
-    def __init__(self, teacher: Agent, encoder: CardEncoder, space: ActionSpace):
+    def __init__(self, teacher: Agent, encoder: VectorEncoder, space: ActionSpace):
         self.teacher = teacher
         self.encoder = encoder
         self.space = space

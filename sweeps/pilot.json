@@ -5,6 +5,7 @@
    "name": "imit-base-3p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"
@@ -92,6 +93,7 @@
    "name": "imit-lc-5p",
    "kind": "imitate",
    "universal": true,
+   "encoder": "card-v1",
    "teachers": [
     "board",
     "board-focus"

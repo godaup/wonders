@@ -35,12 +35,20 @@ def teacher_tables(combo: str, n: int) -> List[Tuple[List[str], List[str]]]:
     return [(COMBOS[combo], ['board'] * n), (COMBOS[combo], mixed)]
 
 
-def imitation(name: str, cells: Sequence[Tuple[str, int]], games: int, hidden: int = 256, layers: int = 2) -> Dict:
+def imitation(
+    name: str,
+    cells: Sequence[Tuple[str, int]],
+    games: int,
+    hidden: int = 256,
+    layers: int = 2,
+    encoder: str = 'card-v1',
+) -> Dict:
     tables = [t for combo, n in cells for t in teacher_tables(combo, n)]
     return {
         'name': name,
         'kind': 'imitate',
         'universal': True,
+        'encoder': encoder,
         'teachers': ['board', 'board-focus'],
         'games': games,
         'tables': tables,
@@ -130,6 +138,17 @@ def main_sweep(hp: Dict) -> Dict:
     return {'out': 'runs/main', 'runs': runs}
 
 
+def encoder_v2_sweep(hp: Dict) -> Dict:
+    """Head-to-head: a universal 256x2 model with encoder v2 on ppo-C-256x2-s0's exact budget."""
+    every = [(c, n) for c in COMBOS for n in PLAYERS]
+    runs = [imitation('imit-C2-256x2', every, games=12_000, encoder='table-v2')]
+    for seed in (0, 1):
+        runs.append(
+            ppo(f'ppo-C2-256x2-s{seed}', 'imit-C2-256x2', every, 20_000_000, seed, hp, 64, 4, encoder='table-v2')
+        )
+    return {'out': 'runs/main', 'runs': runs}
+
+
 def league_sweep(hp: Dict, base_run: str = 'ppo-C-256x2-s0') -> Dict:
     every = [(c, n) for c in COMBOS for n in PLAYERS]
     run = ppo(
@@ -145,7 +164,13 @@ def cli() -> None:
     parser.add_argument('--rollout', type=int, default=64)
     args = parser.parse_args()
     hp = {'lr': args.lr, 'entropy_coef': args.entropy, 'rollout_steps': args.rollout}
-    for name, spec in (('pilot', pilot()), ('main', main_sweep(hp)), ('league', league_sweep(hp))):
+    specs = (
+        ('pilot', pilot()),
+        ('main', main_sweep(hp)),
+        ('league', league_sweep(hp)),
+        ('encoder_v2', encoder_v2_sweep(hp)),
+    )
+    for name, spec in specs:
         with open(os.path.join(HERE, f'{name}.json'), 'w', encoding='utf-8') as fh:
             json.dump(spec, fh, indent=1)
             fh.write("\n")

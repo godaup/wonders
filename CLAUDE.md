@@ -152,6 +152,14 @@ scoring categories). It is split into three packages under `wonders/`:
   worker). Resume counts learner `steps`, so a run can resume with a different batch size.
   Engine caches that keep this fast: payments memoized by resource cost, per-player
   aggregate caches, `Game.cached_totals()` per tick (engine-driven paths only).
+  **Encoders**: `Vocab.encoder_kind` picks `card-v1` (`CardEncoder`, 851 inputs: own city +
+  neighbours) or `table-v2` (`agents/table_encoder.TableEncoder`, 3,020 inputs: every city
+  seat-relative and padded to 7, rich hand / private / context / history blocks; design in
+  `docs/encoder-v2.md`). Checkpoints store `encoder` / `decisions` / `wonders`
+  (`Vocab.meta()`); checkpoints without them load as v1. v2 relies on extra observation
+  fields (`CityView` tokens / debt / production / score_breakdown …, `Observation`
+  leaders_hand / seen_cards / buy_prices …) — keep them free of hidden information
+  (`tests/test_table_encoder.py` checks opponents' hands never change the encoding).
 
 Design rules to preserve when extending:
 - **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;
