@@ -159,11 +159,17 @@ class Player:
         return any(effect.redirects_defeats() for effect in self.iter_effects())
 
     def coin_discount(self, card: Card) -> int:
-        return sum(effect.coin_discount(card) for effect in self.iter_effects())
+        key = ('coin_discount', card.color)  # discounts depend on the card's colour only
+        if key not in self._cache:
+            self._cache[key] = sum(effect.coin_discount(card) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def neighbour_coin_discount(self, card: Card) -> int:
         """Coins this city knocks off its *neighbours'* cost for ``card`` (Rome B)."""
-        return sum(effect.neighbour_coin_discount(card) for effect in self.iter_effects())
+        key = ('neighbour_coin_discount', card.color)
+        if key not in self._cache:
+            self._cache[key] = sum(effect.neighbour_coin_discount(card) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def build_income(self, event: BuildEvent) -> int:
         return sum(effect.build_income(event) for effect in self.iter_effects())

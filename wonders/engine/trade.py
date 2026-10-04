@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Ressource
 
@@ -85,6 +85,14 @@ def cheapest_payment(
     if sum(1 for u in units if supply(u) == 0) > waivers:
         return None
 
+    prices: Dict[Tuple[str, Ressource], int] = {}
+
+    def price_of(side: str, resource: Ressource) -> int:
+        key = (side, resource)
+        if key not in prices:
+            prices[key] = price(side, resource)
+        return prices[key]
+
     n_slots = len(slots)
     used = [False] * n_slots
     best: List[Optional[Tuple[int, int, int]]] = [None]  # (total, left, right)
@@ -116,7 +124,7 @@ def cheapest_payment(
                 add = bank_price
                 nl, nr = 0, 0
             else:
-                add = price(side, resource)
+                add = price_of(side, resource)
                 nl = add if side == 'left' else 0
                 nr = add if side == 'right' else 0
             used[j] = True

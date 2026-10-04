@@ -25,7 +25,8 @@ from torch.distributions import Categorical
 
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, AgentSpec
-from wonders.env.vector import SingleAgentEnvFactory, SubprocVectorEnv, SyncVectorEnv
+from wonders.env.environment import EnvObs
+from wonders.env.vector import SingleAgentEnvFactory, SubprocVectorEnv, SyncVectorEnv, np
 from wonders.env.vocab import Vocab, universal_vocab, vocab_for
 from wonders.ml.agent import NeuralAgent
 from wonders.ml.imitation import VALUE_SCALE
@@ -57,6 +58,8 @@ class PPOConfig:
     league: bool = False  # add snapshots to the opponent pool (self-play league)
     league_size: int = 4  # most recent snapshots kept in the pool
     league_dir: str = ''  # where snapshots are written
+    device: str = 'auto'  # torch device for the learner: 'auto' (CUDA if available), 'cuda', 'cpu'
+    pipeline: int = 2  # env groups stepped in turn: one simulates while the learner acts for another
     n_envs: int = 24
     envs_per_worker: int = 4  # 0 = run in-process (SyncVectorEnv)
     rollout_steps: int = 64  # learner steps per env per iteration
@@ -97,12 +100,18 @@ def env_tables(config: PPOConfig) -> List[TableSpec]:
 
 
 def make_vector_env(
-    config: PPOConfig, pool: Optional[Sequence[str]] = None, epoch: int = 0
+    config: PPOConfig,
+    pool: Optional[Sequence[str]] = None,
+    epoch: int = 0,
+    envs: Optional[Sequence[int]] = None,
 ) -> Union[SyncVectorEnv, SubprocVectorEnv]:
+    """Vector env over env indices ``envs`` (default: all ``n_envs``)."""
     vocab = config_vocab(config)
     pool = list(pool if pool is not None else (config.opponent_pool or config.opponents))
+    tables = env_tables(config)
     fns = []
-    for i, (expansions, n_players) in enumerate(env_tables(config)):
+    for i in envs if envs is not None else range(config.n_envs):
+        expansions, n_players = tables[i]
         seed = config.seed * 10_007 + epoch * 1_000_003 + i * 31
         if config.tables:  # draw this table's opponents from the pool
             names = random.Random(seed).choices(pool, k=n_players - 1)
@@ -117,8 +126,21 @@ def make_vector_env(
         }
         fns.append(SingleAgentEnvFactory(opponents, learner=i % n_players, env_kwargs=env_kwargs))
     if config.envs_per_worker <= 0:
-        return SyncVectorEnv(fns)
-    return SubprocVectorEnv(fns, envs_per_worker=config.envs_per_worker)
+        return SyncVectorEnv(fns, compact=True)
+    return SubprocVectorEnv(fns, envs_per_worker=config.envs_per_worker, compact=True)
+
+
+def env_groups(config: PPOConfig) -> List[List[int]]:
+    """Env indices per pipeline group (contiguous halves for ``pipeline=2``)."""
+    k = max(1, min(config.pipeline, config.n_envs)) if config.envs_per_worker > 0 else 1
+    bounds = [round(g * config.n_envs / k) for g in range(k + 1)]
+    return [list(range(bounds[g], bounds[g + 1])) for g in range(k)]
+
+
+def make_vector_envs(
+    config: PPOConfig, pool: Optional[Sequence[str]] = None, epoch: int = 0
+) -> List[Union[SyncVectorEnv, SubprocVectorEnv]]:
+    return [make_vector_env(config, pool, epoch, group) for group in env_groups(config)]
 
 
 def _table_key(table: TableSpec) -> str:
@@ -150,6 +172,8 @@ def train_ppo(
     if model.config['obs_size'] != vocab.obs_size or model.config['n_actions'] != vocab.n_actions:
         raise ValueError('model shape does not match the configured vocabulary')
     torch.manual_seed(config.seed)
+    device = resolve_device(config.device)
+    model.to(device)
     tables = env_tables(config)
     learner_seat = [i % n for i, (_exp, n) in enumerate(tables)]
     opt = torch.optim.Adam(model.parameters(), lr=config.lr, eps=1e-5)
@@ -160,71 +184,37 @@ def train_ppo(
         start_iteration = int(state['iteration']) + 1
         pool = list(state.get('pool', pool))
     history: List[Dict[str, float]] = []
-    vec = make_vector_env(config, pool, epoch=start_iteration)
+    rollouts = _Rollouts(config, pool, start_iteration, device, tables, learner_seat)
     try:
-        observations, _infos = vec.reset(config.seed + start_iteration)
         for iteration in range(start_iteration, config.iterations + 1):
             start = time.time()
             model.eval()
-            xs, masks, actions, logps, values, rewards, dones = [], [], [], [], [], [], []
-            wins = margins = games = rel = 0.0
-            per_table: Dict[str, List[float]] = {}
-            for _ in range(config.rollout_steps):
-                x = torch.tensor([o['observation'] for o in observations], dtype=torch.float32)
-                m = torch.tensor([o['action_mask'] for o in observations])
-                with torch.no_grad():
-                    logits, value = model(x, m)
-                    dist = Categorical(logits=logits)
-                    action = dist.sample()
-                observations, reward, terminated, truncated, infos = vec.step(action.tolist())
-                done = [t or u for t, u in zip(terminated, truncated)]
-                for env, (finished, info) in enumerate(zip(done, infos)):
-                    if finished:
-                        scores = info['final_info']['scores']
-                        me = learner_seat[env]
-                        best_other = max(s for j, s in enumerate(scores) if j != me)
-                        won = float(scores[me] > best_other)
-                        wins += won
-                        margins += scores[me] - best_other
-                        games += 1
-                        rel += won * len(scores)
-                        bucket = per_table.setdefault(_table_key(tables[env]), [0.0, 0.0])
-                        bucket[0] += won * len(scores)
-                        bucket[1] += 1
-                xs.append(x)
-                masks.append(m)
-                actions.append(action)
-                logps.append(dist.log_prob(action))
-                values.append(value)
-                rewards.append(torch.tensor(reward, dtype=torch.float32) * VALUE_SCALE)
-                dones.append(torch.tensor(done, dtype=torch.float32))
-            with torch.no_grad():
-                x = torch.tensor([o['observation'] for o in observations], dtype=torch.float32)
-                m = torch.tensor([o['action_mask'] for o in observations])
-                _logits, next_value = model(x, m)
-            advantages = _gae(rewards, values, dones, next_value, config.gamma, config.gae_lambda)
-            returns = advantages + torch.stack(values)
+            batch, next_value, stats = rollouts.collect(model)
+            advantages = _gae(
+                batch['reward'], batch['value'], batch['done'], next_value, config.gamma, config.gae_lambda
+            )
+            returns = advantages + torch.stack(batch['value'])
             losses = _update(
                 model,
                 opt,
                 config,
-                torch.cat(xs),
-                torch.cat(masks),
-                torch.cat(actions),
-                torch.cat(logps),
+                torch.cat(batch['x']),
+                torch.cat(batch['mask']),
+                torch.cat(batch['action']),
+                torch.cat(batch['logp']),
                 advantages.flatten(),
                 returns.flatten(),
             )
-            steps = config.rollout_steps * config.n_envs
+            games = stats['games']
             metrics = {
                 'iteration': float(iteration),
                 'games': games,
-                'win_rate': wins / games if games else 0.0,
-                'margin': margins / games if games else 0.0,
-                'win_rel': rel / games if games else 0.0,
-                'steps_per_sec': steps / (time.time() - start),
+                'win_rate': stats['wins'] / games if games else 0.0,
+                'margin': stats['margins'] / games if games else 0.0,
+                'win_rel': stats['rel'] / games if games else 0.0,
+                'steps_per_sec': config.rollout_steps * config.n_envs / (time.time() - start),
                 **losses,
-                **{f'win_rel/{key}': r / g for key, (r, g) in sorted(per_table.items())},
+                **{f'win_rel/{key}': r / g for key, (r, g) in sorted(rollouts.per_table.items())},
             }
             history.append(metrics)
             if log is not None:
@@ -241,13 +231,111 @@ def train_ppo(
                 if on_snapshot is not None:
                     on_snapshot(iteration, {'optimizer': opt.state_dict(), 'iteration': iteration, 'pool': pool})
                 if config.league and iteration < config.iterations:  # new opponents: rebuild the envs
-                    vec.close()
-                    vec = make_vector_env(config, pool, epoch=iteration)
-                    observations, _infos = vec.reset(config.seed + iteration)
+                    rollouts.close()
+                    rollouts = _Rollouts(config, pool, iteration, device, tables, learner_seat)
     finally:
-        vec.close()
+        rollouts.close()
+        model.cpu()  # checkpoints and callers always see a CPU model
     model.eval()
     return history
+
+
+class _Rollouts:
+    """Collects rollouts from env groups in a pipeline.
+
+    With ``pipeline=2`` the envs form two groups of worker processes: while one group
+    simulates its step, the learner computes the other group's actions, so neither side
+    waits for the other. Buffers are reassembled in env order, so GAE and metrics see the
+    same layout as a single lockstep vector env.
+    """
+
+    def __init__(
+        self,
+        config: PPOConfig,
+        pool: Sequence[str],
+        epoch: int,
+        device: torch.device,
+        tables: Sequence[TableSpec],
+        learner_seat: Sequence[int],
+    ):
+        self.config, self.device, self.tables, self.learner_seat = config, device, tables, learner_seat
+        self.groups = env_groups(config)
+        self.vecs = make_vector_envs(config, pool, epoch)
+        self.obs = [vec.reset(config.seed + epoch + 7919 * g)[0] for g, vec in enumerate(self.vecs)]
+        self.per_table: Dict[str, List[float]] = {}
+
+    def close(self) -> None:
+        for vec in self.vecs:
+            vec.close()
+
+    def collect(self, model: PolicyValueNet) -> Tuple[Dict[str, List[torch.Tensor]], torch.Tensor, Dict[str, float]]:
+        """One rollout: per-step tensors (env order), the bootstrap value and game stats."""
+        steps, n_groups = self.config.rollout_steps, len(self.groups)
+        buf: List[List[Dict[str, torch.Tensor]]] = [[] for _ in range(n_groups)]
+        stats = {'wins': 0.0, 'margins': 0.0, 'games': 0.0, 'rel': 0.0}
+        self.per_table = {}
+        for t in range(steps):
+            for g, vec in enumerate(self.vecs):
+                if t > 0:
+                    self._receive(g, buf[g][-1], stats)  # simulated while the learner acted for others
+                x, m = _batch(self.obs[g], self.device)
+                with torch.no_grad():
+                    logits, value = model(x, m)
+                    dist = Categorical(logits=logits)
+                    action = dist.sample()
+                buf[g].append({'x': x, 'mask': m, 'action': action, 'logp': dist.log_prob(action), 'value': value})
+                vec.step_async(action.tolist())
+        for g in range(n_groups):
+            self._receive(g, buf[g][-1], stats)
+        batch = {
+            key: [torch.cat([buf[g][t][key] for g in range(n_groups)]) for t in range(steps)]
+            for key in ('x', 'mask', 'action', 'logp', 'value', 'reward', 'done')
+        }
+        with torch.no_grad():
+            next_value = torch.cat([model(*_batch(self.obs[g], self.device))[1] for g in range(n_groups)])
+        return batch, next_value, stats
+
+    def _receive(self, g: int, step: Dict[str, torch.Tensor], stats: Dict[str, float]) -> None:
+        """Collect group ``g``'s pending step into ``step``; update the game stats."""
+        obs, reward, terminated, truncated, infos = self.vecs[g].step_wait()
+        self.obs[g] = obs
+        done = [t or u for t, u in zip(terminated, truncated)]
+        step['reward'] = torch.tensor(reward, dtype=torch.float32, device=self.device) * VALUE_SCALE
+        step['done'] = torch.tensor(done, dtype=torch.float32, device=self.device)
+        for local, (finished, info) in enumerate(zip(done, infos)):
+            if finished:
+                self._record_game(self.groups[g][local], info['final_info']['scores'], stats)
+
+    def _record_game(self, env: int, scores: Sequence[int], stats: Dict[str, float]) -> None:
+        me = self.learner_seat[env]
+        best_other = max(s for j, s in enumerate(scores) if j != me)
+        won = float(scores[me] > best_other)
+        stats['wins'] += won
+        stats['margins'] += scores[me] - best_other
+        stats['games'] += 1
+        stats['rel'] += won * len(scores)
+        bucket = self.per_table.setdefault(_table_key(self.tables[env]), [0.0, 0.0])
+        bucket[0] += won * len(scores)
+        bucket[1] += 1
+
+
+def resolve_device(name: str) -> torch.device:
+    """``'auto'`` → CUDA when available, else CPU."""
+    if name == 'auto':
+        return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    return torch.device(name)
+
+
+def _batch(observations: Sequence[EnvObs], device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Stack per-env observations / masks (NumPy arrays or lists) into tensors on ``device``."""
+    first = observations[0]['observation']
+    if np is not None and isinstance(first, np.ndarray):
+        x = torch.from_numpy(np.stack([o['observation'] for o in observations]))
+        m = torch.from_numpy(np.stack([o['action_mask'] for o in observations]))
+    else:
+        x = torch.tensor([o['observation'] for o in observations], dtype=torch.float32)
+        m = torch.tensor([o['action_mask'] for o in observations])
+    return x.to(device, non_blocking=True), m.to(device, non_blocking=True)
 
 
 def _snapshot(model: PolicyValueNet, config: PPOConfig, vocab: Vocab, iteration: int, pool: List[str]) -> List[str]:
@@ -275,7 +363,7 @@ def _gae(
     lam: float,
 ) -> torch.Tensor:
     """Generalized advantage estimates ``[T, n_envs]``; ``dones[t]`` ends the episode after step t."""
-    advantages = torch.zeros(len(rewards), next_value.shape[0])
+    advantages = torch.zeros(len(rewards), next_value.shape[0], device=next_value.device)
     running = torch.zeros_like(next_value)
     for t in reversed(range(len(rewards))):
         following = next_value if t == len(rewards) - 1 else values[t + 1]
@@ -302,7 +390,7 @@ def _update(
     totals = {'policy_loss': 0.0, 'value_loss': 0.0, 'entropy': 0.0, 'approx_kl': 0.0}
     batches = 0
     for _ in range(config.epochs):
-        for idx in torch.randperm(n).split(config.minibatch):
+        for idx in torch.randperm(n, device=x.device).split(config.minibatch):
             logits, value = model(x[idx], mask[idx])
             dist = Categorical(logits=logits)
             logp = dist.log_prob(action[idx])

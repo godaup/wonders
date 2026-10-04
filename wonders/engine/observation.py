@@ -201,7 +201,7 @@ class Observation:
         }
 
 
-def _city_view(game: 'Game', seat: int) -> CityView:
+def _city_view(game: 'Game', seat: int, total: Optional[int] = None) -> CityView:
     from collections import Counter
 
     p: 'Player' = game.players[seat]
@@ -218,7 +218,7 @@ def _city_view(game: 'Game', seat: int) -> CityView:
         cards=[c.name for c in p.cards],
         cards_by_color=dict(Counter(c.color.value for c in p.cards)),
         science={s.value: n for s, n in p.science().items()},
-        score=game.score(seat).total,
+        score=game.score(seat).total if total is None else total,
     )
 
 
@@ -257,9 +257,9 @@ def _filter_history(raw: Sequence, viewer: int) -> List[MoveEvent]:
     return [event for entry in raw for event in _filter_entry(entry, viewer)]
 
 
-def public_table(game: 'Game') -> List[CityView]:
+def public_table(game: 'Game', totals: Optional[Sequence[int]] = None) -> List[CityView]:
     """Every city's public view, in seat order (identical for every viewer)."""
-    return [_city_view(game, i) for i in range(game.n)]
+    return [_city_view(game, i, None if totals is None else totals[i]) for i in range(game.n)]
 
 
 def build_observation(
@@ -374,7 +374,7 @@ class ObservationBuilder:
     def table(self, game: 'Game') -> List[CityView]:
         key = (id(game), game.tick)
         if self._table is None or self._table_key != key:
-            self._table = public_table(game)
+            self._table = public_table(game, game.cached_totals())
             self._table_key = key
         return self._table
 

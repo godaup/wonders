@@ -52,12 +52,29 @@ class SingleAgentEnvFactory:
         return SingleAgentEnv(opponents, learner=self.learner, **copy.deepcopy(self.env_kwargs))
 
 
+try:  # optional: compact arrays pickle far faster than lists of Python floats
+    import numpy as np
+except ImportError:  # pragma: no cover - numpy ships with torch, not with the core package
+    np = None  # type: ignore[assignment]
+
+
+def _compact(obs: EnvObs) -> EnvObs:
+    """Observation / mask as NumPy arrays (when available) for cheap IPC and batching."""
+    if np is None or not obs:
+        return obs
+    return {
+        'observation': np.asarray(obs['observation'], dtype=np.float32),
+        'action_mask': np.asarray(obs['action_mask'], dtype=np.bool_),
+    }
+
+
 class _AutoResetEnv:
     """One env plus the auto-reset/seeding/info-trimming shared by both vector envs."""
 
-    def __init__(self, env: SingleAgentEnv, keep_obs: bool):
+    def __init__(self, env: SingleAgentEnv, keep_obs: bool, compact: bool = False):
         self.env = env
         self.keep_obs = keep_obs
+        self.compact = compact
         self.rng: Optional[random.Random] = None
 
     def _trim(self, info: Dict[str, Any]) -> Dict[str, Any]:
@@ -68,7 +85,7 @@ class _AutoResetEnv:
     def reset(self, seed: Optional[int]) -> Tuple[EnvObs, Dict[str, Any]]:
         self.rng = random.Random(seed) if seed is not None else None
         obs, info = self.env.reset(seed)
-        return obs, self._trim(info)
+        return self._out(obs), self._trim(info)
 
     def step(self, action: int) -> Tuple[EnvObs, float, bool, bool, Dict[str, Any]]:
         obs, reward, terminated, truncated, info = self.env.step(action)
@@ -78,7 +95,10 @@ class _AutoResetEnv:
             info = {**self._trim(reset_info), 'final_info': info}
         else:
             info = self._trim(info)
-        return obs, reward, terminated, truncated, info
+        return self._out(obs), reward, terminated, truncated, info
+
+    def _out(self, obs: EnvObs) -> EnvObs:
+        return _compact(obs) if self.compact else obs
 
 
 def _transpose(results: Sequence[Tuple]) -> VecStep:
@@ -93,10 +113,12 @@ class SyncVectorEnv:
         env_fns: One zero-argument env factory per env (e.g. :class:`SingleAgentEnvFactory`).
         keep_obs: Keep the raw ``Observation`` in each info (``'obs'``); off by default
             because the encoded ``'observation'`` is what a learner consumes.
+        compact: Return ``observation`` / ``action_mask`` as NumPy arrays (float32 / bool)
+            instead of lists — much cheaper to pass between processes and to batch.
     """
 
-    def __init__(self, env_fns: Sequence[EnvFn], keep_obs: bool = False):
-        self._envs = [_AutoResetEnv(fn(), keep_obs) for fn in env_fns]
+    def __init__(self, env_fns: Sequence[EnvFn], keep_obs: bool = False, compact: bool = False):
+        self._envs = [_AutoResetEnv(fn(), keep_obs, compact) for fn in env_fns]
         self.num_envs = len(self._envs)
         self.action_space = self._envs[0].env.action_space
 
@@ -109,15 +131,24 @@ class SyncVectorEnv:
             raise ValueError(f'expected {self.num_envs} actions, got {len(actions)}')
         return _transpose([env.step(a) for env, a in zip(self._envs, actions)])
 
+    def step_async(self, actions: Sequence[int]) -> None:
+        """Queue ``actions``; :meth:`step_wait` performs the step (API parity with subprocesses)."""
+        self._queued = list(actions)
+
+    def step_wait(self) -> VecStep:
+        return self.step(self._queued)
+
     def close(self) -> None:
         self._envs = []
 
 
-def _worker(remote: Connection, parent_remote: Connection, env_fns: Sequence[EnvFn], keep_obs: bool) -> None:
+def _worker(
+    remote: Connection, parent_remote: Connection, env_fns: Sequence[EnvFn], keep_obs: bool, compact: bool = False
+) -> None:
     """Host a group of envs; each command carries one argument per hosted env."""
     parent_remote.close()
     init_worker()
-    envs = [_AutoResetEnv(fn(), keep_obs) for fn in env_fns]
+    envs = [_AutoResetEnv(fn(), keep_obs, compact) for fn in env_fns]
     try:
         while True:
             cmd, args = remote.recv()
@@ -153,6 +184,7 @@ class SubprocVectorEnv:
             ``'forkserver'``); defaults to the platform default, or ``forkserver`` once
             torch is loaded (see :mod:`wonders._mp`).
         envs_per_worker: How many consecutive envs each worker process hosts.
+        compact: See :class:`SyncVectorEnv`.
 
     Use as a context manager (or call :meth:`close`) to shut the workers down.
     """
@@ -163,6 +195,7 @@ class SubprocVectorEnv:
         keep_obs: bool = False,
         context: Optional[str] = None,
         envs_per_worker: int = 1,
+        compact: bool = False,
     ):
         if envs_per_worker < 1:
             raise ValueError('envs_per_worker must be at least 1')
@@ -175,7 +208,7 @@ class SubprocVectorEnv:
         for group in groups:
             remote, child = ctx.Pipe()
             process = ctx.Process(  # type: ignore[attr-defined]  # typeshed types get_context() loosely
-                target=_worker, args=(child, remote, group, keep_obs), daemon=True
+                target=_worker, args=(child, remote, group, keep_obs, compact), daemon=True
             )
             process.start()
             child.close()
@@ -202,9 +235,22 @@ class SubprocVectorEnv:
         return [p[0] for p in pairs], [p[1] for p in pairs]
 
     def step(self, actions: Sequence[int]) -> VecStep:
+        self.step_async(actions)
+        return self.step_wait()
+
+    def step_async(self, actions: Sequence[int]) -> None:
+        """Send ``actions`` to the workers and return at once; collect with :meth:`step_wait`.
+
+        Lets the caller do other work (e.g. compute actions for a second vector env) while
+        these envs simulate.
+        """
         if len(actions) != self.num_envs:
             raise ValueError(f'expected {self.num_envs} actions, got {len(actions)}')
-        return _transpose(self._round('step', actions))
+        for remote, chunk in zip(self._remotes, self._split(actions)):
+            remote.send(('step', chunk))
+
+    def step_wait(self) -> VecStep:
+        return _transpose([result for remote in self._remotes for result in remote.recv()])
 
     def close(self) -> None:
         if self._closed:

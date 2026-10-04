@@ -181,6 +181,7 @@ def train_imitation(
     val_fraction: float = 0.1,
     seed: int = 0,
     log: Optional[Callable[[str], None]] = print,
+    device: str = 'auto',
 ) -> Dict[str, float]:
     """Fit ``model`` to ``data``; returns final train loss and held-out accuracy / value MSE."""
     gen = torch.Generator().manual_seed(seed)
@@ -188,6 +189,10 @@ def train_imitation(
     n_val = max(1, int(len(data) * val_fraction))
     val, train = order[:n_val], order[n_val:]
     model.set_normalization(data.obs[train])
+    target = torch.device(
+        'cuda' if device == 'auto' and torch.cuda.is_available() else ('cpu' if device == 'auto' else device)
+    )
+    model.to(target)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     ce = nn.CrossEntropyLoss()
     metrics: Dict[str, float] = {}
@@ -197,28 +202,37 @@ def train_imitation(
         total, batches = 0.0, 0
         for start in range(0, len(perm), batch_size):
             idx = perm[start : start + batch_size]
-            logits, value = model(data.obs[idx], data.mask[idx])
-            loss = ce(logits, data.action[idx]) + value_coef * nn.functional.mse_loss(value, data.value[idx])
+            obs, mask = data.obs[idx].to(target), data.mask[idx].to(target)
+            action, value_target = data.action[idx].to(target), data.value[idx].to(target)
+            logits, value = model(obs, mask)
+            loss = ce(logits, action) + value_coef * nn.functional.mse_loss(value, value_target)
             opt.zero_grad()
             loss.backward()
             opt.step()
             total += loss.item()
             batches += 1
-        metrics = {'train_loss': total / max(1, batches), **evaluate(model, data, val)}
+        metrics = {'train_loss': total / max(1, batches), **evaluate(model, data, val, target)}
         if log is not None:
             log(
                 f'epoch {epoch + 1}/{epochs}: loss {metrics["train_loss"]:.3f}  '
                 f'val acc {metrics["val_accuracy"]:.3f}  val value mse {metrics["val_value_mse"]:.3f}'
             )
+    model.cpu()
     model.eval()
     return metrics
 
 
-def evaluate(model: PolicyValueNet, data: Dataset, idx: torch.Tensor) -> Dict[str, float]:
+def evaluate(
+    model: PolicyValueNet, data: Dataset, idx: torch.Tensor, device: Optional[torch.device] = None
+) -> Dict[str, float]:
     """Accuracy of the greedy policy vs the teacher, and value MSE, on rows ``idx``."""
     model.eval()
+    device = device or next(model.parameters()).device
+    correct, squared, count = 0.0, 0.0, 0
     with torch.inference_mode():
-        logits, value = model(data.obs[idx], data.mask[idx])
-    accuracy = float((logits.argmax(dim=1) == data.action[idx]).float().mean())
-    mse = float(nn.functional.mse_loss(value, data.value[idx]))
-    return {'val_accuracy': accuracy, 'val_value_mse': mse}
+        for chunk in idx.split(8192):
+            logits, value = model(data.obs[chunk].to(device), data.mask[chunk].to(device))
+            correct += float((logits.argmax(dim=1).cpu() == data.action[chunk]).sum())
+            squared += float(((value.cpu() - data.value[chunk]) ** 2).sum())
+            count += len(chunk)
+    return {'val_accuracy': correct / max(1, count), 'val_value_mse': squared / max(1, count)}
