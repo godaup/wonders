@@ -15,7 +15,7 @@ without touching the engine.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card
@@ -48,6 +48,23 @@ def effect_summary(effect, ctx: 'Context') -> Dict[str, object]:
         out['coins'] = coins
     if effect.trade_rules():
         out['trade'] = True
+    # Turn-structure / expansion powers (uniform hooks), so agents can value them too.
+    for key, value in (
+        ('plays_last_card', effect.plays_last_card()),
+        ('free_builds_per_age', effect.free_builds_per_age()),
+        ('discard_builds', effect.discard_builds()),
+        ('guild_copies', effect.guild_copies()),
+        ('science_copies', effect.science_copies()),
+        ('science_set_bonus', effect.science_set_bonus()),
+        ('coins_per_victory', effect.coins_per_victory()),
+        ('redirects_defeats', effect.redirects_defeats()),
+        ('bank_purchases', effect.bank_purchases()),
+        ('leader_draws', effect.leader_draws()),
+        ('extra_recruits', effect.extra_recruits()),
+        ('leader_copies', effect.leader_copies()),
+    ):
+        if value:
+            out[key] = value
     return out
 
 
@@ -123,6 +140,20 @@ class WonderStageView:
 
 
 @dataclass
+class WonderBoardView:
+    """The seat's whole wonder board (public): starting resource and every stage."""
+
+    name: str
+    side: str
+    starting_resource: Optional[str]  # None for boards producing nothing (Rome)
+    stages: List[Dict[str, object]]  # per stage: index (1-based), cost, effects, built
+    effects: List[Dict[str, object]]  # passive board powers (e.g. Rome's leader discounts)
+
+    def to_dict(self) -> Dict[str, object]:
+        return self.__dict__.copy()
+
+
+@dataclass
 class Observation:
     """Full per-seat environment state at a decision point."""
 
@@ -143,6 +174,8 @@ class Observation:
     next_wonder_stage: Optional[WonderStageView] = None
     decision: str = 'play'  # 'play' | 'last_card' | 'discard_build' (see DecisionKind)
     free_builds_left: int = 0  # Olympia: free builds from hand still available this Age
+    wonder_board: Optional[WonderBoardView] = None  # the seat's full board, for board-aware agents
+    production: List[List[str]] = field(default_factory=list)  # own production slots (resource options)
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -163,6 +196,8 @@ class Observation:
             'next_wonder_stage': self.next_wonder_stage.to_dict() if self.next_wonder_stage else None,
             'decision': self.decision,
             'free_builds_left': self.free_builds_left,
+            'wonder_board': self.wonder_board.to_dict() if self.wonder_board else None,
+            'production': self.production,
         }
 
 
@@ -279,6 +314,32 @@ def build_observation(
         next_wonder_stage=next_stage_view,
         decision=game.decision.value,
         free_builds_left=max(0, game.players[seat].free_builds_left),
+        wonder_board=_board_view(game, seat),
+        production=[
+            sorted(r.value for r in slot)
+            for slot in game.players[seat].production_slots() + game.players[seat].private_production_slots()
+        ],
+    )
+
+
+def _board_view(game: 'Game', seat: int) -> WonderBoardView:
+    player = game.players[seat]
+    wonder = player.wonder
+    ctx = game.context(seat)
+    return WonderBoardView(
+        name=wonder.name,
+        side=wonder.side,
+        starting_resource=wonder.starting_resource.value if wonder.starting_resource is not None else None,
+        stages=[
+            {
+                'index': k + 1,
+                'cost': _cost_dict(stage),
+                'effects': [effect_summary(e, ctx) for e in stage.effects],
+                'built': k < player.wonder_stages_built,
+            }
+            for k, stage in enumerate(wonder.stages)
+        ],
+        effects=[effect_summary(e, ctx) for e in wonder.effects],
     )
 
 

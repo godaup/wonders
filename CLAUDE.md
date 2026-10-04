@@ -103,7 +103,15 @@ scoring categories). It is split into three packages under `wonders/`:
   `OpportunistAgent` (switches colour focus every few turns), `BlockerAgent`
   (denies the downstream neighbour their most-wanted card — Ages I/III pass left,
   Age II right), `TableAgent` (best affordable by a fixed value lookup table), and
-  `BalancedAgent` (fills the scarcest colour). All read only the `Observation`, so
+  `BalancedAgent` (fills the scarcest colour). `board.py` has the **wonder-board-aware**
+  agents: `BoardAwareAgent` (HeuristicAgent + values board powers such as Babylon's 7th
+  card / Olympia's free build by Ages remaining, plans production for the resources its
+  unbuilt stages need — the biggest gain — and spends the card the downstream neighbour
+  wants most) and `BoardFocusAgent` (also favours the colours its board's stages point
+  to). They read `Observation.wonder_board` (whole board: starting resource, stages with
+  cost/effects/built, passive powers) and `Observation.production`; effect summaries
+  include the power hooks (`plays_last_card`, `discard_builds`, ...). Board agent vs heuristic +
+  greedy: ~62% wins (heuristic ~26%); the bundled neural agent still beats it. All read only the `Observation`, so
   they respect partial observability. `encoders.py` maps an `Observation` to a
   representation (`DictEncoder` structured, `FlatEncoder` small fixed-length vector with
   optional history, `CardEncoder` multi-hot hand + tableaus over the card vocabulary);

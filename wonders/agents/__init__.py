@@ -12,6 +12,7 @@ from wonders.agents.baselines import (
     RandomAgent,
     ScientistAgent,
 )
+from wonders.agents.board import BoardAwareAgent, BoardFocusAgent
 from wonders.agents.encoders import CardEncoder, DictEncoder, Encoder, FlatEncoder
 from wonders.agents.heuristic import HeuristicAgent
 from wonders.agents.match import play_match
