@@ -66,6 +66,8 @@ For throughput, batch games across processes with `wonders.env.SubprocVectorEnv`
 
 ```
 pip install -e ".[ml]"          # CPU wheels: pip install torch --index-url https://download.pytorch.org/whl/cpu
+                                # NVIDIA GPU: pip install torch --index-url https://download.pytorch.org/whl/cu128
+                                # (training uses CUDA automatically when available)
 
 wonders play -a neural,heuristic,greedy                 # the bundled trained network
 wonders bench -a neural,heuristic,greedy -n 600 -p 6

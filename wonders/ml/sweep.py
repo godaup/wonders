@@ -104,7 +104,7 @@ def _imitate(run: Dict[str, Any], run_dir: str, processes: int, log: Log) -> str
     return final
 
 
-def _ppo(run: Dict[str, Any], run_dir: str, out: str, log: Log) -> str:
+def _ppo(run: Dict[str, Any], run_dir: str, out: str, log: Log, previous: Optional[Dict[str, Any]] = None) -> str:
     config = ppo_config(run, run_dir)
     vocab = config_vocab(config)
     state_path = os.path.join(run_dir, 'state.pt')
@@ -113,8 +113,13 @@ def _ppo(run: Dict[str, Any], run_dir: str, out: str, log: Log) -> str:
         saved = torch.load(state_path, map_location='cpu', weights_only=True)
         model = PolicyValueNet(**saved['config'])
         model.load_state_dict(saved['model'])
-        state = {'optimizer': saved['optimizer'], 'iteration': saved['iteration'], 'pool': saved['pool']}
-        log(f"{run['name']}: resuming after iteration {saved['iteration']}")
+        iteration = int(saved['iteration'])
+        steps_done = int(saved.get('steps', iteration * _batch_size(previous or run)))
+        state = {'optimizer': saved['optimizer'], 'iteration': iteration, 'pool': saved['pool'], 'steps': steps_done}
+        if 'steps' in run:  # finish the step budget even if the rollout size changed
+            batch = config.n_envs * config.rollout_steps
+            config.iterations = iteration + max(0, -(-(int(run['steps']) - steps_done) // batch))
+        log(f"{run['name']}: resuming after iteration {iteration} ({steps_done:,} steps done)")
     elif run.get('init'):
         model, names, _meta = load_checkpoint(os.path.join(out, run['init'], 'final.pt'))
         if tuple(names) != vocab.card_names:
@@ -138,6 +143,13 @@ def _ppo(run: Dict[str, Any], run_dir: str, out: str, log: Log) -> str:
     return final
 
 
+def _batch_size(run: Dict[str, Any]) -> int:
+    """Learner steps per PPO iteration of a run spec."""
+    params = run.get('ppo', {})
+    defaults = PPOConfig()
+    return int(params.get('n_envs', defaults.n_envs)) * int(params.get('rollout_steps', defaults.rollout_steps))
+
+
 def run_one(run: Dict[str, Any], out: str, processes: int = 6, log: Log = print) -> Optional[str]:
     """Execute one run (skipped if already done); returns its final checkpoint."""
     run_dir = os.path.join(out, run['name'])
@@ -146,14 +158,19 @@ def run_one(run: Dict[str, Any], out: str, processes: int = 6, log: Log = print)
         log(f"{run['name']}: done, skipping")
         return final
     os.makedirs(run_dir, exist_ok=True)
-    with open(os.path.join(run_dir, 'config.json'), 'w', encoding='utf-8') as fh:
+    previous: Optional[Dict[str, Any]] = None  # the config an interrupted run was started with
+    config_path = os.path.join(run_dir, 'config.json')
+    if os.path.exists(config_path):
+        with open(config_path, encoding='utf-8') as fh:
+            previous = json.load(fh)
+    with open(config_path, 'w', encoding='utf-8') as fh:
         json.dump(run, fh, indent=1)
     started = time.time()
     if not os.path.exists(final):
         if run['kind'] == 'imitate':
             _imitate(run, run_dir, processes, log)
         elif run['kind'] == 'ppo':
-            _ppo(run, run_dir, out, log)
+            _ppo(run, run_dir, out, log, previous)
         else:
             raise ValueError(f"unknown run kind {run['kind']!r}")
     if run.get('eval'):

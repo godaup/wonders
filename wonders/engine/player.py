@@ -137,13 +137,21 @@ class Player:
 
     def resource_discount(self, target: str) -> int:
         """Resource units waived when paying for ``target`` (a card colour value or 'wonder')."""
-        return sum(effect.resource_discount(target) for effect in self.iter_effects())
+        key = ('resource_discount', target)
+        if key not in self._cache:
+            self._cache[key] = sum(effect.resource_discount(target) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def builds_free(self, card: Card) -> bool:
-        return any(effect.builds_free(card) for effect in self.iter_effects())
+        key = ('builds_free', card.name)  # a card's identity is its name
+        if key not in self._cache:
+            self._cache[key] = any(effect.builds_free(card) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def bank_purchases(self) -> int:
-        return sum(effect.bank_purchases() for effect in self.iter_effects())
+        if 'bank' not in self._cache:
+            self._cache['bank'] = sum(effect.bank_purchases() for effect in self.iter_effects())
+        return self._cache['bank']  # type: ignore[return-value]
 
     def science_set_value(self) -> int:
         """Points per complete science set: 7, plus bonuses (Aristotle)."""
@@ -159,11 +167,17 @@ class Player:
         return any(effect.redirects_defeats() for effect in self.iter_effects())
 
     def coin_discount(self, card: Card) -> int:
-        return sum(effect.coin_discount(card) for effect in self.iter_effects())
+        key = ('coin_discount', card.color)  # discounts depend on the card's colour only
+        if key not in self._cache:
+            self._cache[key] = sum(effect.coin_discount(card) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def neighbour_coin_discount(self, card: Card) -> int:
         """Coins this city knocks off its *neighbours'* cost for ``card`` (Rome B)."""
-        return sum(effect.neighbour_coin_discount(card) for effect in self.iter_effects())
+        key = ('neighbour_coin_discount', card.color)
+        if key not in self._cache:
+            self._cache[key] = sum(effect.neighbour_coin_discount(card) for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
 
     def build_income(self, event: BuildEvent) -> int:
         return sum(effect.build_income(event) for effect in self.iter_effects())

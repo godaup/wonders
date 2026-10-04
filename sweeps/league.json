@@ -159,8 +159,8 @@
      "scientist"
     ],
     "universal": true,
-    "n_envs": 40,
-    "envs_per_worker": 7,
+    "n_envs": 64,
+    "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
     "entropy_coef": 0.01,

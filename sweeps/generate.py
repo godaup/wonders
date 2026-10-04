@@ -112,28 +112,28 @@ def main_sweep(hp: Dict) -> Dict:
         imit = f'imit-C-{hidden}x{layers}'
         runs.append(imitation(imit, every, games=12_000, hidden=hidden, layers=layers))
         for seed in (0, 1, 2):
-            runs.append(ppo(f'ppo-C-{hidden}x{layers}-s{seed}', imit, every, 20_000_000, seed, hp, 40, 7))
+            runs.append(ppo(f'ppo-C-{hidden}x{layers}-s{seed}', imit, every, 20_000_000, seed, hp, 64, 4))
     # Track B — one model per expansion combination, all player counts mixed.
     for combo in COMBOS:
         cells = [(combo, n) for n in PLAYERS]
         imit = f'imit-B-{combo}'
         runs.append(imitation(imit, cells, games=6000))
         for seed in (0, 1):
-            runs.append(ppo(f'ppo-B-{combo}-s{seed}', imit, cells, 6_000_000, seed, hp, 30, 5))
+            runs.append(ppo(f'ppo-B-{combo}-s{seed}', imit, cells, 6_000_000, seed, hp, 48, 4))
     # Track A — specialists, one (expansions, players) cell each.
     for combo, n in every:
         key = f'{combo}-{n}p'
         imit = f'imit-A-{key}'
         runs.append(imitation(imit, [(combo, n)], games=max(800, 9000 // n)))
         for seed in (0, 1):
-            runs.append(ppo(f'ppo-A-{key}-s{seed}', imit, [(combo, n)], 2_000_000, seed, hp, 24, 4))
+            runs.append(ppo(f'ppo-A-{key}-s{seed}', imit, [(combo, n)], 2_000_000, seed, hp, 32, 4))
     return {'out': 'runs/main', 'runs': runs}
 
 
 def league_sweep(hp: Dict, base_run: str = 'ppo-C-256x2-s0') -> Dict:
     every = [(c, n) for c in COMBOS for n in PLAYERS]
     run = ppo(
-        f'league-{base_run}', base_run, every, 10_000_000, 7, hp, 40, 7, league=True, snapshot_every=50, league_size=6
+        f'league-{base_run}', base_run, every, 10_000_000, 7, hp, 64, 4, league=True, snapshot_every=50, league_size=6
     )
     return {'out': 'runs/main', 'runs': [run]}
 

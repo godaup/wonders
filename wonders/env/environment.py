@@ -21,7 +21,7 @@ the others played by agents.
 from __future__ import annotations
 
 import random
-from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Set, Tuple
 
 from wonders.agents.base import Agent
 from wonders.agents.encoders import DECISIONS, LEADERS_DECISIONS, CardEncoder, Encoder
@@ -111,6 +111,9 @@ class WondersEnv:
         self._builder: Optional[RecordBuilder] = None
         self._last_margin: List[float] = []
         self._obs_cache: Dict[int, Observation] = {}  # raw observations at the current decision
+        # Seats whose observation is encoded in step()/reset() results (None = every acting seat);
+        # SingleAgentEnv encodes only the learner — opponents read the raw Observation.
+        self.encode_seats: Optional[Set[int]] = None
 
     # -- public API ----------------------------------------------------------
     @property
@@ -186,8 +189,7 @@ class WondersEnv:
         return self._builder.build()
 
     def scores(self) -> List[int]:
-        game = self._require_game()
-        return [game.score(i).total for i in range(game.n)]
+        return list(self._require_game().cached_totals())
 
     # -- internals -----------------------------------------------------------
     def _require_game(self) -> Game:
@@ -271,10 +273,11 @@ class WondersEnv:
         self._obs_cache = {}
         for seat in self.acting:
             obs = self.observation(seat)
-            observations[seat] = {
-                'observation': self.encoder.encode(obs),
-                'action_mask': self.action_space.mask(obs.legal_actions),
-            }
+            if self.encode_seats is None or seat in self.encode_seats:
+                observations[seat] = {
+                    'observation': self.encoder.encode(obs),
+                    'action_mask': self.action_space.mask(obs.legal_actions),
+                }
             infos[seat] = {'obs': obs, 'decision': obs.decision}
         return observations, infos
 
@@ -312,6 +315,7 @@ class SingleAgentEnv:
         if not 0 <= learner < n_players:
             raise ValueError('learner seat out of range')
         self.env = WondersEnv(n_players=n_players, **env_kwargs)
+        self.env.encode_seats = {learner}  # opponents act on raw Observations
         self.learner = learner
         others = iter(opponents)
         self.agents: Dict[int, Agent] = {seat: next(others) for seat in range(n_players) if seat != learner}

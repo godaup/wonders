@@ -159,3 +159,47 @@ def test_cli_sweep_dry_run_and_eval(tmp_path):
     )
     assert out.exit_code == 0, out.output
     assert 'base/3p' in out.output
+
+
+def test_resume_finishes_the_step_budget_after_a_batch_size_change(tmp_path):
+    from wonders.ml.sweep import run_one
+
+    vocab = universal_vocab()
+    model, _names = new_model(hidden=16, vocab=vocab)
+    run_dir = tmp_path / 'r'
+    run_dir.mkdir()
+    ppo = {
+        'tables': [[['base'], 3]],
+        'opponent_pool': ['heuristic'],
+        'universal': True,
+        'n_envs': 2,
+        'envs_per_worker': 0,
+        'rollout_steps': 12,
+        'minibatch': 16,
+        'epochs': 1,
+    }
+    old = {'name': 'r', 'kind': 'ppo', 'steps': 72, 'ppo': ppo}
+    (run_dir / 'config.json').write_text(json.dumps(old))
+    # An interrupted run's state after iteration 1 (24 steps), in the older format without 'steps'.
+    config = PPOConfig(
+        tables=[(('base',), 3)], opponent_pool=('heuristic',), universal=True, iterations=1, snapshot_every=1, **TINY
+    )
+    states = []
+    train_ppo(model, config, log=None, on_snapshot=lambda it, st: states.append(st))
+    torch.save(
+        {
+            'config': model.config,
+            'model': model.state_dict(),
+            'optimizer': states[-1]['optimizer'],
+            'iteration': 1,
+            'pool': ['heuristic'],
+        },
+        run_dir / 'state.pt',
+    )
+    new = json.loads(json.dumps(old))
+    new['ppo']['n_envs'] = 4  # now 48 steps per iteration: the remaining 48 take exactly one iteration
+    logs = []
+    run_one(new, str(tmp_path), processes=1, log=logs.append)
+    assert any('24 steps done' in line for line in logs)
+    lines = (run_dir / 'metrics.jsonl').read_text().splitlines()
+    assert len(lines) == 1 and json.loads(lines[0])['steps'] == 72

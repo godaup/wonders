@@ -144,6 +144,14 @@ scoring categories). It is split into three packages under `wonders/`:
   the bundled model (`pretrained_path()`, CLI `-a neural`). **Never fork after torch has
   run**: `wonders/_mp.get_context()` switches pools to forkserver/spawn once torch is
   imported and `init_worker` pins workers to one thread — use these for any new pool.
+  **Training speed**: PPO is bound by game simulation in the env workers (building
+  Observations for every acting seat), not by the network. The learner runs on CUDA when
+  available (`PPOConfig.device`), which mostly frees CPU cores for the workers; envs return
+  compact NumPy arrays; `PPOConfig.pipeline=2` steps two env groups in turn so simulation
+  and inference overlap. Use ~16 workers on a 6-core/12-thread CPU (e.g. 64 envs, 4 per
+  worker). Resume counts learner `steps`, so a run can resume with a different batch size.
+  Engine caches that keep this fast: payments memoized by resource cost, per-player
+  aggregate caches, `Game.cached_totals()` per tick (engine-driven paths only).
 
 Design rules to preserve when extending:
 - **Cards compose behaviour via `Effect` objects**, never by subclassing `Card`;

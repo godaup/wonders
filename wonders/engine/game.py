@@ -30,6 +30,8 @@ Policy = Callable[["Game", int, List[Card]], Action]
 # One Age as a coroutine: yields decision points, receives {seat: action} for each.
 AgeSteps = Generator[DecisionPoint, Dict[int, Action], None]
 
+_NO_TRADE = Payment(0, 0, 0)
+
 
 _SYMBOL_ORDER = (ScienceSymbol.TABLET, ScienceSymbol.GEAR, ScienceSymbol.COMPASS)
 
@@ -103,6 +105,7 @@ class Game:
         self._payments: Dict[tuple, tuple] = {}
         self.leader_box: List[Card] = []  # Leaders: undealt leaders, drawn from the end (Rome B)
         self.tick = 0  # bumped on every engine-driven state change (see ObservationBuilder)
+        self._totals: Optional[Tuple[int, List[int]]] = None  # (tick, score totals) cache
 
     # -- neighbours --------------------------------------------------------
     def left_of(self, i: int) -> Player:
@@ -123,8 +126,23 @@ class Game:
         seat's private production and bank purchases (Cities / Bilkis) are included.
         """
         player = self.players[i]
+        if not cost.resources:
+            return _NO_TRADE
+        # Many cards share a resource cost: memoize by what the payment depends on (the
+        # seat's and neighbours' built structures, the cost and the discount) — not coins.
+        key = (
+            'pay',
+            i,
+            player.version,
+            self.left_of(i).version,
+            self.right_of(i).version,
+            frozenset(cost.resources.items()),
+            waivers,
+        )
+        if key in self._payments:
+            return self._payments[key]  # type: ignore[return-value]
         private = player.private_production_slots()
-        return cheapest_payment(
+        pay = cheapest_payment(
             cost.resources,
             player.production_slots() + private if private else player.production_slots(),
             self.left_of(i).production_slots(),
@@ -133,6 +151,8 @@ class Game:
             waivers=waivers,
             bank=player.bank_purchases(),
         )
+        self._payments[key] = pay  # type: ignore[assignment]
+        return pay
 
     def can_build_card(self, i: int, card: Card) -> bool:
         return self._card_payment(i, card) is not None
@@ -473,6 +493,17 @@ class Game:
             # De-duplicate (keeping order) the possible multisets of copied symbols.
             options = list(dict.fromkeys(itertools.combinations(pool, min(len(pool), p.science_copies()))))
         return science_score(symbols, wilds, p.science_set_value(), options)
+
+    def cached_totals(self) -> List[int]:
+        """Every seat's score total, cached per engine state (``tick``).
+
+        Only valid while the game is advanced by the engine (as in the env and
+        :class:`~wonders.engine.observation.ObservationBuilder`): mutating players directly
+        does not bump ``tick``. Use :meth:`score` otherwise.
+        """
+        if self._totals is None or self._totals[0] != self.tick:
+            self._totals = (self.tick, [self.score(i).total for i in range(self.n)])
+        return self._totals[1]
 
     def winner(self) -> int:
         """Seat index of the winner: most points, ties broken by coins."""
