@@ -698,7 +698,7 @@
     "envs_per_worker": 7,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -872,7 +872,7 @@
     "envs_per_worker": 7,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -1046,7 +1046,7 @@
     "envs_per_worker": 7,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 2
    },
    "eval": {
@@ -1755,7 +1755,7 @@
     "envs_per_worker": 7,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -1929,7 +1929,7 @@
     "envs_per_worker": 7,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -2103,7 +2103,7 @@
     "envs_per_worker": 7,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 2
    },
    "eval": {
@@ -2302,7 +2302,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -2366,7 +2366,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -2580,7 +2580,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -2649,7 +2649,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -2863,7 +2863,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -2932,7 +2932,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -3161,7 +3161,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -3235,7 +3235,7 @@
     "envs_per_worker": 5,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -3310,7 +3310,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -3350,7 +3350,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -3427,7 +3427,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -3467,7 +3467,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -3546,7 +3546,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -3586,7 +3586,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -3667,7 +3667,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -3707,7 +3707,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -3790,7 +3790,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -3830,7 +3830,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -3908,7 +3908,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -3949,7 +3949,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4029,7 +4029,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4070,7 +4070,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4152,7 +4152,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4193,7 +4193,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4277,7 +4277,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4318,7 +4318,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4404,7 +4404,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4445,7 +4445,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4523,7 +4523,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4564,7 +4564,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4644,7 +4644,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4685,7 +4685,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4767,7 +4767,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4808,7 +4808,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -4892,7 +4892,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -4933,7 +4933,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -5019,7 +5019,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -5060,7 +5060,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -5141,7 +5141,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -5183,7 +5183,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -5266,7 +5266,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -5308,7 +5308,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -5393,7 +5393,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -5435,7 +5435,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -5522,7 +5522,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -5564,7 +5564,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
@@ -5653,7 +5653,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 0
    },
    "eval": {
@@ -5695,7 +5695,7 @@
     "envs_per_worker": 4,
     "rollout_steps": 64,
     "lr": 0.0001,
-    "entropy_coef": 0.003,
+    "entropy_coef": 0.01,
     "seed": 1
    },
    "eval": {
