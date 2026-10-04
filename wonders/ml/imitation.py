@@ -16,7 +16,7 @@ from __future__ import annotations
 import random
 from array import array
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import torch
 from torch import nn
@@ -151,16 +151,49 @@ def collect(
     obs_size = vocab.obs_size
     specs = [(tuple(expansions), tuple(AGENTS[name] for name in lineup)) for expansions, lineup in tables]
     jobs = [(g, seed, *specs[g % len(specs)], tuple(teachers), vocab) for g in range(n_games)]
+    # Observations dominate memory (obs_size floats per decision), so games are consumed as
+    # they finish and packed into ~256 MB blocks, which are then moved into one exact-size
+    # tensor block by block: peak memory stays close to a single copy of the dataset.
+    blocks: List[torch.Tensor] = []
+    pending: List[bytes] = []
+    pending_size = 0
+    masks: List[bytes] = []
+    actions: List[int] = []
+    values: List[float] = []
+
+    def flush() -> None:
+        nonlocal pending_size
+        if pending:
+            blocks.append(torch.frombuffer(bytearray(b''.join(pending)), dtype=torch.float32).view(-1, obs_size))
+            pending.clear()
+            pending_size = 0
+
+    def consume(parts: Iterable[Tuple[bytes, bytes, List[int], List[float]]]) -> None:
+        nonlocal pending_size
+        for obs_part, mask_part, action_part, value_part in parts:
+            pending.append(obs_part)
+            pending_size += len(obs_part)
+            masks.append(mask_part)
+            actions.extend(action_part)
+            values.extend(value_part)
+            if pending_size >= 1 << 28:
+                flush()
+        flush()
+
     if processes > 1:
         with get_context().Pool(processes, initializer=init_worker) as pool:
-            parts = pool.map(_collect_game, jobs, chunksize=max(1, n_games // (processes * 8)))
+            consume(pool.imap(_collect_game, jobs, chunksize=max(1, n_games // (processes * 8))))
     else:
-        parts = [_collect_game(job) for job in jobs]
-    obs = torch.frombuffer(bytearray(b''.join(p[0] for p in parts)), dtype=torch.float32).view(-1, obs_size)
-    mask = torch.frombuffer(bytearray(b''.join(p[1] for p in parts)), dtype=torch.uint8).view(-1, space.n).bool()
-    action = torch.tensor([a for p in parts for a in p[2]], dtype=torch.int64)
-    value = torch.tensor([v for p in parts for v in p[3]], dtype=torch.float32)
-    return Dataset(obs.clone(), mask, action, value)
+        consume(map(_collect_game, jobs))
+    obs = torch.empty(sum(len(b) for b in blocks), obs_size, dtype=torch.float32)
+    row = 0
+    while blocks:
+        block = blocks.pop(0)
+        obs[row : row + len(block)] = block
+        row += len(block)
+        del block
+    mask = torch.frombuffer(bytearray(b''.join(masks)), dtype=torch.uint8).view(-1, space.n).bool()
+    return Dataset(obs, mask, torch.tensor(actions, dtype=torch.int64), torch.tensor(values, dtype=torch.float32))
 
 
 def new_model(hidden: int = 256, layers: int = 2, vocab: Optional[Vocab] = None) -> Tuple[PolicyValueNet, List[str]]:
@@ -187,7 +220,7 @@ def train_imitation(
     order = torch.randperm(len(data), generator=gen)
     n_val = max(1, int(len(data) * val_fraction))
     val, train = order[:n_val], order[n_val:]
-    model.set_normalization(data.obs[train])
+    model.set_normalization(data.obs, train)
     target = torch.device(
         'cuda' if device == 'auto' and torch.cuda.is_available() else ('cpu' if device == 'auto' else device)
     )

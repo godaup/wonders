@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from importlib import resources
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import torch
 from torch import nn
@@ -45,10 +45,25 @@ class PolicyValueNet(nn.Module):
         self.register_buffer('mean', torch.zeros(obs_size))
         self.register_buffer('std', torch.ones(obs_size))
 
-    def set_normalization(self, observations: torch.Tensor) -> None:
-        """Fit the input standardization to a batch of observations ``[N, obs_size]``."""
-        self.mean.copy_(observations.mean(dim=0))
-        self.std.copy_(observations.std(dim=0).clamp_min(1e-3))
+    def set_normalization(
+        self, observations: torch.Tensor, rows: Optional[torch.Tensor] = None, chunk: int = 65536
+    ) -> None:
+        """Fit the input standardization to observations ``[N, obs_size]`` (or only ``rows`` of them).
+
+        Accumulates float64 sums chunk by chunk, so large datasets are never copied whole.
+        """
+        index = torch.arange(len(observations)) if rows is None else rows
+        total = torch.zeros(observations.shape[1], dtype=torch.float64)
+        squares = torch.zeros_like(total)
+        for part in index.split(chunk):
+            x = observations[part].double()
+            total += x.sum(dim=0)
+            squares += (x * x).sum(dim=0)
+        n = len(index)
+        mean = total / n
+        var = (squares - n * mean * mean) / max(1, n - 1)  # unbiased, like Tensor.std
+        self.mean.copy_(mean.float())
+        self.std.copy_(var.clamp_min(0).sqrt().float().clamp_min(1e-3))
 
     def forward(self, obs: torch.Tensor, mask: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Return ``(masked logits [B, n_actions], value [B])``; illegal actions get -inf-like logits."""
