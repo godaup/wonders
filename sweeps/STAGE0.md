@@ -1,5 +1,12 @@
 # Training — Stage 0: yardstick and Leaders diagnostics
 
+> **Correction (Stage 1, `sweeps/STAGE1.md`):** the head-to-heads and ablations below were seated
+> by rotation, which favours the first-listed model by ~7 points between trained models. Re-run
+> with random seating: **Finding 3 does not hold** — all v1/v2 pairs and seed pairs are 48–51%;
+> Finding 1 stands (policy above cost proxy 65.6%, above random 61.9% for v2-s1; the Leaders
+> re-eval numbers are single-model and unaffected); Finding 2 softens to "about random"
+> (51.3% / 48.9%).
+
 **Goal:** before more training, get a metric that still separates models once they beat the
 scripted agents easily, and find out why Leaders looked weak (v2 eval: Leaders ≈ 3.1 win × n
 vs ≈ 3.9–4.1 elsewhere). Models: the universal 256×2 PPO runs `ppo-C-256x2-s{0,1}` (v1
