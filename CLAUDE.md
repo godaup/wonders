@@ -117,7 +117,11 @@ scoring categories). It is split into three packages under `wonders/`:
   optional history, `CardEncoder` multi-hot hand + tableaus over the card vocabulary);
   `match.play_match` runs agents and returns `(Game, GameRecord)`. `bench.run_bench` plays a
   lineup of picklable `AgentSpec`s (registry `AGENTS`) over many seeded games with rotating
-  seats, reporting win rates with 95% Wilson intervals, mean score/rank and category means.
+  seats, reporting win rates with 95% Wilson intervals, mean score/rank and category means
+  (plus per-game ranks). No scripted agent overrides `Agent.draft_leader` / `recruit`, so they
+  all play leaders by the cost proxy, which measured no better than random
+  (`sweeps/STAGE0.md`). `ablation.LeaderAblation` swaps an agent's leader decisions for
+  random / cost-proxy ones.
 - **`wonders/env/`** — training environments. `ActionSpace` is a fixed discrete space
   (card name × `ActionKind`, index = `card * 4 + kind`) with `mask(legal)` /
   `to_action(index, legal)`. `WondersEnv` is a PettingZoo-`ParallelEnv`-style
@@ -144,7 +148,14 @@ scoring categories). It is split into three packages under `wonders/`:
   torch; a separate `ml` CI job installs CPU torch). `model.PolicyValueNet` is a masked
   policy + value MLP over `CardEncoder` features with stored input normalization;
   checkpoints carry the card vocabulary. `agent.NeuralAgent` plays it (picklable via a
-  checkpoint path). `imitation.py` records teacher (`HeuristicAgent`) decisions in worker
+  checkpoint path) — every decision incl. the Leaders draft/recruit goes through the network
+  when the checkpoint knows those kinds (`leader_policy=False` restores the old cost-proxy
+  routing; before Oct 2026 evals all used it and understate Leaders by 0.5–0.9 win × n).
+  `evaluate.evaluate` scores vs scripted lineups; `evaluate.head_to_head` / `compare_agents`
+  (`wonders train h2h`) seat models at the same tables and report pairwise "ranked above"
+  rates — the primary metric now, since seed variance dwarfs what the scripted eval sees.
+  `diagnostics.leaders_report` (`wonders train leaders`) gives teacher agreement per decision
+  kind and leader-decision ablations. `imitation.py` records teacher (`HeuristicAgent`) decisions in worker
   processes and clones them; its value target is the remaining score margin, i.e. the
   return of the env's `dense` reward × `VALUE_SCALE`, which `ppo.py` (PPO on
   `SubprocVectorEnv`, learner seat rotating) also uses. `pretrained/ppo_base_3p.pt` is
