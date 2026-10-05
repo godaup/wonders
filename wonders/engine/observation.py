@@ -81,6 +81,9 @@ def _static_summary(effect) -> Dict[str, object]:
     ):
         if value:
             out[key] = value
+    counts = effect.counts()
+    if counts:
+        out['counts'] = counts  # what the effect pays per unit (public card text), for combo-aware agents
     return out
 
 
