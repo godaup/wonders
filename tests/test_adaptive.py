@@ -87,7 +87,7 @@ def test_owned_payoffs_make_counted_cards_worth_more(obs):
     plain = replace(obs, me=replace(obs.me, cards=[]))
     with_haven = replace(obs, me=replace(obs.me, cards=['Haven']))
     assert agent._enabler_value(plain, brown) == 0.0
-    assert agent._enabler_value(with_haven, brown) > 0.5
+    assert agent._enabler_value(with_haven, brown) > 0.2
     assert agent._enabler_value(with_haven, blue) == 0.0
 
 

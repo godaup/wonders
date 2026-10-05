@@ -49,13 +49,25 @@ ADAPTIVE_WEIGHTS: Dict[str, float] = {
     'wheel': 0.35,  # share of an uncontested card's value given up by waiting for it to wheel
     'rival_deny': 0.4,  # RivalAgent: denial weight when the score leader receives the hand next
     'rival_front': 1.5,  # RivalAgent: multiplier for the military front against the score leader
-    'combo': 1.0,  # value of what a card adds to payoff effects the city already owns
-    'combo_future': 0.7,  # share of a counting card's projected future count that is credited now
+    'combo': 0.5,  # value of what a card adds to payoff effects the city already owns
+    'combo_future': 0.35,  # share of a counting card's projected future count that is credited now
     'combo_hand': 0.5,  # weight of payoffs on leaders still in hand (not recruited yet)
-    'feed': 0.3,  # cost of a card a neighbour's guild counts (their VP)
-    'stage_odds': 0.6,  # chance an unbuilt wonder stage gets built (for its shields / science / tallies)
+    'feed': 0.15,  # cost of a card a neighbour's guild counts (their VP)
+    'stage_odds': 0.3,  # weight of unbuilt wonder stages (their shields / science / tallies) in projections
     'pace_prior': 0.15,  # prior cards of a colour per turn when projecting a city's collection
+    # Research-backed rules (strategy guides + top-player game data, see the module docstring):
+    'np_military': 1.0,  # 0..1: blend in the player-count military profile (MILITARY_BY_PLAYERS)
+    'upstream_front': 0.6,  # Age III: the upstream neighbour sees the cards first; discount that front
+    'science_rules': 1.0,  # 0..1: stop committing after two sets, no fresh commitment in Age III
+    'raw_soft_cap': 4.0,  # own production slots beyond which more production is worth less
+    'raw_penalty': 0.3,  # value lost per slot over the cap (as a divisor term)
+    'unique_resource': 0.3,  # +/- share for a resource neither / both neighbours produce
+    'coin_hoard': 10.0,  # coins beyond which extra coins are worth less (spend, don't bank)
+    'coin_hoard_factor': 0.6,  # value of coins beyond the hoard threshold
 }
+
+# Military matters most at small tables (3-4 players: near-mandatory) and least at 6-7.
+MILITARY_BY_PLAYERS: Dict[int, float] = {3: 1.25, 4: 1.15, 5: 1.0, 6: 0.75, 7: 0.6}
 
 
 @lru_cache(maxsize=16)
@@ -104,7 +116,12 @@ class AdaptiveAgent(BoardAwareAgent):
         return floor + (1.0 - floor) * (left - 1) / max(1, total - 1)
 
     def _front_weight(self, obs: Observation, neighbour: CityView) -> float:
-        return 1.0
+        w = self.w
+        weight = 1.0 + w['np_military'] * (MILITARY_BY_PLAYERS.get(obs.n_players, 1.0) - 1.0)
+        upstream = obs.right if obs.pass_left else obs.left  # the neighbour who passes to us
+        if obs.age == 3 and neighbour.seat == upstream.seat:
+            weight *= w['upstream_front']
+        return weight
 
     def _front_gain(self, obs: Observation, extra: float) -> float:
         """Expected conflict tokens gained over the remaining conflicts from ``extra`` shields."""
@@ -145,10 +162,35 @@ class AdaptiveAgent(BoardAwareAgent):
         mine += self.w['stage_odds'] * sum(
             1 for e in self._stage_effects(obs) if e.get('science') or e.get('science_wild')
         )
+        if self.w['science_rules']:
+            symbols = [obs.me.science.get(k, 0) for k in ('tablet', 'gear', 'compass')]
+            if min(symbols) + obs.me.science_wilds >= 2:  # two sets: stop investing beyond the exact gain
+                return 0.0
+            if obs.age >= 3 and mine < 2:  # too late to start a science plan
+                return 0.0
         others = [c for c in obs.table if c.seat != obs.seat]
         rivals = sum(c.cards_by_color.get('green', 0) for c in others) / max(1, len(others))
         future = (_turns_left(obs) - 1) / (3 * _turns_per_age(obs))
         return future * min(mine, 4) / (1.0 + rivals)
+
+    def _coin_value(self, obs: Observation, coins: float) -> float:
+        """Coins are worth less once the treasury is large (spend them, don't bank them)."""
+        w = self.w
+        room = max(0.0, w['coin_hoard'] - obs.me.coins)
+        plain = min(coins, room)
+        return (plain + (coins - plain) * w['coin_hoard_factor']) * w['coin']
+
+    def _production_factor(self, obs: Observation, slots: List[object]) -> float:
+        """Production slots, scaled by scarcity among the neighbours and the city's surplus."""
+        w = self.w
+        neighbours = [set(r for slot in nb.production for r in slot) for nb in (obs.left, obs.right)]
+        total = 0.0
+        for slot in slots:
+            resources = set(slot) if isinstance(slot, list) else set()
+            covered = sum(1 for have in neighbours if resources & have)
+            total += 1.0 + w['unique_resource'] * (1 - covered)  # +share if neither, -share if both
+        surplus = max(0.0, len(obs.production) - w['raw_soft_cap'])
+        return total / (1.0 + w['raw_penalty'] * surplus)
 
     # -- combos ---------------------------------------------------------------------
     @staticmethod
@@ -279,10 +321,10 @@ class AdaptiveAgent(BoardAwareAgent):
         for e in effects:
             value += _num(e.get('victory_points')) * w['vp']
             shields += _num(e.get('shields'))
-            value += _num(e.get('coins')) * w['coin']
+            value += self._coin_value(obs, _num(e.get('coins')))
             production = e.get('production')
             if isinstance(production, list) and production:
-                value += w['production'] * len(production) * phase
+                value += w['production'] * phase * self._production_factor(obs, production)
             if e.get('trade'):
                 value += w['trade'] * phase
             adds_symbol = adds_symbol or bool(e.get('science')) or bool(e.get('science_wild'))
@@ -349,7 +391,8 @@ class RivalAgent(AdaptiveAgent):
         return max((c for c in obs.table if c.seat != obs.seat), key=lambda c: c.score)
 
     def _front_weight(self, obs: Observation, neighbour: CityView) -> float:
-        return self.w['rival_front'] if neighbour.seat == self._rival(obs).seat else 1.0
+        base = super()._front_weight(obs, neighbour)
+        return base * (self.w['rival_front'] if neighbour.seat == self._rival(obs).seat else 1.0)
 
     def _denial(self, obs: Observation, card: Optional[CardView]) -> float:
         value = super()._denial(obs, card)
