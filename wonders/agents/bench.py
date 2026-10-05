@@ -137,6 +137,7 @@ class BenchResult:
     n_players: int
     lineup: List[str]
     stats: Dict[str, AgentStats]
+    ranks: List[List[Tuple[str, int]]] = field(default_factory=list)  # per game: (agent name, rank) per seat
 
     def table(self) -> str:
         """A fixed-width text report, best win rate first."""
@@ -212,7 +213,9 @@ def run_bench(
     else:
         results = [_play_one(job) for job in jobs]
     stats: Dict[str, AgentStats] = {spec.name: AgentStats(spec.name) for spec in specs}
+    ranks: List[List[Tuple[str, int]]] = []
     for game in results:
+        ranks.append([(name, rank) for name, rank, _won, _breakdown in game])
         for name, rank, won, breakdown in game:
             s = stats[name]
             s.games += 1
@@ -221,4 +224,4 @@ def run_bench(
             s.score_total += breakdown['total']
             for c in CATEGORIES:
                 s.categories[c] += breakdown[c]
-    return BenchResult(n_games, len(specs), [spec.name for spec in specs], stats)
+    return BenchResult(n_games, len(specs), [spec.name for spec in specs], stats, ranks)

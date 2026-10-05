@@ -9,6 +9,7 @@ import torch
 
 from wonders.agents.base import Agent
 from wonders.agents.encoders import DECISIONS
+from wonders.cards.base import Card
 from wonders.engine.actions import Action
 from wonders.engine.observation import Observation
 from wonders.env.vocab import Vocab
@@ -32,6 +33,10 @@ class NeuralAgent(Agent):
         sample: Sample from the policy instead of taking the most likely action.
         rng: Random source for sampling (seeded for reproducibility).
         name: Display name.
+        leader_policy: Let the network make the Leaders draft and recruitment decisions too
+            (as during PPO training) when its checkpoint knows those decision kinds. ``False``
+            falls back to the :class:`~wonders.agents.base.Agent` hooks (costliest leader),
+            which is how leaders were played before; kept for comparisons.
     """
 
     name = 'neural'
@@ -47,6 +52,7 @@ class NeuralAgent(Agent):
         sample: bool = False,
         rng: Optional[random.Random] = None,
         name: str = 'neural',
+        leader_policy: bool = True,
     ):
         meta: Dict[str, Any] = {'decisions': list(decisions or DECISIONS)}
         if checkpoint is not None:
@@ -63,6 +69,12 @@ class NeuralAgent(Agent):
         self.sample = sample
         self.rng = rng or random.Random()
         self.name = name
+        self.leader_policy = leader_policy and {'draft', 'recruit'} <= set(self.vocab.decisions)
+
+    def act(self, obs: Observation, options: List[Card]) -> Action:
+        if self.leader_policy:
+            return self.decide(obs)  # every decision kind is in the action space
+        return super().act(obs, options)
 
     def logits(self, obs: Observation) -> torch.Tensor:
         """Masked policy logits for ``obs`` (shape ``[n_actions]``)."""

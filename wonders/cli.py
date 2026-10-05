@@ -255,6 +255,71 @@ def evaluate_command(checkpoint, cells, lineups, games, seed, processes):
     click.echo(summary_table(results, checkpoint))
 
 
+def _model_arg(entry: str):
+    """``label=path`` or a bare path (labelled by its run directory when the file is ``final.pt``)."""
+    label, sep, path = entry.partition('=')
+    if not sep:
+        path = entry
+        stem = os.path.splitext(os.path.basename(path))[0]
+        label = os.path.basename(os.path.dirname(os.path.abspath(path))) if stem in ('final', 'state') else stem
+    if not os.path.isfile(path):
+        raise click.BadParameter(f'no checkpoint at {path!r}')
+    return label, path
+
+
+@train.command(name='h2h')
+@click.argument('models', nargs=-1, required=True)
+@click.option('--cells', default='all', show_default=True, help="'all' or e.g. base/3p,leaders+cities/5p")
+@click.option('--filler', default='heuristic', show_default=True, help='Agent filling the remaining seats.')
+@click.option('--games', '-n', default=400, type=int, show_default=True, help='Games per cell.')
+@click.option('--seed', default=4242, type=int, show_default=True)
+@click.option('--processes', '-p', default=6, type=int, show_default=True)
+@click.option('--out', '-o', type=click.Path(dir_okay=False), help='Also save the full results as JSON.')
+def head_to_head_command(models, cells, filler, games, seed, processes, out):
+    """Play checkpoints against each other at the same tables (MODELS: label=path or path)."""
+    _ml()
+    import json
+
+    from wonders.agents.bench import AGENTS
+    from wonders.ml.evaluate import head_to_head, head_to_head_table, parse_cells
+
+    if filler not in AGENTS:
+        raise click.BadParameter(f'unknown agent {filler!r}')
+    parsed = [_model_arg(m) for m in models]
+    if len(parsed) < 2:
+        raise click.BadParameter('give at least two checkpoints')
+    result = head_to_head(parsed, cells=parse_cells(cells), games=games, seed=seed, filler=filler, processes=processes)
+    if out:
+        with open(out, 'w', encoding='utf-8') as fh:
+            json.dump(result, fh, indent=1)
+    click.echo(head_to_head_table(result))
+
+
+@train.command(name='leaders')
+@click.argument('checkpoint')
+@click.option('--teacher', default='board', show_default=True, help='Scripted agent to compare against.')
+@click.option('--games', '-n', default=200, type=int, show_default=True, help='Ablation games per cell.')
+@click.option('--agreement-games', default=50, type=int, show_default=True, help='Teacher-only games per cell.')
+@click.option('--seed', default=4242, type=int, show_default=True)
+@click.option('--processes', '-p', default=6, type=int, show_default=True)
+@click.option('--out', '-o', type=click.Path(dir_okay=False), help='Also save the full report as JSON.')
+def leaders_command(checkpoint, teacher, games, agreement_games, seed, processes, out):
+    """Diagnose Leaders play: teacher agreement per decision kind and leader-decision ablations."""
+    _ml()
+    import json
+
+    from wonders.ml.diagnostics import leaders_report, leaders_report_table
+
+    label, path = _model_arg(checkpoint)
+    report = leaders_report(
+        path, label, teacher=teacher, games=games, agreement_games=agreement_games, seed=seed, processes=processes
+    )
+    if out:
+        with open(out, 'w', encoding='utf-8') as fh:
+            json.dump(report, fh, indent=1)
+    click.echo(leaders_report_table(report, f'Leaders diagnostics: {label}'))
+
+
 @main.command()
 @click.option("--out", "-o", default="cards.html", help="Output HTML file.")
 @click.option("--expansion", "-e", multiple=True, default=("base",), help="Expansions to include.")
