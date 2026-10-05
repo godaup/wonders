@@ -77,3 +77,18 @@ def test_cost_mode_keeps_the_costliest_leader():
 def test_unknown_mode():
     with pytest.raises(ValueError):
         LeaderAblation(AGENTS['board'], 'smart')
+
+
+def test_shuffled_seating_is_deterministic_and_varies():
+    lineup = ['board', 'heuristic', 'greedy', 'civic']
+    serial = run_bench(lineup, n_games=8, seed=3, seating='shuffle')
+    parallel = run_bench(lineup, n_games=8, seed=3, seating='shuffle', processes=2)
+    assert serial.ranks == parallel.ranks
+    orders = {tuple(name for name, _rank in game) for game in serial.ranks}
+    assert len(orders) > 1
+    rotated = run_bench(lineup, n_games=4, seed=3)
+    assert [tuple(n for n, _r in g) for g in rotated.ranks] == [
+        tuple(lineup[(i + g) % 4] for i in range(4)) for g in range(4)
+    ]
+    with pytest.raises(ValueError):
+        run_bench(lineup, n_games=1, seating='random')

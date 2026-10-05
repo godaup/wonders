@@ -146,3 +146,9 @@ def test_cli_h2h_and_leaders(universal, universal_v2, tmp_path):
     )
     assert res.exit_code == 0, res.output
     assert 'Leaders diagnostics: mine' in res.output
+
+
+def test_head_to_head_records_its_seating(universal, universal_v2):
+    models = [('v1', universal), ('v2', universal_v2)]
+    assert head_to_head(models, cells=parse_cells('base/3p'), games=2)['seating'] == 'shuffle'
+    assert head_to_head(models, cells=parse_cells('base/3p'), games=2, seating='rotate')['seating'] == 'rotate'
