@@ -157,6 +157,9 @@ class BenchResult:
 
 
 Seat = Union[str, AgentSpec]
+# 'rotate': the lineup's order rotates one seat per game (neighbours stay fixed);
+# 'shuffle': a random seating per game (neighbours vary too).
+SEATINGS = ('rotate', 'shuffle')
 
 # Per-process content cache (loading JSON once per worker, not once per game).
 _CONTENT: Dict[Tuple[str, ...], Content] = {}
@@ -168,13 +171,19 @@ def _content(expansions: Tuple[str, ...]) -> Content:
     return _CONTENT[expansions]
 
 
-def _play_one(job: Tuple[int, int, Tuple[AgentSpec, ...], Tuple[str, ...], str]) -> List[Tuple[str, int, int, Dict]]:
+def _play_one(
+    job: Tuple[int, int, Tuple[AgentSpec, ...], Tuple[str, ...], str, str],
+) -> List[Tuple[str, int, int, Dict]]:
     """Play game ``index``; return per-seat (agent name, rank, won, score breakdown)."""
-    index, seed, lineup, expansions, sides = job
+    index, seed, lineup, expansions, sides, seating = job
     content = _content(expansions)
     rng = random.Random(seed * 1_000_003 + index)
     n = len(lineup)
-    seats = [lineup[(i + index) % n] for i in range(n)]  # rotate one seat per game
+    if seating == 'shuffle':  # random seating (own rng, so the deal is the same as with rotation)
+        seats = list(lineup)
+        random.Random(seed * 7_919 + index).shuffle(seats)
+    else:
+        seats = [lineup[(i + index) % n] for i in range(n)]  # rotate one seat per game
     names = list(dict.fromkeys(w.name for w in content.wonders))
     setups = [
         PlayerSetup(spec.name, wonder, rng.choice('AB') if sides == 'random' else sides)
@@ -197,6 +206,7 @@ def run_bench(
     sides: str = 'random',
     processes: int = 1,
     context: Optional[str] = None,
+    seating: str = 'rotate',
 ) -> BenchResult:
     """Play ``lineup`` (one agent per seat; names from :data:`AGENTS` or specs) ``n_games`` times.
 
@@ -206,7 +216,9 @@ def run_bench(
     specs = tuple(AGENTS[s] if isinstance(s, str) else s for s in lineup)
     if not MIN_PLAYERS <= len(specs) <= MAX_PLAYERS:
         raise ValueError(f'need {MIN_PLAYERS}-{MAX_PLAYERS} seats, got {len(specs)}')
-    jobs = [(g, seed, specs, tuple(expansions), sides) for g in range(n_games)]
+    if seating not in SEATINGS:
+        raise ValueError(f'seating must be one of {SEATINGS}, got {seating!r}')
+    jobs = [(g, seed, specs, tuple(expansions), sides, seating) for g in range(n_games)]
     if processes > 1:
         with get_context(context).Pool(processes, initializer=init_worker) as pool:
             results = pool.map(_play_one, jobs, chunksize=max(1, n_games // (processes * 8)))

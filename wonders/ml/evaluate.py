@@ -145,8 +145,9 @@ def head_to_head(
     seed: int = 4242,
     filler: str = 'heuristic',
     processes: int = 1,
+    seating: str = 'shuffle',
 ) -> Dict[str, Any]:
-    """Play ``models`` (``(label, checkpoint)`` pairs) at the same tables, seats rotating.
+    """Play ``models`` (``(label, checkpoint)`` pairs) at the same tables.
 
     Only models whose vocabulary covers a cell's cards play in it; see :func:`compare_agents`
     for the result layout.
@@ -162,6 +163,7 @@ def head_to_head(
         seed=seed,
         filler=filler,
         processes=processes,
+        seating=seating,
         eligible=lambda cell: [label for label in labels if _covers(vocab[label], cell[0])],
     )
 
@@ -174,9 +176,14 @@ def compare_agents(
     filler: str = 'heuristic',
     processes: int = 1,
     eligible: Optional[Callable[[Cell], Sequence[str]]] = None,
+    seating: str = 'shuffle',
 ) -> Dict[str, Any]:
-    """Seat ``specs`` (distinct names) at the same tables, one seat each, seats rotating.
+    """Seat ``specs`` (distinct names) at the same tables, one seat each.
 
+    ``seating`` is passed to :func:`~wonders.agents.bench.run_bench`. Keep the default
+    ``'shuffle'`` (every game seated at random): with ``'rotate'`` the agents keep their
+    relative order, so the first-listed model always picks from a hand before the next one
+    in Ages I and III — worth ~7 points of "ranked above" between two trained models.
     ``filler`` agents take the remaining seats; ``eligible(cell)`` may restrict which specs
     play a cell (cells with fewer than two eligible agents, or more than seats, are
     skipped). Returns per-cell results — each agent's win rate × players with a 95%
@@ -200,7 +207,9 @@ def compare_agents(
             cell_results.append({'cell': cell_key(cell), 'skipped': f'{len(present)} eligible models'})
             continue
         seats = [by_name[label] for label in present] + [AGENTS[filler]] * (n_players - len(present))
-        r = run_bench(seats, n_games=games, seed=seed, expansions=tuple(expansions), processes=processes)
+        r = run_bench(
+            seats, n_games=games, seed=seed, expansions=tuple(expansions), processes=processes, seating=seating
+        )
         entry: Dict[str, Any] = {'cell': cell_key(cell), 'games': games, 'models': {}, 'pairs': {}}
         for label in present:
             s = r.stats[label]
@@ -226,6 +235,7 @@ def compare_agents(
     return {
         'models': labels,
         'filler': filler,
+        'seating': seating,
         'cells': cell_results,
         'pairs': _pair_summary(pooled),
         'pairs_by_combo': {combo: _pair_summary(counts) for combo, counts in by_combo.items()},

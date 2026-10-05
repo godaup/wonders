@@ -271,11 +271,18 @@ def _model_arg(entry: str):
 @click.argument('models', nargs=-1, required=True)
 @click.option('--cells', default='all', show_default=True, help="'all' or e.g. base/3p,leaders+cities/5p")
 @click.option('--filler', default='heuristic', show_default=True, help='Agent filling the remaining seats.')
+@click.option(
+    '--seating',
+    type=click.Choice(['shuffle', 'rotate']),
+    default='shuffle',
+    show_default=True,
+    help='shuffle: random seats per game; rotate: fixed order (biased towards the first model).',
+)
 @click.option('--games', '-n', default=400, type=int, show_default=True, help='Games per cell.')
 @click.option('--seed', default=4242, type=int, show_default=True)
 @click.option('--processes', '-p', default=6, type=int, show_default=True)
 @click.option('--out', '-o', type=click.Path(dir_okay=False), help='Also save the full results as JSON.')
-def head_to_head_command(models, cells, filler, games, seed, processes, out):
+def head_to_head_command(models, cells, filler, seating, games, seed, processes, out):
     """Play checkpoints against each other at the same tables (MODELS: label=path or path)."""
     _ml()
     import json
@@ -288,7 +295,15 @@ def head_to_head_command(models, cells, filler, games, seed, processes, out):
     parsed = [_model_arg(m) for m in models]
     if len(parsed) < 2:
         raise click.BadParameter('give at least two checkpoints')
-    result = head_to_head(parsed, cells=parse_cells(cells), games=games, seed=seed, filler=filler, processes=processes)
+    result = head_to_head(
+        parsed,
+        cells=parse_cells(cells),
+        games=games,
+        seed=seed,
+        filler=filler,
+        processes=processes,
+        seating=seating,
+    )
     if out:
         with open(out, 'w', encoding='utf-8') as fh:
             json.dump(result, fh, indent=1)
