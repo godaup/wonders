@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import random
-from typing import Any, Dict, List, Optional, Sequence
+from functools import lru_cache
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import torch
 
@@ -14,6 +16,13 @@ from wonders.engine.actions import Action
 from wonders.engine.observation import Observation
 from wonders.env.vocab import Vocab
 from wonders.ml.model import PolicyValueNet, load_checkpoint
+
+
+@lru_cache(maxsize=32)
+def _shared_checkpoint(path: str, device: str) -> Tuple[PolicyValueNet, Tuple[str, ...], Dict[str, Any]]:
+    """One copy per checkpoint and device per process (agents only run inference, so they can share it)."""
+    model, names, meta = load_checkpoint(path)
+    return model.to(device).eval(), tuple(names), meta
 
 
 class NeuralAgent(Agent):
@@ -33,6 +42,8 @@ class NeuralAgent(Agent):
         sample: Sample from the policy instead of taking the most likely action.
         rng: Random source for sampling (seeded for reproducibility).
         name: Display name.
+        device: Torch device for inference (e.g. ``'cuda'`` to take batch-1 inference of large
+            networks off the CPU). Checkpoints are loaded once per process and device and shared.
         leader_policy: Let the network make the Leaders draft and recruitment decisions too
             (as during PPO training) when its checkpoint knows those decision kinds. ``False``
             falls back to the :class:`~wonders.agents.base.Agent` hooks (costliest leader),
@@ -53,14 +64,16 @@ class NeuralAgent(Agent):
         rng: Optional[random.Random] = None,
         name: str = 'neural',
         leader_policy: bool = True,
+        device: str = 'cpu',
     ):
         meta: Dict[str, Any] = {'decisions': list(decisions or DECISIONS)}
         if checkpoint is not None:
-            model, loaded_names, meta = load_checkpoint(checkpoint)
-            card_names = loaded_names
+            model, loaded_names, meta = _shared_checkpoint(os.path.abspath(checkpoint), device)
+            card_names = list(loaded_names)
         if model is None or card_names is None:
             raise ValueError('give a checkpoint path, or both model and card_names')
-        self.model = model.eval()
+        self.device = torch.device(device)
+        self.model = model.eval() if checkpoint is not None else model.eval().to(self.device)
         self.vocab = vocab or Vocab.from_checkpoint(card_names, meta)
         self.action_space = self.vocab.action_space()
         self.encoder = self.vocab.encoder()
@@ -78,11 +91,11 @@ class NeuralAgent(Agent):
 
     def logits(self, obs: Observation) -> torch.Tensor:
         """Masked policy logits for ``obs`` (shape ``[n_actions]``)."""
-        x = torch.tensor([self.encoder.encode(obs)], dtype=torch.float32)
-        mask = torch.tensor([self.action_space.mask(obs.legal_actions)])
+        x = torch.tensor([self.encoder.encode(obs)], dtype=torch.float32, device=self.device)
+        mask = torch.tensor([self.action_space.mask(obs.legal_actions)], device=self.device)
         with torch.inference_mode():
             logits, _value = self.model(x, mask)
-        return logits[0]
+        return logits[0].cpu()
 
     def decide(self, obs: Observation) -> Action:
         logits = self.logits(obs)

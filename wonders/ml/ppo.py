@@ -17,6 +17,7 @@ import os
 import random
 import time
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
@@ -70,6 +71,11 @@ class PPOConfig:
     anchors_from: int = 0  # iteration from which the anchor tier is drawn
     league_anchor_every: int = 0  # keep every N-th iteration's snapshot as a permanent anchor (0 = never)
     league_anchor_max: int = 8  # most recent self-anchors kept
+    # Where neural opponents run inference: 'cpu', or 'cuda' for networks at least
+    # ``opponent_gpu_min_hidden`` wide (large models are memory-bound on the CPU; small ones are
+    # faster there). Falls back to the CPU when CUDA is unavailable.
+    opponent_device: str = 'cpu'
+    opponent_gpu_min_hidden: int = 512
     device: str = 'auto'  # torch device for the learner: 'auto' (CUDA if available), 'cuda', 'cpu'
     encoder: str = 'card-v1'  # observation encoder: 'card-v1' or 'table-v2'
     pipeline: int = 2  # env groups stepped in turn: one simulates while the learner acts for another
@@ -97,7 +103,21 @@ def config_vocab(config: PPOConfig) -> Vocab:
     return vocab_for(tuple(sorted(expansions)), config.encoder)
 
 
-def opponent_spec(entry: str) -> AgentSpec:
+@lru_cache(maxsize=64)
+def _checkpoint_hidden(path: str) -> int:
+    """Hidden width of a checkpoint's network (read once per path)."""
+    return int(torch.load(path, map_location='cpu', weights_only=True)['config']['hidden'])
+
+
+def opponent_device(config: PPOConfig, entry: str) -> str:
+    """Inference device for the opponent ``entry`` under ``config.opponent_device``."""
+    if config.opponent_device == 'cpu' or not entry.startswith('neural:') or not torch.cuda.is_available():
+        return 'cpu'
+    path = os.path.abspath(entry[len('neural:') :])
+    return config.opponent_device if _checkpoint_hidden(path) >= config.opponent_gpu_min_hidden else 'cpu'
+
+
+def opponent_spec(entry: str, device: str = 'cpu') -> AgentSpec:
     """A built-in agent name, ``name[mode]`` or ``neural:<checkpoint>`` as a picklable spec.
 
     ``name[mode]`` is the built-in agent with its Leaders decisions replaced
@@ -108,6 +128,8 @@ def opponent_spec(entry: str) -> AgentSpec:
     if entry.startswith('neural:'):
         path = entry[len('neural:') :]
         label = f'neural:{os.path.splitext(os.path.basename(path))[0]}'
+        if device != 'cpu':
+            return AgentSpec.of(label, NeuralAgent, checkpoint=os.path.abspath(path), name=label, device=device)
         return AgentSpec.of(label, NeuralAgent, checkpoint=os.path.abspath(path), name=label)
     if entry.endswith(']') and '[' in entry:
         name, _, mode = entry[:-1].partition('[')
@@ -157,7 +179,10 @@ def make_vector_env(
             names = draw_opponents(config, random.Random(seed), pool, anchors, epoch, n_players - 1)
         else:
             names = list(config.opponents)
-        opponents = [_SeededOpponent(opponent_spec(name), seed + k) for k, name in enumerate(names)]
+        opponents = [
+            _SeededOpponent(opponent_spec(name, opponent_device(config, name)), seed + k)
+            for k, name in enumerate(names)
+        ]
         env_kwargs = {
             'reward': 'dense',
             'expansions': tuple(expansions),
