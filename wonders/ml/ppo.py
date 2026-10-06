@@ -59,6 +59,17 @@ class PPOConfig:
     league: bool = False  # add snapshots to the opponent pool (self-play league)
     league_size: int = 4  # most recent snapshots kept in the pool
     league_dir: str = ''  # where snapshots are written
+    # Opponent mix. With ``tier_weights`` = (scripted, recent self, anchors) every opponent seat first
+    # draws a tier (renormalised over the non-empty ones), then an entry of it uniformly: scripted =
+    # the pool's non-neural entries (repeat a name to weight it), recent self = the league's newest
+    # snapshots, anchors = ``anchors`` (fixed, from iteration ``anchors_from``) plus every
+    # ``league_anchor_every``-th snapshot kept for good (the newest ``league_anchor_max``). Empty
+    # ``tier_weights`` keeps the legacy uniform draw over the whole pool.
+    tier_weights: Sequence[float] = ()
+    anchors: Sequence[str] = ()  # fixed opponents of the anchor tier (e.g. 'neural:<best earlier run>')
+    anchors_from: int = 0  # iteration from which the anchor tier is drawn
+    league_anchor_every: int = 0  # keep every N-th iteration's snapshot as a permanent anchor (0 = never)
+    league_anchor_max: int = 8  # most recent self-anchors kept
     device: str = 'auto'  # torch device for the learner: 'auto' (CUDA if available), 'cuda', 'cpu'
     encoder: str = 'card-v1'  # observation encoder: 'card-v1' or 'table-v2'
     pipeline: int = 2  # env groups stepped in turn: one simulates while the learner acts for another
@@ -110,11 +121,29 @@ def env_tables(config: PPOConfig) -> List[TableSpec]:
     return [tables[i % len(tables)] for i in range(config.n_envs)]
 
 
+def draw_opponents(
+    config: PPOConfig, rng: random.Random, pool: Sequence[str], anchors: Sequence[str], epoch: int, k: int
+) -> List[str]:
+    """``k`` opponents for one table: uniform over ``pool``, or by tier with ``config.tier_weights``."""
+    if not config.tier_weights:
+        return rng.choices(list(pool), k=k)
+    tiers = [
+        [p for p in pool if not p.startswith('neural:')],
+        [p for p in pool if p.startswith('neural:')],
+        list(anchors) if epoch >= config.anchors_from else [],
+    ]
+    weights = [w if tier else 0.0 for w, tier in zip(config.tier_weights, tiers)]
+    if not any(weights):
+        raise ValueError('every opponent tier with a positive weight is empty')
+    return [rng.choice(tiers[rng.choices(range(3), weights=weights)[0]]) for _ in range(k)]
+
+
 def make_vector_env(
     config: PPOConfig,
     pool: Optional[Sequence[str]] = None,
     epoch: int = 0,
     envs: Optional[Sequence[int]] = None,
+    anchors: Sequence[str] = (),
 ) -> Union[SyncVectorEnv, SubprocVectorEnv]:
     """Vector env over env indices ``envs`` (default: all ``n_envs``)."""
     vocab = config_vocab(config)
@@ -125,7 +154,7 @@ def make_vector_env(
         expansions, n_players = tables[i]
         seed = config.seed * 10_007 + epoch * 1_000_003 + i * 31
         if config.tables:  # draw this table's opponents from the pool
-            names = random.Random(seed).choices(pool, k=n_players - 1)
+            names = draw_opponents(config, random.Random(seed), pool, anchors, epoch, n_players - 1)
         else:
             names = list(config.opponents)
         opponents = [_SeededOpponent(opponent_spec(name), seed + k) for k, name in enumerate(names)]
@@ -150,9 +179,9 @@ def env_groups(config: PPOConfig) -> List[List[int]]:
 
 
 def make_vector_envs(
-    config: PPOConfig, pool: Optional[Sequence[str]] = None, epoch: int = 0
+    config: PPOConfig, pool: Optional[Sequence[str]] = None, epoch: int = 0, anchors: Sequence[str] = ()
 ) -> List[Union[SyncVectorEnv, SubprocVectorEnv]]:
-    return [make_vector_env(config, pool, epoch, group) for group in env_groups(config)]
+    return [make_vector_env(config, pool, epoch, group, anchors) for group in env_groups(config)]
 
 
 def _table_key(table: TableSpec) -> str:
@@ -192,13 +221,20 @@ def train_ppo(
     start_iteration = 1
     steps_done = 0  # cumulative learner steps (survives changes of n_envs / rollout_steps on resume)
     pool = list(config.opponent_pool or config.opponents)
+    self_anchors: List[str] = []  # snapshots kept for good (league_anchor_every)
     if state:
         opt.load_state_dict(state['optimizer'])
         start_iteration = int(state['iteration']) + 1
         steps_done = int(state.get('steps', 0))
         pool = list(state.get('pool', pool))
+        self_anchors = list(state.get('self_anchors', []))
+
+    def anchors() -> List[str]:
+        kept = self_anchors[-config.league_anchor_max :] if config.league_anchor_max else []
+        return list(config.anchors) + kept
+
     history: List[Dict[str, float]] = []
-    rollouts = _Rollouts(config, pool, start_iteration, device, tables, learner_seat)
+    rollouts = _Rollouts(config, pool, start_iteration, device, tables, learner_seat, anchors())
     try:
         for iteration in range(start_iteration, config.iterations + 1):
             start = time.time()
@@ -244,14 +280,20 @@ def train_ppo(
                 on_iteration(iteration, metrics)
             if config.snapshot_every and iteration % config.snapshot_every == 0:
                 pool = _snapshot(model, config, vocab, iteration, pool)
+                if config.league and config.league_anchor_every and iteration % config.league_anchor_every == 0:
+                    self_anchors.append(_snapshot_name(config, iteration))
                 if on_snapshot is not None:
-                    on_snapshot(
-                        iteration,
-                        {'optimizer': opt.state_dict(), 'iteration': iteration, 'pool': pool, 'steps': steps_done},
-                    )
+                    snapshot_state = {
+                        'optimizer': opt.state_dict(),
+                        'iteration': iteration,
+                        'pool': pool,
+                        'steps': steps_done,
+                        'self_anchors': list(self_anchors),
+                    }
+                    on_snapshot(iteration, snapshot_state)
                 if config.league and iteration < config.iterations:  # new opponents: rebuild the envs
                     rollouts.close()
-                    rollouts = _Rollouts(config, pool, iteration, device, tables, learner_seat)
+                    rollouts = _Rollouts(config, pool, iteration, device, tables, learner_seat, anchors())
     finally:
         rollouts.close()
         model.cpu()  # checkpoints and callers always see a CPU model
@@ -276,10 +318,11 @@ class _Rollouts:
         device: torch.device,
         tables: Sequence[TableSpec],
         learner_seat: Sequence[int],
+        anchors: Sequence[str] = (),
     ):
         self.config, self.device, self.tables, self.learner_seat = config, device, tables, learner_seat
         self.groups = env_groups(config)
-        self.vecs = make_vector_envs(config, pool, epoch)
+        self.vecs = make_vector_envs(config, pool, epoch, anchors)
         self.obs = [vec.reset(config.seed + epoch + 7919 * g)[0] for g, vec in enumerate(self.vecs)]
         self.per_table: Dict[str, List[float]] = {}
 
@@ -364,13 +407,17 @@ def _snapshot(model: PolicyValueNet, config: PPOConfig, vocab: Vocab, iteration:
     """
     if not config.league:
         return pool
-    directory = config.league_dir or '.'
-    os.makedirs(directory, exist_ok=True)
-    path = os.path.join(directory, f'snapshot-{iteration:06d}.pt')
+    path = _snapshot_name(config, iteration)[len('neural:') :]
+    os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
     save_checkpoint(path, model, vocab.card_names, iteration=iteration, **vocab.meta())
     scripted = [p for p in pool if not p.startswith('neural:')]
     neural = [p for p in pool if p.startswith('neural:')] + [f'neural:{path}']
     return scripted + neural[-config.league_size :]
+
+
+def _snapshot_name(config: PPOConfig, iteration: int) -> str:
+    """The pool entry (``neural:<path>``) of the league snapshot written at ``iteration``."""
+    return 'neural:' + os.path.join(config.league_dir or '.', f'snapshot-{iteration:06d}.pt')
 
 
 def _gae(
