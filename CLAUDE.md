@@ -118,10 +118,12 @@ scoring categories). It is split into three packages under `wonders/`:
   `match.play_match` runs agents and returns `(Game, GameRecord)`. `bench.run_bench` plays a
   lineup of picklable `AgentSpec`s (registry `AGENTS`) over many seeded games with rotating
   seats, reporting win rates with 95% Wilson intervals, mean score/rank and category means
-  (plus per-game ranks). No scripted agent overrides `Agent.draft_leader` / `recruit`, so they
-  all play leaders by the cost proxy, which measured no better than random
-  (`sweeps/STAGE0.md`). `ablation.LeaderAblation` swaps an agent's leader decisions for
-  random / cost-proxy ones.
+  (plus per-game ranks). The `HeuristicAgent` family drafts / recruits leaders by
+  `leader_values.LEADER_VALUES` — VP of margin per leader, regressed from 40k games with
+  random leader play (`python -m wonders.agents.leader_values` regenerates it); the other
+  scripted agents keep the base `Agent` cost proxy (≈ random). `ablation.LeaderAblation` swaps an
+  agent's leader decisions for random / cost-proxy ones; PPO pools accept `name[mode]` for it
+  (e.g. `board[cost]`, the pre-Stage-2 behaviour).
 - **`wonders/env/`** — training environments. `ActionSpace` is a fixed discrete space
   (card name × `ActionKind`, index = `card * 4 + kind`) with `mask(legal)` /
   `to_action(index, legal)`. `WondersEnv` is a PettingZoo-`ParallelEnv`-style

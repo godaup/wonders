@@ -23,7 +23,8 @@ from collections import Counter
 from typing import Dict, List, Optional
 
 from wonders.agents.base import Agent
-from wonders.cards.base import ScienceSymbol
+from wonders.agents.leader_values import LEADER_VALUES
+from wonders.cards.base import Card, ScienceSymbol
 from wonders.engine.actions import Action, ActionKind
 from wonders.engine.game import CONFLICT_VALUE, DEFEAT_VALUE, science_score
 from wonders.engine.observation import CardView, Observation
@@ -42,6 +43,8 @@ DEFAULT_WEIGHTS: Dict[str, float] = {
     'wonder_bonus': 0.53,  # tempo value of advancing the wonder at all
     'discard': 1.0,  # = the 3 coins a discard yields (fallback only)
     'free_build': 2.11,  # opportunity cost of spending Olympia's once-per-Age free build
+    'leader': 1.0,  # per VP of a leader's data-driven value (wonders.agents.leader_values)
+    'leader_base': 1.05,  # what the alternative to recruiting (3 coins / a stage) is worth on that scale
 }
 
 _SYMBOLS = {'tablet': ScienceSymbol.TABLET, 'gear': ScienceSymbol.GEAR, 'compass': ScienceSymbol.COMPASS}
@@ -61,7 +64,44 @@ class HeuristicAgent(Agent):
             self.w.update(weights)
         self.name = name
 
+    # -- Leaders (values estimated from random-leader games, see leader_values) ----
+    @staticmethod
+    def leader_value(name: str) -> float:
+        return LEADER_VALUES.get(name, 0.0)
+
+    def draft_leader(self, options: List[Card]) -> Card:
+        return max(options, key=lambda c: self.leader_value(c.name))
+
+    def recruit(self, leaders: List[Card], obs: Observation) -> Optional[Action]:
+        """Recruit the best affordable leader unless a wonder stage or 3 coins is worth more."""
+        if not leaders:
+            return None
+        w = self.w
+
+        def value(action: Action) -> float:
+            if action.kind is ActionKind.BUILD:
+                return w['leader_base'] + w['leader'] * self.leader_value(action.card.name)
+            if action.kind is ActionKind.WONDER:
+                return self._wonder_value(obs)
+            return 3 * w['coin']  # discard
+
+        best = max(value(a) for a in obs.legal_actions)
+        # Among equally good plays, give up (bury / discard) the least valuable leader.
+        return max(
+            (a for a in obs.legal_actions if value(a) == best),
+            key=lambda a: self.leader_value(a.card.name) * (1 if a.kind is ActionKind.BUILD else -1),
+        )
+
+    def _leader_pick(self, obs: Observation) -> Optional[Action]:
+        """Rome's extra recruit / the Courtesans' copy: the most valuable leader on offer."""
+        builds = [a for a in obs.legal_actions if a.kind is ActionKind.BUILD]
+        return max(builds, key=lambda a: self.leader_value(a.card.name)) if builds else None
+
     def decide(self, obs: Observation) -> Action:
+        if obs.decision in ('leader_build', 'copy_leader'):
+            pick = self._leader_pick(obs)
+            if pick is not None:
+                return pick
         views: Dict[str, CardView] = {c.name: c for c in obs.hand}
         # Build (or advance the wonder) whenever possible — in this engine taking the
         # 3 discard coins over a compounding resource/chain card loses ground. Discard

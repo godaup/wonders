@@ -23,6 +23,7 @@ import torch
 from torch import nn
 from torch.distributions import Categorical
 
+from wonders.agents.ablation import leader_ablation
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, AgentSpec
 from wonders.env.environment import EnvObs
@@ -86,11 +87,20 @@ def config_vocab(config: PPOConfig) -> Vocab:
 
 
 def opponent_spec(entry: str) -> AgentSpec:
-    """A built-in agent name or ``neural:<checkpoint>`` as a picklable spec."""
+    """A built-in agent name, ``name[mode]`` or ``neural:<checkpoint>`` as a picklable spec.
+
+    ``name[mode]`` is the built-in agent with its Leaders decisions replaced
+    (:func:`~wonders.agents.ablation.leader_ablation`; modes ``cost``, ``random``,
+    ``random-draft``) — e.g. ``board[cost]`` plays leaders like the agents did before they had
+    data-driven leader values.
+    """
     if entry.startswith('neural:'):
         path = entry[len('neural:') :]
         label = f'neural:{os.path.splitext(os.path.basename(path))[0]}'
         return AgentSpec.of(label, NeuralAgent, checkpoint=os.path.abspath(path), name=label)
+    if entry.endswith(']') and '[' in entry:
+        name, _, mode = entry[:-1].partition('[')
+        return leader_ablation(AGENTS[name], mode)
     return AGENTS[entry]
 
 
