@@ -1,5 +1,6 @@
 """Agents and the state representations they consume."""
 
+from wonders.agents.adaptive import AdaptiveAgent, RivalAgent
 from wonders.agents.base import Agent
 from wonders.agents.baselines import (
     ArchetypeAgent,

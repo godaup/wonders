@@ -45,7 +45,7 @@ Leaders / Cities powers:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
 from wonders.cards.base import Ressource, ScienceSymbol
 
@@ -200,3 +200,13 @@ class Effect:
 
     def leader_copies(self) -> int:
         return 0
+
+    def counts(self) -> Optional[Dict[str, object]]:
+        """What this effect pays per unit, for agents valuing combos (``None`` if nothing).
+
+        A JSON-able dict: ``what`` (e.g. ``'colors'``, ``'wonder_stages'``, ``'color_sets'``,
+        ``'build_income'``), ``scope`` (``'self'`` / ``'neighbours'`` / ``'both'``), ``colors``
+        (card colour values) and ``vp_each`` / ``coins_each``. Descriptive only: the engine never
+        reads it.
+        """
+        return None

@@ -44,6 +44,8 @@ AGENT_BLURBS: Dict[str, str] = {
     'balanced': 'Fills its scarcest colour.',
     'board': 'Plans around its wonder board; the strongest scripted agent.',
     'board-focus': 'Board-aware, favouring the colours its board points to.',
+    'adaptive': 'Board-aware; contests winnable military fronts, adapts to the game phase and the wheel.',
+    'rival': 'Adaptive, and plays against whoever is leading.',
 }
 
 

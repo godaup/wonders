@@ -8,7 +8,7 @@ end-game coin/VP-per-card) and purple guild scoring.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterable, Optional, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
 from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Ressource, ScienceSymbol
 from wonders.effects.base import BuildEvent, Context, Effect, TradeRule
@@ -226,6 +226,15 @@ class Tally(Effect):
             return 0
         return self.vp_each * self._count(ctx)
 
+    def counts(self) -> Optional[Dict[str, object]]:
+        return {
+            'what': self.what,
+            'scope': self.scope,
+            'colors': sorted(c.value for c in self.colors),
+            'vp_each': self.vp_each,
+            'coins_each': self.coins_each,
+        }
+
 
 @dataclass
 class Debt(Effect):
@@ -307,6 +316,14 @@ class ColorSets(Effect):
         counts = [sum(1 for c in ctx.player.cards if c.color is color) for color in self.colors]
         return self.vp_each * min(counts, default=0)
 
+    def counts(self) -> Optional[Dict[str, object]]:
+        return {
+            'what': 'color_sets',
+            'scope': 'self',
+            'colors': sorted(c.value for c in self.colors),
+            'vp_each': self.vp_each,
+        }
+
 
 @dataclass
 class ScienceSetBonus(Effect):
@@ -351,6 +368,16 @@ class BuildIncome(Effect):
             return self.coins * event.neighbours_traded
         return self.coins
 
+    def counts(self) -> Optional[Dict[str, object]]:
+        return {
+            'what': 'build_income',
+            'scope': 'self',
+            'colors': [self.color] if self.color else [],
+            'coins_each': self.coins,
+            'via_chain': self.via_chain,
+            'after_trade': self.after_trade,
+        }
+
 
 @dataclass
 class VictoryIncome(Effect):
@@ -385,6 +412,9 @@ class ResourceDiscount(Effect):
     def resource_discount(self, target: str) -> int:
         return self.amount if target == self.target else 0
 
+    def counts(self) -> Optional[Dict[str, object]]:
+        return {'what': 'discount', 'scope': 'self', 'colors': [self.target], 'amount': self.amount}
+
 
 @dataclass
 class BuildFree(Effect):
@@ -397,6 +427,9 @@ class BuildFree(Effect):
 
     def builds_free(self, card: Card) -> bool:
         return card.color in self.colors
+
+    def counts(self) -> Optional[Dict[str, object]]:
+        return {'what': 'builds_free', 'scope': 'self', 'colors': sorted(c.value for c in self.colors)}
 
 
 @dataclass

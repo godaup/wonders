@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from wonders._mp import get_context, init_worker
+from wonders.agents.adaptive import AdaptiveAgent, RivalAgent
 from wonders.agents.base import Agent
 from wonders.agents.baselines import (
     BuilderAgent,
@@ -85,6 +86,8 @@ AGENTS: Dict[str, AgentSpec] = {
         AgentSpec.of('balanced', BalancedAgent),
         AgentSpec.of('board', BoardAwareAgent),
         AgentSpec.of('board-focus', BoardFocusAgent),
+        AgentSpec.of('adaptive', AdaptiveAgent),
+        AgentSpec.of('rival', RivalAgent),
     )
 }
 
