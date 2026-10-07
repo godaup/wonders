@@ -12,6 +12,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+permissions:
+  contents: write  # create the GitHub release
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "release"
@@ -50,17 +53,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install build
-
-      - name: build documentation
-        run: |
-          pip install ".[doc]"
-          mkdocs build
-
-      - name: publish documentation
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          personal_token: ${{ secrets.PERSONAL_TOKEN }}
-          publish_dir: ./site
 
       - name: Build wheels and source tarball
         run: >-
