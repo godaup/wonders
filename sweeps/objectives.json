@@ -1,0 +1,609 @@
+{
+ "out": "runs/main",
+ "runs": [
+  {
+   "name": "s5-plain",
+   "kind": "ppo",
+   "init": "s3-small",
+   "steps": 10000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "adaptive",
+     "adaptive",
+     "adaptive",
+     "board",
+     "board",
+     "rival",
+     "board-focus",
+     "heuristic",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist",
+     "militarist",
+     "blocker"
+    ],
+    "universal": true,
+    "n_envs": 64,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 50,
+    "encoder": "table-v2",
+    "league": true,
+    "league_size": 6,
+    "snapshot_every": 50,
+    "tier_weights": [
+     0.3,
+     0.4,
+     0.3
+    ],
+    "anchors": [
+     "run:s2-new-a",
+     "run:s2-new-b",
+     "run:s2-old-b"
+    ],
+    "anchors_from": 0,
+    "league_anchor_every": 1000,
+    "league_anchor_max": 8,
+    "opponent_device": "cuda",
+    "opponent_gpu_min_hidden": 512
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "s5-anneal",
+   "kind": "ppo",
+   "init": "s3-small",
+   "steps": 10000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "adaptive",
+     "adaptive",
+     "adaptive",
+     "board",
+     "board",
+     "rival",
+     "board-focus",
+     "heuristic",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist",
+     "militarist",
+     "blocker"
+    ],
+    "universal": true,
+    "n_envs": 64,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 50,
+    "encoder": "table-v2",
+    "league": true,
+    "league_size": 6,
+    "snapshot_every": 50,
+    "tier_weights": [
+     0.3,
+     0.4,
+     0.3
+    ],
+    "anchors": [
+     "run:s2-new-a",
+     "run:s2-new-b",
+     "run:s2-old-b"
+    ],
+    "anchors_from": 0,
+    "league_anchor_every": 1000,
+    "league_anchor_max": 8,
+    "opponent_device": "cuda",
+    "opponent_gpu_min_hidden": 512,
+    "lr_schedule": "linear",
+    "lr_final": 0.1
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  },
+  {
+   "name": "s5-rank",
+   "kind": "ppo",
+   "init": "s3-small",
+   "steps": 10000000,
+   "ppo": {
+    "tables": [
+     [
+      [
+       "base"
+      ],
+      3
+     ],
+     [
+      [
+       "base"
+      ],
+      4
+     ],
+     [
+      [
+       "base"
+      ],
+      5
+     ],
+     [
+      [
+       "base"
+      ],
+      6
+     ],
+     [
+      [
+       "base"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "cities"
+      ],
+      7
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      3
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      4
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      5
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      6
+     ],
+     [
+      [
+       "base",
+       "leaders",
+       "cities"
+      ],
+      7
+     ]
+    ],
+    "opponent_pool": [
+     "adaptive",
+     "adaptive",
+     "adaptive",
+     "board",
+     "board",
+     "rival",
+     "board-focus",
+     "heuristic",
+     "greedy",
+     "builder",
+     "civic",
+     "scientist",
+     "militarist",
+     "blocker"
+    ],
+    "universal": true,
+    "n_envs": 64,
+    "envs_per_worker": 4,
+    "rollout_steps": 64,
+    "lr": 0.0001,
+    "entropy_coef": 0.01,
+    "seed": 50,
+    "encoder": "table-v2",
+    "league": true,
+    "league_size": 6,
+    "snapshot_every": 50,
+    "tier_weights": [
+     0.3,
+     0.4,
+     0.3
+    ],
+    "anchors": [
+     "run:s2-new-a",
+     "run:s2-new-b",
+     "run:s2-old-b"
+    ],
+    "anchors_from": 0,
+    "league_anchor_every": 1000,
+    "league_anchor_max": 8,
+    "opponent_device": "cuda",
+    "opponent_gpu_min_hidden": 512,
+    "reward": "dense_rank",
+    "rank_bonus": 10.0
+   },
+   "eval": {
+    "cells": "all",
+    "games": 400,
+    "lineups": [
+     "heuristic",
+     "board"
+    ]
+   }
+  }
+ ]
+}
