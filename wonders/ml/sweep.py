@@ -31,7 +31,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import torch
 
-from wonders.env.vocab import universal_vocab, vocab_for
+from wonders.env.vocab import DEFAULT_ENCODER, universal_vocab, vocab_for
 from wonders.ml.evaluate import evaluate, parse_cells, summary_table
 from wonders.ml.imitation import collect, new_model, train_imitation
 from wonders.ml.model import PolicyValueNet, load_checkpoint, save_checkpoint
@@ -93,7 +93,7 @@ def ppo_config(run: Dict[str, Any], run_dir: str) -> PPOConfig:
 
 def _imitate(run: Dict[str, Any], run_dir: str, processes: int, log: Log) -> str:
     tables = _tables(run['tables'])
-    encoder = run.get('encoder', 'card-v1')  # 'card-v1' or 'table-v2'
+    encoder = run.get('encoder', DEFAULT_ENCODER)  # 'table-v2' (default) or 'card-v1'
     expansions = tuple(sorted({e for exp, _ in tables for e in exp}))
     vocab = universal_vocab(encoder) if run.get('universal') else vocab_for(expansions, encoder)
     data = collect(

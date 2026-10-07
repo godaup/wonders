@@ -177,13 +177,15 @@ def train():
 def imitate(games, epochs, hidden, seed, processes, out):
     """Clone HeuristicAgent's play into a network (behaviour cloning)."""
     ml = _ml()
+    from wonders.env.vocab import vocab_for
     from wonders.ml.imitation import collect, new_model, train_imitation
 
-    data = collect(games, seed=seed, processes=processes)
+    vocab = vocab_for(('base',))
+    data = collect(games, seed=seed, processes=processes, vocab=vocab)
     click.echo(f'recorded {len(data)} decisions from {games} games')
-    model, names = new_model(hidden=hidden)
+    model, names = new_model(hidden=hidden, vocab=vocab)
     metrics = train_imitation(model, data, epochs=epochs, seed=seed, log=click.echo)
-    ml.save_checkpoint(out, model, names, source='imitation', games=games, **metrics)
+    ml.save_checkpoint(out, model, names, source='imitation', games=games, **vocab.meta(), **metrics)
     click.echo(f'saved {out}')
 
 
@@ -207,15 +209,22 @@ def ppo(init_path, iterations, opponents, envs, envs_per_worker, lr, seed, out):
     unknown = [n for n in names if n not in AGENTS]
     if unknown or not MIN_PLAYERS <= len(names) + 1 <= MAX_PLAYERS:
         raise click.BadParameter(f'need {MIN_PLAYERS - 1}-{MAX_PLAYERS - 1} built-in opponents; unknown: {unknown}')
-    if init_path:
-        model, card_names, _meta = ml.load_checkpoint(init_path)
-    else:
-        model, card_names = new_model()
+    from wonders.ml.ppo import config_vocab
+
+    encoder = None
+    if init_path:  # keep the encoder the starting checkpoint was built for (older ones: v1)
+        model, card_names, meta = ml.load_checkpoint(init_path)
+        encoder = meta.get('encoder', 'card-v1')
     config = PPOConfig(
         opponents=tuple(names), n_envs=envs, envs_per_worker=envs_per_worker, iterations=iterations, lr=lr, seed=seed
     )
+    if encoder is not None:
+        config.encoder = encoder
+    vocab = config_vocab(config)
+    if not init_path:
+        model, card_names = new_model(vocab=vocab)
     train_ppo(model, config, log=click.echo)
-    ml.save_checkpoint(out, model, card_names, source='ppo', init=init_path or '', opponents=opponents)
+    ml.save_checkpoint(out, model, card_names, source='ppo', init=init_path or '', opponents=opponents, **vocab.meta())
     click.echo(f'saved {out}')
 
 

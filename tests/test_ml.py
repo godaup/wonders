@@ -15,6 +15,7 @@ from wonders.agents.bench import AGENTS, AgentSpec, run_bench  # noqa: E402
 from wonders.agents.match import play_match  # noqa: E402
 from wonders.cards.content import load_content  # noqa: E402
 from wonders.engine.record import PlayerSetup  # noqa: E402
+from wonders.env.vocab import vocab_for  # noqa: E402
 from wonders.ml import NeuralAgent, PolicyValueNet, load_checkpoint, save_checkpoint  # noqa: E402
 from wonders.ml.imitation import collect, new_model, train_imitation  # noqa: E402
 from wonders.ml.ppo import PPOConfig, _gae, train_ppo  # noqa: E402
@@ -30,11 +31,12 @@ SETUPS = [
 def trained(tmp_path_factory):
     """A tiny model cloned from a few heuristic games, saved to disk."""
     torch.manual_seed(0)
-    data = collect(8, seed=0)
-    model, names = new_model(hidden=32)
+    vocab = vocab_for(('base',))
+    data = collect(8, seed=0, vocab=vocab)
+    model, names = new_model(hidden=32, vocab=vocab)
     metrics = train_imitation(model, data, epochs=2, batch_size=64, log=None)
     path = str(tmp_path_factory.mktemp('ckpt') / 'tiny.pt')
-    save_checkpoint(path, model, names, source='test')
+    save_checkpoint(path, model, names, source='test', **vocab.meta())
     return model, names, path, data, metrics
 
 
@@ -157,7 +159,26 @@ def test_bundled_pretrained_agent_plays():
     assert 0 <= game.winner() < 3
     played = CliRunner().invoke(cli.main, ['play', '-q', '-a', 'neural,greedy,random'])
     assert played.exit_code == 0, played.output
-    assert 'neural:ppo_base_3p' in played.output
+    assert 'neural:ppo_universal_v2' in played.output
+    # The bundled model is universal: every expansion combination and player count.
+    played = CliRunner().invoke(
+        cli.main,
+        ['play', '-q', '-e', 'base', '-e', 'leaders', '-e', 'cities', '-a', 'neural,greedy,heuristic,random,board'],
+    )
+    assert played.exit_code == 0, played.output
+
+
+def test_checkpoints_record_their_encoder(tmp_path):
+    vocab = vocab_for(('base',))
+    model, names = new_model(hidden=8, vocab=vocab)
+    with pytest.raises(ValueError, match='vocab.meta'):  # a v2 model without meta could never be loaded
+        save_checkpoint(str(tmp_path / 'x.pt'), model, names)
+    legacy = vocab.with_encoder('card-v1')
+    old_model, _ = new_model(hidden=8, vocab=legacy)
+    save_checkpoint(str(tmp_path / 'old.pt'), old_model, names)  # legacy shape: loads as card-v1
+    assert NeuralAgent(str(tmp_path / 'old.pt')).vocab.encoder_kind == 'card-v1'
+    save_checkpoint(str(tmp_path / 'new.pt'), model, names, **vocab.meta())
+    assert NeuralAgent(str(tmp_path / 'new.pt')).vocab.encoder_kind == 'table-v2'
 
 
 def test_cli_lineup_allows_repeated_agents_with_neural(trained, tmp_path):

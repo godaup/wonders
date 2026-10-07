@@ -38,7 +38,7 @@ def test_universal_model_plays_base_and_expansion_games(tmp_path):
     vocab = universal_vocab()
     model, names = new_model(hidden=16, vocab=vocab)
     path = str(tmp_path / 'u.pt')
-    save_checkpoint(path, model, names, decisions=list(vocab.decisions))
+    save_checkpoint(path, model, names, **vocab.meta())
     for expansions in (('base',), ('base', 'leaders', 'cities')):
         content = load_content(*expansions)
         setups = [
@@ -52,13 +52,15 @@ def test_universal_model_plays_base_and_expansion_games(tmp_path):
         assert 0 <= game.winner() < 4
     env = WondersEnv(n_players=3, card_names=vocab.card_names, decisions=vocab.decisions)
     observations, _ = env.reset(0)
-    assert len(observations[0]['observation']) == vocab.obs_size
+    assert (
+        len(observations[0]['observation']) == vocab.with_encoder('card-v1').obs_size
+    )  # the raw env's default encoder
     with pytest.raises(ValueError):
         WondersEnv(expansions=('leaders',), card_names=vocab_for(('base',)).card_names)
 
 
 def test_collect_records_leader_decisions():
-    vocab = universal_vocab()
+    vocab = universal_vocab('card-v1')  # the decision one-hot is the v1 layout's last block
     data = collect(
         2, tables=[(('base', 'leaders'), ('board', 'board', 'board', 'board'))], teachers=('board',), vocab=vocab
     )
@@ -135,9 +137,10 @@ def test_sweep_runner_end_to_end_and_resumable(tmp_path):
 
 
 def test_evaluate_skips_cells_outside_the_vocabulary(tmp_path):
-    model, names = new_model(hidden=16)  # base vocabulary only
+    base = vocab_for(('base',))
+    model, names = new_model(hidden=16, vocab=base)  # base vocabulary only
     path = str(tmp_path / 'b.pt')
-    save_checkpoint(path, model, names)
+    save_checkpoint(path, model, names, **base.meta())
     results = evaluate(path, cells=parse_cells('base/3p,leaders/4p'), lineups=('heuristic',), games=3)
     assert results[0]['cell'] == 'base/3p' and 'win_rel' in results[0]
     assert results[1]['cell'] == 'leaders/4p' and results[1]['skipped']
@@ -151,9 +154,10 @@ def test_cli_sweep_dry_run_and_eval(tmp_path):
     runner = CliRunner()
     listed = runner.invoke(cli.main, ['train', 'sweep', str(spec), '--dry-run'])
     assert listed.exit_code == 0 and 'x-lr1' in listed.output and 'x-lr2' in listed.output
-    model, names = new_model(hidden=16)
+    base = vocab_for(('base',))
+    model, names = new_model(hidden=16, vocab=base)
     ckpt = str(tmp_path / 'm.pt')
-    save_checkpoint(ckpt, model, names)
+    save_checkpoint(ckpt, model, names, **base.meta())
     out = runner.invoke(
         cli.main, ['train', 'eval', ckpt, '--cells', 'base/3p', '-n', '3', '-p', '1', '--lineups', 'heuristic']
     )

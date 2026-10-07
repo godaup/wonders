@@ -27,6 +27,9 @@ ENCODERS: Tuple[str, ...] = ('card-v1', 'table-v2')
 VectorEncoder = Union[CardEncoder, TableEncoder]  # encoders with a fixed vector ``size``
 
 
+DEFAULT_ENCODER = 'table-v2'  # for new models; checkpoints without an encoder entry load as 'card-v1'
+
+
 @dataclass(frozen=True)
 class Vocab:
     """Card names (sorted), decision kinds, wonder names and encoder version; picklable.
@@ -39,7 +42,7 @@ class Vocab:
     card_names: Tuple[str, ...]
     decisions: Tuple[str, ...]
     wonders: Tuple[str, ...] = ()
-    encoder_kind: str = 'card-v1'
+    encoder_kind: str = DEFAULT_ENCODER
 
     def action_space(self) -> ActionSpace:
         return ActionSpace(self.card_names)
@@ -81,7 +84,7 @@ class Vocab:
 
 
 @lru_cache(maxsize=None)
-def vocab_for(expansions: Tuple[str, ...], encoder: str = 'card-v1') -> Vocab:
+def vocab_for(expansions: Tuple[str, ...], encoder: str = DEFAULT_ENCODER) -> Vocab:
     """The vocabulary of one expansion combination (``base`` is always included)."""
     ruleset = Ruleset.of(*expansions)
     content = load_content(*ruleset.content_expansions)
@@ -90,6 +93,6 @@ def vocab_for(expansions: Tuple[str, ...], encoder: str = 'card-v1') -> Vocab:
     return Vocab(names, LEADERS_DECISIONS if ruleset.uses('leaders') else DECISIONS, wonders, encoder)
 
 
-def universal_vocab(encoder: str = 'card-v1') -> Vocab:
+def universal_vocab(encoder: str = DEFAULT_ENCODER) -> Vocab:
     """Every card and wonder of every shipped expansion, and every decision kind."""
     return vocab_for(ALL_CARD_EXPANSIONS, encoder)
