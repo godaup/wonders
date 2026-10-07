@@ -76,22 +76,27 @@ pip install -e ".[ml]"          # CPU wheels: pip install torch --index-url http
                                 # (training uses CUDA automatically when available)
 
 wonders play -a neural,heuristic,greedy                 # the bundled trained network
+wonders play -e base -e leaders -e cities -a neural,adaptive,board,heuristic
 wonders bench -a neural,heuristic,greedy -n 600 -p 6
 
-wonders train imitate -n 3000 -p 6 -o imitation.pt      # clone HeuristicAgent (~20 s)
-wonders train ppo --init imitation.pt -n 150 -o ppo.pt  # fine-tune with PPO (~5 min on 6 cores)
+wonders train imitate -n 3000 -p 6 -o imitation.pt      # clone HeuristicAgent
+wonders train ppo --init imitation.pt -n 150 -o ppo.pt  # fine-tune with PPO
 wonders bench -a neural:ppo.pt,heuristic,greedy
+wonders train sweep sweeps/stage3.json -p 6             # the full recipe of the bundled model
+wonders train h2h a=one.pt b=other.pt -p 6              # models head-to-head (random seating)
 ```
 
-The bundled network (`wonders/ml/pretrained/ppo_base_3p.pt`) was trained exactly like
-that. Benchmarked over 900 held-out games each (fair share 33% / 25%):
+The bundled network (`wonders/ml/pretrained/ppo_universal_v2.pt`) plays **every expansion
+combination and 3–7 players**: a 256×2 network over the `table-v2` encoder, cloned from the
+`adaptive` agent and trained for 40M PPO steps against a tiered mix of scripted agents, its own
+recent snapshots and the best earlier models (`sweeps/STAGE3.md`). Head-to-head (random
+seating, heuristic agents filling the other seats), it ranks above:
 
-| lineup | win rate |
+| opponent at the same table | share of games ranked higher |
 |---|---|
-| neural vs heuristic + greedy | 87.9% |
-| neural vs heuristic + heuristic | 80.2% |
-| neural vs greedy + random | 89.9% |
-| neural vs heuristic + builder + civic (4 players, unseen in training) | 55.7% |
+| the previously bundled base-game model (base, 3–7 players) | 88.0% |
+| `adaptive`, the strongest scripted agent (all expansions, 3–7 players) | 86.2% |
+| `board` (all expansions, 3–7 players) | 87.6% |
 
 ## Credits
 

@@ -29,7 +29,7 @@ from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, AgentSpec
 from wonders.env.environment import EnvObs
 from wonders.env.vector import SingleAgentEnvFactory, SubprocVectorEnv, SyncVectorEnv, np
-from wonders.env.vocab import Vocab, universal_vocab, vocab_for
+from wonders.env.vocab import DEFAULT_ENCODER, Vocab, universal_vocab, vocab_for
 from wonders.ml.agent import NeuralAgent
 from wonders.ml.imitation import VALUE_SCALE
 from wonders.ml.model import PolicyValueNet, save_checkpoint
@@ -77,7 +77,7 @@ class PPOConfig:
     opponent_device: str = 'cpu'
     opponent_gpu_min_hidden: int = 512
     device: str = 'auto'  # torch device for the learner: 'auto' (CUDA if available), 'cuda', 'cpu'
-    encoder: str = 'card-v1'  # observation encoder: 'card-v1' or 'table-v2'
+    encoder: str = DEFAULT_ENCODER  # observation encoder: 'table-v2' (default) or 'card-v1'
     pipeline: int = 2  # env groups stepped in turn: one simulates while the learner acts for another
     n_envs: int = 24
     envs_per_worker: int = 4  # 0 = run in-process (SyncVectorEnv)

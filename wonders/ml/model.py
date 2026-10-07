@@ -10,9 +10,10 @@ from torch import nn
 
 CHECKPOINT_VERSION = 1
 
-# Bundled with the package: imitation of HeuristicAgent (3000 games) then 150 PPO
-# iterations vs heuristic + greedy, via `wonders train imitate` / `wonders train ppo`.
-PRETRAINED = 'ppo_base_3p.pt'
+# Bundled with the package: the universal model of training Stage 3 (``sweeps/STAGE3.md``) —
+# 256x2 over the table-v2 encoder, every expansion and player count; imitation of the adaptive
+# agent, then 40M PPO steps against a tiered opponent mix (scripted / recent self / anchors).
+PRETRAINED = 'ppo_universal_v2.pt'
 
 
 def pretrained_path(name: str = PRETRAINED) -> str:
@@ -73,7 +74,18 @@ class PolicyValueNet(nn.Module):
 
 
 def save_checkpoint(path: str, model: PolicyValueNet, card_names: Sequence[str], **meta: Any) -> None:
-    """Save weights, architecture and the card vocabulary the action space was built on."""
+    """Save weights, architecture and the card vocabulary the action space was built on.
+
+    Pass the vocabulary's ``**vocab.meta()`` (decisions, wonders, encoder). Without an ``encoder``
+    entry the checkpoint loads as the legacy ``card-v1`` encoder, so that is only allowed for a
+    model of exactly that shape — anything else would save a checkpoint that cannot be loaded.
+    """
+    if 'encoder' not in meta:
+        from wonders.agents.encoders import DECISIONS, CardEncoder
+
+        legacy = CardEncoder(card_names, meta.get('decisions', DECISIONS)).size
+        if model.config['obs_size'] != legacy:
+            raise ValueError("save_checkpoint needs the vocabulary's meta (**vocab.meta()) for this model")
     torch.save(
         {
             'version': CHECKPOINT_VERSION,

@@ -160,8 +160,9 @@ scoring categories). It is split into three packages under `wonders/`:
   kind and leader-decision ablations. `imitation.py` records teacher (`HeuristicAgent`) decisions in worker
   processes and clones them; its value target is the remaining score margin, i.e. the
   return of the env's `dense` reward × `VALUE_SCALE`, which `ppo.py` (PPO on
-  `SubprocVectorEnv`, learner seat rotating) also uses. `pretrained/ppo_base_3p.pt` is
-  the bundled model (`pretrained_path()`, CLI `-a neural`). **Never fork after torch has
+  `SubprocVectorEnv`, learner seat rotating) also uses. `pretrained/ppo_universal_v2.pt` is
+  the bundled model (`pretrained_path()`, CLI `-a neural`, the GUI's neural opponent): the
+  Stage 3 256×2 `table-v2` model, universal over expansions and 3–7 players (`sweeps/STAGE3.md`). **Never fork after torch has
   run**: `wonders/_mp.get_context()` switches pools to forkserver/spawn once torch is
   imported and `init_worker` pins workers to one thread — use these for any new pool.
   **Training speed**: PPO is bound by game simulation in the env workers (building
@@ -172,11 +173,13 @@ scoring categories). It is split into three packages under `wonders/`:
   worker). Resume counts learner `steps`, so a run can resume with a different batch size.
   Engine caches that keep this fast: payments memoized by resource cost, per-player
   aggregate caches, `Game.cached_totals()` per tick (engine-driven paths only).
-  **Encoders**: `Vocab.encoder_kind` picks `card-v1` (`CardEncoder`, 851 inputs: own city +
-  neighbours) or `table-v2` (`agents/table_encoder.TableEncoder`, 3,020 inputs: every city
+  **Encoders**: `Vocab.encoder_kind` picks `table-v2` (the default, `DEFAULT_ENCODER`, for new
+  models, PPO, sweeps and the CLI) or `card-v1` (`CardEncoder`, 851 inputs: own city +
+  neighbours; still the raw `WondersEnv`'s own default when no encoder is passed) — `table-v2` (`agents/table_encoder.TableEncoder`, 3,020 inputs: every city
   seat-relative and padded to 7, rich hand / private / context / history blocks; design in
   `docs/encoder-v2.md`). Checkpoints store `encoder` / `decisions` / `wonders`
-  (`Vocab.meta()`); checkpoints without them load as v1. v2 relies on extra observation
+  (`Vocab.meta()`); checkpoints without them load as v1, so `save_checkpoint` refuses a
+  non-v1-shaped model saved without `**vocab.meta()`. v2 relies on extra observation
   fields (`CityView` tokens / debt / production / score_breakdown …, `Observation`
   leaders_hand / seen_cards / buy_prices …) — keep them free of hidden information
   (`tests/test_table_encoder.py` checks opponents' hands never change the encoding).

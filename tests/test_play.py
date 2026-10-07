@@ -129,13 +129,23 @@ def test_menu_options():
     json.dumps(menu)
 
 
-def test_neural_opponent_checks_its_vocabulary():
+def test_neural_opponent_checks_its_vocabulary(tmp_path):
     pytest.importorskip('torch')
+    from wonders.env.vocab import vocab_for
+    from wonders.ml import save_checkpoint
+    from wonders.ml.imitation import new_model
+
     assert any(a.id == 'neural' for a in agent_options())
-    session = HumanSession(_config(agents=('neural', 'heuristic'), seed=3))
-    _play_out(session)
+    # The bundled model is universal: it plays any expansion combination.
+    _play_out(HumanSession(_config(expansions=('leaders', 'cities'), agents=('neural', 'heuristic'), seed=3)))
+    base = vocab_for(('base',))
+    path = str(tmp_path / 'base-only.pt')
+    save_checkpoint(path, new_model(hidden=8, vocab=base)[0], base.card_names, **base.meta())
+    HumanSession(_config(agents=('neural:base-only', 'heuristic'), seed=3), checkpoints=[path])
     with pytest.raises(ConfigError, match='not trained'):
-        HumanSession(_config(expansions=('cities',), agents=('neural', 'heuristic'), seed=3))
+        HumanSession(
+            _config(expansions=('cities',), agents=('neural:base-only', 'heuristic'), seed=3), checkpoints=[path]
+        )
 
 
 # -- web server ----------------------------------------------------------------
