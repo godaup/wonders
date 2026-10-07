@@ -9,7 +9,7 @@ You can contribute in many ways:
 
 ### Report Bugs
 
-Report bugs at https://github.com/Stabmixxer/wonders/issues.
+Report bugs at https://github.com/godaup/wonders/issues.
 
 If you are reporting a bug, please include:
 
@@ -35,7 +35,7 @@ articles, and such.
 
 ### Submit Feedback
 
-The best way to send feedback is to file an issue at https://github.com/Stabmixxer/wonders/issues.
+The best way to send feedback is to file an issue at https://github.com/godaup/wonders/issues.
 
 If you are proposing a feature:
 
@@ -65,7 +65,7 @@ Ready to contribute? Here's how to set up `wonders` for local development.
 4. Install the package with its development dependencies (editable install):
 
     ```
-    $ pip install -e ".[test,doc,dev]"
+    $ pip install -e ".[test,dev]"
     ```
 
 5. Create a branch for local development:
@@ -102,7 +102,7 @@ Before you submit a pull request, check that it meets these guidelines:
    your new functionality into a function with a docstring, and add the
    feature to the list in README.md.
 3. The pull request should work for Python 3.6, 3.7, 3.8 and 3.9. Check
-   https://github.com/Stabmixxer/wonders/actions
+   https://github.com/godaup/wonders/actions
    and make sure that the tests pass for all supported Python versions.
 
 ## Tips

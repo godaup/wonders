@@ -13,10 +13,11 @@ Dependencies are managed with a plain **virtual environment + pip** (PEP 621 met
 ```
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -e ".[test,doc,dev]"
+pip install -e ".[test,dev]"
 ```
 
-Optional-dependency groups: `test`, `doc`, `dev` (defined under `[project.optional-dependencies]`).
+Optional-dependency groups: `test`, `dev`, `ml` (defined under `[project.optional-dependencies]`). There is no
+docs site: the README is the entry point; design notes live in `docs/` and training reports in `sweeps/*.md`.
 
 The `makefile` is the primary task runner (activate the venv first):
 

@@ -1,8 +1,8 @@
 [project]
 name = "wonders"
 version = "0.1.0"
-description = "An implementation of a nice card game optimized for Deep Learning integration."
-authors = [{ name = "Patrick Godau", email = "patrick@familiescholz.eu" }]
+description = "A 7 Wonders-style card game engine with agents, training environments and a learned agent."
+authors = [{ name = "Patrick Godau" }]
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10,<4.0"
@@ -22,7 +22,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Stabmixxer/wonders"
+Homepage = "https://github.com/godaup/wonders"
+Issues = "https://github.com/godaup/wonders/issues"
 
 [project.optional-dependencies]
 test = [
@@ -43,14 +44,6 @@ dev = [
 ]
 ml = [
     "torch>=2.2",
-]
-doc = [
-    "mkdocs>=1.6,<2",
-    "mkdocs-include-markdown-plugin>=6,<8",
-    "mkdocs-material>=9.5,<10",
-    "mkdocstrings[python]>=0.26,<0.30",
-    "mkdocs-material-extensions>=1.3,<2",
-    "mkdocs-autorefs>=1.2,<2",
 ]
 
 [project.scripts]
