@@ -148,6 +148,37 @@ def test_cli_h2h_and_leaders(universal, universal_v2, tmp_path):
     assert 'Leaders diagnostics: mine' in res.output
 
 
+def test_exploitability_seats_one_model_against_target_copies(universal, universal_v2, tmp_path):
+    from wonders.ml.evaluate import exploitability
+
+    result = exploitability(('e', universal), ('t', universal_v2), cells=parse_cells('base/3p,leaders/4p'), games=4)
+    assert [c['cell'] for c in result['cells']] == ['base/3p', 'leaders/4p']
+    assert all(0 <= c['win_rel'] <= 4 and 1 <= c['mean_rank'] <= 4 for c in result['cells'])
+    assert result['win_rel'] >= 0 and result['win_rel_se'] >= 0
+    with pytest.raises(ValueError):
+        exploitability(('x', universal), ('x', universal_v2), cells=parse_cells('base/3p'), games=1)
+    out = tmp_path / 'x.json'
+    res = CliRunner().invoke(
+        cli.main,
+        [
+            'train',
+            'exploit',
+            f'e={universal}',
+            f't={universal_v2}',
+            '--cells',
+            'base/3p',
+            '-n',
+            '2',
+            '-p',
+            '1',
+            '-o',
+            str(out),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    assert 'e vs t field' in res.output and json.loads(out.read_text())['target'] == 't'
+
+
 def test_head_to_head_records_its_seating(universal, universal_v2):
     models = [('v1', universal), ('v2', universal_v2)]
     assert head_to_head(models, cells=parse_cells('base/3p'), games=2)['seating'] == 'shuffle'

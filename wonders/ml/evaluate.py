@@ -266,3 +266,51 @@ def head_to_head_table(result: Dict[str, Any], title: Optional[str] = None) -> s
         cols = [f"{models[m]['win_rel']:.2f}" if m in models else '–' for m in labels]
         lines.append(f"| {c['cell']} | " + ' | '.join(cols) + ' |')
     return '\n'.join(lines)
+
+
+def exploitability(
+    exploiter: Tuple[str, str],
+    target: Tuple[str, str],
+    cells: Sequence[Cell] = ALL_CELLS,
+    games: int = 400,
+    seed: int = 4242,
+    processes: int = 1,
+) -> Dict[str, Any]:
+    """How well ``exploiter`` does at tables where every other seat is ``target`` (``(label, checkpoint)``).
+
+    Seats are shuffled every game. Per cell: the exploiter's win rate × players (1.0 = parity with
+    the target copies; above 1.0 = the target is exploitable) with a 95% interval, and its mean
+    rank. ``'win_rel'`` pools the cells (mean) with its standard error from binomial game noise.
+    """
+    e_label, e_path = exploiter
+    t_label, t_path = target
+    if e_label == t_label:
+        raise ValueError('give the exploiter and the target different labels')
+    e_spec, t_spec = neural_spec(e_label, e_path), neural_spec(t_label, t_path)
+    cell_results: List[Dict[str, Any]] = []
+    variance = 0.0
+    for cell in cells:
+        expansions, n_players = cell
+        seats = [e_spec] + [t_spec] * (n_players - 1)
+        r = run_bench(
+            seats, n_games=games, seed=seed, expansions=tuple(expansions), processes=processes, seating='shuffle'
+        )
+        s = r.stats[e_label]
+        lo, hi = s.win_interval
+        cell_results.append(
+            {
+                'cell': cell_key(cell),
+                'win_rel': s.win_rate * n_players,
+                'win_rel_ci': [lo * n_players, hi * n_players],
+                'mean_rank': s.mean_rank,
+            }
+        )
+        variance += n_players**2 * s.win_rate * (1 - s.win_rate) / max(1, s.games)
+    count = max(1, len(cell_results))
+    return {
+        'exploiter': e_label,
+        'target': t_label,
+        'cells': cell_results,
+        'win_rel': sum(c['win_rel'] for c in cell_results) / count,
+        'win_rel_se': variance**0.5 / count,
+    }
