@@ -84,6 +84,10 @@ class PPOConfig:
     rollout_steps: int = 64  # learner steps per env per iteration
     iterations: int = 50
     lr: float = 1e-4
+    lr_schedule: str = 'constant'  # 'constant' or 'linear' (decays to lr * lr_final by the last iteration)
+    lr_final: float = 0.1
+    reward: str = 'dense'  # env reward mode: 'dense' (score margin) or 'dense_rank' (+ placing bonus)
+    rank_bonus: float = 10.0  # VP-equivalent of first place under 'dense_rank'
     gamma: float = 1.0
     gae_lambda: float = 0.95
     clip: float = 0.2
@@ -143,6 +147,16 @@ def env_tables(config: PPOConfig) -> List[TableSpec]:
     return [tables[i % len(tables)] for i in range(config.n_envs)]
 
 
+def learning_rate(config: PPOConfig, iteration: int) -> float:
+    """The learning rate for ``iteration`` (1-based) under ``config.lr_schedule``."""
+    if config.lr_schedule == 'constant':
+        return config.lr
+    if config.lr_schedule == 'linear':
+        progress = (iteration - 1) / max(1, config.iterations - 1)
+        return config.lr * (1.0 - (1.0 - config.lr_final) * min(1.0, progress))
+    raise ValueError(f"lr_schedule must be 'constant' or 'linear', got {config.lr_schedule!r}")
+
+
 def draw_opponents(
     config: PPOConfig, rng: random.Random, pool: Sequence[str], anchors: Sequence[str], epoch: int, k: int
 ) -> List[str]:
@@ -184,7 +198,8 @@ def make_vector_env(
             for k, name in enumerate(names)
         ]
         env_kwargs = {
-            'reward': 'dense',
+            'reward': config.reward,
+            'rank_bonus': config.rank_bonus,
             'expansions': tuple(expansions),
             'card_names': vocab.card_names,
             'decisions': vocab.decisions,
@@ -263,6 +278,9 @@ def train_ppo(
     try:
         for iteration in range(start_iteration, config.iterations + 1):
             start = time.time()
+            lr = learning_rate(config, iteration)
+            for group in opt.param_groups:
+                group['lr'] = lr
             model.eval()
             batch, next_value, stats = rollouts.collect(model)
             advantages = _gae(
@@ -289,6 +307,7 @@ def train_ppo(
                 'win_rel': stats['rel'] / games if games else 0.0,
                 'steps': float(steps_done + config.rollout_steps * config.n_envs),
                 'steps_per_sec': config.rollout_steps * config.n_envs / (time.time() - start),
+                'lr': lr,
                 **losses,
                 **{f'win_rel/{key}': r / g for key, (r, g) in sorted(rollouts.per_table.items())},
             }

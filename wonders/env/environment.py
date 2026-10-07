@@ -36,7 +36,7 @@ from wonders.engine.record import GameRecord, PlayerSetup, RecordBuilder
 from wonders.env.action_space import ActionSpace
 from wonders.ruleset import Ruleset
 
-REWARD_MODES = ('margin', 'win', 'score', 'dense')
+REWARD_MODES = ('margin', 'win', 'score', 'dense', 'dense_rank')
 
 EnvObs = Dict[str, Any]
 StepResult = Tuple[Dict[int, EnvObs], Dict[int, float], Dict[int, bool], Dict[int, bool], Dict[int, Dict[str, Any]]]
@@ -58,7 +58,10 @@ class WondersEnv:
         reward: ``'margin'`` (final own VP minus best opponent), ``'win'`` (+1 to the
             winner, ``-1/(n-1)`` to the others), ``'score'`` (final own VP), or ``'dense'``
             (each step: change in own VP minus the opponents' mean; sums to the final margin
-            over the mean).
+            over the mean), or ``'dense_rank'`` (``'dense'`` plus a terminal bonus of
+            ``rank_bonus`` VP for first place, falling linearly to ``-rank_bonus`` for last; places
+            break ties by coins, like the benchmark).
+        rank_bonus: VP-equivalent of finishing first under ``'dense_rank'``.
         card_names: Fix the action-space / encoder vocabulary (e.g. :func:`~wonders.env.vocab.
             universal_vocab`), so one network fits games of any expansion combination.
         decisions: Decision kinds the encoder one-hots (defaults to this game's kinds).
@@ -73,6 +76,7 @@ class WondersEnv:
         setups: Optional[Sequence[PlayerSetup]] = None,
         sides: str = 'random',
         reward: str = 'margin',
+        rank_bonus: float = 10.0,
         card_names: Optional[Sequence[str]] = None,
         decisions: Optional[Sequence[str]] = None,
     ):
@@ -102,6 +106,7 @@ class WondersEnv:
         self.setups = list(setups) if setups is not None else None
         self.sides = sides
         self.reward_mode = reward
+        self.rank_bonus = rank_bonus
         self.possible_agents: List[int] = list(range(n_players))
         self.agents: List[int] = []
         self.game: Optional[Game] = None
@@ -284,12 +289,15 @@ class WondersEnv:
     def _rewards(self, terminal: bool) -> Dict[int, float]:
         scores = self.scores()
         n = self.n_players
-        if self.reward_mode == 'dense':
+        if self.reward_mode in ('dense', 'dense_rank'):
             rewards = {}
             for i in range(n):
                 margin = scores[i] - sum(s for j, s in enumerate(scores) if j != i) / (n - 1)
                 rewards[i] = margin - self._last_margin[i]
                 self._last_margin[i] = margin
+            if terminal and self.reward_mode == 'dense_rank':
+                for place, i in enumerate(self._placing(scores)):
+                    rewards[i] += self.rank_bonus * (1.0 - 2.0 * place / (n - 1))
             return rewards
         if not terminal:
             return {i: 0.0 for i in range(n)}
@@ -299,6 +307,11 @@ class WondersEnv:
             return {i: float(scores[i] - max(s for j, s in enumerate(scores) if j != i)) for i in range(n)}
         winner = self._require_game().winner()
         return {i: 1.0 if i == winner else -1.0 / (n - 1) for i in range(n)}
+
+    def _placing(self, scores: List[int]) -> List[int]:
+        """Seats from first to last place (score, then coins)."""
+        game = self._require_game()
+        return sorted(range(self.n_players), key=lambda i: (-scores[i], -game.players[i].coins))
 
 
 class SingleAgentEnv:
