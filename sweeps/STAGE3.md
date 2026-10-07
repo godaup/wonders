@@ -72,6 +72,46 @@ One seed per arm: with fair seating, seeds of the same recipe have measured 48�
 other (Stage 0/1), so a single seed is informative, but a gap under ~2 points will be treated as a
 tie.
 
+## Throughput note — large opponents on the GPU
+
+Once `s3-big`'s own snapshots joined the pool (iteration 51) PPO dropped from ~2,000 to ~450
+steps/s: batch-1 CPU inference of a 1024×3 network costs 3–5 ms per opponent decision (23 MB of
+weights streamed from RAM per forward; the 256×2 fits in cache). The run was paused at iteration
+4,250 (state saved 18 s earlier) and resumed with `opponent_device='cuda'`
+(`opponent_gpu_min_hidden=512`): large neural opponents run inference on the RTX 3060 (0.3 ms
+alone, 1.7 ms with 8 workers at once), identical actions to the CPU (tested). Throughput went to
+~1,000–1,200 steps/s. `s3-big` took 21,811 s after the resume, `s3-small` 34,585 s (its 256×2
+snapshots stay on the CPU).
+
 ## Results
 
-*(pending)*
+Imitation of `adaptive` (846k decisions, 5 epochs): val accuracy 0.822 (1024×3) vs 0.820
+(256×2); value MSE 0.426 vs 0.509.
+
+Head-to-head, random seating, 400 games per cell:
+
+| pair | 4 models (4–7p, 6,400 games) | 3 models (all cells, 8,000 games) |
+|---|---|---|
+| big vs small | 48.9% (47.7–50.2) | 50.0% (48.9–51.1) |
+| big vs s2-new-b | **53.5%** (52.3–54.7) | **51.8%** (50.7–52.9) |
+| small vs s2-new-b | **53.1%** (51.9–54.3) | **51.8%** (50.7–52.9) |
+| big / small vs s2-new-a | 53.2% / 53.8% | — |
+| s2-new-a vs s2-new-b | 49.7% | — |
+
+Per expansion (3-model run): big vs small 48.0–51.0% in every combination; against `s2-new-b`
+the new models gain in Leaders (53.8% / 53.3%) and Leaders+Cities (52.7% / 52.6%), and are level
+in base (50.3% / 51.7%) and Cities (50.4% / 49.7%).
+
+Scripted eval (regression guard): s3-small 4.130, s3-big 4.078 (−0.052 ± 0.023), s2-new-a 3.947,
+s2-new-b 3.969 win × n — both new models up ~+0.1–0.2, mostly in the Leaders cells.
+
+## Interpretation
+
+* **Size gate not passed:** the 1024×3 network is no stronger than the 256×2 trained the same
+  way (50.0%), and slightly weaker on the scripted eval. Capacity is not the bottleneck at this
+  budget — consistent with the v1 sweep, where 512×3 did not beat 256×2 either.
+* **The new recipe beats the previous best** at equal budget (40M steps): ~+2–3 points
+  head-to-head, concentrated in Leaders games — most likely from imitating `adaptive` (whose leader
+  play is now data-driven) and the tiered mix with anchors. The two causes are not separated here.
+* **Best checkpoint: `s3-small`** — as strong as `s3-big` at 1/6 of the inference cost (it plays
+  fine on the CPU, e.g. in `wonders gui`), so it is the candidate for Stage 4.
