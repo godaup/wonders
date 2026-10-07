@@ -72,9 +72,17 @@ def ppo_config(run: Dict[str, Any], run_dir: str) -> PPOConfig:
         raise ValueError(f"run {run['name']}: unknown PPO settings {sorted(unknown)}")
     if 'tables' in params:
         params['tables'] = _tables(params['tables'])
-    for key in ('opponents', 'opponent_pool'):
+    for key in ('opponents', 'opponent_pool', 'anchors'):
         if key in params:
             params[key] = tuple(params[key])
+    if 'anchors' in params:  # 'run:<name>' = that run's final checkpoint (in the sweep's output folder)
+        out = os.path.dirname(os.path.abspath(run_dir))
+        params['anchors'] = tuple(
+            f"neural:{os.path.join(out, a[len('run:'):], 'final.pt')}" if a.startswith('run:') else a
+            for a in params['anchors']
+        )
+    if 'tier_weights' in params:
+        params['tier_weights'] = tuple(float(x) for x in params['tier_weights'])
     params.setdefault('snapshot_every', 25)  # resumable state every 25 iterations
     params.setdefault('league_dir', os.path.join(run_dir, 'snapshots'))
     config = PPOConfig(**params)
