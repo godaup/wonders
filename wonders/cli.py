@@ -319,6 +319,36 @@ def head_to_head_command(models, cells, filler, seating, games, seed, processes,
     click.echo(head_to_head_table(result))
 
 
+@train.command(name='exploit')
+@click.argument('exploiter')
+@click.argument('target')
+@click.option('--cells', default='all', show_default=True, help="'all' or e.g. base/3p,leaders+cities/5p")
+@click.option('--games', '-n', default=400, type=int, show_default=True, help='Games per cell.')
+@click.option('--seed', default=4242, type=int, show_default=True)
+@click.option('--processes', '-p', default=6, type=int, show_default=True)
+@click.option('--out', '-o', type=click.Path(dir_okay=False), help='Also save the full results as JSON.')
+def exploit_command(exploiter, target, cells, games, seed, processes, out):
+    """Measure how well EXPLOITER does at tables full of TARGET copies (win rate × players; 1.0 = parity)."""
+    _ml()
+    import json
+
+    from wonders.ml.evaluate import exploitability, parse_cells
+
+    result = exploitability(
+        _model_arg(exploiter), _model_arg(target), cells=parse_cells(cells), games=games, seed=seed, processes=processes
+    )
+    if out:
+        with open(out, 'w', encoding='utf-8') as fh:
+            json.dump(result, fh, indent=1)
+    click.echo(
+        f"{result['exploiter']} vs {result['target']} field: "
+        f"win × n {result['win_rel']:.3f} ± {result['win_rel_se']:.3f}"
+    )
+    for c in result['cells']:
+        lo, hi = c['win_rel_ci']
+        click.echo(f"  {c['cell']:18s} {c['win_rel']:.2f} ({lo:.2f}–{hi:.2f})  mean rank {c['mean_rank']:.2f}")
+
+
 @train.command(name='leaders')
 @click.argument('checkpoint')
 @click.option('--teacher', default='board', show_default=True, help='Scripted agent to compare against.')
