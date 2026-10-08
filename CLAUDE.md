@@ -163,6 +163,9 @@ scoring categories). It is split into three packages under `wonders/`:
   `search.SearchAgent` is network-guided lookahead: the policy's top candidates are played out in
   shared sampled worlds for `depth` turns, then the value head scores them (3 turns / 16 worlds
   ranked above the plain network in ~60% of games, old rules; `ROADMAP.md`).
+  `expert.collect_search` / `expert.distill` (`wonders train expert`) record the search's soft targets
+  (softmax of candidate values) with one searching seat per game and fine-tune the network on them
+  (expert iteration; ROADMAP item 2).
   `evaluate.evaluate` scores vs scripted lineups; `evaluate.head_to_head` / `compare_agents`
   (`wonders train h2h`) seat models at the same tables and report pairwise "ranked above"
   rates — the primary metric now, since seed variance dwarfs what the scripted eval sees.
