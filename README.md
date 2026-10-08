@@ -5,9 +5,9 @@
 <h1 align="center">wonders</h1>
 
 <p align="center">
-  <b>Seven wonders, three Ages, one engine — built for people and for neural networks.</b><br>
-  A complete, rules-checked engine for a 7&nbsp;Wonders-style drafting game, with agents, training
-  environments, a trained network and a browser table to play against them.
+  <b>Can you beat the machine?</b><br>
+  Sit down at the table with a trained network in your browser — or build an agent that beats it.<br>
+  A complete, rules-checked engine for a 7&nbsp;Wonders-style drafting game, made for players and developers alike.
 </p>
 
 <p align="center">
@@ -28,47 +28,82 @@
 > *7 Wonders* is a trademark of its respective owners. No publisher artwork is included: all
 > card and board renderings are generated from game data.
 
-### The zen of wonders
+## The challenge
 
-* **Cards are data, mechanics are effects.** Every card lives in JSON; new rules are new
-  composable effects, never special cases.
-* **A seat sees only what it may see.** Agents, encoders and the UI read one seat's
-  observation — hidden hands and buried cards stay hidden.
-* **Every game replays exactly.** A record is like a chess PGN: the same moves, the same game.
-* **Rules first.** Expansions and powers are checked against the official rulebooks.
-* **Fast and dependency-light.** Pure Python with `click`; PyTorch only for the learned agent.
+* **Players:** `pip install`, run `wonders gui`, and take on the bundled network. It finishes
+  first {{win5}} of five-player games against the strongest hand-written agents — how often do
+  you?
+* **Developers:** train or script an agent and put it at the same table:
+  `wonders train h2h mine=my_model.pt bundled` (or `wonders bench` for scripted agents).
+  Beat the bundled network over a few thousand games and you have the new state of the art for
+  this engine — the [training guide](docs/training.md) shows how the current one was made.
 
 ## Contents
 
-* [Features](#features)
+* [The challenge](#the-challenge)
+* [What's inside](#whats-inside)
 * [Play in your browser](#play-in-your-browser)
 * [Installation](#installation)
 * [Command line](#command-line)
-* [Training](#training-needs-pytorch)
 * [Python API](#python-api)
 * [The bundled network](#the-bundled-network)
-* [Roadmap and further reading](#roadmap-and-further-reading)
+* [Documentation](#documentation)
 * [License](#license)
 
-## Features
+## What's inside
 
-* **Rules engine** — the base game for 3–7 players (68 cards, 10 guilds, 7 wonders with A and
-  B sides, all wonder powers) plus the optional, combinable **Leaders** (draft and recruitment)
-  and **Cities** expansions with every power mechanized. Cards are data
-  (`wonders/cards/data/*.json`); mechanics are composable effects.
-* **Agents** — from simple baselines (`random`, `greedy`, colour archetypes) to the
-  board-aware `board` and the situational `adaptive` agent; `wonders agents` lists all of them.
-  Every agent reads only what its seat may legally see.
+### Expansions
+
+| expansion | status | contents |
+|---|---|---|
+| Base game | ✅ playable | 3–7 players, 68 cards incl. 10 guilds, 7 wonders with A and B sides and every board power |
+| Leaders | ✅ playable | 36 leaders with the draft and recruitment phases, 4 extra guilds, the Rome board |
+| Cities | ✅ playable | 42 black cards (debt, diplomacy, plunder, …), the Petra and Byzantium boards |
+| Armada | 🛠 planned | naval boards, ships and naval conflicts, islands |
+| Babel | 🛠 planned | the Tower of Babel and Great Projects |
+| Wonder Pack | 🛠 planned | four extra wonder boards |
+
+Expansions combine freely (any subset with the base game). Every power is mechanized and was
+checked against the official rulebooks. Plans: [ROADMAP.md](ROADMAP.md).
+
+### Agents
+
+| family | agents | how they play |
+|---|---|---|
+| Baselines | `random`, `greedy`, `hoarder` | any legal move · most points now · discards for coins |
+| Colour archetypes | `militarist`, `scientist`, `civic`, `economist`, `builder` | favour one card colour or the wonder |
+| Value functions | `heuristic`, `table`, `balanced`, `opportunist`, `blocker` | tuned scoring of each move; a value table; fill the scarcest colour; switch focus; deny the neighbour |
+| Board-aware | `board`, `board-focus` | plan around their own wonder board's needs and powers |
+| Adaptive | [`adaptive`](docs/adaptive-agents.md), `rival` | the strongest scripted agents: contest winnable military fronts, adapt to the game phase |
+| Learned | `neural`, `neural:<file.pt>` | the bundled network, or your own checkpoint |
+
+17 scripted agents plus any number of networks. Every agent sees only what its seat may legally
+see: hidden hands, buried cards and opponents' discards stay hidden.
+
+### Speed
+
+Measured on one core of an Intel i5-12400F unless noted.
+
+| what | throughput |
+|---|---|
+| complete games, random agents (base game, 4 players) | {{gps_r4}} games/s |
+| complete games, random agents (all expansions, 5 players) | {{gps_r5}} games/s |
+| complete games, `heuristic` agents (base game, 4 players) | {{gps_h4}} games/s |
+| training-env decisions incl. observation encoding (all expansions, 5 players) | {{env}} decisions/s |
+| one decision of the bundled network (CPU) | {{dec}} ms |
+| PPO training (6 cores + RTX 3060) | ~1,150 learner steps/s — 10M steps in about 2.5 h |
+
+### And also
+
+* **Replayable game records** — like PGN for chess: every game can be saved, shared and replayed
+  move by move (`wonders play --record`, `wonders replay`, the GUI's download button).
 * **Training environments** — a fixed discrete action space with legal-action masks, a
-  PettingZoo-style multi-agent `WondersEnv`, a Gym-style `SingleAgentEnv` and multi-process
-  vector envs. No dependency on Gym or PettingZoo.
-* **Learned agent** (optional, PyTorch) — imitation learning, PPO with a self-play league and a
-  tiered opponent mix, sweeps, and a bundled network for every expansion combination and
-  player count.
-* **Evaluation** — benchmarks with 95% confidence intervals, head-to-head comparison of models
-  at the same tables, exploitability measurement.
-* **Replayable game records** (like PGN for chess) and a **browser UI** for human play.
-* The core is pure Python with `click` as its only runtime dependency.
+  PettingZoo-style multi-agent env, a Gym-style single-agent env and multi-process vector envs,
+  without depending on Gym or PettingZoo.
+* **Evaluation tools** — benchmarks with 95% confidence intervals, head-to-head comparison of
+  models at the same tables, exploitability measurement.
+* **Light** — the core is pure Python with `click` as its only runtime dependency; PyTorch is
+  only needed for the learned agent. Type-checked with mypy and covered by ~300 tests.
 
 ## Play in your browser
 
@@ -76,11 +111,11 @@
 wonders gui
 ```
 
-A local page (http://127.0.0.1:8765; nothing leaves your machine): pick expansions, an opponent
-for every seat and your wonder, then play. Cards and boards are rendered from the game data, build
-costs include trade (and you choose which neighbour to buy from), every city shows its stats,
-resources and wonder stages, and hovering anything explains it. The final score sheet is
-colour-coded and sortable, and the game record can be downloaded at any time.
+Pick the expansions, an opponent for every seat and your wonder, then play. Cards and boards are
+rendered from the game data, build costs include trade — and you choose which neighbour to buy
+from —, every city shows its stats, resources and wonder stages, and hovering anything explains
+it. The final score sheet is colour-coded and sortable, and the game record can be downloaded at
+any time. Everything runs locally.
 
 <p align="center">
   <img src="docs/images/cards.png" width="900" alt="Card renderings: raw material, commercial, military, civilian, guild, leader and city cards">
@@ -128,6 +163,8 @@ name, `neural` for the bundled network, or `neural:<checkpoint.pt>`.
 
 ### Training (needs PyTorch)
 
+The [training guide](docs/training.md) explains the full workflow; the main commands:
+
 ```
 wonders train imitate -n 3000 -p 6 -o imitation.pt         # behaviour cloning of a scripted agent
 wonders train ppo --init imitation.pt -n 150 -o ppo.pt     # PPO against built-in opponents
@@ -161,32 +198,48 @@ For throughput, batch games across processes with `wonders.env.SubprocVectorEnv`
 
 ## The bundled network
 
-`wonders/ml/pretrained/ppo_universal_v2.pt` plays **every expansion combination and 3–7
-players**: a 256×2 policy/value network over the `table-v2` observation encoder, cloned from the
-`adaptive` agent and trained for 40M PPO steps against a mix of scripted agents, its own recent
-snapshots and the best earlier models, then 10M more with a linearly decaying learning rate
-(`sweeps/OBJECTIVES.md`, run `s5-anneal`). Head-to-head (random seating, heuristic agents in the
-other seats; all expansions, 3–7 players, 4,000 games per pair) it ranks above:
+`wonders/ml/pretrained/ppo_universal_v2.pt` (the `neural` agent) plays **every expansion
+combination with 3–7 players**. It is a 256×2 policy/value network over the `table-v2` observation
+encoder: first cloned from the `adaptive` agent, then trained for 50M PPO steps in self-play
+against a mix of scripted agents, its own recent snapshots and the best earlier models — see the
+[training guide](docs/training.md).
 
-| opponent at the same table | share of games ranked higher |
-|---|---|
-| the previously bundled network (the same model before the decay phase) | 53.2% |
-| `adaptive`, the strongest scripted agent | 87.8% |
-| `board` | 88.4% |
+**How strong is it?** {{strength_games}} games, every expansion combination and 3–7 players, with
+the network, the two strongest scripted agents and `heuristic` agents filling the remaining seats
+(seats drawn at random every game):
 
-## Roadmap and further reading
+| at the same table | finishes first | ranked above the other | mean score |
+|---|---|---|---|
+{{strength_rows}}
 
-* `docs/encoder-v2.md` — design of the `table-v2` observation encoder.
-* `docs/adaptive-agents.md` — the adaptive agents, their rules and benchmarks, with the strategy
-  research behind them.
-* `sweeps/*.md` — training reports (`STAGE0`–`STAGE3`, `OBJECTIVES`): what was tried, the
-  results and how they were measured. Each report's runs are reproducible from the JSON spec
-  next to it (`wonders train sweep <spec>`); the raw run outputs are not part of the repository.
-* `ROADMAP.md` — planned work: retraining after the rules fixes, search, post-game analysis and
-  the remaining expansions.
-* `CONTRIBUTING.md` — how to contribute; `CLAUDE.md` — an architecture overview written for
-  AI coding assistants, useful for human contributors too.
+{{strength_note}}
+
+By player count (all expansions), the network's share of first places compared with an even
+share:
+
+| players | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|
+{{by_n_rows}}
+
+* [`adaptive`](docs/adaptive-agents.md) — the strongest scripted agent: plans around its wonder
+  board, contests the military fronts it can win, and adapts to the game phase and to what its
+  neighbours collect.
+* `board` — plans production for its wonder stages and values its board's powers.
+* `heuristic` — a tuned value function over points, science sets, military, economy and chains.
+
+These numbers were measured under the current rules. The network itself was trained before the
+October 2026 rules fixes, so a retrained network should do better still ([roadmap](ROADMAP.md)).
+
+## Documentation
+
+* [Training guide](docs/training.md) — train, evaluate and compare your own agents.
+* [Roadmap](ROADMAP.md) — retraining after the rules fixes, search, post-game analysis, the
+  remaining expansions.
+* [Changelog](CHANGELOG.md) — what changed.
+* [Contributing](CONTRIBUTING.md) — how to contribute.
+* [Architecture overview](CLAUDE.md) — the code structure, written for AI coding assistants and
+  useful for human contributors too.
 
 ## License
 
-MIT — see `LICENSE`. The disclaimer above applies.
+MIT — see [LICENSE](LICENSE). The disclaimer above applies.
