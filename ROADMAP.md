@@ -247,6 +247,59 @@ catalogue extends it; revisit only if non-programmers start designing mechanics.
 3. Hugging Face models and datasets (~1 day).
 4. Curated PRs with GitHub Actions (builds on item 4, ~1–2 days more).
 
+## 7. Translations
+
+**Goal.** Play and read everything in your own language.
+
+* **What gets translated:** the GUI (menu, status bar, tooltips, score sheet), the card renderer's
+  texts (categories, effect descriptions, cost labels), CLI messages, and later the documentation.
+* **How:** one locale file per language (`wonders/locales/<lang>.json`) with keyed strings and
+  placeholders; a small `t(key, **values)` helper in Python and its counterpart in the page; card
+  and wonder names and effect descriptions keyed by their canonical id. A language picker in the GUI
+  menu, `--lang` on the CLI, the system language as the default.
+* **Stays canonical:** game records, agent and checkpoint vocabularies and the API use the English
+  ids, so a game recorded in one language replays in any other.
+* **Names:** this project's card names are its own paraphrases and are translated as such; the
+  publisher's official localized names and texts are not shipped (see the disclaimer).
+* **Rendering:** fonts for non-Latin scripts in the card SVGs and the page; right-to-left layouts
+  once a right-to-left language is added; text wrapping already adapts to longer translations.
+* **Contributions:** language packs are data, so they fit the extension system (item 6); a
+  completeness check in CI lists untranslated keys.
+
+**Effort:** ~2–3 days for the mechanism plus English and one more language; each further language is
+a data contribution.
+
+## 8. Table companion: from a real table to a move proposal
+
+**Goal.** Bring the engine to games played elsewhere — a physical table or a recorded game: turn
+the position into an `Observation`, ask the network (or search) for a move, and explain it.
+
+**One core, several front-ends.**
+
+1. **Position editor (the core).** Enter or correct a table state in the GUI: Age and turn, your
+   hand, every city's cards, coins, wonder stages and military tokens, Leaders and Cities state. It
+   builds an `Observation`; `worlds.sample_world` already turns that into playable games with the
+   hidden cards sampled, so the search agent can recommend a move, with the explanation from
+   post-game analysis (item 3). Useful on its own for studying positions.
+2. **Voice input.** Dictate the position or the moves ("I hold Forum, Baths and Altar; left
+   neighbour built Barracks"): local speech-to-text, a parser with fuzzy matching against the card
+   names (and their translations, item 7), and follow-up questions for what is missing. Optional
+   spoken answers.
+3. **Image input.** Photos or video frames of the table or a screen: recognise cards, boards, coins
+   and tokens and fill the editor. Two routes: a multimodal model that reads the cards (fast to
+   build, needs an API or a large local model), or a dedicated recogniser trained on photos the user
+   provides (no publisher artwork is shipped). Always with a confirmation step in the editor —
+   recognition errors must not silently change the advice.
+4. **Recorded gameplay.** Step through a recorded physical or digital game turn by turn, rebuild a
+   `GameRecord`, then run the post-game analysis on it.
+
+**Fair play.** The companion is meant for learning, solo and offline play and post-game analysis. Using
+it during live competitive games against people (online platforms included) is cheating and usually
+against their terms; the documentation and the GUI say so clearly.
+
+**Order and effort.** Position editor (~2–3 days, with item 3's explanations) → voice (~2–3 days) →
+image recognition (~1–2 weeks, depending on the route) → recorded games.
+
 ## Smaller items
 
 * **Python 3.14.** Support and test the newest Python:
