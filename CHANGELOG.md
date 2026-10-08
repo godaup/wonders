@@ -22,7 +22,8 @@
   learning, PPO and `wonders train imitate | ppo`.
 * Bundled universal network (`ppo_universal_v2.pt`) for every expansion combination and 3–7
   players, replacing the base-game-only model; the `table-v2` observation encoder (every city
-  seat-relative, rich hand / private / history blocks) is the default for new models.
+  seat-relative, rich hand / private / history blocks) is the default for new models. The bundled
+  network is the learning-rate-decayed `s5-anneal` (53.2% head-to-head over its predecessor).
 * Training: self-play league with a tiered opponent mix (scripted / recent self / anchors),
   long-lived self-anchors, large neural opponents on the GPU, linear learning-rate decay, a
   rank-shaped reward option, resumable JSON sweeps (`wonders train sweep`).

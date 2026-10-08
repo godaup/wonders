@@ -163,7 +163,8 @@ scoring categories). It is split into three packages under `wonders/`:
   return of the env's `dense` reward × `VALUE_SCALE`, which `ppo.py` (PPO on
   `SubprocVectorEnv`, learner seat rotating) also uses. `pretrained/ppo_universal_v2.pt` is
   the bundled model (`pretrained_path()`, CLI `-a neural`, the GUI's neural opponent): the
-  Stage 3 256×2 `table-v2` model, universal over expansions and 3–7 players (`sweeps/STAGE3.md`). **Never fork after torch has
+  Stage 3 256×2 `table-v2` model, universal over expansions and 3–7 players (`sweeps/STAGE3.md`), continued
+  with learning-rate decay (`s5-anneal`, `sweeps/OBJECTIVES.md`). **Never fork after torch has
   run**: `wonders/_mp.get_context()` switches pools to forkserver/spawn once torch is
   imported and `init_worker` pins workers to one thread — use these for any new pool.
   **Training speed**: PPO is bound by game simulation in the env workers (building
