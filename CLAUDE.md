@@ -119,6 +119,9 @@ scoring categories). It is split into three packages under `wonders/`:
   they respect partial observability. `encoders.py` maps an `Observation` to a
   representation (`DictEncoder` structured, `FlatEncoder` small fixed-length vector with
   optional history, `CardEncoder` multi-hot hand + tableaus over the card vocabulary);
+  `worlds.sample_world(obs, rng)` rebuilds a playable `Game` from one seat's Observation, sampling
+  everything hidden (opponents' hands, hidden discards / burials, guild / black draws, leaders), so
+  search cannot leak information; `Game.age_steps(first_turn=...)` lets it resume mid-Age.
   `match.play_match` runs agents and returns `(Game, GameRecord)`. `bench.run_bench` plays a
   lineup of picklable `AgentSpec`s (registry `AGENTS`) over many seeded games with rotating
   seats, reporting win rates with 95% Wilson intervals, mean score/rank and category means
@@ -157,6 +160,9 @@ scoring categories). It is split into three packages under `wonders/`:
   checkpoint path) — every decision incl. the Leaders draft/recruit goes through the network
   when the checkpoint knows those kinds (`leader_policy=False` restores the old cost-proxy
   routing; before Oct 2026 evals all used it and understate Leaders by 0.5–0.9 win × n).
+  `search.SearchAgent` is network-guided lookahead: the policy's top candidates are played out in
+  shared sampled worlds for `depth` turns, then the value head scores them (3 turns / 16 worlds
+  ranked above the plain network in ~60% of games, old rules; `ROADMAP.md`).
   `evaluate.evaluate` scores vs scripted lineups; `evaluate.head_to_head` / `compare_agents`
   (`wonders train h2h`) seat models at the same tables and report pairwise "ranked above"
   rates — the primary metric now, since seed variance dwarfs what the scripted eval sees.
