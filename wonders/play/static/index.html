@@ -117,7 +117,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .cardchip { font-size: 11px; padding: 2px 7px; border-radius: 6px; color: #fff; border: 0; cursor: pointer; line-height: 1.5; }
 .cardchip.white { color: #1f2a37; }
 .cardchip.black { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
-.me { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr) auto; gap: 18px; margin-bottom: 12px; align-items: start; }
+.me { display: grid; grid-template-columns: fit-content(58%) minmax(320px, 1fr) auto; gap: 18px; margin-bottom: 12px; align-items: start; }
 .board img { width: auto; max-width: 100%; max-height: 270px; border-radius: 10px; display: block; cursor: zoom-in; }
 .me-info .section-title { margin-top: 10px; }
 .stages { display: flex; gap: 6px; margin-top: 8px; }
@@ -128,10 +128,28 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .kv dd { margin: 0; overflow-wrap: anywhere; }
 .decision { padding: 10px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); margin-bottom: 12px; }
 .decision b { color: var(--accent); }
+.turnbar .decision { display: flex; align-items: center; gap: 10px; }
+.decision .help { flex: 1; }
+.help-toggle { flex: none; width: 26px; height: 26px; padding: 0; border-radius: 50%; font-weight: 700; line-height: 1; }
+.discard { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.discard .pile { width: 14px; height: 18px; border-radius: 3px; background: var(--c-unknown); box-shadow: 2px -2px 0 var(--line), 4px -4px 0 var(--c-unknown); margin: 4px 4px 0 0; }
+.citygroups { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 10px; align-items: start; }
+.cg-label { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; border-left: 4px solid var(--cg); background: var(--panel-2);
+  white-space: nowrap; }
+.cg-label b { color: var(--muted); font-weight: 600; margin-left: 4px; }
+#result th { cursor: pointer; user-select: none; white-space: nowrap; border-top: 4px solid var(--cat, transparent); }
+#result th .arrow { color: var(--muted); font-size: 11px; margin-left: 3px; }
+#result td.cat { background: color-mix(in srgb, var(--cat) 12%, transparent); }
 .hand { display: flex; flex-wrap: wrap; gap: 10px; }
-.handcard { width: 162px; display: grid; gap: 6px; align-content: start; position: relative; }
-.handcard img { width: 162px; border-radius: 10px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
-.handcard .acts { display: grid; gap: 4px; }
+.handcard { width: 148px; display: grid; gap: 6px; align-content: start; position: relative; }
+.handcard img { width: 148px; border-radius: 10px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
+.handcard .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.handcard .acts > button.primary, .handcard .acts > .pay, .handcard .acts > button:only-child { grid-column: 1 / -1; }
+.handcard .acts > button:not(.primary) { padding: 3px 6px; line-height: 1.25; }
+.handcard .acts > button:not(.primary) small { display: block; float: none; }
+.opponents .cell .l { display: none; }
+.opponents .cell { padding: 3px 6px; }
 .handcard .acts button { font-size: 12px; padding: 5px 6px; text-align: left; }
 .handcard .acts small { color: var(--muted); float: right; }
 .handcard .acts button.primary small { color: inherit; opacity: .85; }
@@ -182,6 +200,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
   <h1>Wonders</h1>
   <div class="status" id="status"></div>
   <div class="tools">
+    <span id="h-discard" class="discard hidden" data-tip="Shared discard pile: cards discarded or left over at the end of an Age (face down)"><span class="pile"></span><span id="h-discard-n"></span></span>
     <button id="btn-theme" title="Toggle light/dark">◐</button>
     <button id="btn-record" class="hidden">Download record</button>
     <button id="btn-menu" class="hidden">New game</button>
@@ -225,14 +244,14 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
       <div class="panel me">
         <div class="board">
           <img id="g-board" alt="Your wonder board">
-          <div class="stages" id="g-stages"></div>
         </div>
         <div class="me-info">
           <div class="city-head"><h3 id="g-name"></h3><span class="score" id="g-score"></span></div>
           <div class="statgrid" id="g-stats"></div>
+          <p class="section-title">Production</p>
           <div class="res" id="g-res"></div>
-          <p class="section-title">Your city</p>
-          <div class="tableau" id="g-tableau"></div>
+          <p class="section-title">Your city <span id="g-count" class="muted"></span></p>
+          <div class="citygroups" id="g-tableau"></div>
         </div>
         <div class="me-side">
           <div id="g-leaders-box" class="hidden">
@@ -314,7 +333,7 @@ async function api(path, body) {
   return data;
 }
 const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name);
-const wonderUrl = (name, side) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side;
+const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + (built || 0);
 const show = (id) => ['menu', 'game', 'result'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
 function viewUrl(src, alt, wide) {
   const img = $('viewer').querySelector('img');
@@ -322,7 +341,7 @@ function viewUrl(src, alt, wide) {
   $('viewer').classList.remove('hidden'); hideTip();
 }
 function viewCard(name) { viewUrl(cardUrl(name), name, false); }
-function viewWonder(name, side) { viewUrl(wonderUrl(name, side), name, true); }
+function viewWonder(name, side, built) { viewUrl(wonderUrl(name, side, built), name, true); }
 $('viewer').addEventListener('click', () => $('viewer').classList.add('hidden'));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('viewer').classList.add('hidden'); });
 
@@ -469,6 +488,21 @@ function tableau(names) {
   const color = (n) => COLORS.indexOf(((state.cards || {})[n] || {}).color);
   return [...names].sort((a, b) => color(a) - color(b) || a.localeCompare(b)).map(chip);
 }
+const GROUPS = { brown: 'Raw materials', grey: 'Manufactured', yellow: 'Commercial', red: 'Military', blue: 'Civic',
+  green: 'Science', purple: 'Guilds', white: 'Leaders', black: 'Cities' };
+function cityGroups(names) {
+  const by = {};
+  for (const n of names) { const c = ((state.cards || {})[n] || {}).color || 'unknown'; (by[c] = by[c] || []).push(n); }
+  const out = [];
+  for (const color of [...COLORS, 'unknown']) {
+    const cards = by[color];
+    if (!cards) continue;
+    out.push(el('span', { class: 'cg-label', style: `--cg: var(--c-${color})` }, GROUPS[color] || 'Other', el('b', {}, String(cards.length))),
+      el('div', { class: 'tableau' }, cards.sort().map(chip)));
+  }
+  if (!out.length) out.push(el('span', { class: 'muted', style: 'font-size:12px' }, 'nothing built yet'));
+  return out;
+}
 function tokenSum(tokens) { return (tokens || []).reduce((a, b) => a + b, 0); }
 function statCell(symbol, value, label, tip) {
   return el('div', { class: 'cell', 'data-tip': tip || label },
@@ -508,7 +542,7 @@ function renderOpponents(obs) {
     const tag = seat === obs.left.seat ? '← left neighbour' : seat === obs.right.seat ? 'right neighbour →' : '';
     const board = state.boards[seat];
     const wonder = el('span', { class: 'wonder-link', 'data-tip': 'Starts with ' + board.produces + (board.powers.length ? '\n' + board.powers.join('\n') : '') + '\nClick to view the board',
-      onclick: () => viewWonder(city.wonder, city.wonder_side) }, city.wonder + ' (' + city.wonder_side + ')');
+      onclick: () => viewWonder(city.wonder, city.wonder_side, city.stages_built) }, city.wonder + ' (' + city.wonder_side + ')');
     // Exactly six rows per city: the panels share them (CSS subgrid), so sections line up.
     box.append(el('div', { class: 'panel city' + (tag ? ' neighbour' : '') },
       el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted', style: 'font-size:12px' }, agentLabel(p.agent) + ' · ', wonder)),
@@ -525,11 +559,11 @@ function renderMe(obs) {
   const me = obs.me;
   $('g-name').textContent = me.name + ' — ' + me.wonder + ' (' + me.wonder_side + ')';
   $('g-score').replaceWith(Object.assign(scoreEl(me.score), { id: 'g-score' }));
-  const src = wonderUrl(me.wonder, me.wonder_side);
-  if ($('g-board').getAttribute('src') !== src) { $('g-board').src = src; $('g-board').onclick = () => viewWonder(me.wonder, me.wonder_side); }
-  const stages = state.boards[obs.seat].stages;
-  $('g-stages').replaceChildren(...stages.map((s) => el('div', { class: 'stage' + (s.built ? ' built' : ''), 'data-tip': stageTip(s) },
-    'Stage ' + s.index + (s.built ? ' ✓' : ''))));
+  const src = wonderUrl(me.wonder, me.wonder_side, me.stages_built);
+  if ($('g-board').getAttribute('src') !== src) {
+    $('g-board').src = src; $('g-board').onclick = () => viewWonder(me.wonder, me.wonder_side, me.stages_built);
+  }
+  $('g-board').dataset.tip = state.boards[obs.seat].stages.map(stageTip).join('\n\n') + '\n\nClick to enlarge';
   $('g-stats').replaceChildren(...statGrid(me));
   $('g-res').replaceChildren(...resChips(me));
   const leaders = obs.leaders_hand || [];
@@ -538,13 +572,14 @@ function renderMe(obs) {
   const kv = $('g-kv'); kv.replaceChildren();
   const add = (k, v, tip) => kv.append(el('dt', {}, k), el('dd', { 'data-tip': tip }, v));
   if (obs.free_builds_left) add('Free builds', obs.free_builds_left + ' left this Age', 'Build a card from your hand for free');
-  add('Discard pile', obs.discard_count + ' cards', 'Cards discarded or left over so far (face down)');
-  $('g-tableau').replaceChildren(...tableau(me.cards));
+  kv.classList.toggle('hidden', !kv.children.length);
+  $('g-count').textContent = '· ' + me.cards.length + ' cards';
+  $('g-tableau').replaceChildren(...cityGroups(me.cards));
 }
 
 function coinsText(n) { return n + ' coin' + (n === 1 ? '' : 's'); }
 function actionLabel(a, decision) {
-  if (a.kind === 'wonder') return ['Wonder stage', a.coins ? coinsText(a.coins) + (a.trade ? ' (' + a.trade + ' trade)' : '') : ''];
+  if (a.kind === 'wonder') return ['Wonder', a.coins ? coinsText(a.coins) + (a.trade ? ' (' + a.trade + ' trade)' : '') : ''];
   if (a.kind === 'build') {
     const verb = { draft: 'Keep', recruit: 'Recruit', leader_build: 'Recruit', copy_leader: 'Copy' }[decision] || 'Build';
     let cost = 'free';
@@ -590,9 +625,25 @@ function renderPassing(obs) {
     el('span', { 'data-tip': 'Your remaining hand goes to ' + to + (obs.decision === 'draft' ? ' after each draft pick' : ' after every turn this Age') },
       'Passing ' + (left ? 'left' : 'right') + ' to ' + to));
 }
+const SHORT = { play: 'Your turn: pick a card', last_card: 'Babylon: play your last card?', discard_build: 'Halicarnassus: build from the discards',
+  draft: 'Leaders draft: keep one', recruit: 'Recruit a leader', leader_build: 'Rome: recruit an extra leader',
+  copy_leader: "Courtesans' Guild: copy a leader" };
+let helpOpen = store.get('help', true);
+function renderDecision(obs) {
+  const text = el('span', { class: 'help' });
+  text.innerHTML = helpOpen ? (DECISIONS[obs.decision] || 'Your move.') : '<b>' + (SHORT[obs.decision] || 'Your move') + '</b>';
+  const toggle = el('button', { class: 'help-toggle', 'data-tip': helpOpen ? 'Hide the explanation' : 'Show the explanation',
+    onclick: () => { helpOpen = !helpOpen; store.set('help', helpOpen); hideTip(); renderDecision(obs); } }, helpOpen ? '−' : '?');
+  $('g-decision').replaceChildren(text, toggle);
+}
+function pairUp(buttons) {  // secondary moves sit two per row; a leftover one takes the full row
+  const halves = buttons.filter((b) => b.tagName === 'BUTTON' && !b.classList.contains('primary'));
+  if (halves.length % 2) halves[halves.length - 1].style.gridColumn = '1 / -1';
+  return buttons;
+}
 function renderHand(obs) {
   renderPassing(obs);
-  $('g-decision').innerHTML = DECISIONS[obs.decision] || 'Your move.';
+  renderDecision(obs);
   const byCard = new Map();
   for (const a of obs.actions) {
     if (!byCard.has(a.card)) byCard.set(a.card, []);
@@ -609,7 +660,7 @@ function renderHand(obs) {
     hand.append(el('div', { class: 'handcard' },
       el('img', { src: cardUrl(name), alt: name, 'data-tip': cardTip(name) + '\nClick to enlarge', onclick: () => viewCard(name) }),
       copies[name] > 1 ? el('span', { class: 'count', 'data-tip': copies[name] + ' copies in your hand' }, '×' + copies[name]) : null,
-      el('div', { class: 'acts' }, acts.length ? acts.flatMap((a) => actionButtons(a, obs)) :
+      el('div', { class: 'acts' }, acts.length ? pairUp(acts.flatMap((a) => actionButtons(a, obs))) :
         el('button', { disabled: true, 'data-locked': '1' }, 'Not playable'))));
   }
 }
@@ -642,6 +693,8 @@ function setHeader() {
   $('btn-menu').classList.toggle('hidden', !state || inMenu);
   $('btn-record').classList.toggle('hidden', !state || inMenu);
   $('m-resume').classList.toggle('hidden', !state || state.done);
+  $('h-discard').classList.toggle('hidden', !state || inMenu || state.done);
+  if (state && state.observation) $('h-discard-n').textContent = state.observation.discard_count + ' discarded';
   if (!state || inMenu) { $('status').textContent = ''; return; }
   if (state.done) { $('status').innerHTML = '<b>Game over</b>'; return; }
   const obs = state.observation;
@@ -651,6 +704,26 @@ function setHeader() {
     ' · ' + state.expansions.join(' + ');
 }
 
+const CAT_COLOR = { military: 'var(--c-red)', treasury: 'var(--gold)', wonders: 'var(--c-grey)', civilian: 'var(--c-blue)',
+  commercial: 'var(--c-yellow)', guilds: 'var(--c-purple)', science: 'var(--c-green)', leaders: 'var(--c-white)', cities: 'var(--c-black)' };
+let scoreSort = { key: 'total', dir: -1 };
+function renderScoreTable(cats) {
+  const r = state.result, human = state.human;
+  const value = (i, key) => (key === 'player' ? playerName(i).toLowerCase() : r.scores[i][key]);
+  const rows = state.players.map((p, i) => i).sort((a, b) => {
+    const x = value(a, scoreSort.key), y = value(b, scoreSort.key);
+    return (x < y ? -1 : x > y ? 1 : 0) * scoreSort.dir || r.scores[b].total - r.scores[a].total;
+  });
+  const th = (key, label, color) => el('th', { style: color ? `--cat:${color}` : null, 'data-tip': 'Sort by ' + label.toLowerCase(),
+    onclick: () => { scoreSort = { key, dir: scoreSort.key === key ? -scoreSort.dir : (key === 'player' ? 1 : -1) }; hideTip(); renderScoreTable(cats); } },
+    label, scoreSort.key === key ? el('span', { class: 'arrow' }, scoreSort.dir < 0 ? '▼' : '▲') : null);
+  const head = el('tr', {}, th('player', 'Player'), cats.map((c) => th(c, c[0].toUpperCase() + c.slice(1), CAT_COLOR[c])), th('total', 'Total'));
+  const body = rows.map((i) => el('tr', { class: (i === r.winner ? 'winner ' : '') + (i === human ? 'you' : '') },
+    el('td', {}, playerName(i) + ' · ' + state.players[i].wonder + ' (' + state.players[i].side + ')'),
+    cats.map((c) => el('td', { class: 'cat', style: `--cat:${CAT_COLOR[c] || 'transparent'}` }, String(r.scores[i][c]))),
+    el('td', {}, String(r.scores[i].total))));
+  $('r-table').replaceChildren(el('thead', {}, head), el('tbody', {}, body));
+}
 function renderResult() {
   const r = state.result;
   const cats = r.categories.filter((c) => r.scores.some((s) => s[c] !== 0));
@@ -659,11 +732,7 @@ function renderResult() {
   const won = r.winner === human;
   const rank = order.indexOf(human) + 1;
   $('r-title').textContent = won ? 'You won!' : `${playerName(r.winner)} wins — you finished #${rank} of ${order.length}`;
-  const head = el('tr', {}, el('th', {}, 'Player'), cats.map((c) => el('th', {}, c[0].toUpperCase() + c.slice(1))), el('th', {}, 'Total'));
-  const rows = order.map((i) => el('tr', { class: (i === r.winner ? 'winner ' : '') + (i === human ? 'you' : '') },
-    el('td', {}, playerName(i) + ' · ' + state.players[i].wonder + ' (' + state.players[i].side + ')'),
-    cats.map((c) => el('td', {}, String(r.scores[i][c]))), el('td', {}, String(r.scores[i].total))));
-  $('r-table').replaceChildren(el('thead', {}, head), el('tbody', {}, rows));
+  renderScoreTable(cats);
   $('r-cities').replaceChildren(...state.cities.map((c) => el('div', { class: 'panel city' },
     el('div', { class: 'city-head' }, el('h3', {}, playerName(c.seat)), el('span', { class: 'score' }, String(r.scores[c.seat].total))),
     el('div', { class: 'muted', style: 'font-size:12px;margin-bottom:6px' }, agentLabel(state.players[c.seat].agent) + ' · ' + c.coins + ' coins · ' + c.stages_built + ' stages'),

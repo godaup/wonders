@@ -110,5 +110,13 @@ def test_long_effect_text_wraps_inside_the_card():
     for card in load_content('base', 'leaders', 'cities').cards:
         svg = card_svg(card)
         assert '…' not in svg, card.name
-        for x, line in re.findall(r'<text x="([\d.]+)" y="[\d.]+" font-size="15.0" fill="[^"]+">([^<]*)<', svg):
-            assert float(x) + 0.53 * 15 * len(line) <= 250, (card.name, line)  # stays inside the card
+        for x, line in re.findall(r'<text x="([\d.]+)" y="[\d.]+" font-size="17.0" fill="[^"]+">([^<]*)<', svg):
+            assert float(x) + 0.53 * 17 * len(line) <= 250, (card.name, line)  # stays inside the card
+
+
+def test_wonder_svg_marks_built_stages():
+    from wonders.cards.content import load_content
+
+    wonder = load_content('base').wonder('The Pyramids of Giza', 'B')
+    assert '✓ BUILT' not in wonder_svg(wonder)
+    assert wonder_svg(wonder, built=2).count('✓ BUILT') == 2
