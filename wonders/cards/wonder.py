@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-from wonders.cards.base import Cost, Ressource
+from wonders.cards.base import Cost, Resource
 from wonders.effects.base import Effect
 
 
@@ -28,7 +28,7 @@ class WonderStage:
 @dataclass
 class Wonder:
     name: str
-    starting_resource: Optional[Ressource]
+    starting_resource: Optional[Resource]
     stages: Tuple[WonderStage, ...]
     side: str = 'A'
     effects: Tuple[Effect, ...] = ()  # passive powers of the board itself, active from the start

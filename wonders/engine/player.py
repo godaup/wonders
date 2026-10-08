@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Dict, Iterator, List
 
-from wonders.cards.base import Card, Color, Ressource
+from wonders.cards.base import Card, Color, Resource
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.base import BuildEvent, Effect
 
@@ -195,7 +195,7 @@ class Player:
     def build_income(self, event: BuildEvent) -> int:
         return sum(effect.build_income(event) for effect in self.iter_effects())
 
-    def buy_price(self, side: str, resource: Ressource) -> int:
+    def buy_price(self, side: str, resource: Resource) -> int:
         """Coins to buy one ``resource`` from the neighbour on ``side``."""
         key = (side, resource)
         cached = self._cache.get(key)

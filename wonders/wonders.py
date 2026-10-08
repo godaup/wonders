@@ -4,7 +4,7 @@ Convenience re-exports so callers can ``from wonders.wonders import Game, Player
 without reaching into subpackages.
 """
 
-from wonders.cards.base import Card, Color, Cost, Ressource, ScienceSymbol
+from wonders.cards.base import Card, Color, Cost, Resource, ScienceSymbol
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.engine.actions import Action, ActionKind
 from wonders.engine.game import Game, ScoreBreakdown, science_score
@@ -20,7 +20,7 @@ __all__ = [
     'Game',
     'Phase',
     'Player',
-    'Ressource',
+    'Resource',
     'ScienceSymbol',
     'ScoreBreakdown',
     'Wonder',
