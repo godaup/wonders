@@ -128,6 +128,8 @@ other seats; all expansions, 3–7 players, 4,000 games per pair) it ranks above
 * `sweeps/*.md` — training reports (`STAGE0`–`STAGE3`, `OBJECTIVES`): what was tried, the
   results and how they were measured. Each report's runs are reproducible from the JSON spec
   next to it (`wonders train sweep <spec>`); the raw run outputs are not part of the repository.
+* `ROADMAP.md` — planned work: retraining after the rules fixes, search, post-game analysis and
+  the remaining expansions.
 * `CONTRIBUTING.md` — how to contribute; `CLAUDE.md` — an architecture overview written for
   AI coding assistants, useful for human contributors too.
 
