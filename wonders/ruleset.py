@@ -18,6 +18,15 @@ from typing import Dict, Tuple
 
 DEFAULT_STARTING_COINS = 3
 
+# Version of the game rules as implemented by the engine. Bump it whenever a rules change alters
+# how games play out, so models trained under older rules can be recognised (checkpoints record
+# the version they were trained under; see wonders.ml.model.save_checkpoint).
+#   1 - everything before the October 2026 fixes (also every checkpoint without a version)
+#   2 - neighbours may only buy board and brown / grey production; cards buried under a wonder
+#       stage and discarded leaders no longer go to the discard pile
+RULES_VERSION = 2
+LEGACY_RULES_VERSION = 1
+
 
 @dataclass(frozen=True)
 class Expansion:

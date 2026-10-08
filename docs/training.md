@@ -70,7 +70,8 @@ The reports next to the specs (`sweeps/*.md`) describe what was tried, what work
 **Note — rules changes.** The October 2026 rules fixes (trading only from the board and brown /
 grey cards; buried cards and discarded leaders no longer reach the discard pile) postdate every
 trained model. Train or fine-tune under the current rules before comparing with older results; see
-[ROADMAP.md](../ROADMAP.md).
+[ROADMAP.md](../ROADMAP.md). Checkpoints record the rules version they were trained under
+(`wonders.ruleset.RULES_VERSION`, currently 2); loading an older one warns.
 
 ## Measuring progress
 

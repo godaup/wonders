@@ -80,7 +80,13 @@ def save_checkpoint(path: str, model: PolicyValueNet, card_names: Sequence[str],
     Pass the vocabulary's ``**vocab.meta()`` (decisions, wonders, encoder). Without an ``encoder``
     entry the checkpoint loads as the legacy ``card-v1`` encoder, so that is only allowed for a
     model of exactly that shape — anything else would save a checkpoint that cannot be loaded.
+
+    The checkpoint records the engine's :data:`~wonders.ruleset.RULES_VERSION` (``rules_version``)
+    unless ``meta`` gives one, e.g. when re-saving an older model unchanged.
     """
+    from wonders.ruleset import RULES_VERSION
+
+    meta.setdefault('rules_version', RULES_VERSION)
     if 'encoder' not in meta:
         from wonders.agents.encoders import DECISIONS, CardEncoder
 
@@ -97,6 +103,13 @@ def save_checkpoint(path: str, model: PolicyValueNet, card_names: Sequence[str],
         },
         path,
     )
+
+
+def rules_version(meta: Dict[str, Any]) -> int:
+    """The rules version a checkpoint was trained under (checkpoints without one predate versioning)."""
+    from wonders.ruleset import LEGACY_RULES_VERSION
+
+    return int(meta.get('rules_version', LEGACY_RULES_VERSION))
 
 
 def load_checkpoint(path: str) -> Tuple[PolicyValueNet, List[str], Dict[str, Any]]:
