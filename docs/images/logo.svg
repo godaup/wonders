@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="wonders logo">
+  <title>wonders</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2d3b4e"/>
+      <stop offset="1" stop-color="#1b2533"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f1c45a"/>
+      <stop offset="1" stop-color="#c8951a"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#bg)"/>
+  <!-- three Ages: a stepped wonder of three tiers -->
+  <rect x="30" y="80" width="68" height="14" rx="3" fill="url(#gold)"/>
+  <rect x="40" y="63" width="48" height="14" rx="3" fill="url(#gold)" opacity=".9"/>
+  <rect x="50" y="46" width="28" height="14" rx="3" fill="url(#gold)" opacity=".8"/>
+  <!-- seven card colours as a fan of tabs on the base -->
+  <g transform="translate(26 99)">
+    <rect x="0" y="0" width="10" height="6" rx="2" fill="#8a5a2b"/>
+    <rect x="11" y="0" width="10" height="6" rx="2" fill="#7c828a"/>
+    <rect x="22" y="0" width="10" height="6" rx="2" fill="#d99a1c"/>
+    <rect x="33" y="0" width="10" height="6" rx="2" fill="#b23b3b"/>
+    <rect x="44" y="0" width="10" height="6" rx="2" fill="#2f6fb0"/>
+    <rect x="55" y="0" width="10" height="6" rx="2" fill="#3f9e5a"/>
+    <rect x="66" y="0" width="10" height="6" rx="2" fill="#7a4fb0"/>
+  </g>
+  <!-- laurel arc -->
+  <path d="M28 54 Q 34 26 64 22 Q 94 26 100 54" fill="none" stroke="#f1c45a" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+  <g fill="#f1c45a" opacity=".85">
+    <ellipse cx="33" cy="41" rx="3.2" ry="6" transform="rotate(-35 33 41)"/>
+    <ellipse cx="42" cy="31" rx="3.2" ry="6" transform="rotate(-55 42 31)"/>
+    <ellipse cx="53" cy="25" rx="3.2" ry="6" transform="rotate(-75 53 25)"/>
+    <ellipse cx="95" cy="41" rx="3.2" ry="6" transform="rotate(35 95 41)"/>
+    <ellipse cx="86" cy="31" rx="3.2" ry="6" transform="rotate(55 86 31)"/>
+    <ellipse cx="75" cy="25" rx="3.2" ry="6" transform="rotate(75 75 25)"/>
+  </g>
+</svg>

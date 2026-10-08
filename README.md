@@ -1,16 +1,54 @@
-# wonders
+<p align="center">
+  <img src="docs/images/logo.svg" width="112" alt="wonders logo">
+</p>
 
-[![Build Status](https://github.com/godaup/wonders/actions/workflows/dev.yml/badge.svg)](https://github.com/godaup/wonders/actions/workflows/dev.yml)
+<h1 align="center">wonders</h1>
 
-A Python engine for a **7 Wonders-style card drafting game**, built for agents and deep
-learning: a clean, partial-observability-correct state/action interface, scripted agents,
-training environments, a replayable game notation, benchmarks, a trained network that plays
-every expansion combination, and a local browser UI to play against them.
+<p align="center">
+  <b>Seven wonders, three Ages, one engine — built for people and for neural networks.</b><br>
+  A complete, rules-checked engine for a 7&nbsp;Wonders-style drafting game, with agents, training
+  environments, a trained network and a browser table to play against them.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.10%20%E2%80%93%203.13-3776ab?logo=python&logoColor=white" alt="Python 3.10–3.13">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
+  <img src="https://img.shields.io/badge/code%20style-black-000000" alt="code style: black">
+  <img src="https://img.shields.io/badge/types-mypy-2a6db2" alt="type-checked with mypy">
+  <img src="https://img.shields.io/badge/expansions-base%20%C2%B7%20leaders%20%C2%B7%20cities-c8951a" alt="expansions: base, leaders, cities">
+  <img src="https://img.shields.io/badge/PyTorch-optional-ee4c2c?logo=pytorch&logoColor=white" alt="PyTorch optional">
+</p>
+
+<p align="center">
+  <img src="docs/images/game.png" width="900" alt="Playing a five-player game with Leaders and Cities in the browser">
+</p>
 
 > **Disclaimer.** This is an independent, non-commercial fan project. It is not affiliated
 > with, endorsed or sponsored by Repos Production or any publisher of *7 Wonders*.
 > *7 Wonders* is a trademark of its respective owners. No publisher artwork is included: all
 > card and board renderings are generated from game data.
+
+### The zen of wonders
+
+* **Cards are data, mechanics are effects.** Every card lives in JSON; new rules are new
+  composable effects, never special cases.
+* **A seat sees only what it may see.** Agents, encoders and the UI read one seat's
+  observation — hidden hands and buried cards stay hidden.
+* **Every game replays exactly.** A record is like a chess PGN: the same moves, the same game.
+* **Rules first.** Expansions and powers are checked against the official rulebooks.
+* **Fast and dependency-light.** Pure Python with `click`; PyTorch only for the learned agent.
+
+## Contents
+
+* [Features](#features)
+* [Play in your browser](#play-in-your-browser)
+* [Installation](#installation)
+* [Command line](#command-line)
+* [Training](#training-needs-pytorch)
+* [Python API](#python-api)
+* [The bundled network](#the-bundled-network)
+* [Roadmap and further reading](#roadmap-and-further-reading)
+* [License](#license)
 
 ## Features
 
@@ -31,6 +69,25 @@ every expansion combination, and a local browser UI to play against them.
   at the same tables, exploitability measurement.
 * **Replayable game records** (like PGN for chess) and a **browser UI** for human play.
 * The core is pure Python with `click` as its only runtime dependency.
+
+## Play in your browser
+
+```
+wonders gui
+```
+
+A local page (http://127.0.0.1:8765; nothing leaves your machine): pick expansions, an opponent
+for every seat and your wonder, then play. Cards and boards are rendered from the game data, build
+costs include trade (and you choose which neighbour to buy from), every city shows its stats,
+resources and wonder stages, and hovering anything explains it. The final score sheet is
+colour-coded and sortable, and the game record can be downloaded at any time.
+
+<p align="center">
+  <img src="docs/images/cards.png" width="900" alt="Card renderings: raw material, commercial, military, civilian, guild, leader and city cards">
+</p>
+<p align="center">
+  <img src="docs/images/scores.png" width="760" alt="The final score sheet">
+</p>
 
 ## Installation
 
@@ -67,10 +124,7 @@ wonders table -o table.html                                   # render the final
 `-e` lists the expansions in play (include `base`); `-a` takes one agent per seat — a built-in
 name, `neural` for the bundled network, or `neural:<checkpoint.pt>`.
 
-`wonders gui` serves a local page (http://127.0.0.1:8765; nothing leaves your machine): pick
-expansions, opponents per seat and your wonder, then play with card renderings, build costs
-including trade, the neighbours' cities and a move log; the game record can be downloaded at
-any time. `--checkpoint model.pt` adds your own network as an opponent.
+`wonders gui --checkpoint model.pt` adds your own network as an opponent in the browser table.
 
 ### Training (needs PyTorch)
 
@@ -120,7 +174,7 @@ other seats; all expansions, 3–7 players, 4,000 games per pair) it ranks above
 | `adaptive`, the strongest scripted agent | 87.8% |
 | `board` | 88.4% |
 
-## Further reading
+## Roadmap and further reading
 
 * `docs/encoder-v2.md` — design of the `table-v2` observation encoder.
 * `docs/adaptive-agents.md` — the adaptive agents, their rules and benchmarks, with the strategy

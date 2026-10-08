@@ -183,7 +183,7 @@ def _cost_items(coins: int, resources) -> List[Tuple[str, str, int, str]]:
 def _cost_chip(x: float, y: float, key: str, color: str, count: int, title: str, tile: float = 30) -> str:
     out = [
         f'<rect x="{x:.1f}" y="{y:.1f}" width="{tile}" height="{tile}" rx="8" fill="{TILE_BG}" stroke="{TILE_LINE}"/>',
-        _icon(key, x + (tile - 20) / 2, y + (tile - 20) / 2, 20, color, title),
+        _icon(key, x + tile * 0.19, y + tile * 0.19, tile * 0.62, color, title),
     ]
     if count > 1:
         cx, cy = x + tile - 5, y + tile - 5
@@ -425,7 +425,9 @@ def card_svg(card: Card) -> str:
     parts.append('</g>')
 
     parts.append(f'<text x="18" y="86" font-size="11" letter-spacing="1.2" fill="{MUTED}">COST</text>')
-    parts.append(_cost_row(card.cost.coins, card.cost.resources, 16, 92, tile=42, gap=6))
+    kinds = len(card.cost.resources) + (1 if card.cost.coins else 0)
+    tile = round(min(42.0, (_W - 32 - 5 * max(0, kinds - 1)) / max(1, kinds)), 1)  # many cost types: smaller tiles
+    parts.append(_cost_row(card.cost.coins, card.cost.resources, 16, 92 + (42 - tile) / 2, tile=tile, gap=5))
 
     rows: List[Row] = []
     for effect in card.effects:
