@@ -1,55 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="wonders logo">
   <title>wonders</title>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2d3b4e"/>
-      <stop offset="1" stop-color="#1b2533"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f1c45a"/>
-      <stop offset="1" stop-color="#c8951a"/>
-    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d3b4e"/><stop offset="1" stop-color="#1b2533"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1c45a"/><stop offset="1" stop-color="#c8951a"/></linearGradient>
   </defs>
   <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#bg)"/>
-  <!-- three Ages: a stepped wonder of three tiers -->
-  <rect x="30" y="80" width="68" height="14" rx="3" fill="url(#gold)"/>
-  <rect x="40" y="63" width="48" height="14" rx="3" fill="url(#gold)" opacity=".9"/>
-  <rect x="50" y="46" width="28" height="14" rx="3" fill="url(#gold)" opacity=".8"/>
-  <!-- the seven card colours along the base -->
-  <g transform="translate(26 99)">
-    <rect x="0" y="0" width="10" height="6" rx="2" fill="#8a5a2b"/>
-    <rect x="11" y="0" width="10" height="6" rx="2" fill="#7c828a"/>
-    <rect x="22" y="0" width="10" height="6" rx="2" fill="#d99a1c"/>
-    <rect x="33" y="0" width="10" height="6" rx="2" fill="#b23b3b"/>
-    <rect x="44" y="0" width="10" height="6" rx="2" fill="#2f6fb0"/>
-    <rect x="55" y="0" width="10" height="6" rx="2" fill="#3f9e5a"/>
-    <rect x="66" y="0" width="10" height="6" rx="2" fill="#7a4fb0"/>
-  </g>
-  <!-- human: a laurel branch (left half of the crown) -->
-  <path d="M28 56 Q 32 30 60 23" fill="none" stroke="#f1c45a" stroke-width="2.6" stroke-linecap="round"/>
-  <g fill="#f1c45a">
-    <ellipse cx="30" cy="45" rx="3" ry="6" transform="rotate(-25 30 45)"/>
-    <ellipse cx="36" cy="35" rx="3" ry="6" transform="rotate(-45 36 35)"/>
-    <ellipse cx="45" cy="27.5" rx="3" ry="6" transform="rotate(-65 45 27.5)"/>
-    <ellipse cx="55" cy="23.5" rx="2.6" ry="5" transform="rotate(-80 55 23.5)"/>
-  </g>
-  <!-- machine: circuit traces with nodes (right half of the crown) -->
-  <g fill="none" stroke="#7cc4ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M68 23 L 82 26 L 92 34 L 98 45 L 100 56"/>
-    <path d="M82 26 L 84 17"/>
-    <path d="M92 34 L 101 29"/>
-    <path d="M98 45 L 107 44"/>
-  </g>
-  <g fill="#1b2533" stroke="#7cc4ff" stroke-width="2.2">
-    <circle cx="84" cy="16" r="2.8"/>
-    <circle cx="102" cy="28.5" r="2.8"/>
-    <circle cx="108" cy="44" r="2.8"/>
-  </g>
-  <g fill="#7cc4ff">
-    <circle cx="82" cy="26" r="2.2"/>
-    <circle cx="92" cy="34" r="2.2"/>
-    <circle cx="98" cy="45" r="2.2"/>
-  </g>
-  <!-- the meeting point -->
-  <circle cx="64" cy="22.5" r="3.4" fill="#ffffff"/>
+  <rect x="30" y="82" width="68" height="14" rx="3" fill="url(#gold)" opacity="1.0"/>
+  <rect x="40" y="65" width="48" height="14" rx="3" fill="url(#gold)" opacity="0.9"/>
+  <rect x="50" y="48" width="28" height="14" rx="3" fill="url(#gold)" opacity="0.8"/>
+  <rect x="30" y="99" width="8.43" height="6" rx="1.6" fill="#8a5a2b"/>
+  <rect x="39.93" y="99" width="8.43" height="6" rx="1.6" fill="#7c828a"/>
+  <rect x="49.86" y="99" width="8.43" height="6" rx="1.6" fill="#d99a1c"/>
+  <rect x="59.79" y="99" width="8.43" height="6" rx="1.6" fill="#b23b3b"/>
+  <rect x="69.71" y="99" width="8.43" height="6" rx="1.6" fill="#2f6fb0"/>
+  <rect x="79.64" y="99" width="8.43" height="6" rx="1.6" fill="#3f9e5a"/>
+  <rect x="89.57" y="99" width="8.43" height="6" rx="1.6" fill="#7a4fb0"/>
+  <path d="M28 58 A36.0 36.0 0 0 1 60.24 22.2" fill="none" stroke="#f1c45a" stroke-width="2.6" stroke-linecap="round"/>
+  <ellipse cx="24.82" cy="45.27" rx="2.9" ry="6.2" transform="rotate(-34 24.82 45.27)" fill="#f1c45a"/>
+  <circle cx="29.76" cy="46.88" r="2.2" fill="#f1c45a"/>
+  <ellipse cx="33.38" cy="30.43" rx="2.9" ry="6.2" transform="rotate(-10 33.38 30.43)" fill="#f1c45a"/>
+  <circle cx="37.25" cy="33.91" r="2.2" fill="#f1c45a"/>
+  <ellipse cx="47.24" cy="20.36" rx="2.9" ry="6.2" transform="rotate(14 47.24 20.36)" fill="#f1c45a"/>
+  <circle cx="49.36" cy="25.11" r="2.2" fill="#f1c45a"/>
+  <path d="M 100 58 L 98.24 46.88 L 90.75 33.91 L 78.64 25.11 L 67.76 22.2" fill="none" stroke="#7cc4ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M98.24 46.88 L105.85 44.4" stroke="#7cc4ff" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="105.85" cy="44.4" r="2.6" fill="#1b2533" stroke="#7cc4ff" stroke-width="2"/>
+  <circle cx="98.24" cy="46.88" r="2.2" fill="#7cc4ff"/>
+  <path d="M90.75 33.91 L96.7 28.56" stroke="#7cc4ff" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="96.7" cy="28.56" r="2.6" fill="#1b2533" stroke="#7cc4ff" stroke-width="2"/>
+  <circle cx="90.75" cy="33.91" r="2.2" fill="#7cc4ff"/>
+  <path d="M78.64 25.11 L81.9 17.8" stroke="#7cc4ff" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="81.9" cy="17.8" r="2.6" fill="#1b2533" stroke="#7cc4ff" stroke-width="2"/>
+  <circle cx="78.64" cy="25.11" r="2.2" fill="#7cc4ff"/>
+  <circle cx="64" cy="22" r="3.6" fill="#ffffff"/>
 </svg>
