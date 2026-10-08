@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Rules fix: neighbours may only buy the board's resource and brown / grey card production;
+  yellow cards (Forum, Caravansery, ...), wonder stages and leaders produce for their owner only
+  (`Player.tradeable_slots`, `CityView.trade_production`).
 * GUI: card effect text wraps; larger wonder board and every board's stages with their effects;
   resources, VP labels and hover tooltips for every city, card and stage; leaders shown as
   cards; a passing-direction banner; duplicate cards merged; choose which neighbour to buy

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from html import escape
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
@@ -316,7 +316,64 @@ def cost_text(coins: int, resources) -> str:
     return ', '.join(parts) or 'free'
 
 
-EFFECT_FONT = 17.0  # effect labels on cards
+EFFECT_FONTS = (22, 21, 20, 19, 18, 17, 16, 15, 14)  # largest effect text that fits is used
+_GLYPH = 0.58  # conservative average glyph width (em) when estimating how text wraps
+
+
+def _effects_height(rows: List[Row], chain: Optional[Tuple[str, str]], width: float, font: float) -> float:
+    """Estimated height of the effect rows at ``font`` (the browser does the actual wrapping)."""
+    icon, line = font * 1.45, font * 1.2
+    total = 0.0
+    for icons, label in rows:
+        room = width - len(icons[:4]) * (icon + 2) - 12
+        if room < 6.5 * font:  # the label drops below the icons
+            room, total = width - 4, total + icon + 2
+        lines = max(1, -(-int(len(label) * _GLYPH * font) // max(1, int(room))))
+        total += max(icon, lines * line) + font * 0.5
+    if chain is not None:
+        lines = max(1, -(-int(len(chain[0]) * _GLYPH * font * 0.85) // max(1, int(width - icon))))
+        total += lines * line * 0.85
+    return total
+
+
+def _effects_html(
+    rows: List[Row], chain: Optional[Tuple[str, str]], x: float, y: float, width: float, height: float
+) -> str:
+    """The effect rows as HTML in a ``foreignObject``: the browser wraps the text with the real font.
+
+    The font is the largest of :data:`EFFECT_FONTS` whose estimated layout fits the panel, so short
+    effects read large and long ones still fit.
+    """
+    font = next((f for f in EFFECT_FONTS if _effects_height(rows, chain, width, f) <= height), EFFECT_FONTS[-1])
+    size = round(font * 1.45)
+
+    def svg_icon(key: str, color: str, px: int) -> str:
+        return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="{px}" height="{px}" '
+            f'style="color:{color};flex:none">{ICONS[key]}</svg>'
+        )
+
+    items = []
+    for icons, label in rows:
+        glyphs = ''.join(svg_icon(key, color, size) for key, color in icons[:4])
+        items.append(
+            f'<div style="display:flex;flex-wrap:wrap;gap:2px 6px;align-items:center">'
+            f'<span style="display:flex;gap:2px;flex:none">{glyphs}</span>'
+            f'<span style="flex:1 1 6.5em">{escape(label)}</span></div>'
+        )
+    if chain is not None:
+        text, color = chain
+        items.append(
+            f'<div style="display:flex;gap:5px;align-items:center;color:{color};font-size:{font * 0.85:.1f}px">'
+            f'{svg_icon("chain", color, round(size * 0.8))}<span>{escape(text)}</span></div>'
+        )
+    return (
+        f'<foreignObject x="{x:.0f}" y="{y:.0f}" width="{width:.0f}" height="{height:.0f}">'
+        f'<div xmlns="http://www.w3.org/1999/xhtml" style="height:100%;overflow:hidden;display:flex;'
+        f'flex-direction:column;gap:{font * 0.5:.1f}px;color:{INK};font-size:{font}px;line-height:1.2;'
+        f'overflow-wrap:break-word;padding-right:4px;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif">'
+        f'{"".join(items)}</div></foreignObject>'
+    )
 
 
 def card_svg(card: Card) -> str:
@@ -369,21 +426,12 @@ def card_svg(card: Card) -> str:
         f'<rect x="10" y="144" width="4" height="{panel_h}" rx="2" fill="{fill}"/>'
         f'<text x="22" y="162" font-size="11" letter-spacing="1.2" fill="{MUTED}">EFFECTS</text>'
     )
-    y = 196.0
-    for icons, label in rows:
-        row, extra = _row_svg(icons, label, 21, y, size=28, font=EFFECT_FONT, right=_W - 12, maxlines=4)
-        parts.append(row)
-        y += 38 + extra
+    chain: Optional[Tuple[str, str]] = None
     if card.chain_requires:
-        parts.append(_icon('chain', 20, y - 23, 23, GUILD))
-        parts.append(
-            f'<text x="49" y="{y - 5}" font-size="15" fill="{GUILD}">free if {escape(card.chain_requires)}</text>'
-        )
+        chain = (f'free if {card.chain_requires}', GUILD)
     elif card.chain_enables:
-        parts.append(_icon('chain', 20, y - 23, 23, MUTED))
-        parts.append(
-            f'<text x="49" y="{y - 5}" font-size="14.5" fill="{MUTED}">unlocks {escape(card.chain_enables[0])}</text>'
-        )
+        chain = (f'unlocks {card.chain_enables[0]}', MUTED)
+    parts.append(_effects_html(rows, chain, x=18, y=170, width=_W - 30, height=_H - 34 - 170 - 4))
 
     meta = []
     if card.at_players:

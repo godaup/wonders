@@ -146,8 +146,8 @@ class Game:
         pay = cheapest_payment(
             cost.resources,
             player.production_slots() + private if private else player.production_slots(),
-            self.left_of(i).production_slots(),
-            self.right_of(i).production_slots(),
+            self.left_of(i).tradeable_slots(),
+            self.right_of(i).tradeable_slots(),
             player.buy_price,
             waivers=waivers,
             bank=player.bank_purchases(),
@@ -252,8 +252,8 @@ class Game:
         options = payment_options(
             cost.resources,
             player.production_slots() + private,
-            self.left_of(i).production_slots(),
-            self.right_of(i).production_slots(),
+            self.left_of(i).tradeable_slots(),
+            self.right_of(i).tradeable_slots(),
             player.buy_price,
             waivers=waivers,
             bank=player.bank_purchases(),

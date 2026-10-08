@@ -134,6 +134,7 @@ class CityView:
     diplomacy: int = 0  # Cities diplomacy tokens held
     science_wilds: int = 0  # choose-any science symbols
     production: List[List[str]] = field(default_factory=list)  # public production slots (options each)
+    trade_production: List[List[str]] = field(default_factory=list)  # the slots neighbours may buy from
     private_slots: int = 0  # own-use production slots (Black Market / Secret Warehouse)
     score_breakdown: Dict[str, int] = field(default_factory=dict)  # ScoreBreakdown.as_dict()
     copied_leaders: List[str] = field(default_factory=list)  # Courtesans' Guild copies
@@ -268,6 +269,7 @@ def _city_view(game: 'Game', seat: int, breakdown: Optional[Dict[str, int]] = No
         diplomacy=p.diplomacy,
         science_wilds=p.science_wilds(),
         production=[sorted(r.value for r in slot) for slot in p.production_slots()],
+        trade_production=[sorted(r.value for r in slot) for slot in p.tradeable_slots()],
         private_slots=len(p.private_production_slots()),
         score_breakdown=dict(breakdown),
         copied_leaders=[c.name for c in p.copied_leaders],
