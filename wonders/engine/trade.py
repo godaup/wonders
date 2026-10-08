@@ -136,3 +136,61 @@ def cheapest_payment(
         return None
     total, l_paid, r_paid = best[0]
     return Payment(total, l_paid, r_paid)
+
+
+def payment_options(
+    required: Counter,
+    own: Sequence[frozenset],
+    left: Sequence[frozenset],
+    right: Sequence[frozenset],
+    price: PriceFn,
+    waivers: int = 0,
+    bank: int = 0,
+    bank_price: int = 1,
+) -> List[Payment]:
+    """Every distinct way to split a purchase between the neighbours (cheapest first).
+
+    The rules let a player buy from either neighbour; :func:`cheapest_payment` only finds the
+    cheapest. This lists one :class:`Payment` per distinct ``(left, right)`` split — the
+    cheapest total for that split — so a human can choose whom to pay. Same arguments as
+    :func:`cheapest_payment`; empty if the cost cannot be covered.
+    """
+    units: List[Ressource] = list(required.elements())
+    slots: List[Slot] = (
+        _slots('self', own) + _slots('left', left) + _slots('right', right) + _slots('bank', [BANK_OPTIONS] * bank)
+    )
+    best: Dict[Tuple[int, int], int] = {}
+    used = [False] * len(slots)
+
+    def rec(i: int, total: int, l_paid: int, r_paid: int, waived: int) -> None:
+        if i == len(units):
+            key = (l_paid, r_paid)
+            if key not in best or total < best[key]:
+                best[key] = total
+            return
+        resource = units[i]
+        if waived < waivers:
+            rec(i + 1, total, l_paid, r_paid, waived + 1)
+        tried = set()
+        for j, (side, opts) in enumerate(slots):
+            if used[j] or resource not in opts or (side, opts) in tried:
+                continue
+            tried.add((side, opts))
+            add = 0 if side == 'self' else bank_price if side == 'bank' else price(side, resource)
+            used[j] = True
+            rec(
+                i + 1,
+                total + add,
+                l_paid + (add if side == 'left' else 0),
+                r_paid + (add if side == 'right' else 0),
+                waived,
+            )
+            used[j] = False
+
+    rec(0, 0, 0, 0, 0)
+    options = [Payment(total, l_paid, r_paid) for (l_paid, r_paid), total in best.items()]
+
+    def dominated(p: Payment) -> bool:  # another split pays nobody more, and less in total or to someone
+        return any(q != p and q.left <= p.left and q.right <= p.right and q.total <= p.total for q in options)
+
+    return sorted((p for p in options if not dominated(p)), key=lambda p: (p.total, p.left, p.right))

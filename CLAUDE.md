@@ -88,6 +88,9 @@ scoring categories). It is split into three packages under `wonders/`:
   `record.py` (`GameRecord`: a chess-PGN-style replayable notation — setup + ordered
   decks + every decision, with power-granted decisions in `extras`; `replay()`
   re-simulates deterministically without any RNG).
+  Purchases are paid the cheapest way unless an `Action` carries a chosen `payment` (left, right)
+  split (`Action.paying`, options from `Game.payment_options`; not part of action equality, so the
+  action space is unchanged); the record stores such moves as `[code, card, left, right]`.
   The base-game wonder powers are real effects with their own hooks: `PlayLastCard`
   (Babylon B), `FreeBuildPerAge` (Olympia A, played as `ActionKind.FREE`, offered only
   when it saves coins), `CopyGuild` (Olympia B, best neighbour guild at scoring, incl.

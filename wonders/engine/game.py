@@ -18,7 +18,7 @@ from wonders.effects.base import BuildEvent, Context
 from wonders.engine.actions import Action, ActionKind, DecisionKind, DecisionPoint
 from wonders.engine.phase import Phase
 from wonders.engine.player import SCIENCE_SET_VALUE, Player
-from wonders.engine.trade import Payment, cheapest_payment
+from wonders.engine.trade import Payment, cheapest_payment, payment_options
 
 DISCARD_COINS = 3
 CONFLICT_VALUE = {1: 1, 2: 3, 3: 5}
@@ -222,6 +222,50 @@ class Game:
             return None
         return (stage, stage.cost.coins, pay)
 
+    def payment_options(self, i: int, action: Action) -> List[Payment]:
+        """Every affordable way to split ``action``'s trade between the neighbours (cheapest first).
+
+        Only BUILD and WONDER actions trade; chained / free builds and actions without a
+        resource purchase have the single option of paying nobody. The player may pick any of
+        them via :meth:`Action.paying` (the cheapest is played when none is chosen).
+        """
+        player = self.players[i]
+        if action.kind is ActionKind.BUILD:
+            result = self._card_payment(i, action.card)
+            if result is None:
+                return []
+            coins, cheapest = result
+            if cheapest.total == 0 or self._chained(i, action.card) or player.builds_free(action.card):
+                return [cheapest]
+            cost, waivers = action.card.cost, player.resource_discount(action.card.color.value)
+        elif action.kind is ActionKind.WONDER:
+            stage_result = self._stage_payment(i)
+            if stage_result is None:
+                return []
+            stage, coins, cheapest = stage_result
+            if cheapest.total == 0:
+                return [cheapest]
+            cost, waivers = stage.cost, player.resource_discount('wonder')
+        else:
+            return [_NO_TRADE]
+        private = player.private_production_slots()
+        options = payment_options(
+            cost.resources,
+            player.production_slots() + private,
+            self.left_of(i).production_slots(),
+            self.right_of(i).production_slots(),
+            player.buy_price,
+            waivers=waivers,
+            bank=player.bank_purchases(),
+        )
+        return [p for p in options if coins + p.total <= player.coins]
+
+    def _chosen_payment(self, i: int, action: Action, split: Tuple[int, int]) -> Payment:
+        for option in self.payment_options(i, action):
+            if (option.left, option.right) == tuple(split):
+                return option
+        raise IllegalAction(f'{self.players[i].name} cannot pay {split} (left, right) for {action.card.name}')
+
     # -- actions -----------------------------------------------------------
     def apply(self, i: int, action: Action) -> None:
         """Apply one action and immediately resolve its cross-player effects.
@@ -235,9 +279,9 @@ class Game:
 
     def _dispatch(self, i: int, action: Action) -> None:
         if action.kind is ActionKind.BUILD:
-            self._do_build(i, action.card)
+            self._do_build(i, action.card, action.payment)
         elif action.kind is ActionKind.WONDER:
-            self._do_wonder(i, action.card)
+            self._do_wonder(i, action.card, action.payment)
         elif action.kind is ActionKind.DISCARD:
             self._do_discard(i, action.card)
         elif action.kind is ActionKind.FREE:
@@ -258,11 +302,13 @@ class Game:
         self.left_of(i).coins += pay.left
         self.right_of(i).coins += pay.right
 
-    def _do_build(self, i: int, card: Card) -> None:
+    def _do_build(self, i: int, card: Card, split: Optional[Tuple[int, int]] = None) -> None:
         result = self._card_payment(i, card)
         if result is None:
             raise IllegalAction(f'{self.players[i].name} cannot build {card.name}')
         coins_to_bank, pay = result
+        if split is not None:
+            pay = self._chosen_payment(i, Action.build(card), split)
         via_chain = self._chained(i, card)
         self._settle(i, coins_to_bank, pay)
         self.players[i].add_card(card)
@@ -287,11 +333,13 @@ class Game:
                     player.leaders_hand.append(self.leader_box.pop())
             self._pending.append((ctx, effect))  # cross-player: deferred to end of turn
 
-    def _do_wonder(self, i: int, card: Card) -> None:
+    def _do_wonder(self, i: int, card: Card, split: Optional[Tuple[int, int]] = None) -> None:
         result = self._stage_payment(i)
         if result is None:
             raise IllegalAction(f'{self.players[i].name} has no buildable wonder stage')
         stage, coins_to_bank, pay = result
+        if split is not None:
+            pay = self._chosen_payment(i, Action.wonder(card), split)
         self._settle(i, coins_to_bank, pay)
         player = self.players[i]
         player.add_stage(stage)

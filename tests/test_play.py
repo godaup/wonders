@@ -198,3 +198,47 @@ def test_server_reports_errors(base_url):
     with pytest.raises(urllib.error.HTTPError) as err:
         _request(base_url + '/api/card.svg?name=Nope')
     assert err.value.code == 404
+
+
+def _until_trade_choice(session: HumanSession) -> Dict[str, Any]:
+    while not session.done:
+        for action in session.state()['observation']['actions']:
+            if action.get('payments'):
+                return action
+        session.act(0)
+    pytest.fail('no purchase with a choice of neighbours came up')
+
+
+def test_human_chooses_whom_to_buy_from():
+    from wonders.cards.content import load_content
+    from wonders.engine.record import GameRecord
+
+    session = HumanSession(_config(agents=('heuristic', 'board', 'greedy'), human=1, seed=0))
+    action = _until_trade_choice(session)
+    options = action['payments']
+    assert len(options) > 1 and options == sorted(options, key=lambda p: p['total'])
+    choice = options[-1]
+    with pytest.raises(ConfigError):
+        session.act(action['index'], [choice['left'] + 1, choice['right']])
+    session.act(action['index'], [choice['left'], choice['right']])
+    split = [m for turns in session.env.record().moves.values() for turn in turns for m in turn if len(m) == 4]
+    assert [m[1:] for m in split] == [[action['card'], choice['left'], choice['right']]]
+    while not session.done:
+        session.act(0)
+    game = session.env.game
+    assert game is not None
+    replayed = GameRecord.from_json(session.record_json()).replay(load_content('base'))
+    assert [replayed.score(i).total for i in range(4)] == [game.score(i).total for i in range(4)]
+    assert [p.coins for p in replayed.players] == [p.coins for p in game.players]
+
+
+def test_state_describes_cards_and_every_board():
+    session = HumanSession(_config(expansions=('base', 'leaders'), seed=4))
+    state = session.state()
+    assert len(state['boards']) == 3
+    for board in state['boards']:
+        assert board['stages'] and all('cost' in s and 'effects' in s for s in board['stages'])
+    text = session.card_info('Builders Guild')['text']
+    assert any('you + neighbours' in line for line in text)
+    for name in state['observation']['leaders_hand']:
+        assert state['cards'][name]['text']

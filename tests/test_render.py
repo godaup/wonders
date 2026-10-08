@@ -100,3 +100,15 @@ def test_table_html_is_self_contained():
     html = table_html(_table_game(), title='Mid-game')
     assert html.startswith('<!doctype html>')
     assert html.count('<svg') == 1 and 'Mid-game' in html
+
+
+def test_long_effect_text_wraps_inside_the_card():
+    import re
+
+    from wonders.cards.content import load_content
+
+    for card in load_content('base', 'leaders', 'cities').cards:
+        svg = card_svg(card)
+        assert '…' not in svg, card.name
+        for x, line in re.findall(r'<text x="([\d.]+)" y="[\d.]+" font-size="12.5" fill="[^"]+">([^<]*)<', svg):
+            assert float(x) + 0.53 * 12.5 * len(line) <= 250, (card.name, line)  # stays inside the card

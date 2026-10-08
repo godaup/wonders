@@ -5,7 +5,8 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``GET /api/options`` — the game menu (expansions, agents, wonders, seat limits)
 - ``POST /api/new`` — start a game from a :class:`~wonders.play.session.GameConfig` dict
 - ``GET /api/state`` — the human's current view
-- ``POST /api/act`` — ``{"index": i}`` plays the i-th legal action
+- ``POST /api/act`` — ``{"index": i}`` plays the i-th legal action (``"payment": [left, right]``
+  optionally picks one of its listed splits of the purchase between the neighbours)
 - ``GET /api/record`` — the replayable GameRecord JSON
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A`` — renderings
 
@@ -78,11 +79,11 @@ class PlayServer:
         with self.lock:
             return None if self.session is None else self.session.state()
 
-    def act(self, index: int) -> Dict[str, Any]:
+    def act(self, index: int, payment: Optional[Sequence[int]] = None) -> Dict[str, Any]:
         with self.lock:
             if self.session is None:
                 raise ConfigError('no game in progress')
-            self.session.act(index)
+            self.session.act(index, payment)
             return self.session.state()
 
     def record(self) -> Optional[str]:
@@ -126,7 +127,7 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
 }
 POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any]], Response]] = {
     '/api/new': lambda play, body: _json({'state': play.new_game(body)}),
-    '/api/act': lambda play, body: _json({'state': play.act(int(body.get('index', -1)))}),
+    '/api/act': lambda play, body: _json({'state': play.act(int(body.get('index', -1)), body.get('payment'))}),
 }
 
 
