@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, List
+from dataclasses import dataclass, field, replace
+from typing import Dict, List, Optional, Tuple
 
 from wonders.cards.base import Card, IdentityEnum
 
@@ -19,6 +19,14 @@ class ActionKind(IdentityEnum):
 class Action:
     kind: ActionKind
     card: Card
+    # Optional (left, right) coins to pay the neighbours for resources (BUILD / WONDER). ``None``
+    # pays the cheapest way. Not part of equality, so an action with a chosen split still
+    # matches its legal action (and its action-space index).
+    payment: Optional[Tuple[int, int]] = field(default=None, compare=False)
+
+    def paying(self, left: int, right: int) -> 'Action':
+        """This action with a chosen split of the trade between the neighbours."""
+        return replace(self, payment=(left, right))
 
     @classmethod
     def build(cls, card: Card) -> 'Action':

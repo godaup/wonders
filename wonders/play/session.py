@@ -23,6 +23,7 @@ from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
 from wonders.env.environment import WondersEnv
 from wonders.ruleset import EXPANSIONS, Ruleset
+from wonders.viz.render import RES_NAME, cost_text, effect_lines
 
 HUMAN = 'human'
 SIDES = ('A', 'B', 'random')
@@ -277,23 +278,70 @@ class HumanSession:
         """The human's current Observation (``None`` once the game is over)."""
         return None if self.done else self.env.observation(self.human)
 
-    def act(self, index: int) -> None:
-        """Play the human's ``index``-th legal action (as listed in :meth:`state`)."""
+    def act(self, index: int, payment: Optional[Sequence[int]] = None) -> None:
+        """Play the human's ``index``-th legal action (as listed in :meth:`state`).
+
+        ``payment`` optionally chooses how to split the purchase between the neighbours, as
+        ``(left, right)`` coins — one of the action's ``payments`` in :meth:`state`.
+        """
         obs = self.observation()
         if obs is None:
             raise ConfigError('the game is over')
         legal = obs.legal_actions
         if not 0 <= index < len(legal):
             raise ConfigError(f'no legal action #{index}')
-        self.env.step({seat: self._choose(seat, legal[index]) for seat in self.env.acting})
+        action = legal[index]
+        if payment is not None:
+            split = (int(payment[0]), int(payment[1]))
+            options = self._payments(action)
+            if split not in {(p.left, p.right) for p in options}:
+                raise ConfigError(f'cannot pay {split[0]} left / {split[1]} right for {action.card.name}')
+            if (options[0].left, options[0].right) != split:  # the cheapest is the default anyway
+                action = action.paying(*split)
+        choices = {seat: self._choose(seat) for seat in self.env.acting if seat != self.human}
+        self.env.step({**choices, self.human: action})
         self._advance()
+
+    def _payments(self, action: Action):
+        game = self.env.game
+        assert game is not None
+        return game.payment_options(self.human, action)
 
     # -- views -----------------------------------------------------------------
     def card_info(self, name: str) -> Dict[str, Any]:
         card = self.cards.get(name)
         if card is None:
             return {'name': name, 'color': 'unknown'}
-        return {'name': name, 'color': card.color.value, 'age': card.age}
+        text = ['Cost: ' + cost_text(card.cost.coins, card.cost.resources)] + effect_lines(card.effects)
+        if card.chain_requires:
+            text.append('Free if you own ' + card.chain_requires)
+        if card.chain_enables:
+            text.append('Unlocks ' + ', '.join(card.chain_enables))
+        return {'name': name, 'color': card.color.value, 'age': card.age, 'text': text}
+
+    def boards(self, built: Sequence[int]) -> List[Dict[str, Any]]:
+        """Every seat's wonder board (public): starting resource and stages, ``built[seat]`` built."""
+        out = []
+        for seat, setup in enumerate(self.setups):
+            wonder = self.content.wonder(setup.wonder, setup.side)
+            res = wonder.starting_resource
+            out.append(
+                {
+                    'seat': seat,
+                    'produces': RES_NAME[res] if res is not None else 'nothing',
+                    'powers': effect_lines(wonder.effects),
+                    'stages': [
+                        {
+                            'index': k + 1,
+                            'cost': cost_text(stage.cost.coins, stage.cost.resources),
+                            'effects': effect_lines(stage.effects),
+                            'built': k < built[seat],
+                        }
+                        for k, stage in enumerate(wonder.stages)
+                    ],
+                }
+            )
+        return out
 
     def _actions(self, obs: Observation) -> List[Dict[str, Any]]:
         views = {c.name: c for c in obs.hand}
@@ -304,6 +352,13 @@ class HumanSession:
             if action.kind.value == 'build' and view is not None and view.build_coin_cost is not None:
                 entry.update(coins=view.build_coin_cost, bank=view.bank_coins, trade=view.trade_coins)
                 entry['chain'] = view.chain_free
+            if action.kind.value in ('build', 'wonder') and obs.decision == 'play':
+                payments = self._payments(action)
+                if action.kind.value == 'wonder' and payments and obs.next_wonder_stage is not None:
+                    stage_coins = int(obs.next_wonder_stage.cost.get('coins', 0) or 0)  # type: ignore[call-overload]
+                    entry.update(coins=stage_coins + payments[0].total, trade=payments[0].traded)
+                if len(payments) > 1:  # a real choice of whom to buy from
+                    entry['payments'] = [{'left': p.left, 'right': p.right, 'total': p.total} for p in payments]
             out.append(entry)
         return out
 
@@ -327,9 +382,11 @@ class HumanSession:
             view = obs.to_dict()
             view['actions'] = self._actions(obs)
             state['observation'] = view
+            state['boards'] = self.boards([city.stages_built for city in obs.table])
             cards = {c.name for c in obs.hand}
             cards.update(n for city in obs.table for n in city.cards)
             cards.update(e.card for e in obs.history if e.card)
+            cards.update(obs.leaders_hand)
             state['cards'] = {n: self.card_info(n) for n in sorted(cards)}
         else:
             scores = [game.score(i).as_dict() for i in range(game.n)]

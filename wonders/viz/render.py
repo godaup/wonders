@@ -95,7 +95,7 @@ SCI_NAME = {'tablet': 'Tablet', 'gear': 'Gear', 'compass': 'Compass'}
 SCIENCE, MILITARY, CIVIC, GOLD, GUILD = '#2f7d46', '#b23b3b', '#2f6fb0', '#c8951a', '#6b46a8'
 INK, MUTED, SLATE = '#233043', '#6b7684', '#334155'
 TILE_BG, TILE_LINE = '#f1f3f5', '#e4e7eb'
-SCOPE = {'self': 'self', 'neighbours': 'neighbors', 'both': 'all cities'}
+SCOPE = {'self': 'you', 'neighbours': 'neighbours', 'both': 'you + neighbours', 'others': 'all others'}
 
 # --- icon set (original 24x24 line icons, currentColor) ------------------
 ICONS = {
@@ -273,13 +273,41 @@ def _describe(effect) -> List[Row]:
     return [([('coin', MUTED)], type(effect).__name__)]
 
 
-def _row_svg(icons: List[Tuple[str, str]], label: str, x: float, y: float, size: float = 19, font: float = 12.5) -> str:
+def _row_svg(
+    icons: List[Tuple[str, str]],
+    label: str,
+    x: float,
+    y: float,
+    size: float = 19,
+    font: float = 12.5,
+    right: float = _W - 16,
+    maxlines: int = 3,
+) -> Tuple[str, float]:
+    """One effect row: icons, then the label wrapped to end at ``right``. Returns (svg, extra height)."""
     out, ix = [], x
     for key, color in icons[:3]:
         out.append(_icon(key, ix, y - size + 2, size, color))
         ix += size + 3
-    out.append(f'<text x="{ix + 4:.1f}" y="{y - 3:.1f}" font-size="{font}" fill="{INK}">{escape(label)}</text>')
-    return ''.join(out)
+    limit = max(8, int((right - ix - 4) / (font * 0.53)))  # average glyph width ~0.53 em
+    lines = _wrap(label, limit, maxlines)
+    step = font * 1.2
+    for k, line in enumerate(lines):
+        out.append(
+            f'<text x="{ix + 4:.1f}" y="{y - 3 + k * step:.1f}" font-size="{font}" fill="{INK}">{escape(line)}</text>'
+        )
+    return ''.join(out), (len(lines) - 1) * step
+
+
+def effect_lines(effects) -> List[str]:
+    """Plain-text descriptions of ``effects`` (one per rendered row), e.g. for tooltips."""
+    return [label for effect in effects for _icons, label in _describe(effect)]
+
+
+def cost_text(coins: int, resources) -> str:
+    """A plain-text cost such as ``'2 coins, 2 Stone, 1 Glass'`` (``'free'`` when nothing)."""
+    parts = [f'{coins} coin' + ('s' if coins != 1 else '')] if coins else []
+    parts += [f'{n} {RES_NAME[res]}' for res, n in sorted(resources.items(), key=lambda kv: kv[0].value)]
+    return ', '.join(parts) or 'free'
 
 
 def card_svg(card: Card) -> str:
@@ -332,10 +360,11 @@ def card_svg(card: Card) -> str:
         f'<rect x="12" y="132" width="4" height="{panel_h}" rx="2" fill="{fill}"/>'
         f'<text x="26" y="152" font-size="10" letter-spacing="1.2" fill="{MUTED}">EFFECTS</text>'
     )
-    y = 178
+    y = 178.0
     for icons, label in rows:
-        parts.append(_row_svg(icons, label, 26, y))
-        y += 28
+        row, extra = _row_svg(icons, label, 26, y)
+        parts.append(row)
+        y += 28 + extra
     if card.chain_requires:
         parts.append(_icon('chain', 24, y - 18, 18, GUILD))
         parts.append(
@@ -375,10 +404,11 @@ def _stage_panel(stage: WonderStage, index: int, x: float) -> str:
         f'<text x="{x + 12:.0f}" y="{y0 + 48}" font-size="9.5" fill="{MUTED}">COST</text>',
         _cost_row(stage.cost.coins, stage.cost.resources, x + 12, y0 + 54, tile=26, gap=5),
     ]
-    ey = y0 + 108
+    ey = float(y0 + 108)
     for icons, label in [r for e in stage.effects for r in _describe(e)][:2]:
-        out.append(_row_svg(icons, label, x + 12, ey, size=18, font=11.5))
-        ey += 26
+        row, extra = _row_svg(icons, label, x + 12, ey, size=18, font=11.5, right=x + w - 6, maxlines=2)
+        out.append(row)
+        ey += 26 + extra
     return ''.join(out)
 
 

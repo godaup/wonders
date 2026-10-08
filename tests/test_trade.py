@@ -3,7 +3,7 @@
 from collections import Counter
 
 from wonders.cards.base import Ressource as R
-from wonders.engine.trade import cheapest_payment
+from wonders.engine.trade import Payment, cheapest_payment, payment_options
 
 
 def price_two(side, resource):
@@ -62,3 +62,21 @@ def test_minimises_across_split_sources():
     )
     # cheapest: self wood (0) + left wood (1) + left ore (1) = 2
     assert pay.total == 2 and pay.left == 2
+
+
+def test_payment_options_list_every_useful_split():
+    # Two wood, both neighbours sell it; the left one at 1 coin, the right one at 2.
+    def price(side, resource):
+        return 1 if side == 'left' else 2
+
+    wood = Counter([R.WOOD, R.WOOD])
+    sellers = [fs(R.WOOD), fs(R.WOOD)]
+    options = payment_options(wood, own=[], left=sellers, right=sellers, price=price)
+    assert options == [Payment(2, 2, 0), Payment(3, 1, 2), Payment(4, 0, 4)]
+    assert options[0] == cheapest_payment(wood, own=[], left=sellers, right=sellers, price=price)
+
+
+def test_payment_options_drop_dominated_splits_and_unaffordable_costs():
+    options = payment_options(Counter([R.ORE]), own=[fs(R.ORE)], left=[fs(R.ORE)], right=[], price=price_two)
+    assert options == [Payment(0, 0, 0)]  # paying a neighbour for what you produce is never useful
+    assert payment_options(Counter([R.GLASS]), own=[], left=[], right=[], price=price_two) == []

@@ -21,7 +21,7 @@ the others played by agents.
 from __future__ import annotations
 
 import random
-from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, Generator, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
 from wonders.agents.base import Agent
 from wonders.agents.encoders import DECISIONS, LEADERS_DECISIONS, CardEncoder, Encoder
@@ -144,8 +144,11 @@ class WondersEnv:
         self._point = next(self._steps)
         return self._observe()
 
-    def step(self, actions: Dict[int, int]) -> StepResult:
+    def step(self, actions: Mapping[int, Union[int, Action]]) -> StepResult:
         """Apply one action index per acting seat; return PettingZoo-style dicts.
+
+        A seat may give a legal :class:`Action` instead of its index — e.g. one with a chosen
+        split of its purchase between the neighbours (:meth:`Action.paying`).
 
         Returns ``(observations, rewards, terminations, truncations, infos)``. Rewards,
         terminations and truncations cover every seat; observations and infos cover the
@@ -156,10 +159,7 @@ class WondersEnv:
         if set(actions) != set(self._point.options):
             raise ValueError(f'expected actions for seats {sorted(self._point.options)}, got {sorted(actions)}')
         game = self._require_game()
-        chosen = {
-            seat: self.action_space.to_action(index, game.legal_actions(seat, self._point.options[seat]))
-            for seat, index in actions.items()
-        }
+        chosen = {seat: self._chosen(game, seat, choice) for seat, choice in actions.items()}
         try:
             self._point = self._steps.send(chosen)
         except StopIteration:
@@ -201,6 +201,15 @@ class WondersEnv:
         if self.game is None:
             raise RuntimeError('call reset() first')
         return self.game
+
+    def _chosen(self, game: Game, seat: int, choice: Union[int, Action]) -> Action:
+        assert self._point is not None
+        legal = game.legal_actions(seat, self._point.options[seat])
+        if isinstance(choice, Action):
+            if choice not in legal:
+                raise ValueError(f'seat {seat}: {choice.kind.value} {choice.card.name} is not legal')
+            return choice
+        return self.action_space.to_action(choice, legal)
 
     def _random_setups(self, rng: random.Random) -> List[PlayerSetup]:
         names = list(dict.fromkeys(w.name for w in self.content.wonders))

@@ -10,6 +10,10 @@ Extra decisions granted by wonder powers (Babylon B's 7th card, Halicarnassus'
 discard build) are kept in ``extras``, one ``[turn, kind, seat, code, card]`` entry per
 decision in the order the engine asked for them.
 
+A move on which the player chose how to split a purchase between the neighbours (see
+:meth:`~wonders.engine.actions.Action.paying`) carries the coins paid as two more numbers,
+``[code, card, left, right]``; moves without them paid the cheapest way.
+
 The decks are stored explicitly (not as an RNG seed) so replay does not depend on
 the shuffle implementation or engine version — only on the rules staying stable.
 """
@@ -118,9 +122,9 @@ class GameRecord:
         for age in (1, 2, 3):
             lines.append(f'Age {age}:')
             for t, turn in enumerate(self.moves.get(age, []), 1):
-                parts = [f'{self.players[seat].name} {code}:{name}' for seat, (code, name) in enumerate(turn)]
+                parts = [f'{self.players[seat].name} {move[0]}:{move[1]}' for seat, move in enumerate(turn)]
                 lines.append(f'  {t}. ' + ' | '.join(parts))
-                for turn_idx, kind, seat, code, name in self.extras.get(age, []):
+                for turn_idx, kind, seat, code, name, *_split in self.extras.get(age, []):
                     if turn_idx == t - 1:
                         lines.append(f'     + {self.players[seat].name} {code}:{name} ({kind})')
         return '\n'.join(lines)
@@ -148,16 +152,18 @@ class GameRecord:
         """Answer the engine's decision points for ``age`` from the recorded moves."""
         extras = iter(self.extras.get(age, []))
 
-        def pick(options: List[Card], code: str, name: str) -> Action:
+        def pick(options: List[Card], move: Sequence[Any]) -> Action:
+            code, name, split = move[0], move[1], move[2:]
             card = next((c for c in options if c.name == name), None)
             if card is None:
                 raise ReplayError(f'Age {age}: recorded card {name!r} is not among the options')
-            return Action(_KIND[code], card)
+            action = Action(_KIND[code], card)
+            return action.paying(int(split[0]), int(split[1])) if len(split) == 2 else action
 
         def choose(point: DecisionPoint) -> Dict[int, Action]:
             if point.kind is DecisionKind.PLAY:
                 row = self.moves[age][point.turn]
-                return {seat: pick(opts, *row[seat]) for seat, opts in point.options.items()}
+                return {seat: pick(opts, row[seat]) for seat, opts in point.options.items()}
             if point.kind is DecisionKind.RECRUIT:
                 plays = self.recruits.get(age, [])
                 actions = {}
@@ -165,17 +171,25 @@ class GameRecord:
                     entry = plays[seat] if seat < len(plays) else None
                     if entry is None:
                         raise ReplayError(f'Age {age}: no recorded recruitment for seat {seat}')
-                    actions[seat] = pick(opts, *entry)
+                    actions[seat] = pick(opts, entry)
                 return actions
             actions = {}
             for seat, opts in point.options.items():
                 entry = next(extras, None)
                 if entry is None or entry[:3] != [point.turn, point.kind.value, seat]:
                     raise ReplayError(f'Age {age}: no recorded {point.kind.value} decision for seat {seat}')
-                actions[seat] = pick(opts, entry[3], entry[4])
+                actions[seat] = pick(opts, entry[3:])
             return actions
 
         return choose
+
+
+def _move(action: Action) -> List[Any]:
+    """``[code, card]``, plus ``left, right`` coins when the player chose how to split a purchase."""
+    move: List[Any] = [_CODE[action.kind], action.card.name]
+    if action.payment is not None:
+        move += list(action.payment)
+    return move
 
 
 class RecordBuilder:
@@ -195,12 +209,11 @@ class RecordBuilder:
         self.age_decks[age] = list(names)
 
     def add_turn(self, age: int, actions: Sequence[Action]) -> None:
-        self.moves[age].append([[_CODE[a.kind], a.card.name] for a in actions])
+        self.moves[age].append([_move(a) for a in actions])
 
     def add_extra(self, point: DecisionPoint, actions: Dict[int, Action]) -> None:
         for seat in sorted(actions):
-            a = actions[seat]
-            self.extras[point.age].append([point.turn, point.kind.value, seat, _CODE[a.kind], a.card.name])
+            self.extras[point.age].append([point.turn, point.kind.value, seat, *_move(actions[seat])])
 
     def set_leader_box(self, box: Sequence[Card]) -> None:
         self.leader_box = [c.name for c in box]

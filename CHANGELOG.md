@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* GUI: card effect text wraps; larger wonder board and every board's stages with their effects;
+  resources, VP labels and hover tooltips for every city, card and stage; leaders shown as
+  cards; a passing-direction banner; duplicate cards merged; choose which neighbour to buy
+  from (`Action.paying`, `Game.payment_options`, recorded in `GameRecord`).
+* Builders Guild text now says it counts your and your neighbours' wonder stages.
 * Complete base game: full deck and wonders, with the special wonder powers mechanized
   (Babylon B, Olympia A/B, Halicarnassus).
 * Optional, combinable expansions: Leaders (official deck, draft and recruitment) and
