@@ -40,6 +40,10 @@ header { position: sticky; top: 0; z-index: 5; display: flex; align-items: cente
 header h1 { font-size: 17px; letter-spacing: .3px; }
 header .status { flex: 1; color: var(--muted); }
 header .status b { color: var(--ink); }
+header .status .pass { color: var(--accent); }
+header .status .todo { color: var(--ink); }
+header .status .hint { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%;
+  border: 1px solid var(--line); font-size: 11px; font-weight: 700; cursor: help; color: var(--muted); }
 header .tools { display: flex; gap: 8px; }
 
 main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
@@ -201,7 +205,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
   header .tools button { padding: 5px 9px; font-size: 13px; }
   .log { position: static; max-height: 320px; }
   #menu .grid { grid-template-columns: 1fr; }
-  header .status { display: none; }
+  header .status { order: 3; flex-basis: 100%; font-size: 12px; }
 }
 </style>
 </head>
@@ -264,7 +268,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
               <div class="res" id="g-res"></div>
             </div>
             <div>
-              <p class="section-title" style="margin-top:0">Your city <span id="g-count" class="muted"></span></p>
+              <p class="section-title" style="margin-top:0">Your city</p>
               <div class="citygroups" id="g-tableau"></div>
             </div>
           </div>
@@ -279,11 +283,6 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
         </div>
       </div>
       <div class="panel">
-        <div class="turnbar">
-          <div class="passing hidden" id="g-passing"></div>
-          <div class="decision" id="g-decision"></div>
-          <button id="g-help" class="help-toggle hidden" data-tip="Show the explanation">?</button>
-        </div>
         <div class="hand" id="g-hand"></div>
       </div>
     </div>
@@ -512,6 +511,8 @@ function tableau(names) {
   const color = (n) => COLORS.indexOf(((state.cards || {})[n] || {}).color);
   return [...names].sort((a, b) => color(a) - color(b) || a.localeCompare(b)).map(chip);
 }
+const SHORT_GROUPS = { brown: 'Raw', grey: 'Goods', yellow: 'Trade', red: 'Mil.', blue: 'Civic', green: 'Sci.',
+  purple: 'Guild', white: 'Lead.', black: 'City' };
 const GROUPS = { brown: 'Raw materials', grey: 'Manufactured', yellow: 'Commercial', red: 'Military', blue: 'Civic',
   green: 'Science', purple: 'Guilds', white: 'Leaders', black: 'Cities' };
 function cityGroups(names) {
@@ -521,7 +522,8 @@ function cityGroups(names) {
   for (const color of [...COLORS, 'unknown']) {
     const cards = by[color];
     if (!cards) continue;
-    out.push(el('span', { class: 'cg-label', style: `--cg: var(--c-${color})` }, GROUPS[color] || 'Other', el('b', {}, String(cards.length))),
+    out.push(el('span', { class: 'cg-label', style: `--cg: var(--c-${color})`, 'data-tip': (GROUPS[color] || 'Other') + ': ' + cards.length },
+      SHORT_GROUPS[color] || 'Other'),
       el('div', { class: 'tableau' }, cards.sort().map(chip)));
   }
   if (!out.length) out.push(el('span', { class: 'muted', style: 'font-size:12px' }, 'nothing built yet'));
@@ -598,7 +600,6 @@ function renderMe(obs) {
   const add = (k, v, tip) => kv.append(el('dt', {}, k), el('dd', { 'data-tip': tip }, v));
   if (obs.free_builds_left) add('Free builds', obs.free_builds_left + ' left this Age', 'Build a card from your hand for free');
   kv.classList.toggle('hidden', !kv.children.length);
-  $('g-count').textContent = '· ' + me.cards.length + ' cards';
   $('g-tableau').replaceChildren(...cityGroups(me.cards));
 }
 
@@ -638,39 +639,16 @@ function actionButtons(a, obs) {
   });
   return [button, el('div', { class: 'pay', 'data-tip': 'Choose whom to buy from: coins to your left · right neighbour' }, pills)];
 }
-function renderPassing(obs) {
-  const box = $('g-passing');
-  const show = obs.decision === 'play' || obs.decision === 'draft';
-  box.classList.toggle('hidden', !show);
-  if (!show) return;
-  const left = obs.decision === 'draft' || obs.pass_left;
-  const to = playerName((left ? obs.left : obs.right).seat);
-  box.classList.toggle('right', !left);
-  box.replaceChildren(el('span', { class: 'arrow' }, left ? '⬅' : '➡'),
-    el('span', { 'data-tip': 'Your remaining hand goes to ' + to + (obs.decision === 'draft' ? ' after each draft pick' : ' after every turn this Age') },
-      'Passing ' + (left ? 'left' : 'right') + ' to ' + to));
-}
 const SHORT = { play: 'Your turn: pick a card', last_card: 'Babylon: play your last card?', discard_build: 'Build a discarded card for free',
   draft: 'Leaders draft: keep one', recruit: 'Recruit a leader', leader_build: 'Rome: recruit an extra leader',
   copy_leader: "Courtesans' Guild: copy a leader" };
-let helpOpen = store.get('help', true);
-function renderDecision(obs) {
-  const flip = () => { helpOpen = !helpOpen; store.set('help', helpOpen); hideTip(); renderDecision(obs); };
-  const text = el('span', { class: 'help' });
-  text.innerHTML = DECISIONS[obs.decision] || 'Your move.';
-  $('g-decision').replaceChildren(text, el('button', { class: 'help-toggle', 'data-tip': 'Hide the explanation', onclick: flip }, '−'));
-  $('g-decision').classList.toggle('hidden', !helpOpen);
-  $('g-help').classList.toggle('hidden', helpOpen);
-  $('g-help').onclick = flip;
-}
+const plain = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent; };
 function pairUp(buttons) {  // secondary moves sit two per row; a leftover one takes the full row
   const halves = buttons.filter((b) => b.tagName === 'BUTTON' && !b.classList.contains('primary'));
   if (halves.length % 2) halves[halves.length - 1].style.gridColumn = '1 / -1';
   return buttons;
 }
 function renderHand(obs) {
-  renderPassing(obs);
-  renderDecision(obs);
   const byCard = new Map();
   for (const a of obs.actions) {
     if (!byCard.has(a.card)) byCard.set(a.card, []);
@@ -729,9 +707,19 @@ function setHeader() {
   if (state.done) { $('status').innerHTML = '<b>Game over</b>'; return; }
   const obs = state.observation;
   const phase = { draft: 'Leaders draft', recruit: 'Recruitment' }[obs.decision];
-  $('status').innerHTML = (phase ? `<b>${phase}</b>${obs.age ? ' · before Age ' + AGES[obs.age] : ''}` :
-    `<b>Age ${AGES[obs.age]}</b> · turn ${obs.turn + 1} · <b>${obs.pass_left ? '⬅ passing left' : 'passing right ➡'}</b>`) +
-    ' · ' + state.expansions.join(' + ');
+  const parts = [phase ? el('b', {}, phase + (obs.age ? ' · before Age ' + AGES[obs.age] : ''))
+    : el('span', {}, el('b', {}, 'Age ' + AGES[obs.age]), ' · turn ' + (obs.turn + 1))];
+  if (obs.decision === 'play' || obs.decision === 'draft') {
+    const left = obs.decision === 'draft' || obs.pass_left;
+    const to = playerName((left ? obs.left : obs.right).seat);
+    parts.push(el('b', { class: 'pass', 'data-tip': 'Your remaining hand goes to ' + to +
+      (obs.decision === 'draft' ? ' after each draft pick' : ' after every turn this Age') },
+      left ? '⬅ passing left to ' + to : 'passing right to ' + to + ' ➡'));
+  }
+  parts.push(el('span', { class: 'todo' }, SHORT[obs.decision] || 'Your move',
+    el('span', { class: 'hint', 'data-tip': plain(DECISIONS[obs.decision] || 'Your move.') }, '?')));
+  parts.push(el('span', {}, state.expansions.join(' + ')));
+  $('status').replaceChildren(...parts.flatMap((x, k) => (k ? [' · ', x] : [x])));
 }
 
 const CAT_COLOR = { military: 'var(--c-red)', treasury: 'var(--gold)', wonders: 'var(--c-grey)', civilian: 'var(--c-blue)',
