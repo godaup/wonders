@@ -201,6 +201,19 @@ existing effect types. A custom-expansion feature would make that a first-class 
 
 ## Smaller items
 
+* **Python 3.14.** Support and test the newest Python:
+  * add 3.14 where the supported versions are declared — `pyproject.toml` classifiers and black
+    `target-version`, the tox `envlist` and its `gh-actions` map in `setup.cfg`, the
+    `.github/workflows/dev.yml` matrix, CLAUDE.md and the README badge;
+  * run the full suite on 3.14; the core only needs `click`, so it should pass as is. Check that
+    PyTorch and NumPy publish 3.14 wheels before adding 3.14 to the `ml` job;
+  * try the **free-threaded build** (`python3.14t`, no GIL). The engine is pure Python, so game
+    simulation could run in threads instead of worker processes (less memory and no pickling in
+    vector envs, benchmarks and search). It needs a thread-safety review of the shared caches
+    (`Player._cache`, `Game._payments`, the observation summary cache, `lru_cache`d content) and a
+    PyTorch build for free-threading; benchmark before switching anything;
+  * Python 3.10 reaches end of life in October 2026: consider raising `requires-python` to 3.11
+    when 3.14 is added, keeping a four-version window.
 * Publish to PyPI once the API settles (release flow in `CLAUDE.md`).
 * A replay viewer in the GUI for recorded games (`GameRecord` JSON), reusing the review screen of
   item 3.
