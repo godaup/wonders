@@ -90,7 +90,47 @@ evaluator merged).
 **Plan (~2–3 days).** Analysis job + JSON report (move ratings, key moments) → GUI review screen
 (graph, key moments with hand / board, patterns) → what-if replays.
 
-## 4. Remaining expansions
+## 4. Model challenge via pull requests
+
+**Goal.** Anyone can submit a model by pull request and get an automatic head-to-head against the
+bundled network, with a scorecard posted on the PR — the README's "beat the machine" challenge as a
+contribution path, ending in a public leaderboard.
+
+**Submission.** A PR adds `models/contrib/<name>.pt` (a 256×2 checkpoint is ~4 MB, no Git LFS
+needed) and `models/contrib/<name>.yml` (author, description, how it was trained).
+
+**Evaluation workflow** (GitHub Actions, triggered by changes under `models/`):
+
+1. **Validate** before spending compute: a loadable checkpoint (loaded with `weights_only=True`, as
+   everywhere), the expected encoder and vocabulary, a size limit, and the rules version it was
+   trained under — checkpoints should start recording it, so models from before a rules change are
+   flagged.
+2. **Play** `wonders train h2h <name>=models/contrib/<name>.pt bundled` with a fixed seed and random
+   seating, split into a job matrix by expansion combination (4 cores each on a standard runner;
+   ~4,000 games in roughly 10–20 minutes, about ±1.5–2 points of 95% interval).
+3. **Report** as a PR comment and job summary:
+   * overall: ranked above the bundled network (with interval), first-place share, mean score;
+   * per expansion combination and player count, showing where the model is stronger or weaker;
+   * strengths and weaknesses by score category (military, science, commercial, guilds, wonders,
+     treasury) relative to the bundled network, plus play-style statistics (coins spent on trade,
+     wonder stages built, science sets completed) — the head-to-head report needs to collect these;
+   * a verdict: *new state of the art* only when the interval's lower bound is above 50%.
+4. **Leaderboard** — on merge, a workflow updates `LEADERBOARD.md` (or a GitHub Pages page); a clear
+   winner can become the next bundled network.
+
+**Security.** The evaluation runs main's code and takes only the model file from the PR, so a PR
+cannot change the referee. Use the two-workflow pattern: the `pull_request` job (read-only token,
+no secrets) evaluates and uploads the results as an artifact; a separate `workflow_run` job with
+permission to comment posts them without executing anything from the PR.
+
+**Reproducibility.** Fixed seeds: the scorecard lists the exact command, so anyone can reproduce
+the numbers locally.
+
+**Prerequisites.** GitHub Actions running for the repository (free for public repositories on
+standard runners); a rules-version field in checkpoints. **Effort:** ~1–2 days, mostly the
+scorecard, the category breakdown and the validator.
+
+## 5. Remaining expansions
 
 Expansions are optional and combinable (`wonders/ruleset.py`); content is data in
 `wonders/cards/data/<id>.json`, new mechanics are new `Effect` hooks, and turn-structure changes are
