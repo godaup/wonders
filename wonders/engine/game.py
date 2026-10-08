@@ -522,7 +522,7 @@ class Game:
         return max(range(self.n), key=key)
 
     # -- draft loop --------------------------------------------------------
-    def age_steps(self, age: int, hands: List[List[Card]]) -> AgeSteps:
+    def age_steps(self, age: int, hands: List[List[Card]], first_turn: int = 0) -> AgeSteps:
         """Play one Age as a coroutine that yields every decision point.
 
         Each yielded :class:`DecisionPoint` lists the seats that must choose and their
@@ -535,18 +535,23 @@ class Game:
         other leftover is discarded (no coins). After each turn, owed discard-pile
         builds (Halicarnassus) are resolved one seat at a time, so they see every card
         discarded that turn — including the end-of-Age leftovers.
+
+        ``first_turn`` resumes an Age already in progress (``hands`` are then the hands held
+        at that turn, and free builds already spent this Age are kept) — used by search,
+        which rebuilds positions mid-Age.
         """
         self.age = age
         self.phase = Phase.for_age(age)
-        for player in self.players:
-            player.free_builds_used = 0
+        if first_turn == 0:
+            for player in self.players:
+                player.free_builds_used = 0
         pass_left = self.phase.pass_left
-        plays = len(hands[0]) - 1
-        for turn in range(plays):
+        last_turn = first_turn + len(hands[0]) - 2
+        for turn in range(first_turn, last_turn + 1):
             self.turn = turn
             actions = yield self._ask(DecisionKind.PLAY, {i: hands[i] for i in range(self.n)})
             self._resolve(actions, hands)
-            if turn == plays - 1:
+            if turn == last_turn:
                 last = {i: hands[i] for i in range(self.n) if hands[i] and self.players[i].plays_last_card()}
                 if last:
                     self._resolve((yield self._ask(DecisionKind.LAST_CARD, last)), hands)
