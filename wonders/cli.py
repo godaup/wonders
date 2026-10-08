@@ -229,6 +229,73 @@ def ppo(init_path, iterations, opponents, envs, envs_per_worker, lr, seed, out):
 
 
 @train.command()
+@click.argument('checkpoint', type=click.Path(exists=True, dir_okay=False))
+@click.option('--games', '-n', default=2000, type=int, show_default=True, help='Games with one searching seat.')
+@click.option('--cells', default='all', show_default=True, help="'all' or e.g. base/3p,leaders+cities/5p")
+@click.option('--depth', default=3, type=int, show_default=True, help='Turns searched before the value head.')
+@click.option('--worlds', default=16, type=int, show_default=True, help='Sampled worlds per decision.')
+@click.option('--candidates', default=4, type=int, show_default=True, help='Moves searched per decision.')
+@click.option('--temperature', default=1.0, type=float, show_default=True, help='VP; soft-target temperature.')
+@click.option('--opponents', default='neural', show_default=True, help="Other seats: 'neural' or built-in names.")
+@click.option('--epochs', default=3, type=int, show_default=True)
+@click.option('--lr', default=1e-4, type=float, show_default=True)
+@click.option('--seed', default=0, type=int, show_default=True)
+@click.option('--processes', '-p', default=6, type=int, show_default=True)
+@click.option(
+    '--data', 'data_path', type=click.Path(dir_okay=False), help='Save the search data here (reused if present).'
+)
+@click.option('--out', '-o', default='expert.pt', show_default=True, type=click.Path(dir_okay=False))
+def expert(
+    checkpoint,
+    games,
+    cells,
+    depth,
+    worlds,
+    candidates,
+    temperature,
+    opponents,
+    epochs,
+    lr,
+    seed,
+    processes,
+    data_path,
+    out,
+):
+    """Expert iteration: record network-guided search with CHECKPOINT, then distil it back into the network."""
+    ml = _ml()
+    from wonders.ml.evaluate import parse_cells
+    from wonders.ml.expert import SearchDataset, collect_search, distill
+    from wonders.ruleset import RULES_VERSION
+
+    if data_path and os.path.isfile(data_path):
+        data = SearchDataset.load(data_path)
+        click.echo(f'loaded {len(data)} decisions from {data_path}')
+    else:
+        names = [n.strip() for n in opponents.split(',') if n.strip()]
+        data = collect_search(
+            checkpoint,
+            games,
+            parse_cells(cells),
+            depth=depth,
+            worlds=worlds,
+            candidates=candidates,
+            temperature=temperature,
+            opponents=names,
+            seed=seed,
+            processes=processes,
+            log=click.echo,
+        )
+        click.echo(f'recorded {len(data)} decisions from {games} games')
+        if data_path:
+            data.save(data_path)
+    model, card_names, meta = ml.load_checkpoint(checkpoint)
+    metrics = distill(model, data, epochs=epochs, lr=lr, seed=seed, log=click.echo)
+    meta.update(source='expert', init=os.path.abspath(checkpoint), rules_version=RULES_VERSION, **metrics)
+    ml.save_checkpoint(out, model, card_names, **meta)
+    click.echo(f'saved {out}')
+
+
+@train.command()
 @click.argument('spec', type=click.Path(exists=True, dir_okay=False))
 @click.option('--only', multiple=True, help='Only runs whose name starts with this (repeatable).')
 @click.option('--processes', '-p', default=6, type=int, show_default=True, help='Worker processes.')
