@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Rules fix: cards used for a wonder stage stay under the board and discarded leaders return
+  to the box (Leaders rulebook) — neither goes to the discard pile, so Halicarnassus / Solomon
+  can only build discarded Age cards.
 * Rules fix: neighbours may only buy the board's resource and brown / grey card production;
   yellow cards (Forum, Caravansery, ...), wonder stages and leaders produce for their owner only
   (`Player.tradeable_slots`, `CityView.trade_production`).

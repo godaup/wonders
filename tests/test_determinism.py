@@ -20,7 +20,9 @@ from wonders.cards.content import load_content
 from wonders.engine.record import PlayerSetup
 from wonders.env import WondersEnv
 
-EXPECTED = '9f9ff8349762b001e4687bb8cf5af2170f3a0f200a0ff332ae0c19f3be5c6de0'  # neighbours buy only board + brown/grey
+EXPECTED = (
+    '57445956d9a23534c6214d46764f642d491e489d9fa1d6c16873b138e2f130de'  # buried cards and leaders skip the discard pile
+)
 
 
 def _digest() -> str:

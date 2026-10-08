@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 import random
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from wonders.agents.base import Agent
@@ -133,6 +134,19 @@ class GameConfig:
         }
 
 
+def _asset_version() -> str:
+    """A short hash of the card renderer and the card data, so browsers refetch changed images."""
+    import hashlib
+
+    from wonders.viz import render
+
+    digest = hashlib.sha1(Path(render.__file__).read_bytes())
+    for exp in EXPANSIONS.values():
+        if exp.implemented:
+            digest.update(repr([(c.name, c.effects) for c in load_content(exp.id).cards]).encode())
+    return digest.hexdigest()[:10]
+
+
 def menu_options(checkpoints: Sequence[str] = ()) -> Dict[str, Any]:
     """What the game menu can offer: expansions, agents, wonders per expansion, seat limits."""
     expansions = []
@@ -153,6 +167,7 @@ def menu_options(checkpoints: Sequence[str] = ()) -> Dict[str, Any]:
         'defaults': GameConfig().to_dict(),
         # The card renderer's icons (24x24, currentColor), so the page draws the same symbols.
         'icons': dict(ICONS),
+        'asset_version': _asset_version(),  # cache-busts card / board images when the renderer changes
         'resources': {r.value: {'icon': RES_ICON[r], 'color': RES_COLOR[r], 'name': RES_NAME[r]} for r in RES_ICON},
     }
 

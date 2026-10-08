@@ -83,6 +83,9 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .city.neighbour { border-color: var(--accent); }
 .city-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .city-head h3 { font-size: 15px; }
+.city-head > div:first-child { min-width: 0; flex: 1 1 auto; }
+.city-head .score { flex: none; }
+.me-side .score { display: block; text-align: right; font-size: 26px; margin-bottom: 6px; }
 .score { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .score small { font-size: 11px; font-weight: 700; color: var(--muted); margin-left: 3px; letter-spacing: .5px; }
 .score .laurel { color: var(--gold); font-size: 15px; margin-right: 3px; }
@@ -100,8 +103,8 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .me-body { display: grid; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); gap: 18px; align-items: start; }
 .me-body .statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
 .logcard { cursor: zoom-in; text-decoration: underline dotted; text-underline-offset: 2px; }
-.leaders { display: flex; gap: 6px; }
-.leaders img { width: 66px; border-radius: 8px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
+.leaders { display: grid; grid-template-columns: repeat(3, 60px); gap: 6px; }
+.leaders img { width: 60px; border-radius: 8px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
 .turnbar { display: flex; gap: 10px; align-items: stretch; margin-bottom: 10px; }
 .turnbar .decision { flex: 1; margin: 0; align-self: center; }
 .passing { display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-radius: 10px; white-space: nowrap;
@@ -123,7 +126,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .cardchip { font-size: 11px; padding: 2px 7px; border-radius: 6px; color: #fff; border: 0; cursor: pointer; line-height: 1.5; }
 .cardchip.white { color: #1f2a37; }
 .cardchip.black { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
-.me { display: grid; grid-template-columns: fit-content(58%) minmax(320px, 1fr) auto; gap: 18px; margin-bottom: 12px; align-items: start; }
+.me { display: grid; grid-template-columns: fit-content(50%) minmax(320px, 1fr) auto; gap: 18px; margin-bottom: 12px; align-items: start; }
 .board img { width: auto; max-width: 100%; max-height: 270px; border-radius: 10px; display: block; cursor: zoom-in; }
 .me-info .section-title { margin-top: 10px; }
 .stages { display: flex; gap: 6px; margin-top: 8px; }
@@ -253,7 +256,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
           <img id="g-board" alt="Your wonder board">
         </div>
         <div class="me-info">
-          <div class="city-head"><h3 id="g-name"></h3><span class="score" id="g-score"></span></div>
+          <div class="city-head"><h3 id="g-name"></h3></div>
           <div class="me-body">
             <div>
               <div class="statgrid" id="g-stats"></div>
@@ -267,6 +270,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
           </div>
         </div>
         <div class="me-side">
+          <span class="score" id="g-score"></span>
           <div id="g-leaders-box" class="hidden">
             <p class="section-title">Leaders in hand</p>
             <div class="leaders" id="g-leaders"></div>
@@ -328,7 +332,7 @@ const AGES = ['', 'I', 'II', 'III'];
 const DECISIONS = {
   play: 'Choose a card: <b>build</b> it, use it for a <b>wonder stage</b>, or <b>discard</b> it for 3 coins. The rest of the hand passes on.',
   last_card: '<b>Babylon:</b> you may also play the last card of this Age.',
-  discard_build: '<b>Halicarnassus:</b> build one card from the discard pile for free.',
+  discard_build: '<b>Build from the discard pile:</b> choose one discarded Age card and build it for free (Halicarnassus or Solomon).',
   draft: '<b>Leaders draft:</b> keep one leader and pass the rest.',
   recruit: '<b>Recruit</b> a leader for this Age, use one for a wonder stage, or discard one for 3 coins.',
   leader_build: '<b>Rome:</b> recruit an extra leader right away.',
@@ -346,8 +350,9 @@ async function api(path, body) {
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
 }
-const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name);
-const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + (built || 0);
+const assetV = () => '&v=' + ((options && options.asset_version) || '0');
+const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name) + assetV();
+const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + (built || 0) + assetV();
 const show = (id) => ['menu', 'game', 'result'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
 function viewUrl(src, alt, wide) {
   const img = $('viewer').querySelector('img');
@@ -645,7 +650,7 @@ function renderPassing(obs) {
     el('span', { 'data-tip': 'Your remaining hand goes to ' + to + (obs.decision === 'draft' ? ' after each draft pick' : ' after every turn this Age') },
       'Passing ' + (left ? 'left' : 'right') + ' to ' + to));
 }
-const SHORT = { play: 'Your turn: pick a card', last_card: 'Babylon: play your last card?', discard_build: 'Halicarnassus: build from the discards',
+const SHORT = { play: 'Your turn: pick a card', last_card: 'Babylon: play your last card?', discard_build: 'Build a discarded card for free',
   draft: 'Leaders draft: keep one', recruit: 'Recruit a leader', leader_build: 'Rome: recruit an extra leader',
   copy_leader: "Courtesans' Guild: copy a leader" };
 let helpOpen = store.get('help', true);

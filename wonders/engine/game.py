@@ -343,13 +343,15 @@ class Game:
         self._settle(i, coins_to_bank, pay)
         player = self.players[i]
         player.add_stage(stage)
-        self.discard_pile.append(card)  # the card itself is buried, effect ignored
+        # The card is tucked under the board face down (effect ignored): it does not go to the discard
+        # pile, so Halicarnassus / Solomon cannot build it later.
         self._activate(i, stage.effects)
         self._income(i, BuildEvent(None, traded=pay.traded, neighbours_traded=_sides(pay)))
 
     def _do_discard(self, i: int, card: Card) -> None:
         self.players[i].coins += DISCARD_COINS
-        self.discard_pile.append(card)
+        if card.color is not Color.WHITE:  # discarded leaders return to the box (Leaders rulebook), not the pile
+            self.discard_pile.append(card)
 
     def _do_free(self, i: int, card: Card) -> None:
         """Build without paying: from the discard pile (Halicarnassus) or from hand (Olympia)."""

@@ -173,3 +173,25 @@ def test_neighbours_sell_only_board_and_brown_grey_resources():
     players[2].add_card(content.card('Glassworks'))  # grey: may be bought
     pay = game.payment_for(0, glass)
     assert pay is not None and pay.right == 2 and pay.left == 0
+
+
+def test_buried_cards_and_discarded_leaders_skip_the_discard_pile():
+    from wonders.cards.content import load_content
+    from wonders.engine.actions import Action
+    from wonders.engine.game import Game
+    from wonders.engine.player import Player
+
+    content = load_content('base', 'leaders')
+    players = [
+        Player(f'P{i}', content.wonder(w, 'A'), coins=10)
+        for i, w in enumerate(['The Pyramids of Giza', 'The Colossus of Rhodes', 'The Temple of Artemis in Ephesus'])
+    ]
+    game = Game(players, expansions=('base', 'leaders'))
+    players[0].add_card(content.card('Stone Pit'))
+    players[0].add_card(content.card('Quarry'))
+    game.apply(0, Action.wonder(content.card('Baths')))  # Giza A stage 1 costs 2 stone: Baths is buried
+    assert players[0].wonder_stages_built == 1 and game.discard_pile == []
+    game.apply(1, Action.discard(content.card('Solomon')))  # a leader returns to the box
+    assert game.discard_pile == [] and players[1].coins == 13
+    game.apply(1, Action.discard(content.card('Altar')))  # Age cards are discarded as usual
+    assert [c.name for c in game.discard_pile] == ['Altar']
