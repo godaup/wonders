@@ -176,9 +176,8 @@ plus a few board powers; a natural first step because it reuses the existing tur
 Content is already data, so new cards and boards need no engine changes as long as they use the
 existing effect types. A custom-expansion feature would make that a first-class workflow:
 
-* **Load your own expansion** — `load_content('base', 'my_expansion.json')` / `-e my_expansion.json`
-  on the CLI and a file picker in the GUI menu: cards (with copy counts per player count), wonder
-  boards and guilds in the same JSON format as the bundled expansions.
+* **Load your own expansion** — through the extension system (item 6): a JSON expansion dropped
+  into the expansions folder, or a pip-installed plugin when it brings new mechanics.
 * **A documented effect catalogue** — every effect type with its parameters and an example card,
   generated from `EFFECT_BUILDERS`, so designers can compose new cards without reading code; a
   validator that reports unknown effects, broken chains and deck sizes that do not match the
@@ -198,6 +197,55 @@ existing effect types. A custom-expansion feature would make that a first-class 
 * **7 Wonders, 2nd edition** (2020) — different card set, Edifice expansion and some rule changes;
   it would be a separate ruleset rather than an expansion of this one.
 * **7 Wonders Duel** — a different two-player game.
+
+## 6. Extensions: custom expansions, agents and models
+
+**Goal.** Let anyone add expansions, agents and trained models without changing this repository,
+with one mechanism and clear trust rules.
+
+**Two kinds of extension.**
+
+* **Data** — card / wonder JSON (expansions built from existing effect types), network checkpoints,
+  game records and datasets. Safe to load automatically after validation (checkpoints already load
+  with `weights_only=True`).
+* **Code** — new effect types (new mechanics), scripted agents, new decision kinds. Arbitrary Python:
+  it needs the same trust as any `pip install`.
+
+**Design.**
+
+1. **One registry in the core** — `register_effect`, `register_agent`, `register_expansion`,
+   `register_model`. The built-in content, agents and the bundled network register through the same
+   API, so there is a single path for everything.
+2. **A manifest per extension** — id, name, version, author, licence, the rules version and engine
+   API it was built for, what it contains, and a content hash.
+3. **Sources feeding the registry:**
+   * **Local folders** (e.g. `~/.wonders/expansions/`, `~/.wonders/models/`) — data only; offline and
+     good for private experiments.
+   * **Python plugins** — `pip install wonders-myexpansion`, discovered through standard entry points
+     (`wonders.effects`, `wonders.agents`, `wonders.expansions`, `wonders.models`); the place for code.
+   * **Hugging Face Hub** (optional extra) — models and datasets with model cards, e.g.
+     `-a neural:hf://user/model`; data only, never code.
+   * **Curated** — the repository itself via pull requests: GitHub Actions validate a submission and
+     simulate it (balance for expansions, the head-to-head of item 4 for models) before it is merged
+     and bundled.
+4. **Trust rules** — data loads automatically after validation; code only through an explicit
+   `pip install`; the game never downloads code by itself.
+5. **Compatibility** — game records store each extension's id, version and hash, so a game replays
+   only with identical content; extensions declare the rules version they target; networks refuse
+   unknown cards until the effect-based card encoding (custom expansions above) exists.
+6. **Tooling** — `wonders ext list | validate | new` (scaffold an expansion or agent package); the
+   GUI menu lists installed expansions, agents and models; `wonders gallery` previews an expansion.
+
+**Not now:** a sandboxed scripting layer (a custom language or WebAssembly) for mechanics without
+Python. The JSON effect specs already act as a small language for most cards, and the effect
+catalogue extends it; revisit only if non-programmers start designing mechanics.
+
+**Order and effort.**
+
+1. Registry, manifests and local folders (~2–3 days) — the foundation.
+2. Python plugins via entry points (~1 day).
+3. Hugging Face models and datasets (~1 day).
+4. Curated PRs with GitHub Actions (builds on item 4, ~1–2 days more).
 
 ## Smaller items
 
