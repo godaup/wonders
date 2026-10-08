@@ -63,8 +63,23 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 /* game */
 #game { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 12px; }
 #game > * { min-width: 0; }
-.opponents { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.opponents { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.opponents .city { display: grid; grid-row: span 6; grid-template-rows: subgrid; row-gap: 6px; align-content: start; }
+.opponents .city > * { margin: 0; min-width: 0; }
+.statgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 8px 0; }
+.opponents .statgrid { margin: 0; }
+.cell { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 7px; min-width: 0; }
+.cell .v { display: flex; align-items: center; gap: 4px; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; white-space: nowrap; }
+.cell .v .n { margin-right: 6px; }
+.cell .l { font-size: 9.5px; letter-spacing: .3px; text-transform: uppercase; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell .glyph { font-size: 13px; color: var(--muted); }
+.ic { display: inline-flex; flex: none; }
+.ic svg { display: block; }
+.reschip { display: inline-flex; align-items: center; gap: 2px; }
+.reschip .sep { color: var(--muted); font-size: 11px; margin: 0 1px; }
+.reschip .times { font-size: 11px; margin-left: 3px; }
 .city { padding: 10px 12px; }
+.me-side { display: grid; gap: 10px; align-content: start; }
 .city.neighbour { border-color: var(--accent); }
 .city-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .city-head h3 { font-size: 15px; }
@@ -98,12 +113,12 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; font-variant-numeric: tabular-nums; }
 .stat { display: inline-flex; gap: 4px; align-items: center; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.tableau { display: flex; flex-wrap: wrap; gap: 4px; }
+.tableau { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; align-items: flex-start; }
 .cardchip { font-size: 11px; padding: 2px 7px; border-radius: 6px; color: #fff; border: 0; cursor: pointer; line-height: 1.5; }
 .cardchip.white { color: #1f2a37; }
 .cardchip.black { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
-.me { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr) auto; gap: 18px; margin-bottom: 12px; align-items: start; }
-.board img { width: 100%; border-radius: 10px; display: block; cursor: zoom-in; }
+.me { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr) auto; gap: 18px; margin-bottom: 12px; align-items: start; }
+.board img { width: auto; max-width: 100%; max-height: 270px; border-radius: 10px; display: block; cursor: zoom-in; }
 .me-info .section-title { margin-top: 10px; }
 .stages { display: flex; gap: 6px; margin-top: 8px; }
 .stage { flex: 1; text-align: center; font-size: 12px; padding: 4px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); }
@@ -114,8 +129,8 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .decision { padding: 10px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); margin-bottom: 12px; }
 .decision b { color: var(--accent); }
 .hand { display: flex; flex-wrap: wrap; gap: 10px; }
-.handcard { width: 140px; display: grid; gap: 6px; align-content: start; position: relative; }
-.handcard img { width: 140px; border-radius: 10px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
+.handcard { width: 162px; display: grid; gap: 6px; align-content: start; position: relative; }
+.handcard img { width: 162px; border-radius: 10px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
 .handcard .acts { display: grid; gap: 4px; }
 .handcard .acts button { font-size: 12px; padding: 5px 6px; text-align: left; }
 .handcard .acts small { color: var(--muted); float: right; }
@@ -214,15 +229,17 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
         </div>
         <div class="me-info">
           <div class="city-head"><h3 id="g-name"></h3><span class="score" id="g-score"></span></div>
-          <div class="stats" id="g-stats"></div>
+          <div class="statgrid" id="g-stats"></div>
           <div class="res" id="g-res"></div>
-          <dl class="kv" id="g-kv"></dl>
           <p class="section-title">Your city</p>
           <div class="tableau" id="g-tableau"></div>
         </div>
-        <div id="g-leaders-box" class="hidden">
-          <p class="section-title">Leaders in hand</p>
-          <div class="leaders" id="g-leaders"></div>
+        <div class="me-side">
+          <div id="g-leaders-box" class="hidden">
+            <p class="section-title">Leaders in hand</p>
+            <div class="leaders" id="g-leaders"></div>
+          </div>
+          <dl class="kv" id="g-kv"></dl>
         </div>
       </div>
       <div class="panel">
@@ -418,14 +435,27 @@ function scoreEl(points) {
   return el('span', { class: 'score', 'data-tip': 'Victory points if the game ended now' },
     el('span', { class: 'laurel' }, '★'), String(points), el('small', {}, 'VP'));
 }
+function icon(key, color, size) {
+  const px = size || 18;
+  const span = el('span', { class: 'ic', style: `color:${color || 'currentColor'};width:${px}px;height:${px}px` });
+  span.innerHTML = `<svg viewBox="0 0 24 24" width="${px}" height="${px}" aria-hidden="true">${(options.icons || {})[key] || ''}</svg>`;
+  return span;
+}
+function resIcon(r, size) { const info = (options.resources || {})[r] || {}; return icon(info.icon, info.color, size); }
 function resChips(city) {
-  const counts = {};
-  for (const slot of city.production || []) { const k = slot.map((r) => RES[r] || r).join(' / '); counts[k] = (counts[k] || 0) + 1; }
-  const chips = Object.entries(counts).map(([k, n]) => el('span', { class: 'reschip',
-    'data-tip': (k.includes('/') ? 'Produces one of ' + k : 'Produces ' + k) + ' each turn' + (n > 1 ? ' (×' + n + ')' : '') + '. Neighbours may buy it.' },
-    (n > 1 ? n + '× ' : '') + k));
+  const counts = new Map();
+  for (const slot of city.production || []) { const k = [...slot].sort().join('|'); counts.set(k, (counts.get(k) || 0) + 1); }
+  const chips = [...counts.entries()].map(([k, n]) => {
+    const rs = k.split('|');
+    const names = rs.map((r) => RES[r] || r).join(' / ');
+    const parts = [];
+    rs.forEach((r, i) => { if (i) parts.push(el('span', { class: 'sep' }, '/')); parts.push(resIcon(r, 17)); });
+    if (n > 1) parts.push(el('b', { class: 'times' }, '×' + n));
+    return el('span', { class: 'reschip', 'data-tip': (rs.length > 1 ? 'Produces one of ' : 'Produces ') + names +
+      ' every turn' + (n > 1 ? ' (×' + n + ')' : '') + '. Neighbours may buy it.' }, parts);
+  });
   if (city.private_slots) chips.push(el('span', { class: 'reschip private', 'data-tip': 'Own-use production neighbours cannot buy' }, '+' + city.private_slots + ' private'));
-  if (!chips.length) chips.push(el('span', { class: 'reschip muted' }, 'no resources'));
+  if (!chips.length) chips.push(el('span', { class: 'muted', style: 'font-size:12px' }, 'no resources'));
   return chips;
 }
 function stageTip(stage) {
@@ -440,25 +470,31 @@ function tableau(names) {
   return [...names].sort((a, b) => color(a) - color(b) || a.localeCompare(b)).map(chip);
 }
 function tokenSum(tokens) { return (tokens || []).reduce((a, b) => a + b, 0); }
-function stats(city) {
-  const out = [
-    el('span', { class: 'stat', 'data-tip': 'Coins' }, el('span', { class: 'dot', style: 'background:var(--gold)' }), String(city.coins)),
-    el('span', { class: 'stat', 'data-tip': 'Shields' }, el('span', { class: 'dot', style: 'background:var(--red)' }), String(city.shields) + ' ⛨'),
-    el('span', { class: 'stat', 'data-tip': 'Military tokens' }, '⚔ ' + (tokenSum(city.tokens) >= 0 ? '+' : '') + tokenSum(city.tokens)),
-    el('span', { class: 'stat', 'data-tip': 'Wonder stages' }, '▲ ' + city.stages_built + '/' + city.stages_total),
-  ];
-  const sci = Object.entries(city.science || {}).filter(([, n]) => n > 0).map(([s, n]) => SCI[s] + ' ' + n);
-  if (city.science_wilds) sci.push('Any ' + city.science_wilds);
-  if (sci.length) out.push(el('span', { class: 'stat', 'data-tip': 'Science' }, el('span', { class: 'dot', style: 'background:var(--green)' }), sci.join(' · ')));
-  if (city.debt) out.push(el('span', { class: 'stat', 'data-tip': 'Debt tokens' }, 'Debt ' + city.debt));
-  if (city.diplomacy) out.push(el('span', { class: 'stat', 'data-tip': 'Diplomacy tokens' }, 'Diplomacy ' + city.diplomacy));
-  return out;
+function statCell(symbol, value, label, tip) {
+  return el('div', { class: 'cell', 'data-tip': tip || label },
+    el('div', { class: 'v' }, symbol, value), el('div', { class: 'l' }, label));
 }
-function prices(side) {
-  const p = state.observation.buy_prices[side] || {};
-  const groups = {};
-  for (const [r, c] of Object.entries(p)) (groups[c] = groups[c] || []).push(RES[r] || r);
-  return Object.entries(groups).map(([c, rs]) => rs.join('/') + ' ' + c).join(' · ') || '—';
+function statGrid(city) {
+  const war = tokenSum(city.tokens);
+  const sci = city.science || {};
+  const cities = state.expansions.includes('cities');
+  const cells = [
+    statCell(icon('coin', 'var(--gold)'), String(city.coins), 'Coins', 'Coins (3 = 1 VP at the end)'),
+    statCell(icon('shield', 'var(--red)'), String(city.shields), 'Shields', 'Military strength, compared with both neighbours at the end of each Age'),
+    statCell(el('span', { class: 'glyph' }, '⚔'), (war >= 0 ? '+' : '') + war, 'Military',
+      'Military tokens: ' + ((city.tokens || []).map((x) => (x > 0 ? '+' : '') + x).join(', ') || 'none')),
+    statCell(el('span', { class: 'glyph' }, '▲'), city.stages_built + '/' + city.stages_total, 'Wonder', 'Wonder stages built'),
+    el('div', { class: 'cell', style: `grid-column: span ${cities ? 2 : 4}`,
+      'data-tip': 'Science symbols: gear, tablet, compass' + (city.science_wilds ? ' (+' + city.science_wilds + ' of your choice)' : '') },
+      el('div', { class: 'v' }, ...['gear', 'tablet', 'compass'].flatMap((s) => [icon(s, 'var(--c-green)', 16), el('span', { class: 'n' }, String(sci[s] || 0))]),
+        city.science_wilds ? el('span', { class: 'n' }, '+' + city.science_wilds + ' any') : null),
+      el('div', { class: 'l' }, 'Science')),
+  ];
+  if (cities) {
+    cells.push(statCell(icon('coin', 'var(--red)'), String(city.debt || 0), 'Debt', 'Debt tokens: −1 VP each'));
+    cells.push(statCell(icon('shield', 'var(--accent)'), String(city.diplomacy || 0), 'Diplomacy', 'Diplomacy tokens: sit out the next military conflict'));
+  }
+  return cells;
 }
 
 function renderOpponents(obs) {
@@ -473,11 +509,12 @@ function renderOpponents(obs) {
     const board = state.boards[seat];
     const wonder = el('span', { class: 'wonder-link', 'data-tip': 'Starts with ' + board.produces + (board.powers.length ? '\n' + board.powers.join('\n') : '') + '\nClick to view the board',
       onclick: () => viewWonder(city.wonder, city.wonder_side) }, city.wonder + ' (' + city.wonder_side + ')');
+    // Exactly six rows per city: the panels share them (CSS subgrid), so sections line up.
     box.append(el('div', { class: 'panel city' + (tag ? ' neighbour' : '') },
       el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted', style: 'font-size:12px' }, agentLabel(p.agent) + ' · ', wonder)),
         scoreEl(city.score)),
-      tag ? el('div', { class: 'tag' }, tag) : null,
-      el('div', { class: 'stats' }, stats(city)),
+      el('div', { class: 'tag' }, tag),
+      el('div', { class: 'statgrid' }, statGrid(city)),
       el('div', { class: 'res' }, resChips(city)),
       el('div', { class: 'minis' }, minis(board)),
       el('div', { class: 'tableau' }, tableau(city.cards))));
@@ -493,17 +530,15 @@ function renderMe(obs) {
   const stages = state.boards[obs.seat].stages;
   $('g-stages').replaceChildren(...stages.map((s) => el('div', { class: 'stage' + (s.built ? ' built' : ''), 'data-tip': stageTip(s) },
     'Stage ' + s.index + (s.built ? ' ✓' : ''))));
-  $('g-stats').replaceChildren(...stats(me));
+  $('g-stats').replaceChildren(...statGrid(me));
   $('g-res').replaceChildren(...resChips(me));
-  const kv = $('g-kv'); kv.replaceChildren();
-  const add = (k, v) => kv.append(el('dt', {}, k), el('dd', {}, v));
-  add('Buy from ' + playerName(obs.left.seat) + ' (left)', prices('left'));
-  add('Buy from ' + playerName(obs.right.seat) + ' (right)', prices('right'));
   const leaders = obs.leaders_hand || [];
   $('g-leaders-box').classList.toggle('hidden', !leaders.length);
   $('g-leaders').replaceChildren(...leaders.map((name) => el('img', { src: cardUrl(name), alt: name, 'data-tip': cardTip(name), onclick: () => viewCard(name) })));
-  if (obs.free_builds_left) add('Free builds', obs.free_builds_left + ' left this Age');
-  add('Discard pile', obs.discard_count + ' cards');
+  const kv = $('g-kv'); kv.replaceChildren();
+  const add = (k, v, tip) => kv.append(el('dt', {}, k), el('dd', { 'data-tip': tip }, v));
+  if (obs.free_builds_left) add('Free builds', obs.free_builds_left + ' left this Age', 'Build a card from your hand for free');
+  add('Discard pile', obs.discard_count + ' cards', 'Cards discarded or left over so far (face down)');
   $('g-tableau').replaceChildren(...tableau(me.cards));
 }
 

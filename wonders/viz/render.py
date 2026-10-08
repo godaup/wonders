@@ -12,7 +12,7 @@ import re
 from html import escape
 from typing import Iterable, List, Sequence, Tuple
 
-from wonders.cards.base import Card, Color, Ressource
+from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Ressource
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.library import (
     BuildFromDiscard,
@@ -211,7 +211,13 @@ def _resource_rows(effect) -> List[Row]:
     rows: List[Row] = []
     for opts in slots:
         res = sorted(opts, key=lambda r: r.value)
-        rows.append(([(RES_ICON[r], RES_COLOR[r]) for r in res], ' / '.join(RES_NAME[r] for r in res)))
+        if set(opts) == RAW_MATERIALS:
+            label = 'Any raw material'
+        elif set(opts) == MANUFACTURED_GOODS:
+            label = 'Any manufactured good'
+        else:
+            label = ' / '.join(RES_NAME[r] for r in res)
+        rows.append(([(RES_ICON[r], RES_COLOR[r]) for r in res], label))
     return rows
 
 
@@ -310,6 +316,9 @@ def cost_text(coins: int, resources) -> str:
     return ', '.join(parts) or 'free'
 
 
+EFFECT_FONT = 15.0  # effect labels on cards
+
+
 def card_svg(card: Card) -> str:
     """A standalone, self-contained ``<svg>`` element for one card."""
     uid = _slug(card.name)
@@ -348,32 +357,32 @@ def card_svg(card: Card) -> str:
         )
     parts.append('</g>')
 
-    parts.append(f'<text x="18" y="86" font-size="10" letter-spacing="1.2" fill="{MUTED}">COST</text>')
-    parts.append(_cost_row(card.cost.coins, card.cost.resources, 18, 92))
+    parts.append(f'<text x="18" y="86" font-size="11" letter-spacing="1.2" fill="{MUTED}">COST</text>')
+    parts.append(_cost_row(card.cost.coins, card.cost.resources, 18, 92, tile=38, gap=7))
 
     rows: List[Row] = []
     for effect in card.effects:
         rows += _describe(effect)
-    panel_h = _H - 132 - 40
+    panel_h = _H - 140 - 36
     parts.append(
-        f'<rect x="12" y="132" width="{_W - 24}" height="{panel_h}" rx="12" fill="{fill}" fill-opacity="0.06"/>'
-        f'<rect x="12" y="132" width="4" height="{panel_h}" rx="2" fill="{fill}"/>'
-        f'<text x="26" y="152" font-size="10" letter-spacing="1.2" fill="{MUTED}">EFFECTS</text>'
+        f'<rect x="12" y="140" width="{_W - 24}" height="{panel_h}" rx="12" fill="{fill}" fill-opacity="0.06"/>'
+        f'<rect x="12" y="140" width="4" height="{panel_h}" rx="2" fill="{fill}"/>'
+        f'<text x="24" y="159" font-size="11" letter-spacing="1.2" fill="{MUTED}">EFFECTS</text>'
     )
-    y = 178.0
+    y = 190.0
     for icons, label in rows:
-        row, extra = _row_svg(icons, label, 26, y)
+        row, extra = _row_svg(icons, label, 24, y, size=24, font=EFFECT_FONT, maxlines=4)
         parts.append(row)
-        y += 28 + extra
+        y += 34 + extra
     if card.chain_requires:
-        parts.append(_icon('chain', 24, y - 18, 18, GUILD))
+        parts.append(_icon('chain', 22, y - 21, 21, GUILD))
         parts.append(
-            f'<text x="47" y="{y - 4}" font-size="11.5" fill="{GUILD}">free if {escape(card.chain_requires)}</text>'
+            f'<text x="48" y="{y - 4}" font-size="13.5" fill="{GUILD}">free if {escape(card.chain_requires)}</text>'
         )
     elif card.chain_enables:
-        parts.append(_icon('chain', 24, y - 18, 18, MUTED))
+        parts.append(_icon('chain', 22, y - 21, 21, MUTED))
         parts.append(
-            f'<text x="47" y="{y - 4}" font-size="11" fill="{MUTED}">unlocks {escape(card.chain_enables[0])}</text>'
+            f'<text x="48" y="{y - 4}" font-size="13" fill="{MUTED}">unlocks {escape(card.chain_enables[0])}</text>'
         )
 
     meta = []
@@ -383,7 +392,7 @@ def card_svg(card: Card) -> str:
     if card.guild:
         meta.append('guild')
     parts.append(
-        f'<text x="{_W / 2:.0f}" y="{_H - 16}" text-anchor="middle" font-size="10.5" fill="{MUTED}">'
+        f'<text x="{_W / 2:.0f}" y="{_H - 14}" text-anchor="middle" font-size="11.5" fill="{MUTED}">'
         f'{escape(" · ".join(meta))}</text>'
     )
     parts.append('</svg>')
@@ -391,7 +400,7 @@ def card_svg(card: Card) -> str:
 
 
 # --- wonder boards -------------------------------------------------------
-_WLEFT, _WSTAGE, _WH = 172, 138, 214
+_WLEFT, _WSTAGE, _WH = 172, 172, 240
 
 
 def _stage_panel(stage: WonderStage, index: int, x: float) -> str:
@@ -399,16 +408,16 @@ def _stage_panel(stage: WonderStage, index: int, x: float) -> str:
     out = [
         f'<rect x="{x:.0f}" y="{y0}" width="{w}" height="{h}" rx="10" fill="#fff" stroke="{TILE_LINE}"/>',
         f'<rect x="{x:.0f}" y="{y0}" width="{w}" height="4" rx="2" fill="{GOLD}"/>',
-        f'<text x="{x + 12:.0f}" y="{y0 + 26}" font-size="10" letter-spacing="1.2" fill="{MUTED}">'
+        f'<text x="{x + 12:.0f}" y="{y0 + 26}" font-size="12" letter-spacing="1.2" fill="{MUTED}">'
         f'STAGE {index}</text>',
-        f'<text x="{x + 12:.0f}" y="{y0 + 48}" font-size="9.5" fill="{MUTED}">COST</text>',
-        _cost_row(stage.cost.coins, stage.cost.resources, x + 12, y0 + 54, tile=26, gap=5),
+        f'<text x="{x + 12:.0f}" y="{y0 + 48}" font-size="10.5" fill="{MUTED}">COST</text>',
+        _cost_row(stage.cost.coins, stage.cost.resources, x + 10, y0 + 54, tile=31, gap=4),
     ]
-    ey = float(y0 + 108)
+    ey = float(y0 + 116)
     for icons, label in [r for e in stage.effects for r in _describe(e)][:2]:
-        row, extra = _row_svg(icons, label, x + 12, ey, size=18, font=11.5, right=x + w - 6, maxlines=2)
+        row, extra = _row_svg(icons, label, x + 10, ey, size=22, font=14, right=x + w - 4, maxlines=3)
         out.append(row)
-        ey += 26 + extra
+        ey += 30 + extra
     return ''.join(out)
 
 
