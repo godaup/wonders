@@ -8,7 +8,7 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``POST /api/act`` — ``{"index": i}`` plays the i-th legal action (``"payment": [left, right]``
   optionally picks one of its listed splits of the purchase between the neighbours)
 - ``GET /api/record`` — the replayable GameRecord JSON
-- ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A`` — renderings
+- ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
 
 It binds to localhost only and holds one game at a time (one human, all local).
 """
@@ -48,9 +48,9 @@ def _card_svg(name: str) -> Optional[str]:
 
 
 @lru_cache(maxsize=64)
-def _wonder_svg(name: str, side: str) -> Optional[str]:
+def _wonder_svg(name: str, side: str, built: str = '0') -> Optional[str]:
     try:
-        return wonder_svg(_all_content().wonder(name, side))
+        return wonder_svg(_all_content().wonder(name, side), built=max(0, int(built or 0)))
     except (KeyError, ValueError):
         return None
 
@@ -123,7 +123,7 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/state': lambda play, q: _json({'state': play.state()}),
     '/api/record': lambda play, q: _record(play),
     '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''))),
-    '/api/wonder.svg': lambda play, q: _svg(_wonder_svg(q.get('name', ''), q.get('side', 'A'))),
+    '/api/wonder.svg': lambda play, q: _svg(_wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'))),
 }
 POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any]], Response]] = {
     '/api/new': lambda play, body: _json({'state': play.new_game(body)}),
