@@ -110,14 +110,15 @@ For throughput, batch games across processes with `wonders.env.SubprocVectorEnv`
 `wonders/ml/pretrained/ppo_universal_v2.pt` plays **every expansion combination and 3–7
 players**: a 256×2 policy/value network over the `table-v2` observation encoder, cloned from the
 `adaptive` agent and trained for 40M PPO steps against a mix of scripted agents, its own recent
-snapshots and the best earlier models. Head-to-head (random seating, heuristic agents in the
-other seats) it ranks above:
+snapshots and the best earlier models, then 10M more with a linearly decaying learning rate
+(`sweeps/OBJECTIVES.md`, run `s5-anneal`). Head-to-head (random seating, heuristic agents in the
+other seats; all expansions, 3–7 players, 4,000 games per pair) it ranks above:
 
 | opponent at the same table | share of games ranked higher |
 |---|---|
-| the previously bundled base-game model (base, 3–7 players) | 88.0% |
-| `adaptive`, the strongest scripted agent (all expansions, 3–7 players) | 86.2% |
-| `board` (all expansions, 3–7 players) | 87.6% |
+| the previously bundled network (the same model before the decay phase) | 53.2% |
+| `adaptive`, the strongest scripted agent | 87.8% |
+| `board` | 88.4% |
 
 ## Further reading
 
