@@ -317,22 +317,32 @@ def cost_text(coins: int, resources) -> str:
 
 
 EFFECT_FONTS = (22, 21, 20, 19, 18, 17, 16, 15, 14)  # largest effect text that fits is used
-_GLYPH = 0.58  # conservative average glyph width (em) when estimating how text wraps
+_GLYPH = 0.52  # average glyph width (em) when estimating how text wraps (the browser wraps for real)
+
+
+def _wrapped_lines(text: str, room: float, font: float) -> int:
+    """Lines ``text`` needs at ``font`` in ``room`` px, wrapping word by word like the browser."""
+    lines, used, space = 1, 0.0, _GLYPH * font
+    for word in text.split():
+        w = len(word) * _GLYPH * font
+        if used and used + space + w > room:
+            lines, used = lines + 1, w
+        else:
+            used += (space if used else 0.0) + w
+    return lines
 
 
 def _effects_height(rows: List[Row], chain: Optional[Tuple[str, str]], width: float, font: float) -> float:
     """Estimated height of the effect rows at ``font`` (the browser does the actual wrapping)."""
-    icon, line = font * 1.45, font * 1.2
+    icon, line = font * 1.45, font * 1.15
     total = 0.0
     for icons, label in rows:
         room = width - len(icons[:4]) * (icon + 2) - 12
         if room < 6.5 * font:  # the label drops below the icons
             room, total = width - 4, total + icon + 2
-        lines = max(1, -(-int(len(label) * _GLYPH * font) // max(1, int(room))))
-        total += max(icon, lines * line) + font * 0.5
+        total += max(icon, _wrapped_lines(label, room, font) * line) + font * 0.35
     if chain is not None:
-        lines = max(1, -(-int(len(chain[0]) * _GLYPH * font * 0.85) // max(1, int(width - icon))))
-        total += lines * line * 0.85
+        total += _wrapped_lines(chain[0], width - icon, font * 0.85) * line * 0.85
     return total
 
 
@@ -370,7 +380,7 @@ def _effects_html(
     return (
         f'<foreignObject x="{x:.0f}" y="{y:.0f}" width="{width:.0f}" height="{height:.0f}">'
         f'<div xmlns="http://www.w3.org/1999/xhtml" style="height:100%;overflow:hidden;display:flex;'
-        f'flex-direction:column;gap:{font * 0.5:.1f}px;color:{INK};font-size:{font}px;line-height:1.2;'
+        f'flex-direction:column;gap:{font * 0.35:.1f}px;color:{INK};font-size:{font}px;line-height:1.15;'
         f'overflow-wrap:break-word;padding-right:4px;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif">'
         f'{"".join(items)}</div></foreignObject>'
     )
@@ -431,7 +441,7 @@ def card_svg(card: Card) -> str:
         chain = (f'free if {card.chain_requires}', GUILD)
     elif card.chain_enables:
         chain = (f'unlocks {card.chain_enables[0]}', MUTED)
-    parts.append(_effects_html(rows, chain, x=18, y=170, width=_W - 30, height=_H - 34 - 170 - 4))
+    parts.append(_effects_html(rows, chain, x=18, y=167, width=_W - 30, height=_H - 34 - 167))
 
     meta = []
     if card.at_players:
