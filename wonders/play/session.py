@@ -23,7 +23,7 @@ from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
 from wonders.env.environment import WondersEnv
 from wonders.ruleset import EXPANSIONS, Ruleset
-from wonders.viz.render import RES_NAME, cost_text, effect_lines
+from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, RES_NAME, cost_text, effect_lines
 
 HUMAN = 'human'
 SIDES = ('A', 'B', 'random')
@@ -151,6 +151,9 @@ def menu_options(checkpoints: Sequence[str] = ()) -> Dict[str, Any]:
         'max_players': MAX_PLAYERS,
         'sides': list(SIDES),
         'defaults': GameConfig().to_dict(),
+        # The card renderer's icons (24x24, currentColor), so the page draws the same symbols.
+        'icons': dict(ICONS),
+        'resources': {r.value: {'icon': RES_ICON[r], 'color': RES_COLOR[r], 'name': RES_NAME[r]} for r in RES_ICON},
     }
 
 
