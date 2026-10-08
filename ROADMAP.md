@@ -130,6 +130,28 @@ Four extra wonder boards (Great Wall, Stonehenge, Manneken Pis, Abu Simbel) with
 rules (e.g. stages built in any order, copying a neighbour's board, burying leaders). Mostly data
 plus a few board powers; a natural first step because it reuses the existing turn structure.
 
+### Custom expansions
+
+Content is already data, so new cards and boards need no engine changes as long as they use the
+existing effect types. A custom-expansion feature would make that a first-class workflow:
+
+* **Load your own expansion** — `load_content('base', 'my_expansion.json')` / `-e my_expansion.json`
+  on the CLI and a file picker in the GUI menu: cards (with copy counts per player count), wonder
+  boards and guilds in the same JSON format as the bundled expansions.
+* **A documented effect catalogue** — every effect type with its parameters and an example card,
+  generated from `EFFECT_BUILDERS`, so designers can compose new cards without reading code; a
+  validator that reports unknown effects, broken chains and deck sizes that do not match the
+  player counts.
+* **Card designer preview** — the card renderer and the GUI's tooltips work for custom cards
+  unchanged; a `wonders gallery -e my_expansion.json` page shows the whole set at a glance.
+* **Agents that cope with unseen cards** — scripted agents read effects through the uniform
+  hooks, so they play custom cards out of the box. The network's encoder indexes cards by name;
+  an effect-based card encoding (cost, production, points, science, chains as features) would let
+  a model generalise to cards it was never trained on, and is worth having anyway.
+* **An original expansion of this project** — once the workflow exists, a small official set of
+  new cards and a board designed and balanced with the agents: simulate thousands of games to
+  check that no card or strategy dominates before anyone plays it.
+
 ### Out of scope for now
 
 * **7 Wonders, 2nd edition** (2020) — different card set, Edifice expansion and some rule changes;

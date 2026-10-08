@@ -265,8 +265,15 @@ def evaluate_command(checkpoint, cells, lineups, games, seed, processes):
 
 
 def _model_arg(entry: str):
-    """``label=path`` or a bare path (labelled by its run directory when the file is ``final.pt``)."""
+    """``label=path`` or a bare path (labelled by its run directory when the file is ``final.pt``).
+
+    ``bundled`` (as the path) stands for the network shipped with the package.
+    """
     label, sep, path = entry.partition('=')
+    if (path if sep else entry) == 'bundled':
+        from wonders.ml import pretrained_path
+
+        return (label if sep else 'bundled'), pretrained_path()
     if not sep:
         path = entry
         stem = os.path.splitext(os.path.basename(path))[0]
@@ -292,7 +299,7 @@ def _model_arg(entry: str):
 @click.option('--processes', '-p', default=6, type=int, show_default=True)
 @click.option('--out', '-o', type=click.Path(dir_okay=False), help='Also save the full results as JSON.')
 def head_to_head_command(models, cells, filler, seating, games, seed, processes, out):
-    """Play checkpoints against each other at the same tables (MODELS: label=path or path)."""
+    """Play checkpoints against each other at the same tables (MODELS: label=path, path or bundled)."""
     _ml()
     import json
 
