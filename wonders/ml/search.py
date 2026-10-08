@@ -58,6 +58,8 @@ class SearchAgent(Agent):
         candidates: Most likely actions (by the policy) that are searched; the rest are never played.
         depth: Regular turns to roll out after the root before the value head takes over;
             ``None`` plays every rollout to the end of the game.
+        prior_weight: VP added per nat of the policy's log-probability, so a candidate the network
+            dislikes must win its rollouts clearly before it is played (0: rollouts alone decide).
         rng: Random source for the world samples.
         name: Display name.
         device: Torch device for the network.
@@ -72,6 +74,7 @@ class SearchAgent(Agent):
         worlds: int = 8,
         candidates: int = 4,
         depth: Optional[int] = None,
+        prior_weight: float = 0.0,
         rng: Optional[random.Random] = None,
         name: str = 'search',
         device: str = 'cpu',
@@ -82,6 +85,7 @@ class SearchAgent(Agent):
         self.worlds = worlds
         self.candidates = candidates
         self.depth = depth
+        self.prior_weight = prior_weight
         self.rng = rng or random.Random()
         self.name = name
 
@@ -100,6 +104,11 @@ class SearchAgent(Agent):
         if len(top) == 1:
             return top[0]
         values = self.evaluate(obs, top)
+        if self.prior_weight:
+            legal = torch.tensor([space.index(a) for a in obs.legal_actions])
+            log_prior = torch.log_softmax(logits[legal], dim=0)
+            by_index = dict(zip(legal.tolist(), log_prior.tolist()))
+            values = [v + self.prior_weight * by_index[space.index(a)] for v, a in zip(values, top)]
         best = max(range(len(top)), key=lambda k: values[k])  # ties go to the higher prior
         return top[best]
 
