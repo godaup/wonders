@@ -31,7 +31,7 @@
 ## The challenge
 
 * **Players:** `pip install`, run `wonders gui`, and take on the bundled network. It finishes
-  first {{win5}} of five-player games against the strongest hand-written agents — how often do
+  first in 71% of five-player games against the strongest hand-written agents — how often do
   you?
 * **Developers:** train or script an agent and put it at the same table:
   `wonders train h2h mine=my_model.pt bundled` (or `wonders bench` for scripted agents).
@@ -86,11 +86,11 @@ Measured on one core of an Intel i5-12400F unless noted.
 
 | what | throughput |
 |---|---|
-| complete games, random agents (base game, 4 players) | {{gps_r4}} games/s |
-| complete games, random agents (all expansions, 5 players) | {{gps_r5}} games/s |
-| complete games, `heuristic` agents (base game, 4 players) | {{gps_h4}} games/s |
-| training-env decisions incl. observation encoding (all expansions, 5 players) | {{env}} decisions/s |
-| one decision of the bundled network (CPU) | {{dec}} ms |
+| complete games, random agents (base game, 4 players) | ~73 games/s |
+| complete games, random agents (all expansions, 5 players) | ~37 games/s |
+| complete games, `heuristic` agents (base game, 4 players) | ~50 games/s |
+| training-env decisions incl. observation encoding (all expansions, 5 players) | ~3,400 decisions/s |
+| one decision of the bundled network (CPU) | ~0.4 ms |
 | PPO training (6 cores + RTX 3060) | ~1,150 learner steps/s — 10M steps in about 2.5 h |
 
 ### And also
@@ -204,22 +204,26 @@ encoder: first cloned from the `adaptive` agent, then trained for 50M PPO steps 
 against a mix of scripted agents, its own recent snapshots and the best earlier models — see the
 [training guide](docs/training.md).
 
-**How strong is it?** {{strength_games}} games, every expansion combination and 3–7 players, with
+**How strong is it?** 4,000 games, every expansion combination and 3–7 players, with
 the network, the two strongest scripted agents and `heuristic` agents filling the remaining seats
 (seats drawn at random every game):
 
 | at the same table | finishes first | ranked above the other | mean score |
 |---|---|---|---|
-{{strength_rows}}
+| **bundled network** (`neural`) | **74%** | above `adaptive` in **85%**, above `board` in **86%** of games | 70.2 |
+| [`adaptive`](docs/adaptive-agents.md) | 11% | above `board` in 53% | 57.4 |
+| `board` | 10% | | 56.3 |
+| *an even share* | *22%* | *50%* | |
 
-{{strength_note}}
+The network averages +12.9 points over `adaptive` and wins about 3.4× as often as an even share.
 
 By player count (all expansions), the network's share of first places compared with an even
 share:
 
 | players | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|
-{{by_n_rows}}
+| bundled network | **88%** | **79%** | **71%** | **68%** | **65%** |
+| even share | 33% | 25% | 20% | 17% | 14% |
 
 * [`adaptive`](docs/adaptive-agents.md) — the strongest scripted agent: plans around its wonder
   board, contests the military fronts it can win, and adapts to the game phase and to what its
@@ -228,7 +232,7 @@ share:
 * `heuristic` — a tuned value function over points, science sets, military, economy and chains.
 
 These numbers were measured under the current rules. The network itself was trained before the
-October 2026 rules fixes, so a retrained network should do better still ([roadmap](ROADMAP.md)).
+October 2026 rules fixes; retraining under the current rules is next on the [roadmap](ROADMAP.md).
 
 ## Documentation
 
