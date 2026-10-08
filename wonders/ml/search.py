@@ -88,13 +88,18 @@ class SearchAgent(Agent):
         self.prior_weight = prior_weight
         self.rng = rng or random.Random()
         self.name = name
+        # The last regular-turn evaluation: (candidates, their values in VP), or None when the last
+        # decision was not searched. Expert iteration reads it to record the search's targets.
+        self.last: Optional[Tuple[List[Action], List[float]]] = None
 
     def act(self, obs: Observation, options: List[Card]) -> Action:
         if obs.decision != DecisionKind.PLAY.value:
+            self.last = None
             return self.net.act(obs, options)
         return self.decide(obs)
 
     def decide(self, obs: Observation) -> Action:
+        self.last = None
         if obs.decision != DecisionKind.PLAY.value:
             return self.net.decide(obs)
         logits = self.net.logits(obs)
@@ -104,6 +109,7 @@ class SearchAgent(Agent):
         if len(top) == 1:
             return top[0]
         values = self.evaluate(obs, top)
+        self.last = (top, list(values))
         if self.prior_weight:
             legal = torch.tensor([space.index(a) for a in obs.legal_actions])
             log_prior = torch.log_softmax(logits[legal], dim=0)

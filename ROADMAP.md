@@ -33,7 +33,8 @@ the discard pile.
 
 ## 2. Network-guided search and expert iteration
 
-**Status: in progress** (branch `search-agent`, not merged).
+**Status: in progress.** Search and the expert-iteration pipeline (`wonders train expert`) are
+implemented; the first distillation round runs after the retraining under the current rules.
 
 * `wonders/agents/worlds.py` rebuilds a playable game from one seat's observation and samples the
   hidden cards (opponents' hands, hidden discards / burials, the guild / black-card draws,

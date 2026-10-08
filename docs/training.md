@@ -73,6 +73,27 @@ trained model. Train or fine-tune under the current rules before comparing with 
 [ROADMAP.md](../ROADMAP.md). Checkpoints record the rules version they were trained under
 (`wonders.ruleset.RULES_VERSION`, currently 2); loading an older one warns.
 
+## Expert iteration: learning from search
+
+Network-guided search (`wonders.ml.search.SearchAgent`) plays clearly better than the network it
+searches with, so it can teach it:
+
+```
+wonders train expert model.pt -n 2000 -p 10 --data search.pt -o expert.pt
+wonders train h2h expert=expert.pt before=model.pt -p 10
+```
+
+`expert` plays games in which one seat (rotating) searches — by default 3 turns deep in 16 sampled
+worlds over the policy's 4 best moves — while the others play the plain network. Each searched turn
+becomes a *soft* policy target, `softmax(value / temperature)` over the candidates' values in VP, and
+the value target is the remaining score margin. The network is then fine-tuned towards these
+targets (`--epochs`, `--lr`; it keeps its input normalisation). `--data` saves the recorded games,
+so distillation settings can be tried again without searching anew. Repeat with the result as the
+new searcher while head-to-head keeps improving.
+
+Search is slow (well under a second per decision on one core, many games per hour on all cores),
+so data collection is the expensive part: plan an evening for a few thousand games.
+
 ## Measuring progress
 
 * `wonders train eval model.pt` — win rates against scripted lineups, per expansion combination
