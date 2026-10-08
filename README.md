@@ -237,9 +237,9 @@ October 2026 rules fixes; retraining under the current rules is next on the [roa
 ## Documentation
 
 * [Training guide](docs/training.md) — train, evaluate and compare your own agents.
-* [Roadmap](ROADMAP.md) — retraining after the rules fixes, search, post-game analysis, a model
-  challenge via pull requests, the remaining expansions, an extension system, translations and a
-  table companion.
+* [Roadmap](ROADMAP.md) — planned work: stronger networks (retraining, search, expert iteration),
+  new ways to play and learn (browser version, difficulty levels, puzzles, post-game analysis,
+  translations, accessibility), expansions and extensions, and research benchmarks.
 * [Changelog](CHANGELOG.md) — what changed.
 * [Contributing](CONTRIBUTING.md) — how to contribute.
 * [Architecture overview](CLAUDE.md) — the code structure, written for AI coding assistants and

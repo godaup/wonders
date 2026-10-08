@@ -300,6 +300,117 @@ against their terms; the documentation and the GUI say so clearly.
 **Order and effort.** Position editor (~2–3 days, with item 3's explanations) → voice (~2–3 days) →
 image recognition (~1–2 weeks, depending on the route) → recorded games.
 
+## 9. Play in the browser, no installation
+
+**Goal.** A static page (e.g. on GitHub Pages) where anyone can play against the bundled network —
+the fastest way into the README's challenge.
+
+* The engine is pure Python with no compiled dependencies, so it can run in the browser through
+  **Pyodide** (Python on WebAssembly); the GUI's page already talks to a small JSON API, which a
+  thin in-browser adapter can provide instead of the local server.
+* The network (256×2) is exported to **ONNX** and runs with ONNX Runtime Web; scripted agents run as
+  they are. Search is optional (slower in the browser) and could run in a web worker.
+* Game records download as usual; a link can carry a record for sharing replays.
+
+**Effort:** ~3–5 days (adapter, ONNX export and parity test, start-up size and speed tuning).
+
+## 10. Accessibility
+
+* **Colour-blind support:** card categories are colour-coded; add a colour-blind palette and a
+  pattern or icon per category everywhere colours carry meaning (cards, chips, score sheet).
+* **Keyboard play:** every action reachable without a mouse, with visible focus.
+* **Screen readers:** labels for cards, actions and cities; the move log and status bar as live
+  regions.
+* Check contrast in both themes; respect reduced-motion settings.
+
+**Effort:** ~2 days.
+
+## 11. Difficulty levels and adaptive opponents
+
+**Goal.** Opponents that match the player, from beginner to the full-strength network.
+
+* **Tiers** from existing material: scripted agents, earlier training snapshots, the network with
+  sampling instead of greedy moves (a temperature), the full network, and search on top. Each tier
+  is calibrated by simulation to a target strength.
+* **Adaptive mode:** adjusts the tier after each game to keep the human near a 50% win rate.
+* The GUI menu offers difficulty names instead of agent names (agents stay available for experts).
+
+**Effort:** ~2–3 days, mostly calibration runs.
+
+## 12. Puzzles and coach mode
+
+**Goal.** Learn the game from the engine.
+
+* **Puzzles:** "find the best move" positions taken from simulated games where search finds a clear
+  gap between the best and the second-best move; the solution is explained with the post-game
+  analysis (item 3). A daily puzzle; themed sets (science, military, wonders, leaders).
+* **Coach mode:** in a normal game, ask for a hint (how good is each move?) or let the coach flag
+  mistakes as they happen.
+* Both build on search and the analysis explanations; the position editor of item 8 lets anyone
+  create puzzles too.
+
+**Effort:** ~2–3 days after item 3.
+
+## 13. Balance lab
+
+**Goal.** Use millions of simulated games to answer balance questions — for strategy fans and for
+designers of custom expansions (items 5 and 6).
+
+* **Reports:** win rates per wonder and side by player count and expansions, card values by Age,
+  opening tendencies, how strong each colour strategy is, how much seat position matters.
+* **What-if variants:** change a rule or a card (trade price, a card's cost, a stage's effect) and
+  compare against the baseline with confidence intervals.
+* **Designer workflow:** a new card or wonder from an extension is simulated automatically, with a
+  warning when it is clearly over- or under-powered.
+* Results as an HTML report (and a page on the website).
+
+**Caveat:** the agents' play shapes the numbers; report them per agent family and prefer the
+strongest agents.
+
+**Effort:** ~3–4 days for the framework and the first report.
+
+## 14. Language models as players
+
+**Goal.** A benchmark of large language models against the engine's agents — a timely showcase.
+
+* A text interface over the `Observation` (hand, cities, costs, legal moves) and a strict answer
+  format; illegal or unparsable answers count as a fallback move and are reported.
+* Pluggable providers (local models and hosted APIs); prompts, settings and costs are recorded.
+* A leaderboard of LLMs against scripted agents and the network, with the same head-to-head
+  statistics as everything else; game records show the models' reasoning.
+
+**Effort:** ~2–3 days, plus API budget for the runs.
+
+## 15. Official variants still missing
+
+* **Two players:** the base game's two-player rules with a third, shared seat played alternately by
+  both players.
+* **Team play** for 4–8 players (Cities), with team scoring.
+* **Eight players** (supported with Cities).
+
+These are rules, not new cards, so they fit the engine; like Leaders and Cities, each rule is
+checked against the official rulebooks first. The training environment and the network need the
+new seat counts and decisions (the two-player shared seat is an extra decision kind).
+
+**Effort:** ~3–5 days for all three, plus training for the network to play them.
+
+## Further ideas
+
+* **Multiplayer with friends** — humans and bots at one table over the local network or the
+  internet; spectator mode; shareable replay links.
+* **Player profile** — your rating over time, statistics and favourite wonders, kept locally.
+* **Strategy explorer** — what the network values (card heatmaps by Age, "why this move"); a
+  language model could narrate the search's numbers in plain words.
+* **Environment wrappers and a benchmark suite** — official PettingZoo / Gymnasium registrations and
+  fixed seeds, opponents and metrics, so research results are comparable.
+* **Opponent modelling for search** — infer opponents' likely hands and plans from what they played
+  and passed instead of sampling hidden cards uniformly; the most direct route to stronger search
+  and expert iteration.
+* **Smaller, faster models** — distilled and quantized networks for phones, the browser (item 9)
+  and faster search.
+* **Rules oracle** — the official FAQ cases as tests, and a way to ask edge-case questions by running
+  the engine.
+
 ## Smaller items
 
 * **Python 3.14.** Support and test the newest Python:
