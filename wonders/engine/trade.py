@@ -23,7 +23,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Ressource
+from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Resource
 
 BANK_OPTIONS = frozenset(RAW_MATERIALS | MANUFACTURED_GOODS)
 
@@ -45,7 +45,7 @@ class Payment:
 # A production slot is (side, options): side in {'self', 'left', 'right'}.
 Slot = Tuple[str, frozenset]
 
-PriceFn = Callable[[str, Ressource], int]
+PriceFn = Callable[[str, Resource], int]
 
 
 def _slots(side: str, production: Sequence[frozenset]) -> List[Slot]:
@@ -68,7 +68,7 @@ def cheapest_payment(
     neighbour on ``side`` (``'left'`` / ``'right'``). ``waivers`` units need not be
     paid at all; ``bank`` slots each buy one resource from the bank at ``bank_price``.
     """
-    units: List[Ressource] = list(required.elements())
+    units: List[Resource] = list(required.elements())
     if len(units) <= waivers:
         return Payment(0, 0, 0)
 
@@ -77,7 +77,7 @@ def cheapest_payment(
     )
 
     # Most-constrained unit first (fewest slots that can supply it) → strong pruning.
-    def supply(resource: Ressource) -> int:
+    def supply(resource: Resource) -> int:
         return sum(1 for _side, opts in slots if resource in opts)
 
     units.sort(key=supply)
@@ -85,9 +85,9 @@ def cheapest_payment(
     if sum(1 for u in units if supply(u) == 0) > waivers:
         return None
 
-    prices: Dict[Tuple[str, Ressource], int] = {}
+    prices: Dict[Tuple[str, Resource], int] = {}
 
-    def price_of(side: str, resource: Ressource) -> int:
+    def price_of(side: str, resource: Resource) -> int:
         key = (side, resource)
         if key not in prices:
             prices[key] = price(side, resource)
@@ -155,7 +155,7 @@ def payment_options(
     cheapest total for that split — so a human can choose whom to pay. Same arguments as
     :func:`cheapest_payment`; empty if the cost cannot be covered.
     """
-    units: List[Ressource] = list(required.elements())
+    units: List[Resource] = list(required.elements())
     slots: List[Slot] = (
         _slots('self', own) + _slots('left', left) + _slots('right', right) + _slots('bank', [BANK_OPTIONS] * bank)
     )

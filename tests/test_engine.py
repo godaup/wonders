@@ -3,7 +3,7 @@
 import pytest
 
 from wonders.cards.base import Card, Color, Cost
-from wonders.cards.base import Ressource as R
+from wonders.cards.base import Resource as R
 from wonders.cards.library import base_cards, wonder_ephesos_a, wonder_gizah_a, wonder_rhodes_a
 from wonders.effects.library import Production, VictoryPoints
 from wonders.engine.actions import Action, ActionKind
@@ -153,7 +153,7 @@ def test_full_three_age_game_runs_and_scores():
 def test_neighbours_sell_only_board_and_brown_grey_resources():
     from collections import Counter
 
-    from wonders.cards.base import Cost, Ressource
+    from wonders.cards.base import Cost, Resource
     from wonders.cards.content import load_content
     from wonders.engine.game import Game
     from wonders.engine.player import Player
@@ -166,7 +166,7 @@ def test_neighbours_sell_only_board_and_brown_grey_resources():
         )
     ]
     game = Game(players)
-    glass = Cost(0, Counter({Ressource.GLASS: 1}))
+    glass = Cost(0, Counter({Resource.GLASS: 1}))
     players[1].add_card(content.card('Forum'))  # yellow: glass / loom / papyrus, for its owner only
     assert players[1].production_slots() != players[1].tradeable_slots()
     assert game.payment_for(0, glass) is None

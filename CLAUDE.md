@@ -48,8 +48,8 @@ The game implements the **7 Wonders** base game (3 Ages of 6 plays, draft-and-pa
 build/wonder/discard, neighbour trading, military conflict, and the full seven
 scoring categories). It is split into three packages under `wonders/`:
 
-- **`wonders/cards/`** — static content. `base.py` has the `Color` and `Ressource`
-  enums (note the spelling; `GOLD` models coins and is *not* a tradeable resource),
+- **`wonders/cards/`** — static content. `base.py` has the `Color` and `Resource`
+  enums (`GOLD` models coins and is *not* a tradeable resource),
   `ScienceSymbol`, the `Cost` value object (bank coins + a `Counter` of resources),
   and the `Card` dataclass (color, cost, `effects`, chaining, plus deck-composition
   metadata: `expansion`, `at_players`, `guild`). `wonder.py` has `Wonder`/`WonderStage`.

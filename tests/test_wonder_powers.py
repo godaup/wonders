@@ -7,7 +7,7 @@ import pytest
 from wonders.agents import HeuristicAgent, RandomAgent
 from wonders.agents.match import play_match
 from wonders.cards.base import Card, Color, Cost
-from wonders.cards.base import Ressource as R
+from wonders.cards.base import Resource as R
 from wonders.cards.content import load_content
 from wonders.cards.library import wonder_gizah_a, wonder_rhodes_a
 from wonders.effects.library import (

@@ -5,7 +5,7 @@ from collections import Counter
 import pytest
 
 from wonders.cards.base import Card, Color, Cost
-from wonders.cards.base import Ressource as R
+from wonders.cards.base import Resource as R
 from wonders.cards.base import ScienceSymbol as S
 from wonders.cards.content import load_content
 from wonders.cards.library import wonder_ephesos_a, wonder_gizah_a, wonder_rhodes_a
