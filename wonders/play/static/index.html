@@ -94,6 +94,12 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
   border: 1px solid var(--line); cursor: default; }
 .mini.built { background: var(--green); border-color: var(--green); color: #fff; }
 .wonder-link { cursor: zoom-in; text-decoration: underline dotted; }
+.sub { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent { cursor: help; text-decoration: underline dotted; }
+.mini { overflow-wrap: anywhere; hyphens: auto; }
+.me-body { display: grid; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.me-body .statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.logcard { cursor: zoom-in; text-decoration: underline dotted; text-underline-offset: 2px; }
 .leaders { display: flex; gap: 6px; }
 .leaders img { width: 66px; border-radius: 8px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
 .turnbar { display: flex; gap: 10px; align-items: stretch; margin-bottom: 10px; }
@@ -130,6 +136,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .decision b { color: var(--accent); }
 .turnbar .decision { display: flex; align-items: center; gap: 10px; }
 .decision .help { flex: 1; }
+#g-help { align-self: center; }
 .help-toggle { flex: none; width: 26px; height: 26px; padding: 0; border-radius: 50%; font-weight: 700; line-height: 1; }
 .discard { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px;
   background: var(--panel-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -247,11 +254,17 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
         </div>
         <div class="me-info">
           <div class="city-head"><h3 id="g-name"></h3><span class="score" id="g-score"></span></div>
-          <div class="statgrid" id="g-stats"></div>
-          <p class="section-title">Production</p>
-          <div class="res" id="g-res"></div>
-          <p class="section-title">Your city <span id="g-count" class="muted"></span></p>
-          <div class="citygroups" id="g-tableau"></div>
+          <div class="me-body">
+            <div>
+              <div class="statgrid" id="g-stats"></div>
+              <p class="section-title">Production</p>
+              <div class="res" id="g-res"></div>
+            </div>
+            <div>
+              <p class="section-title" style="margin-top:0">Your city <span id="g-count" class="muted"></span></p>
+              <div class="citygroups" id="g-tableau"></div>
+            </div>
+          </div>
         </div>
         <div class="me-side">
           <div id="g-leaders-box" class="hidden">
@@ -265,6 +278,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
         <div class="turnbar">
           <div class="passing hidden" id="g-passing"></div>
           <div class="decision" id="g-decision"></div>
+          <button id="g-help" class="help-toggle hidden" data-tip="Show the explanation">?</button>
         </div>
         <div class="hand" id="g-hand"></div>
       </div>
@@ -373,6 +387,7 @@ $('btn-theme').addEventListener('click', () => {
 
 /* ---------- menu ---------- */
 function agentLabel(id) { const a = options.agents.find((x) => x.id === id); return a ? a.label : id; }
+function agentBlurb(id) { const a = options.agents.find((x) => x.id === id); return (a && a.blurb) || 'A computer opponent.'; }
 function availableWonders() {
   const ids = new Set(['base', ...menu.expansions]);
   return options.expansions.filter((e) => ids.has(e.id)).flatMap((e) => e.wonders);
@@ -462,16 +477,20 @@ function icon(key, color, size) {
 }
 function resIcon(r, size) { const info = (options.resources || {})[r] || {}; return icon(info.icon, info.color, size); }
 function resChips(city) {
-  const counts = new Map();
+  const counts = new Map(), sellable = new Map();
   for (const slot of city.production || []) { const k = [...slot].sort().join('|'); counts.set(k, (counts.get(k) || 0) + 1); }
+  for (const slot of city.trade_production || []) { const k = [...slot].sort().join('|'); sellable.set(k, (sellable.get(k) || 0) + 1); }
   const chips = [...counts.entries()].map(([k, n]) => {
+    const sold = Math.min(n, sellable.get(k) || 0);
     const rs = k.split('|');
     const names = rs.map((r) => RES[r] || r).join(' / ');
     const parts = [];
     rs.forEach((r, i) => { if (i) parts.push(el('span', { class: 'sep' }, '/')); parts.push(resIcon(r, 17)); });
     if (n > 1) parts.push(el('b', { class: 'times' }, '×' + n));
-    return el('span', { class: 'reschip', 'data-tip': (rs.length > 1 ? 'Produces one of ' : 'Produces ') + names +
-      ' every turn' + (n > 1 ? ' (×' + n + ')' : '') + '. Neighbours may buy it.' }, parts);
+    const trade = sold === n ? 'Neighbours may buy it.' : sold === 0 ? 'For this city only: neighbours cannot buy it (yellow card or wonder stage).'
+      : sold + ' of ' + n + ' may be bought by neighbours; the rest is for this city only.';
+    return el('span', { class: 'reschip' + (sold ? '' : ' private'), 'data-tip': (rs.length > 1 ? 'Produces one of ' : 'Produces ') + names +
+      ' every turn' + (n > 1 ? ' (×' + n + ')' : '') + '. ' + trade }, parts);
   });
   if (city.private_slots) chips.push(el('span', { class: 'reschip private', 'data-tip': 'Own-use production neighbours cannot buy' }, '+' + city.private_slots + ' private'));
   if (!chips.length) chips.push(el('span', { class: 'muted', style: 'font-size:12px' }, 'no resources'));
@@ -508,7 +527,7 @@ function statCell(symbol, value, label, tip) {
   return el('div', { class: 'cell', 'data-tip': tip || label },
     el('div', { class: 'v' }, symbol, value), el('div', { class: 'l' }, label));
 }
-function statGrid(city) {
+function statGrid(city, cols) {
   const war = tokenSum(city.tokens);
   const sci = city.science || {};
   const cities = state.expansions.includes('cities');
@@ -518,7 +537,7 @@ function statGrid(city) {
     statCell(el('span', { class: 'glyph' }, '⚔'), (war >= 0 ? '+' : '') + war, 'Military',
       'Military tokens: ' + ((city.tokens || []).map((x) => (x > 0 ? '+' : '') + x).join(', ') || 'none')),
     statCell(el('span', { class: 'glyph' }, '▲'), city.stages_built + '/' + city.stages_total, 'Wonder', 'Wonder stages built'),
-    el('div', { class: 'cell', style: `grid-column: span ${cities ? 2 : 4}`,
+    el('div', { class: 'cell', style: `grid-column: span ${cols === 2 || cities ? 2 : 4}`,
       'data-tip': 'Science symbols: gear, tablet, compass' + (city.science_wilds ? ' (+' + city.science_wilds + ' of your choice)' : '') },
       el('div', { class: 'v' }, ...['gear', 'tablet', 'compass'].flatMap((s) => [icon(s, 'var(--c-green)', 16), el('span', { class: 'n' }, String(sci[s] || 0))]),
         city.science_wilds ? el('span', { class: 'n' }, '+' + city.science_wilds + ' any') : null),
@@ -545,7 +564,8 @@ function renderOpponents(obs) {
       onclick: () => viewWonder(city.wonder, city.wonder_side, city.stages_built) }, city.wonder + ' (' + city.wonder_side + ')');
     // Exactly six rows per city: the panels share them (CSS subgrid), so sections line up.
     box.append(el('div', { class: 'panel city' + (tag ? ' neighbour' : '') },
-      el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted', style: 'font-size:12px' }, agentLabel(p.agent) + ' · ', wonder)),
+      el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted sub' },
+        el('span', { class: 'agent', 'data-tip': agentBlurb(p.agent) }, agentLabel(p.agent) + ' agent')), el('div', { class: 'sub' }, wonder)),
         scoreEl(city.score)),
       el('div', { class: 'tag' }, tag),
       el('div', { class: 'statgrid' }, statGrid(city)),
@@ -564,7 +584,7 @@ function renderMe(obs) {
     $('g-board').src = src; $('g-board').onclick = () => viewWonder(me.wonder, me.wonder_side, me.stages_built);
   }
   $('g-board').dataset.tip = state.boards[obs.seat].stages.map(stageTip).join('\n\n') + '\n\nClick to enlarge';
-  $('g-stats').replaceChildren(...statGrid(me));
+  $('g-stats').replaceChildren(...statGrid(me, 2));
   $('g-res').replaceChildren(...resChips(me));
   const leaders = obs.leaders_hand || [];
   $('g-leaders-box').classList.toggle('hidden', !leaders.length);
@@ -630,11 +650,13 @@ const SHORT = { play: 'Your turn: pick a card', last_card: 'Babylon: play your l
   copy_leader: "Courtesans' Guild: copy a leader" };
 let helpOpen = store.get('help', true);
 function renderDecision(obs) {
+  const flip = () => { helpOpen = !helpOpen; store.set('help', helpOpen); hideTip(); renderDecision(obs); };
   const text = el('span', { class: 'help' });
-  text.innerHTML = helpOpen ? (DECISIONS[obs.decision] || 'Your move.') : '<b>' + (SHORT[obs.decision] || 'Your move') + '</b>';
-  const toggle = el('button', { class: 'help-toggle', 'data-tip': helpOpen ? 'Hide the explanation' : 'Show the explanation',
-    onclick: () => { helpOpen = !helpOpen; store.set('help', helpOpen); hideTip(); renderDecision(obs); } }, helpOpen ? '−' : '?');
-  $('g-decision').replaceChildren(text, toggle);
+  text.innerHTML = DECISIONS[obs.decision] || 'Your move.';
+  $('g-decision').replaceChildren(text, el('button', { class: 'help-toggle', 'data-tip': 'Hide the explanation', onclick: flip }, '−'));
+  $('g-decision').classList.toggle('hidden', !helpOpen);
+  $('g-help').classList.toggle('hidden', helpOpen);
+  $('g-help').onclick = flip;
 }
 function pairUp(buttons) {  // secondary moves sit two per row; a leftover one takes the full row
   const halves = buttons.filter((b) => b.tagName === 'BUTTON' && !b.classList.contains('primary'));
@@ -665,15 +687,18 @@ function renderHand(obs) {
   }
 }
 
+function cardLink(name) {
+  return el('span', { class: 'logcard', 'data-tip': cardTip(name) + '\nClick to view', onclick: () => viewCard(name) }, name);
+}
 function describe(e, obs) {
   const who = e.seat === obs.seat ? 'You' : playerName(e.seat);
-  const card = e.card;
+  const card = e.card ? cardLink(e.card) : null;
   switch (e.kind) {
-    case 'build': return who + ' built ' + card;
-    case 'free': return who + ' built ' + card + ' for free';
-    case 'wonder': return who + ' built a wonder stage' + (card ? ' with ' + card : '');
-    case 'discard': return who + ' discarded ' + (card || 'a card');
-    default: return who + ' ' + e.kind + (card ? ' ' + card : '');
+    case 'build': return [who + ' built ', card];
+    case 'free': return [who + ' built ', card, ' for free'];
+    case 'wonder': return card ? [who + ' built a wonder stage with ', card] : [who + ' built a wonder stage'];
+    case 'discard': return card ? [who + ' discarded ', card] : [who + ' discarded a card'];
+    default: return [who + ' ' + e.kind + ' ', card];
   }
 }
 function renderLog(obs) {

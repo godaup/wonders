@@ -20,7 +20,7 @@ from wonders.cards.content import load_content
 from wonders.engine.record import PlayerSetup
 from wonders.env import WondersEnv
 
-EXPECTED = '3ca32f4058bb28e16a77f75b7b746aaed98ad42456d45e25af35a3d68efd5b8e'  # + leaders/cities score keys
+EXPECTED = '9f9ff8349762b001e4687bb8cf5af2170f3a0f200a0ff332ae0c19f3be5c6de0'  # neighbours buy only board + brown/grey
 
 
 def _digest() -> str:

@@ -45,7 +45,8 @@ def test_every_base_card_renders():
     content = load_content('base')
     for card in content.cards:
         svg = card_svg(card)
-        assert svg.count('<svg') == 1
+        assert svg.startswith('<svg') and svg.endswith('</svg>')
+        assert svg.count('<foreignObject') == 1  # the effect text, laid out by the browser
 
 
 def test_special_characters_are_escaped():
@@ -60,14 +61,14 @@ def test_gallery_html_wraps_cards():
     content = load_content('base')
     html = gallery_html(content.cards[:5], title='Sample')
     assert html.startswith('<!doctype html>')
-    assert html.count('<svg') == 5
+    assert html.count('role="img"') == 5
     assert 'Sample' in html
 
 
 def test_gallery_includes_wonders_when_given():
     content = load_content('base')
     html = gallery_html(content.cards[:3], content.wonders, title='All')
-    assert html.count('<svg') == 3 + len(content.wonders)
+    assert html.count('role="img"') == 3 + len(content.wonders)
     assert 'Wonder boards' in html
 
 
@@ -102,16 +103,20 @@ def test_table_html_is_self_contained():
     assert html.count('<svg') == 1 and 'Mid-game' in html
 
 
-def test_long_effect_text_wraps_inside_the_card():
+def test_effect_text_is_sized_to_fit_the_card():
     import re
 
     from wonders.cards.content import load_content
+    from wonders.viz.render import EFFECT_FONTS
 
+    sizes = []
     for card in load_content('base', 'leaders', 'cities').cards:
         svg = card_svg(card)
         assert '…' not in svg, card.name
-        for x, line in re.findall(r'<text x="([\d.]+)" y="[\d.]+" font-size="17.0" fill="[^"]+">([^<]*)<', svg):
-            assert float(x) + 0.53 * 17 * len(line) <= 250, (card.name, line)  # stays inside the card
+        size = int(re.search(r'color:#[0-9a-f]+;font-size:(\d+)px', svg).group(1))
+        assert size in EFFECT_FONTS, card.name
+        sizes.append(size)
+    assert min(sizes) >= 16 and max(sizes) == EFFECT_FONTS[0]  # long texts shrink a little, short ones read large
 
 
 def test_wonder_svg_marks_built_stages():

@@ -94,6 +94,19 @@ class Player:
             self._cache['slots'] = slots
         return slots  # type: ignore[return-value]
 
+    def tradeable_slots(self) -> List[frozenset]:
+        """The production neighbours may buy: the board's resource and brown / grey cards (do not mutate).
+
+        Resources from commercial (yellow) cards such as Forum or Caravansery, wonder stages and
+        leaders are for the owner only.
+        """
+        slots = self._cache.get('trade_slots')
+        if slots is None:
+            slots = [self.wonder.starting_production] if self.wonder.starting_resource is not None else []
+            slots += [s for c in self.cards if c.color in BASIC_COLORS for e in c.effects for s in e.production()]
+            self._cache['trade_slots'] = slots
+        return slots  # type: ignore[return-value]
+
     def shields(self) -> int:
         return sum(effect.shields() for effect in self.iter_effects())
 

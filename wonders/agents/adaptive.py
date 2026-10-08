@@ -183,7 +183,7 @@ class AdaptiveAgent(BoardAwareAgent):
     def _production_factor(self, obs: Observation, slots: List[object]) -> float:
         """Production slots, scaled by scarcity among the neighbours and the city's surplus."""
         w = self.w
-        neighbours = [set(r for slot in nb.production for r in slot) for nb in (obs.left, obs.right)]
+        neighbours = [set(r for slot in nb.trade_production for r in slot) for nb in (obs.left, obs.right)]
         total = 0.0
         for slot in slots:
             resources = set(slot) if isinstance(slot, list) else set()

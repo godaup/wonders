@@ -148,3 +148,28 @@ def test_full_three_age_game_runs_and_scores():
     totals = [g.score(i).total for i in range(g.n)]
     assert all(isinstance(t, int) for t in totals)
     assert 0 <= g.winner() < g.n
+
+
+def test_neighbours_sell_only_board_and_brown_grey_resources():
+    from collections import Counter
+
+    from wonders.cards.base import Cost, Ressource
+    from wonders.cards.content import load_content
+    from wonders.engine.game import Game
+    from wonders.engine.player import Player
+
+    content = load_content('base')
+    players = [
+        Player(f'P{i}', content.wonder(w, 'A'))
+        for i, w in enumerate(
+            ['The Colossus of Rhodes', 'The Statue of Zeus in Olympia', 'The Temple of Artemis in Ephesus']
+        )
+    ]
+    game = Game(players)
+    glass = Cost(0, Counter({Ressource.GLASS: 1}))
+    players[1].add_card(content.card('Forum'))  # yellow: glass / loom / papyrus, for its owner only
+    assert players[1].production_slots() != players[1].tradeable_slots()
+    assert game.payment_for(0, glass) is None
+    players[2].add_card(content.card('Glassworks'))  # grey: may be bought
+    pay = game.payment_for(0, glass)
+    assert pay is not None and pay.right == 2 and pay.left == 0
