@@ -1,0 +1,79 @@
+# Reusable: play contributed models against the bundled network (`wonders ext scorecard`), one job
+# per model and expansion combination (3–7 players each), and upload the scorecard JSON shards.
+# Called by contributions.yml (pull requests) and leaderboard.yml (after a merge).
+
+name: scorecard
+
+on:
+  workflow_call:
+    inputs:
+      models:
+        description: 'JSON list of {"extension": id, "model": name} (names checked by `wonders ext changed`)'
+        type: string
+        required: true
+      referee:
+        description: Commit whose game and checks are installed
+        type: string
+        required: true
+      content:
+        description: Commit the extensions are taken from
+        type: string
+        required: true
+      games:
+        description: Games per cell (5 cells per job)
+        type: number
+        default: 250
+
+permissions:
+  contents: read
+
+jobs:
+  play:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJSON(inputs.models) }}
+        combo: ['base', 'leaders', 'cities', 'leaders+cities']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.referee }}
+          path: referee
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.content }}
+          path: content
+          sparse-checkout: extensions
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the referee (CPU PyTorch)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install ./referee
+
+      - name: Play against the bundled network
+        working-directory: content
+        env:
+          WONDERS_NO_EXTENSIONS: '1'
+          EXTENSION: ${{ matrix.model.extension }}
+          MODEL: ${{ matrix.model.model }}
+          COMBO: ${{ matrix.combo }}
+          GAMES: ${{ inputs.games }}
+        run: |
+          CELLS=$(printf "$COMBO/%sp," 3 4 5 6 7)
+          mkdir -p ../scorecards
+          wonders ext scorecard "extensions/$EXTENSION" --model "$MODEL" --cells "${CELLS%,}" \
+            --games "$GAMES" -p 4 -o "../scorecards/$EXTENSION-$MODEL-${COMBO/+/-}.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scorecard-${{ strategy.job-index }}
+          path: scorecards/

@@ -220,10 +220,10 @@ def ext():
 @ext.command(name='list')
 def ext_list():
     """Show the installed extensions (folders and plugins) and what each provides."""
-    from wonders.extensions import ensure_loaded, extensions_home
+    from wonders.extensions import ensure_loaded, extensions_homes
 
     registry = ensure_loaded()
-    click.echo(f'extensions home: {extensions_home()}')
+    click.echo(f'extensions home: {os.pathsep.join(map(str, extensions_homes()))}')
     if not registry.extensions:
         click.echo('no extensions installed (try: wonders ext new my-expansion)')
         return
@@ -255,15 +255,124 @@ def ext_validate(folder):
 @ext.command(name='new')
 @click.argument('extension_id')
 @click.option('--name', default='', help='Display name (defaults to the id).')
+@click.option('--author', default='', help='Your name (contributions need one).')
 @click.option(
     '--dir', 'parent', type=click.Path(file_okay=False), help='Where to create it (default: the extensions home).'
 )
-def ext_new(extension_id, name, parent):
+def ext_new(extension_id, name, author, parent):
     """Create a minimal data extension (manifest + one example card) to start from."""
     from wonders.extensions import extensions_home, scaffold
 
-    folder = scaffold(os.path.join(parent or extensions_home(), extension_id), extension_id, name)
-    click.echo(f'created {folder}: edit cards.json, then run  wonders ext validate {folder}')
+    folder = scaffold(os.path.join(parent or extensions_home(), extension_id), extension_id, name, author)
+    click.echo(f'created {folder}: edit cards.json, then run  wonders ext check {folder}')
+
+
+@ext.command(name='check')
+@click.argument('targets', nargs=-1, required=True, type=click.Path(exists=True))
+@click.option('--games', '-n', default=4, type=int, show_default=True, help='Games per smoke test.')
+@click.option('--report', type=click.Path(dir_okay=False), help='Also write the Markdown report here.')
+def ext_check(targets, games, report):
+    """Check contributions: extension folders, installed plugin packages and locale files.
+
+    Stricter than ``validate``: manifest metadata, file types and sizes, clashes with other extensions,
+    deck sizes, games played and replayed with every expansion, agent and model, and translations.
+    """
+    from wonders.contrib import check
+
+    reports = []
+    for target in targets:
+        try:
+            reports.append(check(target, games))
+        except ValueError as exc:
+            raise click.BadParameter(str(exc)) from exc
+    text = '\n'.join(r.markdown() for r in reports)
+    click.echo(text)
+    if report:
+        with open(report, 'w', encoding='utf-8') as fh:
+            fh.write(text)
+    failed = [r.target for r in reports if not r.passed]
+    if failed:
+        raise click.ClickException(f'checks failed for {", ".join(failed)}')
+
+
+@ext.command(name='changed')
+@click.argument('paths', nargs=-1)
+@click.option('--root', default='.', type=click.Path(file_okay=False), show_default=True)
+@click.option('--github-output', type=click.Path(dir_okay=False), help='Append key=JSON lines for GitHub Actions.')
+def ext_changed(paths, root, github_output):
+    """Which contributions the changed PATHS touch (or one path per line on stdin)."""
+    import json
+    import sys
+
+    from wonders.contrib import changed
+
+    result = changed(paths or sys.stdin.read().splitlines(), root)
+    click.echo(json.dumps(result, indent=1))
+    if github_output:
+        with open(github_output, 'a', encoding='utf-8') as fh:
+            for key, value in result.items():
+                fh.write(f'{key}={json.dumps(value)}\n')
+    if result['invalid']:
+        allowed = 'names must be lower-case letters, digits, ".", "_" or "-"'
+        raise click.ClickException(f"{allowed}: {', '.join(result['invalid'])}")
+
+
+@ext.command(name='scorecard')
+@click.argument('source', type=click.Path(exists=True))
+@click.option('--model', help='Which model of the extension (needed when it has several).')
+@click.option('--cells', default='all', show_default=True, help="'all' or e.g. base/3p,leaders+cities/5p")
+@click.option('--games', '-n', default=200, type=int, show_default=True, help='Games per cell.')
+@click.option('--seed', default=4242, type=int, show_default=True)
+@click.option('--processes', '-p', default=4, type=int, show_default=True)
+@click.option('--out', '-o', type=click.Path(dir_okay=False), help='Save the scorecard JSON (for summary).')
+def ext_scorecard(source, model, cells, games, seed, processes, out):
+    """Play a contributed model (extension folder or .pt) against the bundled network (needs PyTorch)."""
+    import json
+
+    _ml()
+    from wonders.contrib import scorecard, scorecard_markdown
+
+    try:
+        card = scorecard(source, model, cells=cells, games=games, seed=seed, processes=processes)
+    except ValueError as exc:
+        raise click.BadParameter(str(exc)) from exc
+    if out:
+        with open(out, 'w', encoding='utf-8') as fh:
+            json.dump(card, fh, indent=1)
+    click.echo(scorecard_markdown(card))
+
+
+@ext.command(name='summary')
+@click.argument('directory', type=click.Path(exists=True, file_okay=False))
+@click.option('--out', '-o', type=click.Path(dir_okay=False), help='Write the Markdown here as well.')
+def ext_summary(directory, out):
+    """One report from a folder of check reports (*.md) and scorecards (*.json; shards are merged)."""
+    from wonders.contrib import summary
+
+    text = summary(directory)
+    click.echo(text)
+    if out:
+        with open(out, 'w', encoding='utf-8') as fh:
+            fh.write(text)
+
+
+@ext.command(name='leaderboard')
+@click.argument('scorecards', nargs=-1, required=True, type=click.Path(exists=True, dir_okay=False))
+@click.option('--data', default='leaderboard.json', show_default=True, type=click.Path(dir_okay=False))
+@click.option('--markdown', default='LEADERBOARD.md', show_default=True, type=click.Path(dir_okay=False))
+def ext_leaderboard(scorecards, data, markdown):
+    """Add scorecards (shards of one model are merged) to the leaderboard and re-render it."""
+    import json
+
+    from wonders.contrib import merge_scorecards, update_leaderboard
+
+    cards = []
+    for path in scorecards:
+        with open(path, encoding='utf-8') as fh:
+            cards.append(json.load(fh))
+    for card in merge_scorecards(cards):
+        update_leaderboard(card, data, markdown)
+        click.echo(f"leaderboard: {card.get('extension', '')}/{card['model']}")
 
 
 @main.group()

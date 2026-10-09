@@ -1,0 +1,13 @@
+{
+ "description": "One guild that uses the plugin's tithe effect. Guilds are drawn at random, so deck sizes stay the same.",
+ "cards": [
+  {
+   "name": "Tax Collectors Guild",
+   "color": "purple",
+   "age": 3,
+   "guild": true,
+   "cost": {"resources": {"ore": 2, "paper": 1}},
+   "effects": [{"type": "tithe", "per": 3, "description": "1 VP per 3 coins you hold at the end"}]
+  }
+ ]
+}

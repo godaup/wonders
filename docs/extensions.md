@@ -15,17 +15,25 @@ without changing this repository.
 `weights_only=True`, they cannot run code). Code only comes from Python packages you install yourself
 (`pip install …`); the game never downloads anything. Broken extensions are skipped with a warning.
 
+**Sharing one.** Extensions can be contributed to this repository by pull request, where they are
+checked automatically: data folders go to [`extensions/`](../extensions/README.md), plugin packages
+to [`plugins/`](../plugins/README.md) and translations of the game to
+[`wonders/i18n/`](../wonders/i18n/README.md) (overview in [CONTRIBUTING](../CONTRIBUTING.md)).
+`wonders ext check` runs the same check locally.
+
 ## Quick start: a folder extension
 
 ```
-wonders ext new my-expansion --name "My Expansion"   # creates ~/.wonders/extensions/my-expansion
+wonders ext new my-expansion --name "My Expansion" --author "You"   # creates ~/.wonders/extensions/my-expansion
 wonders ext validate ~/.wonders/extensions/my-expansion
+wonders ext check ~/.wonders/extensions/my-expansion   # stricter: what a pull request must pass
 wonders ext list
 wonders play -e base -e my-expansion -a heuristic,board,greedy
 ```
 
-The folder (default home `~/.wonders/extensions`, or `$WONDERS_EXTENSIONS`) contains a manifest and
-the files it names:
+The folder (default home `~/.wonders/extensions`, or `$WONDERS_EXTENSIONS` — several folders
+separated by `os.pathsep`, e.g. `WONDERS_EXTENSIONS=extensions:$HOME/.wonders/extensions` to use a
+checkout's community extensions too) contains a manifest and the files it names:
 
 ```
 my-expansion/
@@ -82,7 +90,10 @@ An expansion file uses the same format as the bundled `wonders/cards/data/*.json
 * An effect's optional `description` is the text the card renderer shows.
 
 `wonders ext validate` checks that every card and wonder builds, that names do not clash with the
-bundled cards or each other, and that chains point to existing cards.
+bundled cards or each other, and that chains point to existing cards. `wonders ext check` adds the
+contribution rules (complete manifest, data-only files, size limits), warns when new cards change
+hand sizes (hands are deck size // players, so extra Age cards leave cards undealt — guilds and
+black cards are drawn and do not), and plays and replays games with the expansion.
 
 Note: the bundled network only knows the bundled cards, so it refuses games with new cards; scripted
 agents play them out of the box (they read effects through the engine's uniform hooks).
@@ -137,7 +148,8 @@ New mechanics need a new effect type, which is code: see plugins below.
 
 A plugin is an installed Python package with an entry point in the `wonders.extensions` group that
 points to a `register(registry)` function. Optionally, the module defines `MANIFEST` (same fields as
-`manifest.json`; the package version is used by default).
+`manifest.json`; the package version is used by default). [`plugins/example`](../plugins/example) is
+a complete, installable one.
 
 `pyproject.toml` of your package:
 
@@ -215,7 +227,13 @@ may differ; `GameRecord.check_extensions()` lists the differences.
 
 ## Reference
 
-* `wonders ext list | validate FOLDER | new ID [--name] [--dir]`
+* `wonders ext list | validate FOLDER | new ID [--name] [--author] [--dir]`
+* `wonders ext check TARGET…` — the contribution check for extension folders, installed plugin
+  packages and locale files; `wonders ext scorecard FOLDER|PT [--model] [--cells] [--games]` — a
+  model against the bundled network; `wonders ext changed | summary | leaderboard` — used by the
+  contribution workflows.
 * `wonders.extensions`: `REGISTRY`, `ensure_loaded()`, `load_folder()`, `load_plugin()`, `validate()`,
-  `scaffold()`
-* `WONDERS_EXTENSIONS` — the extensions home (default `$WONDERS_HOME/extensions`, i.e. `~/.wonders/extensions`); `WONDERS_NO_EXTENSIONS=1` disables discovery.
+  `scaffold()`; `wonders.contrib`: `check()`, `scorecard()`, `changed()`, `update_leaderboard()`
+* `WONDERS_EXTENSIONS` — the extensions home (default `$WONDERS_HOME/extensions`, i.e.
+  `~/.wonders/extensions`; several folders separated by `os.pathsep`); `WONDERS_NO_EXTENSIONS=1`
+  disables discovery.

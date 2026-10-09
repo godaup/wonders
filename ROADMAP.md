@@ -108,14 +108,26 @@ evaluator merged).
 
 ## 4. Model challenge via pull requests
 
+**Status: built, broadened to every kind of contribution, not yet exercised by a real pull request**
+(`wonders/contrib.py`, `.github/workflows/contributions.yml`, `scorecard.yml`,
+`contributions-comment.yml`, `leaderboard.yml`). Models, expansions and extension locales go to
+`extensions/<id>/` (data), plugins to `plugins/<name>/` (pip packages, with `plugins/example`),
+translations of the game to `wonders/i18n/`; each kind is checked by `wonders ext check`, and models
+get the scorecard below, a PR comment and a leaderboard PR after the merge. Still open: the
+play-style statistics in the scorecard (coins spent on trade, wonder stages, science sets — the
+head-to-head does not collect them yet); enabling "Allow GitHub Actions to create pull requests" for
+the leaderboard workflow; a first real contribution to calibrate the run time (~5,000 games in four
+jobs).
+
 **Goal.** Anyone can submit a model by pull request and get an automatic head-to-head against the
 bundled network, with a scorecard posted on the PR — the README's "beat the machine" challenge as a
 contribution path, ending in a public leaderboard.
 
-**Submission.** A PR adds `models/contrib/<name>.pt` (a 256×2 checkpoint is ~4 MB, no Git LFS
-needed) and `models/contrib/<name>.yml` (author, description, how it was trained).
+**Submission.** A PR adds an extension folder `extensions/<id>/` with `manifest.json` (author,
+licence, description, rules version, the model's name and how it was trained) and the checkpoint (a
+256×2 checkpoint is ~4 MB, no Git LFS needed).
 
-**Evaluation workflow** (GitHub Actions, triggered by changes under `models/`):
+**Evaluation workflow** (GitHub Actions, triggered by changes under `extensions/`):
 
 1. **Validate** before spending compute: a loadable checkpoint (loaded with `weights_only=True`, as
    everywhere), the expected encoder and vocabulary, a size limit, and the rules version it was
@@ -215,10 +227,11 @@ existing effect types. A custom-expansion feature would make that a first-class 
 
 ## 6. Extensions: custom expansions, agents and models
 
-**Status: steps 1–2 done** (`wonders/extensions.py`, `docs/extensions.md`): one registry for
+**Status: steps 1, 2 and 4 done** (`wonders/extensions.py`, `docs/extensions.md`): one registry for
 expansions, effects, agents, models and locales; data folders and pip plugins (entry point
 `wonders.extensions`); manifests with content hashes pinned in game records; `wonders ext list |
-validate | new`. Still open: the Hugging Face source and curated pull requests (steps 3–4).
+validate | new | check`; curated pull requests to `extensions/` and `plugins/` with automatic checks
+(item 4). Still open: the Hugging Face source (step 3).
 
 **Goal.** Let anyone add expansions, agents and trained models without changing this repository,
 with one mechanism and clear trust rules.
@@ -424,7 +437,8 @@ new seat counts and decisions (the two-player shared seat is an extra decision k
 
 * **Multiplayer with friends** — humans and bots at one table over the local network or the
   internet; spectator mode; shareable replay links.
-* **Player profile** — your rating over time, statistics and favourite wonders, kept locally.
+* **Player profile** — partly done: the GUI keeps every game locally (`wonders.storage`) with the
+  player's Elo rating over time and achievements. Still open: statistics and favourite wonders.
 * **Strategy explorer** — what the network values (card heatmaps by Age, "why this move"); a
   language model could narrate the search's numbers in plain words.
 * **Environment wrappers and a benchmark suite** — official PettingZoo / Gymnasium registrations and
@@ -439,19 +453,13 @@ new seat counts and decisions (the two-player shared seat is an extra decision k
 
 ## Smaller items
 
-* **Python 3.14.** Support and test the newest Python:
-  * add 3.14 where the supported versions are declared — `pyproject.toml` classifiers and black
-    `target-version`, the tox `envlist` and its `gh-actions` map in `setup.cfg`, the
-    `.github/workflows/dev.yml` matrix, CLAUDE.md and the README badge;
-  * run the full suite on 3.14; the core only needs `click`, so it should pass as is. Check that
-    PyTorch and NumPy publish 3.14 wheels before adding 3.14 to the `ml` job;
+* **Python 3.14 follow-ups.** 3.11–3.14 are supported and tested (October 2026). Still open:
+  * add 3.14 to the `ml` job once PyTorch and NumPy publish 3.14 wheels;
   * try the **free-threaded build** (`python3.14t`, no GIL). The engine is pure Python, so game
     simulation could run in threads instead of worker processes (less memory and no pickling in
     vector envs, benchmarks and search). It needs a thread-safety review of the shared caches
     (`Player._cache`, `Game._payments`, the observation summary cache, `lru_cache`d content) and a
-    PyTorch build for free-threading; benchmark before switching anything;
-  * Python 3.10 reaches end of life in October 2026: consider raising `requires-python` to 3.11
-    when 3.14 is added, keeping a four-version window.
+    PyTorch build for free-threading; benchmark before switching anything.
 * Publish to PyPI once the API settles (release flow in `CLAUDE.md`).
 * A replay viewer in the GUI for recorded games (`GameRecord` JSON), reusing the review screen of
   item 3.
