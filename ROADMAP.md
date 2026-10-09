@@ -65,7 +65,8 @@ teacher exists (step 3 below).
 
 **Status: done** — `wonders analyse` and the GUI's "Analyse my moves": move ratings with paired noise
 estimates, key moments with reasons, the expected-margin graph, patterns across the game, and what-if
-continuations of the key moments from the real position (`wonders/ml/analysis.py`,
+continuations of the key moments from the real position, and per-aspect ratings and charts
+(category ranks, points lost per move, accuracy by Age and move type, military, economy) (`wonders/ml/analysis.py`,
 `GameRecord.replay_observations` / `GameRecord.branch`). Possible follow-ups: rating the Leaders draft
 and recruitment, and analysing several games for trends.
 

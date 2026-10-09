@@ -207,6 +207,28 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .an-pattern { padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--pc); border-radius: 10px; background: var(--panel-2); }
 .an-pattern h4 { margin: 0 0 4px; font-size: 13px; }
 .an-pattern p { margin: 0; font-size: 12px; color: var(--muted); }
+.an-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.an-stat { border: 1px solid var(--line); border-top: 4px solid var(--sc, var(--line)); border-radius: 8px; padding: 6px 8px; background: var(--panel-2); }
+.an-stat .k { font-size: 10px; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.an-stat .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.an-stat .s { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.an-rank { display: inline-block; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 999px; margin-left: 4px; vertical-align: middle;
+  background: var(--rk); color: #fff; }
+.an-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.an-box { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--panel-2); }
+.an-box h5 { margin: 0 0 8px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.an-bars { display: grid; grid-template-columns: 74px minmax(0, 1fr) 46px; gap: 4px 8px; align-items: center; font-size: 12px; }
+.an-track { position: relative; height: 12px; border-radius: 4px; background: var(--panel); border: 1px solid var(--line); }
+.an-track .fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.an-track .avg { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .55; }
+.an-track .top { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--red); opacity: .8; }
+.an-track .zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--muted); }
+.an-grid { border-collapse: collapse; font-size: 12px; width: 100%; }
+.an-grid td, .an-grid th { padding: 3px 6px; text-align: center; border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.an-grid th { color: var(--muted); font-weight: 600; }
+.an-mil { font-size: 16px; font-weight: 800; }
+.an-legend { display: flex; gap: 10px; font-size: 11px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+.an-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 .an-progress { height: 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
 .an-progress div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
 
@@ -825,6 +847,121 @@ function whatIf(w) {
     (w.best.first || w.played.first) ? bar('better', w.best.first, 'var(--green)') : null,
     (w.best.first || w.played.first) ? bar('yours', w.played.first, 'var(--accent)') : null);
 }
+const CAT_LABEL = { total: 'Total', military: 'Military', treasury: 'Coins', wonders: 'Wonder', civilian: 'Civic', commercial: 'Commerce',
+  guilds: 'Guilds', science: 'Science', leaders: 'Leaders', cities: 'Cities' };
+const RANK_COLOR = ['var(--green)', 'var(--accent)', 'var(--gold)', 'var(--red)'];
+const ordinal = (n) => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
+function rankBadge(rank, players) {
+  const color = rank === 1 ? RANK_COLOR[0] : rank === players ? RANK_COLOR[3] : rank <= players / 2 ? RANK_COLOR[1] : RANK_COLOR[2];
+  return el('span', { class: 'an-rank', style: `--rk:${color}` }, ordinal(rank));
+}
+function stat(key, value, sub, color, tip, extra) {
+  return el('div', { class: 'an-stat', style: color ? `--sc:${color}` : null, 'data-tip': tip || null },
+    el('div', { class: 'k' }, key), el('div', { class: 'v' }, value, extra || null), sub !== null ? el('div', { class: 's' }, sub) : null);
+}
+function categoryStrip(asp) {
+  const order = [...asp.categories].sort((x, y) => (y.key === 'total') - (x.key === 'total'));
+  return el('div', { class: 'an-strip' }, order.map((c) => {
+    const d = c.mine - c.average;
+    return stat(CAT_LABEL[c.key] || c.key, String(c.mine), `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} vs avg`, CAT_COLOR[c.key],
+      `${CAT_LABEL[c.key] || c.key}: ${c.mine} VP, table average ${c.average}, best opponent ${c.best_other}`, rankBadge(c.rank, asp.players));
+  }));
+}
+function categoryBars(asp) {
+  const cats = asp.categories.filter((c) => c.key !== 'total');
+  const all = cats.flatMap((c) => [c.mine, c.average, c.best_other]);
+  const lo = Math.min(0, ...all), hi = Math.max(1, ...all);
+  const pos = (v) => (100 * (v - lo) / (hi - lo));
+  const rows = cats.flatMap((c) => {
+    const a = pos(Math.min(0, c.mine)), b = pos(Math.max(0, c.mine));
+    return [el('span', {}, CAT_LABEL[c.key] || c.key),
+      el('div', { class: 'an-track', 'data-tip': `You ${c.mine} · average ${c.average} · best opponent ${c.best_other}` },
+        el('div', { class: 'fill', style: `left:${a}%;width:${Math.max(1, b - a)}%;background:${CAT_COLOR[c.key] || 'var(--accent)'}` }),
+        lo < 0 ? el('div', { class: 'zero', style: `left:${pos(0)}%` }) : null,
+        el('div', { class: 'avg', style: `left:${pos(c.average)}%` }), el('div', { class: 'top', style: `left:${pos(c.best_other)}%` })),
+      el('span', { style: 'text-align:right;font-variant-numeric:tabular-nums' }, String(c.mine))];
+  });
+  return el('div', { class: 'an-box' }, el('h5', {}, 'Points by category'), el('div', { class: 'an-bars' }, rows),
+    el('div', { class: 'an-legend' }, el('span', {}, el('i', { style: 'background:var(--accent)' }), 'you'),
+      el('span', {}, el('i', { style: 'background:var(--ink);opacity:.55' }), 'table average'),
+      el('span', {}, el('i', { style: 'background:var(--red)' }), 'best opponent')));
+}
+function impactChart(decisions) {
+  const rated = decisions.filter((d) => 'loss' in d);
+  if (!rated.length) return null;
+  const W = 900, H = 120, pad = 28, bw = (W - 2 * pad) / rated.length;
+  const top = Math.max(5, ...rated.map((d) => d.loss));
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Points lost by each move">`;
+  svg += `<text x="${pad}" y="12" font-size="12" fill="currentColor" opacity=".6">points lost by each move (VP)</text>`;
+  [1, 2.5, 5].forEach((v) => { if (v <= top) { const y = 18 + (H - pad - 18) * (v / top);
+    svg += `<line x1="${pad}" x2="${W - pad}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity=".12"/><text x="${W - pad + 4}" y="${y + 4}" font-size="10" fill="currentColor" opacity=".5">${v}</text>`; } });
+  rated.forEach((d, i) => {
+    const x = pad + i * bw, h = (H - pad - 18) * (d.loss / top);
+    if (i && d.age !== rated[i - 1].age) svg += `<line x1="${x}" x2="${x}" y1="14" y2="${H - pad + 4}" stroke="currentColor" stroke-opacity=".2"/>`;
+    const tip = `Age ${AGES[d.age]} turn ${d.turn}: ${moveText(d.played)} — ${d.label}${d.loss ? ' (−' + d.loss.toFixed(1) + ' VP; better: ' + moveText(d.best) + ')' : ''}`;
+    svg += `<g data-tip="${tip.replace(/"/g, '&quot;')}"><rect x="${x + 1}" y="18" width="${bw - 2}" height="${H - pad - 18}" fill="transparent"/>`;
+    svg += d.loss > 0 ? `<rect x="${x + 2}" y="18" width="${bw - 4}" height="${Math.max(2, h)}" rx="2" fill="${LABEL_COLOR[d.label] || 'gray'}"/>`
+      : `<circle cx="${x + bw / 2}" cy="20" r="3" fill="${LABEL_COLOR[d.label]}"/>`;
+    svg += '</g>';
+  });
+  [1, 2, 3].forEach((a) => { const i = rated.findIndex((d) => d.age === a);
+    if (i >= 0) svg += `<text x="${pad + i * bw + 2}" y="${H - 8}" font-size="12" fill="currentColor" opacity=".6">Age ${AGES[a]}</text>`; });
+  svg += '</svg>';
+  const box = el('div', { class: 'an-graph' }); box.innerHTML = svg; return box;
+}
+function accuracyBox(asp) {
+  const bar = (label, s, tip) => [el('span', {}, label),
+    el('div', { class: 'an-track', 'data-tip': tip }, el('div', { class: 'fill', style: `left:0;width:${Math.round(100 * (s.accuracy || 0))}%;background:var(--green)` })),
+    el('span', { style: 'text-align:right' }, s.accuracy === null ? '–' : Math.round(100 * s.accuracy) + '%')];
+  const rows = asp.by_age.filter((s) => s.moves).flatMap((s) => bar('Age ' + AGES[s.age], s, `${s.moves} moves · ${s.loss.toFixed(1)} VP lost`));
+  const kinds = Object.entries(asp.by_kind).flatMap(([k, s]) => bar(VERB[k] ? k : k, s, `${s.moves} ${k} moves · ${s.loss.toFixed(1)} VP lost`));
+  return el('div', { class: 'an-box' }, el('h5', {}, 'Accuracy'), el('div', { class: 'an-bars' }, rows, kinds));
+}
+function matrixBox(asp) {
+  const kinds = ['build', 'wonder', 'discard', 'free'].filter((k) => asp.kind_matrix[k] || Object.values(asp.kind_matrix).some((r) => r[k]));
+  const max = Math.max(1, ...Object.values(asp.kind_matrix).flatMap((r) => Object.values(r)));
+  return el('div', { class: 'an-box' }, el('h5', {}, 'Your move type vs the best'),
+    el('table', { class: 'an-grid' }, el('tr', {}, el('th', {}, 'you ↓ / best →'), kinds.map((k) => el('th', {}, k))),
+      kinds.map((k) => el('tr', {}, el('th', {}, k), kinds.map((b) => {
+        const n = (asp.kind_matrix[k] || {})[b] || 0;
+        const color = k === b ? 'var(--green)' : 'var(--red)';
+        return el('td', { style: n ? `background:color-mix(in srgb, ${color} ${Math.round(15 + 55 * n / max)}%, transparent)` : null,
+          'data-tip': `${n} move${n === 1 ? '' : 's'}: you chose ${k}, the best was ${b}` }, n ? String(n) : '');
+      })))));
+}
+function cardsBox(asp) {
+  const entries = Object.entries(asp.cards).sort((x, y) => COLORS.indexOf(x[0]) - COLORS.indexOf(y[0]));
+  const top = Math.max(1, ...entries.flatMap(([, c]) => [c.mine, c.average]));
+  return el('div', { class: 'an-box' }, el('h5', {}, 'Your city by colour'), el('div', { class: 'an-bars' }, entries.flatMap(([col, c]) => [
+    el('span', { 'data-tip': GROUPS[col] || col }, SHORT_GROUPS[col] || col),
+    el('div', { class: 'an-track', 'data-tip': `${GROUPS[col] || col}: ${c.mine} cards · table average ${c.average}` },
+      el('div', { class: 'fill', style: `left:0;width:${100 * c.mine / top}%;background:var(--c-${col})` }),
+      el('div', { class: 'avg', style: `left:${100 * c.average / top}%` })),
+    el('span', { style: 'text-align:right' }, String(c.mine))])));
+}
+function militaryBox(asp) {
+  const sym = { win: ['✓', 'var(--green)'], tie: ['=', 'var(--muted)'], loss: ['✗', 'var(--red)'] };
+  const sides = ['left', 'right'];
+  return el('div', { class: 'an-box' }, el('h5', {}, 'Military'),
+    el('table', { class: 'an-grid' }, el('tr', {}, el('th', {}, ''), [1, 2, 3].map((a) => el('th', {}, 'Age ' + AGES[a]))),
+      sides.map((side) => {
+        const row = asp.military.filter((m) => m.side === side);
+        return el('tr', {}, el('th', {}, side === 'left' ? '← ' + (row[0] || {}).opponent : (row[0] || {}).opponent + ' →'),
+          [1, 2, 3].map((a) => { const m = row.find((r) => r.age === a); if (!m) return el('td', {}, '');
+            const [s, c] = sym[m.result];
+            return el('td', { 'data-tip': `Age ${AGES[a]}: ${m.mine} vs ${m.theirs} shields — ${m.result}` },
+              el('span', { class: 'an-mil', style: `color:${c}` }, s), el('div', { class: 's', style: 'font-size:11px;color:var(--muted)' }, `${m.mine}–${m.theirs}`)); }));
+      })));
+}
+function economyStrip(asp) {
+  const e = asp.economy, w = asp.wonder;
+  return el('div', { class: 'an-strip' },
+    stat('Trade paid', String(e.trade_paid), 'coins to neighbours', 'var(--gold)', 'Coins you paid neighbours for resources'),
+    stat('Chain builds', String(e.chain_builds), 'built for free', 'var(--c-purple)', 'Cards you built for free through a chain'),
+    stat('Discards', String(e.discards), '+3 coins each', 'var(--c-brown)', 'Cards discarded for coins'),
+    stat('Final coins', String(e.final_coins), Math.floor(e.final_coins / 3) + ' VP', 'var(--gold)', 'Coins left at the end (3 = 1 VP)', rankBadge(e.coins_rank, asp.players)),
+    stat('Wonder', `${w.built}/${w.total}`, w.ages.length ? 'Ages ' + w.ages.map((a) => AGES[a]).join(', ') : 'none built', 'var(--c-grey)', 'Wonder stages built (and in which Ages)'));
+}
 function renderAnalysis(a) {
   const box = $('r-analysis'); box.classList.remove('hidden');
   if (a.status === 'running') {
@@ -849,11 +986,16 @@ function renderAnalysis(a) {
   const rows = r.decisions.map((d) => el('tr', {},
     el('td', {}, `${AGES[d.age]} · ${d.turn}`), el('td', {}, moveText(d.played)), el('td', {}, badge(d.label)),
     el('td', {}, d.loss ? '−' + d.loss.toFixed(1) : ''), el('td', {}, d.best && d.label !== 'best' ? moveText(d.best) : '')));
-  box.replaceChildren(
+  box.replaceChildren(...[
     el('p', { class: 'section-title' }, 'Analysis of your moves'),
     el('div', { class: 'an-summary' }, el('span', { class: 'an-big', 'data-tip': 'Moves rated best or within noise of the best' }, Math.round(100 * s.accuracy) + '% accuracy'),
       el('span', { class: 'muted' }, `${s.rated} rated moves · ${s.total_loss.toFixed(1)} VP left on the table ·`), ...counts),
+    r.aspects ? categoryStrip(r.aspects) : null,
     analysisGraph(r.graph),
+    impactChart(r.decisions),
+    r.aspects ? el('div', { class: 'an-row' }, categoryBars(r.aspects), accuracyBox(r.aspects), matrixBox(r.aspects)) : null,
+    r.aspects ? el('div', { class: 'an-row' }, cardsBox(r.aspects), militaryBox(r.aspects)) : null,
+    r.aspects ? economyStrip(r.aspects) : null,
     el('div', {}, (r.patterns || []).length ? [
       el('p', { class: 'section-title' }, 'Patterns in your game'),
       el('div', { class: 'an-patterns' }, r.patterns.map((pt) => el('div', { class: 'an-pattern', style: `--pc:${PATTERN_COLOR[pt.kind] || 'var(--muted)'}` },
@@ -862,7 +1004,7 @@ function renderAnalysis(a) {
     ...moments,
     el('details', {}, el('summary', {}, 'Every move'),
       el('table', { class: 'an-table' }, el('thead', {}, el('tr', {}, ['Age · turn', 'Your move', 'Rating', 'Loss', 'Better'].map((h) => el('th', {}, h)))), el('tbody', {}, rows))),
-    el('p', { class: 'muted', style: 'font-size:12px' }, `Searched ${r.settings.depth} turns ahead in ${r.settings.worlds} sampled games per move, using only what you could see (${r.settings.checkpoint}). Differences under 1 VP or within noise count as good.`));
+    el('p', { class: 'muted', style: 'font-size:12px' }, `Searched ${r.settings.depth} turns ahead in ${r.settings.worlds} sampled games per move, using only what you could see (${r.settings.checkpoint}). Differences under 1 VP or within noise count as good.`)].filter(Boolean));
   $('r-analyse').disabled = true;
 }
 async function pollAnalysis() {
