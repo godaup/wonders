@@ -236,6 +236,44 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .an-progress { height: 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
 .an-progress div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
 
+/* past games, rating and achievements */
+#history, #achievements { max-width: 1100px; margin: 24px auto; display: grid; gap: 16px; }
+.elo-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.elo-big { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.elo-graph svg { width: 100%; height: auto; display: block; }
+.games { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+.games th, .games td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.games th { font-size: 11px; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.games td.num { text-align: right; }
+.games tr.current td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.games .acts { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.games .acts button { font-size: 12px; padding: 3px 9px; }
+.games .opps { color: var(--muted); font-size: 12px; }
+.games .ach-mini { font-size: 15px; letter-spacing: 2px; cursor: help; }
+.delta { font-weight: 700; }
+.delta.up { color: var(--green); }
+.delta.down { color: var(--red); }
+.place { display: inline-block; min-width: 26px; padding: 0 7px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line);
+  font-weight: 700; text-align: center; }
+.place.first { background: var(--gold); border-color: var(--gold); color: #fff; }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.ach { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px; border: 1px solid var(--line);
+  border-radius: 14px; background: var(--panel); box-shadow: var(--shadow); }
+.ach .icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; background: var(--panel-2);
+  border: 2px solid var(--line); filter: grayscale(1); opacity: .55; }
+.ach.earned .icon { filter: none; opacity: 1; border-color: var(--gold); background: color-mix(in srgb, var(--gold) 16%, var(--panel)); }
+.ach h3 { font-size: 15px; margin-bottom: 4px; }
+.ach p { margin: 0 0 4px; font-size: 13px; }
+.ach .when { font-size: 12px; color: var(--muted); }
+.ach.earned .when { color: var(--green); font-weight: 600; }
+#r-rating { margin: -4px 0 12px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+#r-rating .new-ach { padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--gold) 18%, var(--panel)); border: 1px solid var(--gold);
+  font-weight: 600; font-size: 13px; }
+@media (max-width: 900px) {
+  .games .hide-narrow { display: none; }
+  .games th, .games td { padding: 6px 4px; }
+}
+
 /* viewer */
 #viewer { position: fixed; inset: 0; background: rgba(10, 14, 20, .6); display: grid; place-items: center; z-index: 20; }
 #viewer img { max-width: min(92vw, 520px); max-height: 88vh; border-radius: 14px; }
@@ -268,6 +306,8 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
     <select id="h-lang" class="hidden" data-i18n-attrs="title" title="Language"></select>
     <button id="btn-theme" data-i18n-attrs="title" title="Toggle light/dark">◐</button>
     <button id="btn-record" class="hidden" data-i18n>Download record</button>
+    <button id="btn-games" class="hidden" data-i18n>Past games</button>
+    <button id="btn-achievements" class="hidden" data-i18n>Achievements</button>
     <button id="btn-menu" class="hidden" data-i18n>New game</button>
   </div>
 </header>
@@ -342,6 +382,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 
   <section id="result" class="hidden panel" style="max-width:980px;margin:24px auto">
     <h2 id="r-title" style="margin-bottom:12px"></h2>
+    <div id="r-rating"></div>
     <div style="overflow-x:auto"><table id="r-table"></table></div>
     <div class="actions">
       <button class="primary" id="r-again" data-i18n>Play again (same settings)</button>
@@ -352,6 +393,24 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
     <div id="r-analysis" class="hidden"></div>
     <p class="section-title" style="margin-top:18px" data-i18n>Final cities</p>
     <div class="opponents" id="r-cities"></div>
+  </section>
+
+  <section id="history" class="hidden">
+    <div class="panel">
+      <p class="section-title" data-i18n>Your rating</p>
+      <div id="h-rating"></div>
+    </div>
+    <div class="panel">
+      <p class="section-title" data-i18n>Past games</p>
+      <div style="overflow-x:auto" id="h-games"></div>
+    </div>
+  </section>
+
+  <section id="achievements" class="hidden">
+    <div class="panel">
+      <div class="elo-head"><h2 data-i18n>Achievements</h2><span class="muted" id="a-summary"></span></div>
+      <div class="ach-grid" id="a-grid"></div>
+    </div>
   </section>
 </main>
 
@@ -442,7 +501,14 @@ async function api(path, body) {
 const assetV = () => '&v=' + ((options && options.asset_version) || '0') + '&lang=' + encodeURIComponent(lang);
 const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name) + assetV();
 const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + (built || 0) + assetV();
-const show = (id) => ['menu', 'game', 'result'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
+const PAGES = ['menu', 'game', 'result', 'history', 'achievements'];
+const HASHES = { history: '#games', achievements: '#achievements' };  // pages a reload or link can open
+const show = (id) => {
+  PAGES.forEach((s) => $(s).classList.toggle('hidden', s !== id));
+  const hash = HASHES[id] || '';
+  if (location.hash !== hash) window.history.replaceState(null, '', hash || location.pathname + location.search);
+};
+const page = () => PAGES.find((s) => !$(s).classList.contains('hidden'));
 function viewUrl(src, alt, wide) {
   const img = $('viewer').querySelector('img');
   img.src = src; img.alt = alt; img.classList.toggle('wide', !!wide);
@@ -481,6 +547,7 @@ $('btn-theme').addEventListener('click', () => {
 
 /* ---------- menu ---------- */
 function agentLabel(id) { const a = options.agents.find((x) => x.id === id); return a ? a.label : id === 'human' ? t('human') : id; }
+function agentElo(id) { const a = options.agents.find((x) => x.id === id); return a ? a.elo : null; }
 function agentBlurb(id) { const a = options.agents.find((x) => x.id === id); return (a && a.blurb) || t('A computer opponent.'); }
 function availableWonders() {
   const ids = new Set(['base', ...menu.expansions]);
@@ -505,11 +572,13 @@ function renderMenu() {
       else if (seat.player === 'human') { ev.target.value = 'human'; return; }  // keep exactly one human
       seat.player = ev.target.value; renderMenu();
     } }, el('option', { value: 'human', selected: seat.player === 'human' }, t('You')),
-      options.agents.map((a) => el('option', { value: a.id, selected: seat.player === a.id }, a.label)));
+      options.agents.map((a) => el('option', { value: a.id, selected: seat.player === a.id }, a.label + ' · ' + a.elo)));
     const name = el('input', { type: 'text', value: seat.name, placeholder: seat.player === 'human' ? t('You') : agentLabel(seat.player),
       oninput: (ev) => { seat.name = ev.target.value; } });
     seats.append(el('div', { class: 'seat-row' }, el('span', { class: 'num' }, '#' + (i + 1)), sel, name));
-    const blurb = seat.player === 'human' ? t('Your seat.') : (options.agents.find((a) => a.id === seat.player) || {}).blurb;
+    const agent = options.agents.find((a) => a.id === seat.player);
+    const blurb = seat.player === 'human' ? t('Your seat.')
+      : agent && [agent.blurb, t('Elo {elo}', { elo: agent.elo })].filter(Boolean).join(' · ');
     if (blurb) seats.append(el('div', { class: 'seat-row' }, el('span'), el('div', { class: 'blurb' }, blurb)));
   });
   $('m-count').textContent = menu.seats.length;
@@ -792,12 +861,17 @@ function renderLog(obs) {
 }
 
 function setHeader() {
-  const inMenu = !$('menu').classList.contains('hidden');
-  $('btn-menu').classList.toggle('hidden', !state || inMenu);
-  $('btn-record').classList.toggle('hidden', !state || inMenu);
+  const current = page(), inMenu = current === 'menu', inGame = current === 'game' || current === 'result';
+  $('btn-menu').classList.toggle('hidden', inMenu);
+  $('btn-record').classList.toggle('hidden', !state || !inGame);
+  $('btn-games').classList.toggle('hidden', !options || !options.saving || current === 'history');
+  $('btn-achievements').classList.toggle('hidden', !options || !options.saving || current === 'achievements');
   $('m-resume').classList.toggle('hidden', !state || state.done);
-  $('h-discard').classList.toggle('hidden', !state || inMenu || state.done);
+  $('h-discard').classList.toggle('hidden', !state || current !== 'game');
   if (state && state.observation) $('h-discard-n').textContent = t('{n} discarded', { n: state.observation.discard_count });
+  if (current === 'history' || current === 'achievements') {
+    $('status').replaceChildren(el('b', {}, t(current === 'history' ? N('Past games') : N('Achievements')))); return;
+  }
   if (!state || inMenu) { $('status').textContent = ''; return; }
   if (state.done) { $('status').replaceChildren(el('b', {}, t('Game over'))); return; }
   const obs = state.observation;
@@ -1077,6 +1151,7 @@ $('r-analyse').addEventListener('click', async () => {
 
 function renderResult() {
   $('r-analysis').classList.add('hidden'); $('r-analyse').disabled = false; pollAnalysis();
+  renderRatingChange();
   const r = state.result;
   const cats = r.categories.filter((c) => r.scores.some((s) => s[c] !== 0));
   const order = state.players.map((p, i) => i).sort((a, b) => r.scores[b].total - r.scores[a].total);
@@ -1106,12 +1181,153 @@ async function play(index, payment) {
   finally { setBusy(false); }
 }
 
-$('btn-menu').addEventListener('click', () => { if (!state || state.done || confirm(t('Abandon this game and return to the menu?'))) openMenu(); });
+$('btn-menu').addEventListener('click', () => {
+  if (page() !== 'game' || options.saving || confirm(t('Abandon this game and return to the menu?'))) openMenu();
+});
+$('btn-games').addEventListener('click', openHistory);
+$('btn-achievements').addEventListener('click', openAchievements);
 const download = () => { window.location.href = '/api/record'; };
 $('btn-record').addEventListener('click', download);
 $('r-record').addEventListener('click', download);
 $('r-menu').addEventListener('click', openMenu);
 $('r-again').addEventListener('click', () => startGame(Object.assign({}, state.config, { seed: null })));
+
+/* ---------- past games, rating and achievements ---------- */
+const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(lang, { dateStyle: window.innerWidth < 600 ? 'short' : 'medium', timeStyle: 'short' }); } catch (e) { return iso; } };
+const signed = (n) => (n > 0 ? '+' : n < 0 ? '−' : '±') + Math.abs(n);
+// Reference agents drawn as rungs of the ladder behind the rating graph.
+const LADDER = ['random', 'blocker', 'greedy', 'heuristic', 'board', 'neural'];
+
+function eloGraph(r) {
+  const pts = [{ rating: r.start }, ...r.history];
+  const ratings = pts.map((p) => p.rating);
+  let lo = Math.min(...ratings) - 40, hi = Math.max(...ratings) + 40;
+  const rungs = LADDER.filter((a) => a in r.agents).map((a) => ({ agent: a, elo: r.agents[a] })).sort((a, b) => a.elo - b.elo);
+  const below = rungs.filter((g) => g.elo < lo).pop(), above = rungs.find((g) => g.elo > hi);
+  if (below) lo = Math.min(lo, below.elo - 30);
+  if (above) hi = Math.max(hi, above.elo + 30);
+  const narrow = window.innerWidth < 600;  // a narrower drawing keeps the labels readable on phones
+  const W = narrow ? 400 : 760, H = narrow ? 230 : 250, L = 42, R = narrow ? 86 : 96, T = 14, B = 28;
+  const x = (i) => L + (pts.length > 1 ? (i / (pts.length - 1)) * (W - L - R) : (W - L - R) / 2);
+  const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('Your Elo rating after each game')}">`;
+  for (const g of rungs.filter((g) => g.elo >= lo && g.elo <= hi)) {
+    svg += `<line x1="${L}" x2="${W - R}" y1="${y(g.elo)}" y2="${y(g.elo)}" stroke="currentColor" stroke-opacity=".22" stroke-dasharray="4 4"/>`;
+    svg += `<text x="${W - R + 6}" y="${y(g.elo) + 4}" font-size="11" fill="currentColor" opacity=".6">${agentLabel(g.agent)} ${g.elo}</text>`;
+  }
+  const step = Math.max(50, Math.ceil((hi - lo) / 5 / 50) * 50);
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+    svg += `<text x="${L - 6}" y="${y(v) + 4}" font-size="11" text-anchor="end" fill="currentColor" opacity=".5">${v}</text>`;
+  }
+  svg += `<polyline points="${pts.map((p, i) => x(i) + ',' + y(p.rating)).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  pts.forEach((p, i) => {
+    if (!i) return;
+    const tip = `${fmtDate(p.at)}\n${t('#{place} of {n}', { place: p.place, n: p.players })} · ${t('Elo {elo}', { elo: Math.round(p.rating) })} (${signed(Math.round(p.rating - pts[i - 1].rating))})`;
+    const color = p.place === 1 ? 'var(--gold)' : 'var(--accent)';
+    svg += `<g data-tip="${tip.replace(/"/g, '&quot;')}"><circle cx="${x(i)}" cy="${y(p.rating)}" r="10" fill="transparent"/>`;
+    svg += `<circle cx="${x(i)}" cy="${y(p.rating)}" r="${pts.length > 60 ? 2.5 : 4}" fill="${color}"/></g>`;
+  });
+  svg += `<text x="${L}" y="${H - 8}" font-size="11" fill="currentColor" opacity=".55">${t('start')}</text>`;
+  svg += `<text x="${W - R}" y="${H - 8}" font-size="11" text-anchor="end" fill="currentColor" opacity=".55">${t(r.games === 1 ? '{n} game' : '{n} games', { n: r.games })}</text></svg>`;
+  const box = el('div', { class: 'elo-graph' }); box.innerHTML = svg; return box;
+}
+
+function gameStatus(g) {
+  if (g.finished && g.result) {
+    const place = g.result.places[g.human];
+    return el('span', {}, el('span', { class: 'place' + (place === 1 ? ' first' : '') }, String(place)), ' ' + t('of {n}', { n: g.players.length }));
+  }
+  const p = g.progress || {};
+  if (p.decision === 'draft') return el('span', { class: 'muted' }, t('In progress: Leaders draft'));
+  if (!p.age) return el('span', { class: 'muted' }, t('In progress'));
+  return el('span', { class: 'muted' }, t('In progress: Age {age}, turn {n}', { age: AGES[p.age], n: p.turn + 1 }));
+}
+
+let achievementInfo = {};
+async function openHistory() {
+  show('history'); setHeader();
+  $('h-games').replaceChildren(el('p', { class: 'muted' }, t('Loading…')));
+  try {
+    const [data, ach] = await Promise.all([api('/api/games'), api('/api/achievements')]);
+    achievementInfo = Object.fromEntries(ach.achievements.map((a) => [a.id, a]));
+    renderHistory(data);
+  } catch (e) { $('h-games').replaceChildren(el('p', { class: 'error' }, e.message)); }
+}
+
+function renderHistory(data) {
+  const r = data.rating;
+  $('h-rating').replaceChildren(
+    el('div', { class: 'elo-head' }, el('span', { class: 'elo-big' }, String(r.current)),
+      el('span', { class: 'muted' }, r.games ? t(r.games === 1 ? 'after {n} rated game' : 'after {n} rated games', { n: r.games })
+        : t('Finish a game to get your first rating; everyone starts at {n}.', { n: r.start }))),
+    r.games ? eloGraph(r) : null,
+    el('p', { class: 'muted', style: 'font-size:12px;margin:8px 0 0' },
+      t('Each finished game counts as a match against every opponent: finishing above them is a win, below a loss. The agents keep fixed ratings measured in thousands of games between them.')));
+  if (!data.games.length) { $('h-games').replaceChildren(el('p', { class: 'muted' }, t('No games yet: start one from the menu.'))); return; }
+  const head = el('tr', {}, [N('Date'), N('Result'), N('Your wonder'), N('Opponents'), N('Score'), N('Elo'), ''].map((h, k) =>
+    el('th', { class: (k === 2 || k === 3 ? 'hide-narrow' : '') + (k === 4 || k === 5 ? ' num' : '') }, h ? t(h) : '')));
+  const rows = data.games.map((g) => {
+    const me = g.players[g.human];
+    const opponents = g.players.filter((p, i) => i !== g.human).map((p) => agentLabel(p.agent) + ' ' + p.elo).join(', ');
+    const delta = g.rating ? g.rating.after - g.rating.before : null;
+    const ach = (g.achievements || []).map((id) => achievementInfo[id]).filter(Boolean);
+    const open = async () => {
+      setBusy(true, t('Loading…'));
+      try { state = (await api('/api/games/open', { id: g.id })).state; render(); }
+      catch (e) { alert(e.message); }
+      finally { setBusy(false); }
+    };
+    const remove = async () => {
+      if (!confirm(t('Delete this game for good?'))) return;
+      try { await api('/api/games/delete', { id: g.id }); if (state && state.id === g.id) state = null; openHistory(); }
+      catch (e) { alert(e.message); }
+    };
+    return el('tr', { class: g.current ? 'current' : '' },
+      el('td', {}, fmtDate(g.finished_at || g.updated)),
+      el('td', {}, gameStatus(g), ach.length ? el('span', { class: 'ach-mini', 'data-tip': ach.map((a) => a.name).join('\n') }, ' ' + ach.map((a) => a.icon).join('')) : null),
+      el('td', { class: 'hide-narrow' }, me.wonder_title + ' (' + me.side + ')'),
+      el('td', { class: 'hide-narrow opps' }, opponents),
+      el('td', { class: 'num' }, g.result ? String(g.result.totals[g.human]) : '–'),
+      el('td', { class: 'num' }, delta === null ? '–' : el('span', { class: 'delta ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : ''),
+        'data-tip': t('Elo {before} → {after}', { before: g.rating.before, after: g.rating.after }) }, signed(delta))),
+      el('td', {}, el('div', { class: 'acts' },
+        el('button', { class: g.finished ? '' : 'primary', onclick: open }, t(g.finished ? N('View') : N('Resume'))),
+        el('button', { onclick: () => { window.location.href = '/api/games/record?id=' + encodeURIComponent(g.id); }, 'data-tip': t('Download record') }, '⤓'),
+        el('button', { onclick: remove, 'data-tip': t('Delete') }, '✕'))));
+  });
+  $('h-games').replaceChildren(el('table', { class: 'games' }, el('thead', {}, head), el('tbody', {}, rows)));
+}
+
+async function openAchievements() {
+  show('achievements'); setHeader();
+  try {
+    const data = await api('/api/achievements');
+    const earned = data.achievements.filter((a) => a.count).length;
+    $('a-summary').textContent = t('{earned} of {total} earned in {n} finished games', { earned, total: data.achievements.length, n: data.games });
+    $('a-grid').replaceChildren(...data.achievements.map((a) => el('div', { class: 'ach' + (a.count ? ' earned' : '') },
+      el('div', { class: 'icon' }, a.icon),
+      el('div', {}, el('h3', {}, a.name), el('p', {}, a.description),
+        el('p', { class: 'when' }, a.count ? t(a.count === 1 ? 'Earned once, on {date}' : 'Earned {n} times, first on {date}', { n: a.count, date: fmtDate(a.first) })
+          : t('Not earned yet'))))));
+  } catch (e) { $('a-grid').replaceChildren(el('p', { class: 'error' }, e.message)); }
+}
+
+async function renderRatingChange() {
+  $('r-rating').replaceChildren();
+  if (!options.saving || !state || !state.id) return;
+  try {
+    const [data, ach] = await Promise.all([api('/api/games'), api('/api/achievements')]);
+    const g = data.games.find((x) => x.id === state.id);
+    if (!g || !g.rating) return;
+    const info = Object.fromEntries(ach.achievements.map((a) => [a.id, a]));
+    const delta = g.rating.after - g.rating.before;
+    $('r-rating').replaceChildren(
+      el('span', {}, t('Your Elo: {before} → {after}', { before: g.rating.before, after: g.rating.after }), ' ',
+        el('span', { class: 'delta ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : '') }, '(' + signed(delta) + ')')),
+      ...(g.achievements || []).map((id) => info[id]).filter(Boolean).map((a) =>
+        el('span', { class: 'new-ach', 'data-tip': a.description }, a.icon + ' ' + a.name)));
+  } catch (e) { /* the rating line is optional */ }
+}
 
 function renderLanguages() {
   const langs = options.languages || { en: 'English' };
@@ -1123,7 +1339,9 @@ $('h-lang').addEventListener('change', async (e) => {
   options = await api('/api/options');
   state = (await api('/api/state')).state;
   renderLanguages();
-  if (!$('menu').classList.contains('hidden')) openMenu(); else render();
+  const current = page();
+  if (current === 'menu') openMenu(); else if (current === 'history') openHistory();
+  else if (current === 'achievements') openAchievements(); else render();
   if (state && state.done) pollAnalysis();
 });
 
@@ -1137,7 +1355,9 @@ $('h-lang').addEventListener('change', async (e) => {
   if (!menu.seats || !menu.seats.some((s) => s.player === 'human')) menu = JSON.parse(JSON.stringify(options.defaults));
   menu.seats = menu.seats.filter((s) => s.player === 'human' || options.agents.some((a) => a.id === s.player));
   state = (await api('/api/state')).state;
-  render();
+  if (options.saving && location.hash === HASHES.history) openHistory();
+  else if (options.saving && location.hash === HASHES.achievements) openAchievements();
+  else render();
 })();
 </script>
 </body>

@@ -6,6 +6,11 @@ returns a JSON-ready view built only from the human's own
 :class:`~wonders.engine.observation.Observation`, so the UI sees exactly what the seat may
 legally observe (opponents' hands and buried/discarded cards stay hidden). Final scores of
 every seat are revealed once the game is over.
+
+Every decision of every seat is kept in :attr:`HumanSession.log`, so :meth:`HumanSession.saved`
+gives a JSON game file for :class:`~wonders.storage.Store` and :meth:`HumanSession.restore` rebuilds
+the game from it — the same seed deals the same game, and replaying the logged decisions (instead
+of asking the agents again) reproduces it even after the agents changed.
 """
 
 from __future__ import annotations
@@ -19,12 +24,14 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, CATEGORIES, MAX_PLAYERS, MIN_PLAYERS
 from wonders.cards.content import Content, load_content
-from wonders.engine.actions import Action
+from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
 from wonders.env.environment import WondersEnv
 from wonders.i18n import ENGLISH, Translator, languages
+from wonders.play.rating import places
 from wonders.ruleset import EXPANSIONS, Ruleset
+from wonders.storage import new_id, now
 from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, cost_text, effect_lines, res_name
 
 HUMAN = 'human'
@@ -227,6 +234,8 @@ class HumanSession:
         checkpoints: Extra neural checkpoints the config may refer to (``neural:<stem>``).
         on_progress: Called after every decision the agents play out (for live UIs).
         t: Translates the default seat names (``You``).
+        game_id: The id it is saved under (a new one by default).
+        log: Decisions to replay before play continues (see :meth:`restore`).
     """
 
     def __init__(
@@ -235,9 +244,15 @@ class HumanSession:
         checkpoints: Sequence[str] = (),
         on_progress: Optional[Callable[[], None]] = None,
         t: Translator = ENGLISH,
+        game_id: Optional[str] = None,
+        log: Sequence[Dict[str, Any]] = (),
     ):
         self.config = config
         self.t = t
+        self.id = game_id or new_id()
+        self.created = now()
+        self.finished_at: Optional[str] = None
+        self.log: List[Dict[str, Any]] = []  # every step: {'decision': kind, 'moves': {seat: move}}
         seats = config.seats
         humans = [i for i, s in enumerate(seats) if s.player == HUMAN]
         if len(humans) != 1:
@@ -278,6 +293,8 @@ class HumanSession:
         self.env.encode_seats = set()  # nobody needs tensors here; agents read raw Observations
         self.on_progress = on_progress
         self.env.reset(rng.randrange(2**31))
+        for step in log:
+            self._replay(step)
         self._advance()
 
     # -- setup -----------------------------------------------------------------
@@ -311,16 +328,38 @@ class HumanSession:
         """Let the agents play until the human must decide or the game ends."""
         env = self.env
         while not env.done and self.human not in env.acting:
-            env.step({seat: self._choose(seat) for seat in env.acting})
+            self._step({seat: self._choose(seat) for seat in env.acting})
             if self.on_progress is not None:
                 self.on_progress()
 
-    def _choose(self, seat: int, human: Optional[Action] = None) -> int:
-        """Action index for an acting seat: the human's ``human`` move, or the agent's choice."""
+    def _choose(self, seat: int) -> Action:
+        """The agent's move for an acting seat."""
         env = self.env
-        action = human if seat == self.human else self.agents[seat].act(env.observation(seat), env.options(seat))
-        assert action is not None
-        return env.action_space.index(action)
+        return self.agents[seat].act(env.observation(seat), env.options(seat))
+
+    def _step(self, actions: Dict[int, Action]) -> None:
+        """Play one step and log it."""
+        decision = self.env.decision
+        assert decision is not None
+        self.log.append({'decision': decision.value, 'moves': {str(s): _move(a) for s, a in sorted(actions.items())}})
+        self.env.step(actions)
+
+    def _replay(self, step: Dict[str, Any]) -> None:
+        """Play a logged step again (restoring a saved game)."""
+        env = self.env
+        moves = {int(seat): move for seat, move in step['moves'].items()}
+        if env.done or set(moves) != set(env.acting) or env.decision != DecisionKind(step['decision']):
+            raise ConfigError('the saved game no longer matches the rules: it cannot be restored')
+        actions = {}
+        for seat, move in moves.items():
+            kind, card = ActionKind(move[0]), move[1]
+            found = next(
+                (a for a in env.observation(seat).legal_actions if a.kind is kind and a.card.name == card), None
+            )
+            if found is None:
+                raise ConfigError(f'the saved game no longer matches the rules ({kind.value} {card} is not legal)')
+            actions[seat] = found.paying(int(move[2]), int(move[3])) if len(move) > 3 else found
+        self._step(actions)
 
     def observation(self) -> Optional[Observation]:
         """The human's current Observation (``None`` once the game is over)."""
@@ -347,8 +386,10 @@ class HumanSession:
             if (options[0].left, options[0].right) != split:  # the cheapest is the default anyway
                 action = action.paying(*split)
         choices = {seat: self._choose(seat) for seat in self.env.acting if seat != self.human}
-        self.env.step({**choices, self.human: action})
+        self._step({**choices, self.human: action})
         self._advance()
+        if self.done and self.finished_at is None:
+            self.finished_at = now()
 
     def _payments(self, action: Action):
         game = self.env.game
@@ -418,6 +459,7 @@ class HumanSession:
         game = self.env.game
         assert game is not None
         state: Dict[str, Any] = {
+            'id': self.id,
             'config': self.config.to_dict(),
             'seed': self.seed,
             'human': self.human,
@@ -466,6 +508,91 @@ class HumanSession:
     def record_json(self) -> str:
         """The replayable :class:`~wonders.engine.record.GameRecord` so far, as JSON."""
         return self.env.record().to_json(indent=1)
+
+    # -- saving ----------------------------------------------------------------
+    def result(self) -> Optional[Dict[str, Any]]:
+        """Final facts of every seat (``None`` while the game runs): what ratings and achievements read."""
+        game = self.env.game
+        if not self.done or game is None:
+            return None
+        totals = [game.score(i).total for i in range(game.n)]
+        coins = [p.coins for p in game.players]
+        builds = [0] * game.n
+        for step in self.log:
+            if step['decision'] == DecisionKind.DISCARD_BUILD.value:
+                for seat, move in step['moves'].items():
+                    builds[int(seat)] += move[0] == ActionKind.BUILD.value
+        return {
+            'totals': totals,
+            'coins': coins,
+            'places': places(totals, coins),
+            'winner': game.winner(),
+            'scores': [game.score(i).as_dict() for i in range(game.n)],
+            'colors': [_colors(p.cards) for p in game.players],
+            'stages': [p.wonder_stages_built for p in game.players],
+            'discard_builds': builds,
+        }
+
+    def progress(self) -> Optional[Dict[str, Any]]:
+        """Where an unfinished game stands (Age, turn, decision); ``None`` once it is over."""
+        obs = self.observation()
+        return None if obs is None else {'age': obs.age, 'turn': obs.turn, 'decision': obs.decision}
+
+    def saved(self) -> Dict[str, Any]:
+        """The game as a :class:`~wonders.storage.Store` file: config, players, log, record, result."""
+        return {
+            'id': self.id,
+            'created': self.created,
+            'finished': self.done,
+            'finished_at': self.finished_at,
+            'config': {**self.config.to_dict(), 'seed': self.seed},
+            'human': self.human,
+            'expansions': list(self.ruleset.expansions),
+            'players': [
+                {'name': s.name, 'wonder': s.wonder, 'side': s.side, 'agent': self.config.seats[i].player}
+                for i, s in enumerate(self.setups)
+            ],
+            'progress': self.progress(),
+            'result': self.result(),
+            'log': self.log,
+            'record': self.env.record().to_dict(),
+        }
+
+    @classmethod
+    def restore(
+        cls,
+        saved: Dict[str, Any],
+        checkpoints: Sequence[str] = (),
+        on_progress: Optional[Callable[[], None]] = None,
+        t: Translator = ENGLISH,
+    ) -> 'HumanSession':
+        """Rebuild a game from :meth:`saved`: the same deal, every logged decision replayed."""
+        session = cls(
+            GameConfig.from_dict(saved['config']),
+            checkpoints,
+            on_progress,
+            t,
+            game_id=str(saved['id']),
+            log=saved.get('log', []),
+        )
+        session.created = str(saved.get('created') or session.created)
+        session.finished_at = saved.get('finished_at') or (session.created if session.done else None)
+        return session
+
+
+def _move(action: Action) -> List[Any]:
+    """A logged move: ``[kind, card]``, plus ``left, right`` coins when the payment was chosen."""
+    move: List[Any] = [action.kind.value, action.card.name]
+    if action.payment is not None:
+        move += list(action.payment)
+    return move
+
+
+def _colors(cards: Sequence[Any]) -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    for card in cards:
+        counts[card.color.value] = counts.get(card.color.value, 0) + 1
+    return counts
 
 
 def legal_action(session: HumanSession, kind: str, card: str) -> int:

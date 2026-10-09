@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* Local storage (`wonders.storage`, `$WONDERS_HOME`, default `~/.wonders`): the GUI saves every game
+  after each move and can resume or re-open it (`HumanSession.saved` / `restore`: the seed plus the
+  logged decisions); `wonders gui --no-save` turns it off. New GUI pages: "Past games" with the
+  player's Elo rating and its graph (agents have fixed ratings fitted on 20,000 simulated games,
+  `wonders.play.rating`; `python -m wonders.play.rating` refits them), and "Achievements"
+  (`wonders.play.achievements`: Make Wonders, Not War; Jack of All Trades, Master of Seven; Dumpster
+  Diver). Ratings and achievements are derived from the saved games, so new ones count old games too.
+  Extensions now default to `$WONDERS_HOME/extensions`.
 * German translation (`wonders/i18n/`): the GUI, cards, wonder boards, tooltips and the post-game
   analysis; language picker (browser language by default, `?lang=de`), `wonders gallery --lang de`.
   Further languages are data (`docs/extensions.md#translations`).

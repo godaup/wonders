@@ -609,11 +609,16 @@ def table(out, seed, expansion):
     type=click.Path(exists=True, dir_okay=False),
     help='Offer this trained network as an opponent too (repeatable; needs PyTorch).',
 )
-def gui(port, no_browser, checkpoints):
-    """Play against agents in your browser: pick expansions, opponents and wonders in the menu."""
+@click.option('--no-save', is_flag=True, help='Do not save games (by default every game goes to $WONDERS_HOME/games).')
+def gui(port, no_browser, checkpoints, no_save):
+    """Play against agents in your browser: pick expansions, opponents and wonders in the menu.
+
+    Every game is saved as you play, so you can resume it later; the menu shows your past games, your
+    Elo rating against the agents and your achievements.
+    """
     from wonders.play.server import serve
 
-    serve(port=port, open_browser=not no_browser, checkpoints=checkpoints)
+    serve(port=port, open_browser=not no_browser, checkpoints=checkpoints, save=not no_save)
 
 
 if __name__ == "__main__":

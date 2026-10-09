@@ -218,4 +218,4 @@ may differ; `GameRecord.check_extensions()` lists the differences.
 * `wonders ext list | validate FOLDER | new ID [--name] [--dir]`
 * `wonders.extensions`: `REGISTRY`, `ensure_loaded()`, `load_folder()`, `load_plugin()`, `validate()`,
   `scaffold()`
-* `WONDERS_EXTENSIONS` — the extensions home; `WONDERS_NO_EXTENSIONS=1` disables discovery.
+* `WONDERS_EXTENSIONS` — the extensions home (default `$WONDERS_HOME/extensions`, i.e. `~/.wonders/extensions`); `WONDERS_NO_EXTENSIONS=1` disables discovery.
