@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* The bundled network is retrained under the October 2026 rules (`r1-a`, `sweeps/RETRAIN.md`):
+  52.2% head-to-head over the previous network; leader values re-estimated.
 * Rules fix: cards used for a wonder stage stay under the board and discarded leaders return
   to the box (Leaders rulebook) — neither goes to the discard pile, so Halicarnassus / Solomon
   can only build discarded Age cards.

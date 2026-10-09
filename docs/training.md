@@ -57,20 +57,22 @@ A run is either `"kind": "imitate"` or `"kind": "ppo"`. The fields that matter m
 | `reward` | `dense` (default: change in score margin each step) or `dense_rank` (plus a placing bonus) |
 | `n_envs`, `envs_per_worker`, `opponent_device` | parallelism; large networks as opponents on the GPU |
 
-The bundled network was produced in two steps:
+The bundled network was produced in three steps:
 
 1. `sweeps/stage3.json` — imitation of the `adaptive` agent on every cell, then 40M PPO steps
    with the tiered opponent mix (`s3-small`, 256×2).
 2. `sweeps/objectives.json`, run `s5-anneal` — 10M more PPO steps from `s3-small` with a linear
    learning-rate decay.
+3. `sweeps/retrain.json`, run `r1-a` — 10M more steps from `s5-anneal` under the October 2026 rules
+   fixes, with the same recipe.
 
 The reports next to the specs (`sweeps/*.md`) describe what was tried, what worked and what did not
 (larger networks, rank rewards, exploiters).
 
 **Note — rules changes.** The October 2026 rules fixes (trading only from the board and brown /
-grey cards; buried cards and discarded leaders no longer reach the discard pile) postdate every
-trained model. Train or fine-tune under the current rules before comparing with older results; see
-[ROADMAP.md](../ROADMAP.md). Checkpoints record the rules version they were trained under
+grey cards; buried cards and discarded leaders no longer reach the discard pile) postdate all earlier
+models; the bundled network was fine-tuned under them afterwards (`sweeps/RETRAIN.md`, run `r1-a` in
+`sweeps/retrain.json`). Checkpoints record the rules version they were trained under
 (`wonders.ruleset.RULES_VERSION`, currently 2); loading an older one warns.
 
 ## Expert iteration: learning from search

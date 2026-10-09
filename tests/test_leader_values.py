@@ -26,7 +26,8 @@ def test_every_leader_has_a_value(leaders):
 @pytest.mark.parametrize('agent_cls', [HeuristicAgent, BoardAwareAgent])
 def test_draft_keeps_the_most_valuable_leader(agent_cls, leaders):
     options = [leaders[n] for n in ('Imhotep', 'Midas', 'Sappho', 'Caesar')]
-    assert agent_cls().draft_leader(options).name == 'Midas'
+    best = max(options, key=lambda c: LEADER_VALUES[c.name]).name
+    assert agent_cls().draft_leader(options).name == best
 
 
 class _Obs:

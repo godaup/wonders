@@ -5,6 +5,10 @@ and what is left. Finished work moves to `CHANGELOG.md`; training reports live i
 
 ## 1. Retrain after the October 2026 rules fixes
 
+**Status: done** (October 2026, `sweeps/RETRAIN.md`): leader values re-estimated; `r1-a`, fine-tuned
+from `s5-anneal`, is bundled (52.2% head-to-head over it; rules version 2). The search re-check
+moves to item 2.
+
 **Why.** Three engine bugs were fixed in October 2026 (PRs #28 and #29):
 
 * neighbours may only buy the board's resource and brown / grey card production — yellow
