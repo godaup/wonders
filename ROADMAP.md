@@ -37,8 +37,11 @@ the discard pile.
 
 ## 2. Network-guided search and expert iteration
 
-**Status: in progress.** Search and the expert-iteration pipeline (`wonders train expert`) are
-implemented; the first distillation round runs after the retraining under the current rules.
+**Status:** search and the expert-iteration pipeline (`wonders train expert`) are implemented.
+Under the current rules search still beats the bundled `r1-a` (56.9%), but distilling flat search
+into the network did not help: eight distillation variants and a PPO polish all land at or below
+`r1-a` (best 50.1%; `sweeps/EXPERT.md`). Flat-search expert iteration is shelved until a better
+teacher exists (step 3 below).
 
 * `wonders/agents/worlds.py` rebuilds a playable game from one seat's observation and samples the
   hidden cards (opponents' hands, hidden discards / burials, the guild / black-card draws,
@@ -51,11 +54,12 @@ implemented; the first distillation round runs after the retraining under the cu
 
 **Next.**
 
-1. Finish the depth / width sweep, re-run the best setting under the new rules, merge.
-2. Expert iteration: record the search agent's choices (and values) in self-play, distil them into
-   the network (imitation on the search policy), continue PPO, repeat while head-to-head improves.
-3. Alternatives if flat search stalls: information-set MCTS or decoupled UCT for the
-   simultaneous moves (alpha-beta does not fit: 3–7 players, simultaneous moves, hidden cards).
+1. ~~Depth / width sweep, re-check under the new rules, merge~~ — done.
+2. ~~Expert iteration with flat search~~ — done, no gain (`sweeps/EXPERT.md`).
+3. **A better teacher:** information-set MCTS or decoupled UCT for the simultaneous moves (alpha-beta
+   does not fit: 3–7 players, simultaneous moves, hidden cards); its visit counts give sharp
+   targets for the existing distillation pipeline. Opponent modelling for the determinisation
+   (Further ideas) reduces the noise of any sampled-world search.
 
 ## 3. Post-game analysis
 
