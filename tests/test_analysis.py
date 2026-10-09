@@ -1,0 +1,70 @@
+"""Tests for post-game analysis (skipped unless PyTorch is installed)."""
+
+import random
+
+import pytest
+
+torch = pytest.importorskip('torch')
+
+from wonders.agents import GreedyAgent, HeuristicAgent  # noqa: E402
+from wonders.agents.match import play_match  # noqa: E402
+from wonders.cards.content import load_content  # noqa: E402
+from wonders.engine.record import PlayerSetup  # noqa: E402
+from wonders.ml.analysis import analyse, label, reason, summary_text  # noqa: E402
+
+SETUPS = [
+    PlayerSetup('A', 'The Pyramids of Giza', 'A'),
+    PlayerSetup('B', 'The Colossus of Rhodes', 'B'),
+    PlayerSetup('C', 'The Temple of Artemis in Ephesus', 'A'),
+]
+
+
+def test_labels_need_a_clear_and_significant_loss():
+    assert label(0.0, 0.0, best=True) == 'best'
+    assert label(0.8, 0.1, best=False) == 'good'  # under 1 VP
+    assert label(1.5, 1.0, best=False) == 'good'  # within noise
+    assert label(1.5, 0.3, best=False) == 'inaccuracy'
+    assert label(3.0, 0.3, best=False) == 'mistake'
+    assert label(6.0, 0.3, best=False) == 'blunder'
+
+
+def test_reasons_name_gains_and_costs():
+    assert reason({'science': 2.0, 'treasury': -1.0}, {}) == 'gains 2.0 science; gives up 1.0 coins now'
+    assert 'longer-term outlook' in reason({'civilian': -3.0}, {})
+
+
+@pytest.fixture(scope='module')
+def report():
+    content = load_content('base')
+    agents = [GreedyAgent(), HeuristicAgent(), HeuristicAgent()]
+    _game, record = play_match(content, SETUPS, agents, random.Random(5))
+    return analyse(record, 0, depth=1, worlds=2, candidates=2, seed=1)
+
+
+def test_analyse_rates_every_regular_turn(report):
+    decisions = report['decisions']
+    assert len(decisions) == 18 and all('loss' in d for d in decisions)  # 3 Ages x 6 turns, all rated
+    assert {d['label'] for d in decisions} <= {'best', 'good', 'inaccuracy', 'mistake', 'blunder'}
+    for d in decisions:
+        assert d['loss'] >= 0 and any(c['card'] == d['played']['card'] for c in d['candidates'])
+        if d['label'] == 'best':
+            assert d['loss'] == 0
+    assert len(report['graph']) == 18
+    assert set(report['key_moments']) <= {
+        d['index'] for d in decisions if d['label'] in ('inaccuracy', 'mistake', 'blunder')
+    }
+    assert 0.0 <= report['summary']['accuracy'] <= 1.0
+    assert report['player'] == 'A' and 'Accuracy' not in summary_text(report)
+
+
+def test_server_refuses_to_analyse_an_unfinished_game():
+    from wonders.play.server import PlayServer
+    from wonders.play.session import ConfigError
+
+    play = PlayServer()
+    with pytest.raises(ConfigError):
+        play.start_analysis()
+    play.new_game({'seats': [{'player': 'human'}, {'player': 'heuristic'}, {'player': 'greedy'}], 'seed': 1})
+    with pytest.raises(ConfigError):
+        play.start_analysis()
+    assert play.analysis_state() == {'status': 'idle'}

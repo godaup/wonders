@@ -36,6 +36,19 @@ from wonders.ml.imitation import VALUE_SCALE
 
 
 @dataclass
+class CandidateEval:
+    """How one candidate fared in the sampled worlds (see :meth:`SearchAgent.evaluate_detailed`)."""
+
+    action: Action
+    values: List[float]  # per sampled world (the same worlds for every candidate), VP of margin
+    categories: Dict[str, float]  # mean per score category at the rollouts' end: the seat minus the opponents
+
+    @property
+    def mean(self) -> float:
+        return sum(self.values) / len(self.values)
+
+
+@dataclass
 class _Rollout:
     world: World
     first: Action  # the candidate the searching seat plays at the root
@@ -43,6 +56,8 @@ class _Rollout:
     point: Optional[DecisionPoint] = None
     turns: int = 0  # regular turns completed after the root
     value: Optional[float] = None  # the rollout's result, once finished
+    # Score categories at the rollout's end (the seat minus the opponents' mean), for explanations.
+    categories: Optional[Dict[str, float]] = None
 
     def __post_init__(self) -> None:
         self.steps = self.world.steps()
@@ -120,6 +135,14 @@ class SearchAgent(Agent):
 
     def evaluate(self, obs: Observation, actions: List[Action]) -> List[float]:
         """Mean rollout value of each of ``actions`` (legal at ``obs``) over the sampled worlds."""
+        return [c.mean for c in self.evaluate_detailed(obs, actions)]
+
+    def evaluate_detailed(self, obs: Observation, actions: List[Action]) -> List[CandidateEval]:
+        """Per candidate: its value in every sampled world and the score categories it leads to.
+
+        Every candidate is played in the same worlds, so differences between candidates can be
+        compared world by world (paired), which cancels most of the sampling noise.
+        """
         seeds = [self.rng.getrandbits(64) for _ in range(self.worlds)]
         rollouts: List[List[_Rollout]] = []
         for action in actions:
@@ -129,7 +152,12 @@ class SearchAgent(Agent):
                 row.append(_Rollout(world, action))
             rollouts.append(row)
         self._run([r for row in rollouts for r in row], obs.seat)
-        return [sum(r.value or 0.0 for r in row) / len(row) for row in rollouts]
+        out = []
+        for action, row in zip(actions, rollouts):
+            keys = row[0].categories or {}
+            categories = {k: sum((r.categories or {}).get(k, 0.0) for r in row) / len(row) for k in keys}
+            out.append(CandidateEval(action, [r.value or 0.0 for r in row], categories))
+        return out
 
     # -- lockstep rollouts -------------------------------------------------------------------
     def _run(self, rollouts: List[_Rollout], me: int) -> None:
@@ -154,6 +182,7 @@ class SearchAgent(Agent):
             for r in live:
                 if id(r) in leaf:
                     r.value = _margin(r, me) + leaf[id(r)] / VALUE_SCALE
+                    r.categories = _categories(r, me)
                     continue
                 point = r.point
                 assert point is not None
@@ -169,6 +198,7 @@ class SearchAgent(Agent):
                 except StopIteration:
                     r.point = None
                     r.value = _margin(r, me)
+                    r.categories = _categories(r, me)
             live = still
 
     def _at_depth(self, r: _Rollout) -> bool:
@@ -204,6 +234,19 @@ def _same(action: Action, options: List[Card]) -> Action:
     """``action`` with the matching card object of a rebuilt world's hand."""
     card = next(c for c in options if c.name == action.card.name)
     return Action(action.kind, card)
+
+
+def _categories(r: _Rollout, me: int) -> Dict[str, float]:
+    """Each score category: the seat's points minus the opponents' mean (without the total)."""
+    game = r.world.game
+    rows = [game.score(i).as_dict() for i in range(game.n)]
+    out = {}
+    for key in rows[me]:
+        if key == 'total':
+            continue
+        others = [row[key] for i, row in enumerate(rows) if i != me]
+        out[key] = rows[me][key] - sum(others) / len(others)
+    return out
 
 
 def _margin(r: _Rollout, me: int) -> float:

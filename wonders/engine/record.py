@@ -22,12 +22,13 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card
 from wonders.cards.content import Content, build_age_deck, deal_hands
 from wonders.engine.actions import Action, ActionKind, DecisionKind, DecisionPoint
-from wonders.engine.game import Game, Policy, drive
+from wonders.engine.game import AgeSteps, Game, Policy, drive
+from wonders.engine.observation import Observation, ObservationBuilder
 from wonders.engine.phase import Phase
 from wonders.engine.player import Player
 from wonders.ruleset import Ruleset
@@ -147,6 +148,49 @@ class GameRecord:
             drive(game.age_steps(age, hands), choose)
         game.phase = Phase.FINISHED
         return game
+
+    def replay_observations(self, content: Content, seat: int) -> Iterator[Tuple[DecisionPoint, Observation, Action]]:
+        """Re-simulate the game and yield every decision of ``seat``: the point, its observation, the move.
+
+        The observation is built exactly as during play (the same public history, filtered for
+        ``seat``), so an agent or an analysis sees what the player saw. The Leaders draft is not
+        part of a record (only the drafted hands are), so it is not yielded; recruitment is.
+        """
+        coins = Ruleset.of(*self.expansions).starting_coins
+        players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
+        game = Game(players, expansions=self.expansions)
+        for i, names in self.leader_hands.items():
+            players[i].leaders_hand = [content.card(n) for n in names]
+        game.leader_box = [content.card(n) for n in self.leader_box]
+        builder = ObservationBuilder()
+
+        def relay(steps: AgeSteps, choose: Callable[[DecisionPoint], Dict[int, Action]]):
+            try:
+                point = next(steps)
+                while True:
+                    actions = choose(point)
+                    if seat in point.options:
+                        yield point, builder.build(game, seat, point.options[seat]), actions[seat]
+                    if point.kind is DecisionKind.PLAY:
+                        builder.record(
+                            point.age, point.turn, [(a.kind, a.card.name) for _i, a in sorted(actions.items())]
+                        )
+                    elif point.kind is not DecisionKind.RECRUIT:  # extras are public events; recruitment is not logged
+                        moves = [
+                            (actions[i].kind, actions[i].card.name) if i in actions else None for i in range(game.n)
+                        ]
+                        builder.record(point.age, point.turn, moves)
+                    point = steps.send(actions)
+            except StopIteration:
+                return
+
+        for age in (1, 2, 3):
+            choose = self._chooser(age)
+            if self.leader_hands:
+                yield from relay(game.recruit_steps(age), choose)
+            deck = [content.card(name) for name in self.age_decks[age]]
+            yield from relay(game.age_steps(age, deal_hands(deck, game.n)), choose)
+        game.phase = Phase.FINISHED
 
     def _chooser(self, age: int) -> Callable[[DecisionPoint], Dict[int, Action]]:
         """Answer the engine's decision points for ``age`` from the recorded moves."""

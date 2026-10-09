@@ -163,6 +163,10 @@ scoring categories). It is split into three packages under `wonders/`:
   `search.SearchAgent` is network-guided lookahead: the policy's top candidates are played out in
   shared sampled worlds for `depth` turns, then the value head scores them (3 turns / 16 worlds
   ranked above the plain network in ~60% of games, old rules; `ROADMAP.md`).
+  `analysis.analyse(record, seat)` (`wonders analyse`, the GUI's "Analyse my moves") replays a record
+  with `GameRecord.replay_observations` (each decision as the seat saw it) and rates every regular
+  turn: `SearchAgent.evaluate_detailed` scores the played move next to the policy's top candidates
+  in shared worlds (paired loss + standard error, labels, score-category reasons).
   `expert.collect_search` / `expert.distill` (`wonders train expert`) record the search's soft targets
   (softmax of candidate values) with one searching seat per game and fine-tune the network on them
   (expert iteration; ROADMAP item 2).

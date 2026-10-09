@@ -2,6 +2,8 @@
 
 import random
 
+import pytest
+
 from wonders.agents.baselines import GreedyAgent, RandomAgent
 from wonders.agents.match import play_match
 from wonders.cards.content import load_content
@@ -54,3 +56,49 @@ def test_replay_is_engine_independent_of_rng():
     a = record.replay(content)
     b = record.replay(content)
     assert [a.score(i).total for i in range(3)] == [b.score(i).total for i in range(3)]
+
+
+class _Logger:
+    """Wraps an agent and logs the observation and move of every decision it makes."""
+
+    def __init__(self, agent):
+        self.agent = agent
+        self.name = agent.name
+        self.log = []
+
+    def act(self, obs, options):
+        action = self.agent.act(obs, options)
+        self.log.append((obs.decision, obs.to_dict(), action))
+        return action
+
+    def decide(self, obs):
+        return self.act(obs, [])
+
+
+@pytest.mark.parametrize('seat', [0, 1, 2, 3])
+def test_replay_observations_reproduce_what_the_seat_saw(seat):
+    import random
+
+    from wonders.agents import HeuristicAgent
+    from wonders.agents.match import play_match
+    from wonders.cards.content import load_content
+    from wonders.engine.record import PlayerSetup
+
+    expansions = ('base', 'leaders', 'cities')
+    content = load_content(*expansions)
+    setups = [
+        PlayerSetup('A', 'The Pyramids of Giza', 'A'),
+        PlayerSetup('B', 'The Colossus of Rhodes', 'B'),
+        PlayerSetup('C', 'The Mausoleum of Halicarnassus', 'A'),
+        PlayerSetup('D', 'The Hanging Gardens of Babylon', 'B'),
+    ]
+    agents = [_Logger(HeuristicAgent()) for _ in setups]
+    _game, record = play_match(content, setups, agents, random.Random(seat), expansions)
+    played = [(d, o) for d, o, _a in agents[seat].log if d != 'draft']  # the draft is not part of a record
+    replayed = list(record.replay_observations(content, seat))
+    assert len(replayed) == len(played)
+    for (decision, logged), (_point, obs, action) in zip(played, replayed):
+        assert obs.decision == decision
+        assert obs.to_dict() == logged
+    moves = [a for d, _o, a in agents[seat].log if d != 'draft']
+    assert [(a.kind, a.card.name) for _p, _o, a in replayed] == [(a.kind, a.card.name) for a in moves]

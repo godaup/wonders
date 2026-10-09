@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Post-game analysis: `wonders analyse` and "Analyse my moves" in the GUI rate every move with
+  network-guided search (accuracy, key moments with reasons, expected-margin graph).
 * The bundled network is retrained under the October 2026 rules (`r1-a`, `sweeps/RETRAIN.md`):
   52.2% head-to-head over the previous network; leader values re-estimated.
 * Rules fix: cards used for a wonder stage stay under the board and discarded leaders return

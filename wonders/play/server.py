@@ -8,6 +8,7 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``POST /api/act`` — ``{"index": i}`` plays the i-th legal action (``"payment": [left, right]``
   optionally picks one of its listed splits of the purchase between the neighbours)
 - ``GET /api/record`` — the replayable GameRecord JSON
+- ``POST /api/analyse`` / ``GET /api/analysis`` — start / poll the post-game analysis of the human's moves
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
 
 It binds to localhost only and holds one game at a time (one human, all local).
@@ -16,6 +17,7 @@ It binds to localhost only and holds one game at a time (one human, all local).
 from __future__ import annotations
 
 import json
+import os
 import threading
 import webbrowser
 from functools import lru_cache
@@ -63,6 +65,7 @@ class PlayServer:
         self.session: Optional[HumanSession] = None
         self.lock = threading.Lock()
         self._options: Optional[Dict[str, Any]] = None
+        self.analysis: Dict[str, Any] = {'status': 'idle'}  # post-game analysis of the current game
 
     def options(self) -> Dict[str, Any]:
         if self._options is None:
@@ -73,6 +76,7 @@ class PlayServer:
         config = GameConfig.from_dict(data)
         with self.lock:
             self.session = HumanSession(config, self.checkpoints)
+            self.analysis = {'status': 'idle'}
             return self.session.state()
 
     def state(self) -> Optional[Dict[str, Any]]:
@@ -89,6 +93,48 @@ class PlayServer:
     def record(self) -> Optional[str]:
         with self.lock:
             return None if self.session is None else self.session.record_json()
+
+    # -- post-game analysis ------------------------------------------------------------------
+    def start_analysis(self) -> Dict[str, Any]:
+        """Rate the human's moves of the finished game in a background thread (needs PyTorch)."""
+        from wonders.engine.record import GameRecord
+
+        with self.lock:
+            if self.session is None or not self.session.done:
+                raise ConfigError('finish the game first')
+            if self.analysis['status'] in ('running', 'done'):
+                return dict(self.analysis)
+            record = GameRecord.from_json(self.session.record_json())
+            seat = self.session.human
+            self.analysis = {'status': 'running', 'done': 0, 'total': 0}
+            game = self.session
+        threading.Thread(target=self._analyse, args=(record, seat, game), daemon=True).start()
+        return dict(self.analysis)
+
+    def _analyse(self, record: Any, seat: int, game: HumanSession) -> None:
+        def progress(done: int, total: int) -> None:
+            with self.lock:
+                if self.session is game:
+                    self.analysis.update(done=done, total=total)
+
+        try:
+            from wonders.ml.analysis import analyse
+        except ImportError:
+            result: Dict[str, Any] = {'status': 'unavailable', 'error': 'post-game analysis needs PyTorch'}
+        else:
+            try:
+                processes = max(1, min(6, (os.cpu_count() or 2) - 1))
+                report = analyse(record, seat, processes=processes, progress=progress)
+                result = {'status': 'done', 'report': report}
+            except Exception as exc:  # pragma: no cover - surfaced to the page
+                result = {'status': 'error', 'error': str(exc)}
+        with self.lock:
+            if self.session is game:  # a new game started meanwhile: drop the stale result
+                self.analysis = result
+
+    def analysis_state(self) -> Dict[str, Any]:
+        with self.lock:
+            return dict(self.analysis)
 
 
 Response = Tuple[int, bytes, str, Tuple[Tuple[str, str], ...]]
@@ -122,11 +168,13 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/options': lambda play, q: _json(play.options()),
     '/api/state': lambda play, q: _json({'state': play.state()}),
     '/api/record': lambda play, q: _record(play),
+    '/api/analysis': lambda play, q: _json(play.analysis_state()),
     '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''))),
     '/api/wonder.svg': lambda play, q: _svg(_wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'))),
 }
 POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any]], Response]] = {
     '/api/new': lambda play, body: _json({'state': play.new_game(body)}),
+    '/api/analyse': lambda play, body: _json(play.start_analysis()),
     '/api/act': lambda play, body: _json({'state': play.act(int(body.get('index', -1)), body.get('payment'))}),
 }
 
