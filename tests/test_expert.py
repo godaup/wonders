@@ -38,3 +38,16 @@ def test_distill_moves_the_network_towards_the_search(data):
     model, _names, _meta = load_checkpoint(pretrained_path())
     metrics = distill(model, data, epochs=2, batch_size=32, lr=1e-3, log=None, device='cpu')
     assert 0.0 <= metrics['val_agreement'] <= 1.0 and metrics['train_loss'] > 0
+
+
+def test_targets_can_be_re_derived_at_another_temperature(data):
+    assert data.scores is not None and data.scores.shape == data.targets.shape
+    cold = data.with_temperature(0.01)
+    hot = data.with_temperature(1e6)
+    searched = (data.probs > 0).sum(dim=1) > 1
+    assert torch.allclose(cold.probs.sum(dim=1), torch.ones(len(data)))
+    best = torch.nan_to_num(data.scores, nan=-1e9).argmax(dim=1)
+    assert bool((cold.probs.argmax(dim=1) == best).all())  # cold: the search's choice
+    width = (~torch.isnan(data.scores)).sum(dim=1)
+    assert torch.allclose(hot.probs[searched].max(dim=1).values, 1.0 / width[searched].float(), atol=1e-3)
+    assert torch.equal(cold.probs[~searched], data.probs[~searched])  # unsearched rows stay certain

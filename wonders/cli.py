@@ -235,7 +235,13 @@ def ppo(init_path, iterations, opponents, envs, envs_per_worker, lr, seed, out):
 @click.option('--depth', default=3, type=int, show_default=True, help='Turns searched before the value head.')
 @click.option('--worlds', default=16, type=int, show_default=True, help='Sampled worlds per decision.')
 @click.option('--candidates', default=4, type=int, show_default=True, help='Moves searched per decision.')
-@click.option('--temperature', default=1.0, type=float, show_default=True, help='VP; soft-target temperature.')
+@click.option(
+    '--temperature',
+    default=1.0,
+    type=float,
+    show_default=True,
+    help='VP; soft-target temperature (also re-applied to loaded --data).',
+)
 @click.option('--opponents', default='neural', show_default=True, help="Other seats: 'neural' or built-in names.")
 @click.option('--epochs', default=3, type=int, show_default=True)
 @click.option('--lr', default=1e-4, type=float, show_default=True)
@@ -289,7 +295,7 @@ def expert(
         if data_path:
             data.save(data_path)
     model, card_names, meta = ml.load_checkpoint(checkpoint)
-    metrics = distill(model, data, epochs=epochs, lr=lr, seed=seed, log=click.echo)
+    metrics = distill(model, data, epochs=epochs, lr=lr, seed=seed, log=click.echo, temperature=temperature)
     meta.update(source='expert', init=os.path.abspath(checkpoint), rules_version=RULES_VERSION, **metrics)
     ml.save_checkpoint(out, model, card_names, **meta)
     click.echo(f'saved {out}')
