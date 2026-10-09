@@ -5,7 +5,7 @@ import random
 import pytest
 
 from wonders.cards.base import Color
-from wonders.cards.base import Ressource as R
+from wonders.cards.base import Resource as R
 from wonders.cards.base import ScienceSymbol as S
 from wonders.cards.content import build_age_deck, build_effect, deal_hands, load_content
 from wonders.effects.library import Production, Science, Tally

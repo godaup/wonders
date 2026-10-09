@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from importlib import resources
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from wonders.cards.base import Card, Color, Cost, Ressource, ScienceSymbol
+from wonders.cards.base import Card, Color, Cost, Resource, ScienceSymbol
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.base import Effect
 from wonders.effects.library import (
@@ -72,13 +72,13 @@ GUILDS_OVER_PLAYERS = 2  # Age III uses (players + 2) guild cards
 
 
 def _production(spec: dict) -> Effect:
-    resources = [Ressource(r) for r in spec.get('resources', [])]
-    choice = [Ressource(r) for r in spec.get('choice', [])]
+    resources = [Resource(r) for r in spec.get('resources', [])]
+    choice = [Resource(r) for r in spec.get('choice', [])]
     return Production(*resources, choice=choice)
 
 
 def _multi_production(spec: dict) -> Effect:
-    slots = [[Ressource(r) for r in slot] for slot in spec['slots']]
+    slots = [[Resource(r) for r in slot] for slot in spec['slots']]
     return MultiProduction(*slots)
 
 
@@ -161,7 +161,7 @@ def build_effect(spec: dict) -> Effect:
 def build_cost(spec: Optional[dict]) -> Cost:
     if not spec:
         return Cost()
-    resources = Counter({Ressource(r): n for r, n in spec.get('resources', {}).items()})
+    resources = Counter({Resource(r): n for r, n in spec.get('resources', {}).items()})
     return Cost(coins=spec.get('coins', 0), resources=resources)
 
 
@@ -191,7 +191,7 @@ def build_wonder(spec: dict) -> Wonder:
     start = spec.get('starting_resource')
     return Wonder(
         name=spec['name'],
-        starting_resource=Ressource(start) if start else None,
+        starting_resource=Resource(start) if start else None,
         stages=stages,
         side=spec.get('side', 'A'),
         effects=tuple(build_effect(e) for e in spec.get('effects', [])),

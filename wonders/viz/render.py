@@ -12,7 +12,7 @@ import re
 from html import escape
 from typing import Iterable, List, Optional, Sequence, Tuple
 
-from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Ressource
+from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Resource
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.library import (
     BuildFromDiscard,
@@ -62,34 +62,34 @@ CAT_NAME = {
     Color.BLACK: 'City',
 }
 RES_COLOR = {
-    Ressource.WOOD: '#5f7d22',
-    Ressource.STONE: '#6b7278',
-    Ressource.ORE: '#3f6187',
-    Ressource.BRICKS: '#a8552f',
-    Ressource.GLASS: '#2e9d9d',
-    Ressource.LINEN: '#b0863a',
-    Ressource.PAPER: '#8f8560',
-    Ressource.GOLD: '#c8951a',
+    Resource.WOOD: '#5f7d22',
+    Resource.STONE: '#6b7278',
+    Resource.ORE: '#3f6187',
+    Resource.BRICKS: '#a8552f',
+    Resource.GLASS: '#2e9d9d',
+    Resource.LINEN: '#b0863a',
+    Resource.PAPER: '#8f8560',
+    Resource.GOLD: '#c8951a',
 }
 RES_ICON = {
-    Ressource.WOOD: 'wood',
-    Ressource.STONE: 'stone',
-    Ressource.ORE: 'ore',
-    Ressource.BRICKS: 'brick',
-    Ressource.GLASS: 'glass',
-    Ressource.LINEN: 'loom',
-    Ressource.PAPER: 'scroll',
-    Ressource.GOLD: 'coin',
+    Resource.WOOD: 'wood',
+    Resource.STONE: 'stone',
+    Resource.ORE: 'ore',
+    Resource.BRICKS: 'brick',
+    Resource.GLASS: 'glass',
+    Resource.LINEN: 'loom',
+    Resource.PAPER: 'scroll',
+    Resource.GOLD: 'coin',
 }
 RES_NAME = {
-    Ressource.WOOD: 'Wood',
-    Ressource.STONE: 'Stone',
-    Ressource.ORE: 'Ore',
-    Ressource.BRICKS: 'Clay',
-    Ressource.GLASS: 'Glass',
-    Ressource.LINEN: 'Loom',
-    Ressource.PAPER: 'Papyrus',
-    Ressource.GOLD: 'Coins',
+    Resource.WOOD: 'Wood',
+    Resource.STONE: 'Stone',
+    Resource.ORE: 'Ore',
+    Resource.BRICKS: 'Clay',
+    Resource.GLASS: 'Glass',
+    Resource.LINEN: 'Loom',
+    Resource.PAPER: 'Papyrus',
+    Resource.GOLD: 'Coins',
 }
 SCI_NAME = {'tablet': 'Tablet', 'gear': 'Gear', 'compass': 'Compass'}
 SCIENCE, MILITARY, CIVIC, GOLD, GUILD = '#2f7d46', '#b23b3b', '#2f6fb0', '#c8951a', '#6b46a8'
@@ -174,7 +174,7 @@ def _wrap(name: str, limit: int = 20, maxlines: int = 2) -> List[str]:
 def _cost_items(coins: int, resources) -> List[Tuple[str, str, int, str]]:
     items: List[Tuple[str, str, int, str]] = []
     if coins:
-        items.append(('coin', RES_COLOR[Ressource.GOLD], coins, 'Coins'))
+        items.append(('coin', RES_COLOR[Resource.GOLD], coins, 'Coins'))
     for res, n in sorted(resources.items(), key=lambda kv: kv[0].value):
         items.append((RES_ICON[res], RES_COLOR[res], n, RES_NAME[res]))
     return items

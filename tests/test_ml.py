@@ -191,3 +191,20 @@ def test_cli_lineup_allows_repeated_agents_with_neural(trained, tmp_path):
         other.write_bytes(fh.read())
     clash = runner.invoke(cli.main, ['bench', '-n', '1', '-a', f'neural:{path},neural:{other},greedy'])
     assert clash.exit_code != 0
+
+
+def test_checkpoints_record_their_rules_version(trained, tmp_path):
+    from wonders.ml import rules_version
+    from wonders.ruleset import LEGACY_RULES_VERSION, RULES_VERSION
+
+    model, names, path, _data, _metrics = trained
+    _model, _names, meta = load_checkpoint(path)
+    assert rules_version(meta) == RULES_VERSION
+    vocab = vocab_for(('base',))
+    old = str(tmp_path / 'old.pt')  # a model saved before versioning: no rules_version entry
+    save_checkpoint(old, model, names, **vocab.meta(), rules_version=LEGACY_RULES_VERSION)
+    assert rules_version(load_checkpoint(old)[2]) == LEGACY_RULES_VERSION
+    with pytest.warns(UserWarning, match='rules version'):
+        agent = NeuralAgent(old)
+    assert agent.rules_version == LEGACY_RULES_VERSION
+    assert NeuralAgent(path).rules_version == RULES_VERSION

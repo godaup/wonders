@@ -2,7 +2,7 @@
 
 from collections import Counter
 
-from wonders.cards.base import Ressource as R
+from wonders.cards.base import Resource as R
 from wonders.engine.trade import Payment, cheapest_payment, payment_options
 
 

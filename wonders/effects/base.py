@@ -47,7 +47,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, Optional, Tuple
 
-from wonders.cards.base import Ressource, ScienceSymbol
+from wonders.cards.base import Resource, ScienceSymbol
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from wonders.cards.base import Card
@@ -101,7 +101,7 @@ class TradeRule:
     category: str = 'both'
     price: int = 1
 
-    def applies(self, side: str, resource: Ressource) -> bool:
+    def applies(self, side: str, resource: Resource) -> bool:
         if self.side != 'both' and self.side != side:
             return False
         if self.category == 'raw' and not resource.is_raw:
@@ -183,7 +183,7 @@ class Effect:
         """Production slots only the owner may use (neighbours cannot buy them)."""
         return ()
 
-    def trade_reduction(self, player: 'Player', side: str, resource: Ressource) -> int:
+    def trade_reduction(self, player: 'Player', side: str, resource: Resource) -> int:
         return 0
 
     def coin_discount(self, card: 'Card') -> int:

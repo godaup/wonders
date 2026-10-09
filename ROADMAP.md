@@ -33,7 +33,8 @@ the discard pile.
 
 ## 2. Network-guided search and expert iteration
 
-**Status: in progress** (branch `search-agent`, not merged).
+**Status: in progress.** Search and the expert-iteration pipeline (`wonders train expert`) are
+implemented; the first distillation round runs after the retraining under the current rules.
 
 * `wonders/agents/worlds.py` rebuilds a playable game from one seat's observation and samples the
   hidden cards (opponents' hands, hidden discards / burials, the guild / black-card draws,
@@ -175,9 +176,8 @@ plus a few board powers; a natural first step because it reuses the existing tur
 Content is already data, so new cards and boards need no engine changes as long as they use the
 existing effect types. A custom-expansion feature would make that a first-class workflow:
 
-* **Load your own expansion** — `load_content('base', 'my_expansion.json')` / `-e my_expansion.json`
-  on the CLI and a file picker in the GUI menu: cards (with copy counts per player count), wonder
-  boards and guilds in the same JSON format as the bundled expansions.
+* **Load your own expansion** — through the extension system (item 6): a JSON expansion dropped
+  into the expansions folder, or a pip-installed plugin when it brings new mechanics.
 * **A documented effect catalogue** — every effect type with its parameters and an example card,
   generated from `EFFECT_BUILDERS`, so designers can compose new cards without reading code; a
   validator that reports unknown effects, broken chains and deck sizes that do not match the
@@ -198,8 +198,234 @@ existing effect types. A custom-expansion feature would make that a first-class 
   it would be a separate ruleset rather than an expansion of this one.
 * **7 Wonders Duel** — a different two-player game.
 
+## 6. Extensions: custom expansions, agents and models
+
+**Goal.** Let anyone add expansions, agents and trained models without changing this repository,
+with one mechanism and clear trust rules.
+
+**Two kinds of extension.**
+
+* **Data** — card / wonder JSON (expansions built from existing effect types), network checkpoints,
+  game records and datasets. Safe to load automatically after validation (checkpoints already load
+  with `weights_only=True`).
+* **Code** — new effect types (new mechanics), scripted agents, new decision kinds. Arbitrary Python:
+  it needs the same trust as any `pip install`.
+
+**Design.**
+
+1. **One registry in the core** — `register_effect`, `register_agent`, `register_expansion`,
+   `register_model`. The built-in content, agents and the bundled network register through the same
+   API, so there is a single path for everything.
+2. **A manifest per extension** — id, name, version, author, licence, the rules version and engine
+   API it was built for, what it contains, and a content hash.
+3. **Sources feeding the registry:**
+   * **Local folders** (e.g. `~/.wonders/expansions/`, `~/.wonders/models/`) — data only; offline and
+     good for private experiments.
+   * **Python plugins** — `pip install wonders-myexpansion`, discovered through standard entry points
+     (`wonders.effects`, `wonders.agents`, `wonders.expansions`, `wonders.models`); the place for code.
+   * **Hugging Face Hub** (optional extra) — models and datasets with model cards, e.g.
+     `-a neural:hf://user/model`; data only, never code.
+   * **Curated** — the repository itself via pull requests: GitHub Actions validate a submission and
+     simulate it (balance for expansions, the head-to-head of item 4 for models) before it is merged
+     and bundled.
+4. **Trust rules** — data loads automatically after validation; code only through an explicit
+   `pip install`; the game never downloads code by itself.
+5. **Compatibility** — game records store each extension's id, version and hash, so a game replays
+   only with identical content; extensions declare the rules version they target; networks refuse
+   unknown cards until the effect-based card encoding (custom expansions above) exists.
+6. **Tooling** — `wonders ext list | validate | new` (scaffold an expansion or agent package); the
+   GUI menu lists installed expansions, agents and models; `wonders gallery` previews an expansion.
+
+**Not now:** a sandboxed scripting layer (a custom language or WebAssembly) for mechanics without
+Python. The JSON effect specs already act as a small language for most cards, and the effect
+catalogue extends it; revisit only if non-programmers start designing mechanics.
+
+**Order and effort.**
+
+1. Registry, manifests and local folders (~2–3 days) — the foundation.
+2. Python plugins via entry points (~1 day).
+3. Hugging Face models and datasets (~1 day).
+4. Curated PRs with GitHub Actions (builds on item 4, ~1–2 days more).
+
+## 7. Translations
+
+**Goal.** Play and read everything in your own language.
+
+* **What gets translated:** the GUI (menu, status bar, tooltips, score sheet), the card renderer's
+  texts (categories, effect descriptions, cost labels), CLI messages, and later the documentation.
+* **How:** one locale file per language (`wonders/locales/<lang>.json`) with keyed strings and
+  placeholders; a small `t(key, **values)` helper in Python and its counterpart in the page; card
+  and wonder names and effect descriptions keyed by their canonical id. A language picker in the GUI
+  menu, `--lang` on the CLI, the system language as the default.
+* **Stays canonical:** game records, agent and checkpoint vocabularies and the API use the English
+  ids, so a game recorded in one language replays in any other.
+* **Names:** this project's card names are its own paraphrases and are translated as such; the
+  publisher's official localized names and texts are not shipped (see the disclaimer).
+* **Rendering:** fonts for non-Latin scripts in the card SVGs and the page; right-to-left layouts
+  once a right-to-left language is added; text wrapping already adapts to longer translations.
+* **Contributions:** language packs are data, so they fit the extension system (item 6); a
+  completeness check in CI lists untranslated keys.
+
+**Effort:** ~2–3 days for the mechanism plus English and one more language; each further language is
+a data contribution.
+
+## 8. Table companion: from a real table to a move proposal
+
+**Goal.** Bring the engine to games played elsewhere — a physical table or a recorded game: turn
+the position into an `Observation`, ask the network (or search) for a move, and explain it.
+
+**One core, several front-ends.**
+
+1. **Position editor (the core).** Enter or correct a table state in the GUI: Age and turn, your
+   hand, every city's cards, coins, wonder stages and military tokens, Leaders and Cities state. It
+   builds an `Observation`; `worlds.sample_world` already turns that into playable games with the
+   hidden cards sampled, so the search agent can recommend a move, with the explanation from
+   post-game analysis (item 3). Useful on its own for studying positions.
+2. **Voice input.** Dictate the position or the moves ("I hold Forum, Baths and Altar; left
+   neighbour built Barracks"): local speech-to-text, a parser with fuzzy matching against the card
+   names (and their translations, item 7), and follow-up questions for what is missing. Optional
+   spoken answers.
+3. **Image input.** Photos or video frames of the table or a screen: recognise cards, boards, coins
+   and tokens and fill the editor. Two routes: a multimodal model that reads the cards (fast to
+   build, needs an API or a large local model), or a dedicated recogniser trained on photos the user
+   provides (no publisher artwork is shipped). Always with a confirmation step in the editor —
+   recognition errors must not silently change the advice.
+4. **Recorded gameplay.** Step through a recorded physical or digital game turn by turn, rebuild a
+   `GameRecord`, then run the post-game analysis on it.
+
+**Fair play.** The companion is meant for learning, solo and offline play and post-game analysis. Using
+it during live competitive games against people (online platforms included) is cheating and usually
+against their terms; the documentation and the GUI say so clearly.
+
+**Order and effort.** Position editor (~2–3 days, with item 3's explanations) → voice (~2–3 days) →
+image recognition (~1–2 weeks, depending on the route) → recorded games.
+
+## 9. Play in the browser, no installation
+
+**Goal.** A static page (e.g. on GitHub Pages) where anyone can play against the bundled network —
+the fastest way into the README's challenge.
+
+* The engine is pure Python with no compiled dependencies, so it can run in the browser through
+  **Pyodide** (Python on WebAssembly); the GUI's page already talks to a small JSON API, which a
+  thin in-browser adapter can provide instead of the local server.
+* The network (256×2) is exported to **ONNX** and runs with ONNX Runtime Web; scripted agents run as
+  they are. Search is optional (slower in the browser) and could run in a web worker.
+* Game records download as usual; a link can carry a record for sharing replays.
+
+**Effort:** ~3–5 days (adapter, ONNX export and parity test, start-up size and speed tuning).
+
+## 10. Accessibility
+
+* **Colour-blind support:** card categories are colour-coded; add a colour-blind palette and a
+  pattern or icon per category everywhere colours carry meaning (cards, chips, score sheet).
+* **Keyboard play:** every action reachable without a mouse, with visible focus.
+* **Screen readers:** labels for cards, actions and cities; the move log and status bar as live
+  regions.
+* Check contrast in both themes; respect reduced-motion settings.
+
+**Effort:** ~2 days.
+
+## 11. Difficulty levels and adaptive opponents
+
+**Goal.** Opponents that match the player, from beginner to the full-strength network.
+
+* **Tiers** from existing material: scripted agents, earlier training snapshots, the network with
+  sampling instead of greedy moves (a temperature), the full network, and search on top. Each tier
+  is calibrated by simulation to a target strength.
+* **Adaptive mode:** adjusts the tier after each game to keep the human near a 50% win rate.
+* The GUI menu offers difficulty names instead of agent names (agents stay available for experts).
+
+**Effort:** ~2–3 days, mostly calibration runs.
+
+## 12. Puzzles and coach mode
+
+**Goal.** Learn the game from the engine.
+
+* **Puzzles:** "find the best move" positions taken from simulated games where search finds a clear
+  gap between the best and the second-best move; the solution is explained with the post-game
+  analysis (item 3). A daily puzzle; themed sets (science, military, wonders, leaders).
+* **Coach mode:** in a normal game, ask for a hint (how good is each move?) or let the coach flag
+  mistakes as they happen.
+* Both build on search and the analysis explanations; the position editor of item 8 lets anyone
+  create puzzles too.
+
+**Effort:** ~2–3 days after item 3.
+
+## 13. Balance lab
+
+**Goal.** Use millions of simulated games to answer balance questions — for strategy fans and for
+designers of custom expansions (items 5 and 6).
+
+* **Reports:** win rates per wonder and side by player count and expansions, card values by Age,
+  opening tendencies, how strong each colour strategy is, how much seat position matters.
+* **What-if variants:** change a rule or a card (trade price, a card's cost, a stage's effect) and
+  compare against the baseline with confidence intervals.
+* **Designer workflow:** a new card or wonder from an extension is simulated automatically, with a
+  warning when it is clearly over- or under-powered.
+* Results as an HTML report (and a page on the website).
+
+**Caveat:** the agents' play shapes the numbers; report them per agent family and prefer the
+strongest agents.
+
+**Effort:** ~3–4 days for the framework and the first report.
+
+## 14. Language models as players
+
+**Goal.** A benchmark of large language models against the engine's agents — a timely showcase.
+
+* A text interface over the `Observation` (hand, cities, costs, legal moves) and a strict answer
+  format; illegal or unparsable answers count as a fallback move and are reported.
+* Pluggable providers (local models and hosted APIs); prompts, settings and costs are recorded.
+* A leaderboard of LLMs against scripted agents and the network, with the same head-to-head
+  statistics as everything else; game records show the models' reasoning.
+
+**Effort:** ~2–3 days, plus API budget for the runs.
+
+## 15. Official variants still missing
+
+* **Two players:** the base game's two-player rules with a third, shared seat played alternately by
+  both players.
+* **Team play** for 4–8 players (Cities), with team scoring.
+* **Eight players** (supported with Cities).
+
+These are rules, not new cards, so they fit the engine; like Leaders and Cities, each rule is
+checked against the official rulebooks first. The training environment and the network need the
+new seat counts and decisions (the two-player shared seat is an extra decision kind).
+
+**Effort:** ~3–5 days for all three, plus training for the network to play them.
+
+## Further ideas
+
+* **Multiplayer with friends** — humans and bots at one table over the local network or the
+  internet; spectator mode; shareable replay links.
+* **Player profile** — your rating over time, statistics and favourite wonders, kept locally.
+* **Strategy explorer** — what the network values (card heatmaps by Age, "why this move"); a
+  language model could narrate the search's numbers in plain words.
+* **Environment wrappers and a benchmark suite** — official PettingZoo / Gymnasium registrations and
+  fixed seeds, opponents and metrics, so research results are comparable.
+* **Opponent modelling for search** — infer opponents' likely hands and plans from what they played
+  and passed instead of sampling hidden cards uniformly; the most direct route to stronger search
+  and expert iteration.
+* **Smaller, faster models** — distilled and quantized networks for phones, the browser (item 9)
+  and faster search.
+* **Rules oracle** — the official FAQ cases as tests, and a way to ask edge-case questions by running
+  the engine.
+
 ## Smaller items
 
+* **Python 3.14.** Support and test the newest Python:
+  * add 3.14 where the supported versions are declared — `pyproject.toml` classifiers and black
+    `target-version`, the tox `envlist` and its `gh-actions` map in `setup.cfg`, the
+    `.github/workflows/dev.yml` matrix, CLAUDE.md and the README badge;
+  * run the full suite on 3.14; the core only needs `click`, so it should pass as is. Check that
+    PyTorch and NumPy publish 3.14 wheels before adding 3.14 to the `ml` job;
+  * try the **free-threaded build** (`python3.14t`, no GIL). The engine is pure Python, so game
+    simulation could run in threads instead of worker processes (less memory and no pickling in
+    vector envs, benchmarks and search). It needs a thread-safety review of the shared caches
+    (`Player._cache`, `Game._payments`, the observation summary cache, `lru_cache`d content) and a
+    PyTorch build for free-threading; benchmark before switching anything;
+  * Python 3.10 reaches end of life in October 2026: consider raising `requires-python` to 3.11
+    when 3.14 is added, keeping a four-version window.
 * Publish to PyPI once the API settles (release flow in `CLAUDE.md`).
 * A replay viewer in the GUI for recorded games (`GameRecord` JSON), reusing the review screen of
   item 3.

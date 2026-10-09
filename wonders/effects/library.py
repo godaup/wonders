@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, Optional, Tuple
 
-from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Ressource, ScienceSymbol
+from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Resource, ScienceSymbol
 from wonders.effects.base import BuildEvent, Context, Effect, TradeRule
 
 TRADEABLE = RAW_MATERIALS | MANUFACTURED_GOODS
@@ -24,7 +24,7 @@ class Production(Effect):
     unit per turn.
     """
 
-    def __init__(self, *resources: Ressource, choice: Iterable[Ressource] = ()):
+    def __init__(self, *resources: Resource, choice: Iterable[Resource] = ()):
         self.options = frozenset(resources) | frozenset(choice)
 
     def production(self) -> Tuple[frozenset, ...]:
@@ -40,7 +40,7 @@ class MultiProduction(Effect):
     Each argument is one independent production slot (itself possibly a choice).
     """
 
-    def __init__(self, *slots: Iterable[Ressource]):
+    def __init__(self, *slots: Iterable[Resource]):
         self.slots = tuple(frozenset(s) for s in slots)
 
     def production(self) -> Tuple[frozenset, ...]:
@@ -472,7 +472,7 @@ class StartingResourceDiscount(Effect):
 
     amount: int = 1
 
-    def trade_reduction(self, player, side: str, resource: Ressource) -> int:
+    def trade_reduction(self, player, side: str, resource: Resource) -> int:
         return self.amount if resource is player.wonder.starting_resource else 0
 
 

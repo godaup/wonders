@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import random
+import warnings
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -15,13 +16,22 @@ from wonders.cards.base import Card
 from wonders.engine.actions import Action
 from wonders.engine.observation import Observation
 from wonders.env.vocab import Vocab
-from wonders.ml.model import PolicyValueNet, load_checkpoint
+from wonders.ml.model import PolicyValueNet, load_checkpoint, rules_version
+from wonders.ruleset import RULES_VERSION
 
 
 @lru_cache(maxsize=32)
 def _shared_checkpoint(path: str, device: str) -> Tuple[PolicyValueNet, Tuple[str, ...], Dict[str, Any]]:
     """One copy per checkpoint and device per process (agents only run inference, so they can share it)."""
     model, names, meta = load_checkpoint(path)
+    trained = rules_version(meta)
+    if trained < RULES_VERSION:
+        warnings.warn(
+            f'{os.path.basename(path)} was trained under rules version {trained}; the engine implements version '
+            f'{RULES_VERSION} (see wonders.ruleset.RULES_VERSION). It plays legal games but may misjudge positions '
+            'affected by the rules changes.',
+            stacklevel=2,
+        )
     return model.to(device).eval(), tuple(names), meta
 
 
@@ -66,7 +76,7 @@ class NeuralAgent(Agent):
         leader_policy: bool = True,
         device: str = 'cpu',
     ):
-        meta: Dict[str, Any] = {'decisions': list(decisions or DECISIONS)}
+        meta: Dict[str, Any] = {'decisions': list(decisions or DECISIONS), 'rules_version': RULES_VERSION}
         if checkpoint is not None:
             model, loaded_names, meta = _shared_checkpoint(os.path.abspath(checkpoint), device)
             card_names = list(loaded_names)
@@ -83,6 +93,7 @@ class NeuralAgent(Agent):
         self.rng = rng or random.Random()
         self.name = name
         self.leader_policy = leader_policy and {'draft', 'recruit'} <= set(self.vocab.decisions)
+        self.rules_version = rules_version(meta)  # the rules the model was trained under
 
     def act(self, obs: Observation, options: List[Card]) -> Action:
         if self.leader_policy:

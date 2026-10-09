@@ -45,10 +45,10 @@ class Color(IdentityEnum):
     BLACK = 'black'  # Cities expansion
 
 
-class Ressource(IdentityEnum):
+class Resource(IdentityEnum):
     """Tradeable resources.
 
-    Spelling kept as ``Ressource`` to match the original scaffold. ``GOLD`` models
+    Spelling kept as ``Resource`` to match the original scaffold. ``GOLD`` models
     coins and is intentionally *not* a producible/tradeable resource — coins are
     tracked as integers on the player and never satisfy a resource cost.
     """
@@ -71,8 +71,8 @@ class Ressource(IdentityEnum):
         return self in MANUFACTURED_GOODS
 
 
-RAW_MATERIALS = frozenset({Ressource.WOOD, Ressource.STONE, Ressource.ORE, Ressource.BRICKS})
-MANUFACTURED_GOODS = frozenset({Ressource.GLASS, Ressource.LINEN, Ressource.PAPER})
+RAW_MATERIALS = frozenset({Resource.WOOD, Resource.STONE, Resource.ORE, Resource.BRICKS})
+MANUFACTURED_GOODS = frozenset({Resource.GLASS, Resource.LINEN, Resource.PAPER})
 
 
 class ScienceSymbol(IdentityEnum):
@@ -93,7 +93,7 @@ class Cost:
     resources: Counter = field(default_factory=Counter)
 
     @classmethod
-    def of(cls, *resources: Ressource, coins: int = 0) -> 'Cost':
+    def of(cls, *resources: Resource, coins: int = 0) -> 'Cost':
         """Build a cost from positional resources plus optional coins.
 
         Example: ``Cost.of(WOOD, WOOD, coins=2)``.
