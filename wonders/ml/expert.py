@@ -56,9 +56,21 @@ class SearchDataset:
     targets: torch.Tensor  # [N, K] int64 action indices
     probs: torch.Tensor  # [N, K] float32 target probabilities (0 where unused)
     value: torch.Tensor  # [N] float32 (scaled remaining margin)
+    # [N, K] float32 the search's candidate values in VP (NaN where unused; one 0 for unsearched rows),
+    # so the target temperature can be changed after collection. None for older datasets.
+    scores: Optional[torch.Tensor] = None
 
     def __len__(self) -> int:
         return int(self.value.shape[0])
+
+    def with_temperature(self, temperature: float) -> 'SearchDataset':
+        """The same decisions with targets ``softmax(scores / temperature)`` (needs ``scores``)."""
+        if self.scores is None:
+            raise ValueError('this dataset has no candidate scores; collect it again to change the temperature')
+        used = ~torch.isnan(self.scores)
+        logits = torch.where(used, self.scores / max(1e-6, temperature), torch.full_like(self.scores, -torch.inf))
+        probs = torch.softmax(logits, dim=1)
+        return SearchDataset(self.obs, self.mask, self.targets, probs, self.value, self.scores)
 
     def save(self, path: str) -> None:
         torch.save(self.__dict__, path)
@@ -84,7 +96,7 @@ class _SearchRecorder(Agent):
         self.temperature = temperature
         self.width = width
         self.name = search.name
-        self.rows: List[Tuple[List[float], List[bool], List[int], List[float], float]] = []
+        self.rows: List[Tuple[List[float], List[bool], List[int], List[float], List[float], float]] = []
 
     def act(self, obs: Observation, options: List[Card]) -> Action:
         action = self.search.act(obs, options)
@@ -94,8 +106,9 @@ class _SearchRecorder(Agent):
             candidates, values = self.search.last
             indices = [space.index(a) for a in candidates]
             probs = soft_targets(values, self.temperature)
+            scores = list(values)
         else:
-            indices, probs = [space.index(action)], [1.0]
+            indices, probs, scores = [space.index(action)], [1.0], [0.0]
         pad = self.width - len(indices)
         self.rows.append(
             (
@@ -103,6 +116,7 @@ class _SearchRecorder(Agent):
                 space.mask(obs.legal_actions),
                 indices + [-1] * pad,
                 probs + [0.0] * pad,
+                scores + [math.nan] * pad,
                 _margin(obs),
             )
         )
@@ -112,7 +126,9 @@ class _SearchRecorder(Agent):
         return self.act(obs, [])
 
 
-def _collect_game(job: Tuple[Any, ...]) -> Tuple[bytes, bytes, List[List[int]], List[List[float]], List[float]]:
+def _collect_game(
+    job: Tuple[Any, ...],
+) -> Tuple[bytes, bytes, List[List[int]], List[List[float]], List[List[float]], List[float]]:
     index, seed, expansions, n, checkpoint, search_kwargs, temperature, opponents = job
     content = _content(Ruleset.of(*expansions).content_expansions)
     rng = random.Random(seed * 1_000_003 + index)
@@ -136,14 +152,16 @@ def _collect_game(job: Tuple[Any, ...]) -> Tuple[bytes, bytes, List[List[int]], 
     obs_buf, mask_buf = array('f'), bytearray()
     targets: List[List[int]] = []
     probs: List[List[float]] = []
+    scores: List[List[float]] = []
     values: List[float] = []
-    for x, m, t, p, margin in recorder.rows:
+    for x, m, t, p, s, margin in recorder.rows:
         obs_buf.extend(x)
         mask_buf.extend(bytes(m))
         targets.append(t)
         probs.append(p)
+        scores.append(s)
         values.append((final_margin - margin) * VALUE_SCALE)
-    return obs_buf.tobytes(), bytes(mask_buf), targets, probs, values
+    return obs_buf.tobytes(), bytes(mask_buf), targets, probs, scores, values
 
 
 def collect_search(
@@ -185,14 +203,18 @@ def collect_search(
     masks: List[bytes] = []
     targets: List[List[int]] = []
     probs: List[List[float]] = []
+    scores: List[List[float]] = []
     values: List[float] = []
 
-    def consume(parts: Iterable[Tuple[bytes, bytes, List[List[int]], List[List[float]], List[float]]]) -> None:
-        for done, (o, m, t, p, v) in enumerate(parts, 1):
+    def consume(
+        parts: Iterable[Tuple[bytes, bytes, List[List[int]], List[List[float]], List[List[float]], List[float]]],
+    ) -> None:
+        for done, (o, m, t, p, s, v) in enumerate(parts, 1):
             obs_parts.append(o)
             masks.append(m)
             targets.extend(t)
             probs.extend(p)
+            scores.extend(s)
             values.extend(v)
             if log is not None and done % max(1, n_games // 20) == 0:
                 log(f'collected {done}/{n_games} games, {len(values)} decisions')
@@ -210,6 +232,7 @@ def collect_search(
         torch.tensor(targets, dtype=torch.int64),
         torch.tensor(probs, dtype=torch.float32),
         torch.tensor(values, dtype=torch.float32),
+        torch.tensor(scores, dtype=torch.float32),
     )
 
 
@@ -231,12 +254,18 @@ def distill(
     seed: int = 0,
     log: Optional[Callable[[str], None]] = print,
     device: str = 'auto',
+    temperature: Optional[float] = None,
 ) -> Dict[str, float]:
     """Fine-tune ``model`` towards the search's targets; returns held-out agreement and losses.
+
+    ``temperature`` re-derives the targets from the stored candidate scores (default: the targets as
+    collected).
 
     The model keeps its input normalisation (it is a fine-tune, not a fresh fit), and the learning
     rate is low by default so the policy moves towards the search without forgetting.
     """
+    if temperature is not None:
+        data = data.with_temperature(temperature)
     gen = torch.Generator().manual_seed(seed)
     order = torch.randperm(len(data), generator=gen)
     n_val = max(1, int(len(data) * val_fraction))
