@@ -7,8 +7,12 @@
   logged decisions); `wonders gui --no-save` turns it off. New GUI pages: "Past games" with the
   player's Elo rating and its graph (agents have fixed ratings fitted on 20,000 simulated games,
   `wonders.play.rating`; `python -m wonders.play.rating` refits them), and "Achievements"
-  (`wonders.play.achievements`: Make Wonders, Not War; Jack of All Trades, Master of Seven; Dumpster
-  Diver). Ratings and achievements are derived from the saved games, so new ones count old games too.
+  (`wonders.play.achievements`): 32 feats and career goals in four tiers (bronze to legendary, worth
+  points) — general, Leaders, Cities, opponent-specific and career (table sizes, wonders, Elo goals),
+  calibrated on 1,500 simulated games. Ratings and achievements are derived from the saved games, so
+  new ones count old games too.
+* Agents have display names (`AGENT_NAMES`: Fortuna, Icarus, Odysseus, Hephaestus, Metis, Eris,
+  Pythia, …) in the GUI, as default seat names and as CLI aliases (`-a pythia,metis`); the ids stay.
   Extensions now default to `$WONDERS_HOME/extensions`.
 * German translation (`wonders/i18n/`): the GUI, cards, wonder boards, tooltips and the post-game
   analysis; language picker (browser language by default, `?lang=de`), `wonders gallery --lang de`.

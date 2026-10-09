@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from wonders.agents.base import Agent
-from wonders.agents.bench import AGENTS, CATEGORIES, MAX_PLAYERS, MIN_PLAYERS
+from wonders.agents.bench import AGENTS, CATEGORIES, MAX_PLAYERS, MIN_PLAYERS, agent_name
 from wonders.cards.content import Content, load_content
 from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.observation import Observation
@@ -78,7 +78,7 @@ def agent_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> L
 
     registry = ensure_loaded()
     blurbs = {**AGENT_BLURBS, **registry.agent_blurbs}
-    options = [AgentOption(name, name, t(blurbs[name]) if blurbs.get(name) else '') for name in AGENTS]
+    options = [AgentOption(name, agent_name(name), t(blurbs[name]) if blurbs.get(name) else '') for name in AGENTS]
     try:
         from wonders.ml import pretrained_path
     except ImportError:  # no PyTorch: scripted agents only
@@ -88,7 +88,7 @@ def agent_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> L
         stem = os.path.splitext(os.path.basename(path))[0]
         label = 'neural' if i == 0 else f'neural:{stem}'
         blurb = t('The bundled trained network.') if i == 0 else t('Trained network from {path}.', path=path)
-        options.append(AgentOption(label, label, blurb, path))
+        options.append(AgentOption(label, agent_name(label), blurb, path))
     for model in registry.models.values():  # networks from extensions
         label = f'neural:{model.name}'
         if all(o.id != label for o in options):
@@ -213,7 +213,7 @@ class ConfigError(ValueError):
 def _neural_agent(option: AgentOption, content: Content, ruleset: Ruleset, rng: random.Random) -> Agent:
     from wonders.ml import NeuralAgent
 
-    agent = NeuralAgent(option.checkpoint, rng=rng, name=option.label)
+    agent = NeuralAgent(option.checkpoint, rng=rng, name=option.id)
     missing = {c.name for c in content.cards} - set(agent.vocab.card_names)
     if missing:
         raise ConfigError(f'{option.label} was not trained with these expansions (unknown cards, e.g. {min(missing)})')
@@ -252,6 +252,7 @@ class HumanSession:
         self.id = game_id or new_id()
         self.created = now()
         self.finished_at: Optional[str] = None
+        self.traded = 0  # coins the human paid to its neighbours
         self.log: List[Dict[str, Any]] = []  # every step: {'decision': kind, 'moves': {seat: move}}
         seats = config.seats
         humans = [i for i, s in enumerate(seats) if s.player == HUMAN]
@@ -315,7 +316,9 @@ class HumanSession:
             else:
                 wonder, side = pool.pop(), config.opponent_sides
             side = rng.choice('AB') if side == 'random' else side
-            name = seat.name or (self.t('You') if i == self.human else f'{seat.player.capitalize()} {i}')
+            twins = sum(s.player == seat.player for s in config.seats) > 1  # number agents that sit twice
+            default = agent_name(seat.player) + (f' {i + 1}' if twins else '')
+            name = seat.name or (self.t('You') if i == self.human else default)
             setups.append(PlayerSetup(name, wonder, side))
         return setups
 
@@ -338,10 +341,16 @@ class HumanSession:
         return self.agents[seat].act(env.observation(seat), env.options(seat))
 
     def _step(self, actions: Dict[int, Action]) -> None:
-        """Play one step and log it."""
+        """Play one step and log it (and count the coins the human pays its neighbours)."""
         decision = self.env.decision
         assert decision is not None
         self.log.append({'decision': decision.value, 'moves': {str(s): _move(a) for s, a in sorted(actions.items())}})
+        mine = actions.get(self.human)
+        if mine is not None and mine.kind in (ActionKind.BUILD, ActionKind.WONDER):
+            options = self._payments(mine)
+            chosen = [p for p in options if mine.payment is not None and (p.left, p.right) == mine.payment]
+            if options:
+                self.traded += (chosen or options)[0].traded
         self.env.step(actions)
 
     def _replay(self, step: Dict[str, Any]) -> None:
@@ -517,11 +526,12 @@ class HumanSession:
             return None
         totals = [game.score(i).total for i in range(game.n)]
         coins = [p.coins for p in game.players]
-        builds = [0] * game.n
+        builds, discards = [0] * game.n, [0] * game.n
         for step in self.log:
-            if step['decision'] == DecisionKind.DISCARD_BUILD.value:
-                for seat, move in step['moves'].items():
+            for seat, move in step['moves'].items():
+                if step['decision'] == DecisionKind.DISCARD_BUILD.value:
                     builds[int(seat)] += move[0] == ActionKind.BUILD.value
+                discards[int(seat)] += move[0] == ActionKind.DISCARD.value
         return {
             'totals': totals,
             'coins': coins,
@@ -529,8 +539,16 @@ class HumanSession:
             'winner': game.winner(),
             'scores': [game.score(i).as_dict() for i in range(game.n)],
             'colors': [_colors(p.cards) for p in game.players],
+            'cards': [len(p.cards) for p in game.players],
+            'chains': [_chained(p.cards) for p in game.players],
             'stages': [p.wonder_stages_built for p in game.players],
+            'stages_total': [len(p.wonder.stages) for p in game.players],
+            'tokens': [list(p.tokens) for p in game.players],
+            'debt': [p.debt for p in game.players],
+            'science': [{s.value: n for s, n in p.science().items()} for p in game.players],
+            'discards': discards,
             'discard_builds': builds,
+            'traded': self.traded,  # the human's coins paid to neighbours (agents' payments are not tracked)
         }
 
     def progress(self) -> Optional[Dict[str, Any]]:
@@ -586,6 +604,12 @@ def _move(action: Action) -> List[Any]:
     if action.payment is not None:
         move += list(action.payment)
     return move
+
+
+def _chained(cards: Sequence[Any]) -> int:
+    """Cards built for free through a chain (their prerequisite is in the same city)."""
+    names = {card.name for card in cards}
+    return sum(card.chain_requires in names for card in cards if card.chain_requires)
 
 
 def _colors(cards: Sequence[Any]) -> Dict[str, int]:

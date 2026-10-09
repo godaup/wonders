@@ -261,8 +261,17 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
   border-radius: 14px; background: var(--panel); box-shadow: var(--shadow); }
 .ach .icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; background: var(--panel-2);
   border: 2px solid var(--line); filter: grayscale(1); opacity: .55; }
-.ach.earned .icon { filter: none; opacity: 1; border-color: var(--gold); background: color-mix(in srgb, var(--gold) 16%, var(--panel)); }
+.ach.earned .icon { filter: none; opacity: 1; }
 .ach h3 { font-size: 15px; margin-bottom: 4px; }
+.ach-group { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin: 18px 0 8px; }
+.ach-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.ach .tier { flex: none; font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; padding: 1px 8px;
+  border-radius: 999px; color: #fff; background: var(--tc); cursor: help; }
+.ach.tier-bronze { --tc: #a0643a; } .ach.tier-silver { --tc: #8a939d; } .ach.tier-gold { --tc: #c8951a; } .ach.tier-legendary { --tc: #7a4fb0; }
+.ach.earned .icon { border-color: var(--tc); background: color-mix(in srgb, var(--tc) 16%, var(--panel)); }
+.ach.tier-legendary.earned { box-shadow: 0 0 0 1px var(--tc), var(--shadow); }
+.ach-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 12px; margin: 2px 0 4px; }
+.ach-progress .an-progress div { transition: none; }
 .ach p { margin: 0 0 4px; font-size: 13px; }
 .ach .when { font-size: 12px; color: var(--muted); }
 .ach.earned .when { color: var(--green); font-weight: 600; }
@@ -409,7 +418,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
   <section id="achievements" class="hidden">
     <div class="panel">
       <div class="elo-head"><h2 data-i18n>Achievements</h2><span class="muted" id="a-summary"></span></div>
-      <div class="ach-grid" id="a-grid"></div>
+      <div id="a-grid"></div>
     </div>
   </section>
 </main>
@@ -578,7 +587,7 @@ function renderMenu() {
     seats.append(el('div', { class: 'seat-row' }, el('span', { class: 'num' }, '#' + (i + 1)), sel, name));
     const agent = options.agents.find((a) => a.id === seat.player);
     const blurb = seat.player === 'human' ? t('Your seat.')
-      : agent && [agent.blurb, t('Elo {elo}', { elo: agent.elo })].filter(Boolean).join(' · ');
+      : agent && [agent.label !== agent.id ? agent.id : '', agent.blurb, t('Elo {elo}', { elo: agent.elo })].filter(Boolean).join(' · ');
     if (blurb) seats.append(el('div', { class: 'seat-row' }, el('span'), el('div', { class: 'blurb' }, blurb)));
   });
   $('m-count').textContent = menu.seats.length;
@@ -732,7 +741,7 @@ function renderOpponents(obs) {
     // Exactly six rows per city: the panels share them (CSS subgrid), so sections line up.
     box.append(el('div', { class: 'panel city' + (tag ? ' neighbour' : '') },
       el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted sub' },
-        el('span', { class: 'agent', 'data-tip': agentBlurb(p.agent) }, t('{name} agent', { name: agentLabel(p.agent) }))), el('div', { class: 'sub' }, wonder)),
+        el('span', { class: 'agent', 'data-tip': agentBlurb(p.agent) }, t('{name} agent', { name: p.agent }) + (agentElo(p.agent) ? ' · ' + agentElo(p.agent) : ''))), el('div', { class: 'sub' }, wonder)),
         scoreEl(city.score)),
       el('div', { class: 'tag' }, tag),
       el('div', { class: 'statgrid' }, statGrid(city)),
@@ -1298,17 +1307,33 @@ function renderHistory(data) {
   $('h-games').replaceChildren(el('table', { class: 'games' }, el('thead', {}, head), el('tbody', {}, rows)));
 }
 
+const TIER_NAMES = { bronze: N('Bronze'), silver: N('Silver'), gold: N('Gold'), legendary: N('Legendary') };
+const ACH_GROUPS = [['general', N('Feats')], ['leaders', N('Leaders')], ['cities', N('Cities')], ['opponents', N('Opponents')],
+  ['career', N('Career')]];
 async function openAchievements() {
   show('achievements'); setHeader();
   try {
     const data = await api('/api/achievements');
     const earned = data.achievements.filter((a) => a.count).length;
-    $('a-summary').textContent = t('{earned} of {total} earned in {n} finished games', { earned, total: data.achievements.length, n: data.games });
-    $('a-grid').replaceChildren(...data.achievements.map((a) => el('div', { class: 'ach' + (a.count ? ' earned' : '') },
+    $('a-summary').textContent = t('{earned} of {total} earned in {n} finished games', { earned, total: data.achievements.length, n: data.games })
+      + ' · ' + t('{points} of {max} points', { points: data.points, max: data.max_points });
+    const card = (a) => el('div', { class: 'ach tier-' + a.tier + (a.count ? ' earned' : '') },
       el('div', { class: 'icon' }, a.icon),
-      el('div', {}, el('h3', {}, a.name), el('p', {}, a.description),
-        el('p', { class: 'when' }, a.count ? t(a.count === 1 ? 'Earned once, on {date}' : 'Earned {n} times, first on {date}', { n: a.count, date: fmtDate(a.first) })
-          : t('Not earned yet'))))));
+      el('div', {}, el('div', { class: 'ach-head' }, el('h3', {}, a.name),
+        el('span', { class: 'tier', 'data-tip': t('{n} points', { n: a.points }) }, t(TIER_NAMES[a.tier]))),
+        el('p', {}, a.description),
+        a.goal && !a.count ? el('div', { class: 'ach-progress' }, el('div', { class: 'an-progress' },
+          el('div', { style: `width:${Math.min(100, 100 * a.progress / a.goal)}%` })), el('span', {}, a.progress + ' / ' + a.goal)) : null,
+        el('p', { class: 'when' }, a.count ? (a.goal ? t('Reached on {date}', { date: fmtDate(a.first) })
+          : t(a.count === 1 ? 'Earned once, on {date}' : 'Earned {n} times, first on {date}', { n: a.count, date: fmtDate(a.first) }))
+          : t('Not earned yet'))));
+    $('a-grid').replaceChildren(...ACH_GROUPS.flatMap(([group, title]) => {
+      const items = data.achievements.filter((a) => a.group === group);
+      if (!items.length) return [];
+      const got = items.filter((a) => a.count).length;
+      return [el('h3', { class: 'ach-group' }, t(title), el('span', { class: 'muted' }, ' ' + got + ' / ' + items.length)),
+        el('div', { class: 'ach-grid' }, items.map(card))];
+    }));
   } catch (e) { $('a-grid').replaceChildren(el('p', { class: 'error' }, e.message)); }
 }
 

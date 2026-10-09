@@ -156,8 +156,10 @@ scoring categories). It is split into three packages under `wonders/`:
   so saved games survive agent changes. The server saves after each move to `wonders.storage.Store`
   (`$WONDERS_HOME/games`, default `~/.wonders`; tests point it at a temp dir). `rating.py` holds the
   agents' fixed Elo (`AGENT_ELO`, fitted by `python -m wonders.play.rating`) and derives the human's
-  rating from the finished games (pairwise vs every opponent); `achievements.py` checks predicates
-  over a saved game's `result` — both are derived, never stored, so new ones count old games.
+  rating from the finished games (pairwise vs every opponent); `achievements.py` has feats (predicates
+  over a saved game's `result` facts) and career goals (progress over all finished games + ratings) —
+  both derived, never stored, so new ones count old games; new facts go into `HumanSession.result()`.
+  Agents keep their ids; `agents.bench.AGENT_NAMES` gives the display names (GUI, seat names, CLI aliases).
 
 - **`wonders/ml/`** — the optional learned agent (PyTorch, `[ml]` extra; nothing else
   imports it, so the core stays dependency-free and `tests/test_ml.py` skips without

@@ -211,13 +211,20 @@ class PlayServer:
         return json.dumps(record, indent=1)
 
     def achievements(self, t: Translator = ENGLISH) -> Dict[str, Any]:
-        """Every achievement (translated) with the finished games that earned it."""
+        """Every achievement (translated) with its progress over the finished games."""
         saved = self.store.list_games() if self.store is not None else []
-        finished = sorted((g for g in saved if g.get('finished')), key=_finished_at)
-        items = achievements(finished)
+        finished = sorted((g for g in saved if rated_game(g)), key=_finished_at)
+        ratings = [p.after for p in player_history(r for r in (rated_game(g) for g in finished) if r is not None)]
+        items = achievements(finished, ratings)
         for item in items:
             item.update(name=t(item['name']), description=t(item['description']))
-        return {'saving': self.store is not None, 'achievements': items, 'games': len(finished)}
+        return {
+            'saving': self.store is not None,
+            'achievements': items,
+            'games': len(finished),
+            'points': sum(item['points'] for item in items if item['count']),
+            'max_points': sum(item['points'] for item in items),
+        }
 
     # -- post-game analysis ------------------------------------------------------------------
     def start_analysis(self) -> Dict[str, Any]:
