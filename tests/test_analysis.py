@@ -101,3 +101,21 @@ def test_aspects_compare_the_player_with_the_table(report):
         0 <= asp['wonder']['built'] <= asp['wonder']['total'] and len(asp['wonder']['ages']) == asp['wonder']['built']
     )
     assert asp['economy']['trade_paid'] >= 0 and 1 <= asp['economy']['coins_rank'] <= 3
+
+
+def test_report_reads_in_german(report):
+    import copy
+    import json
+
+    from wonders.i18n import Translator
+    from wonders.ml.analysis import localize
+
+    json.dumps(report)  # the kept messages are JSON-ready
+    original = copy.deepcopy(report)
+    german = localize(report, Translator('de'))
+    assert report == original  # localizing copies
+    for en, de in zip(report['decisions'], german['decisions']):
+        if en['reason']:
+            assert de['reason'] != en['reason'] and 'gains' not in de['reason']
+    for en, de in zip(report['patterns'], german['patterns']):
+        assert de['title'] != en['title'] and de['detail'] != en['detail']

@@ -269,6 +269,12 @@ catalogue extends it; revisit only if non-programmers start designing mechanics.
 
 ## 7. Translations
 
+**Status: done for German** (`wonders/i18n/`, `docs/extensions.md#translations`): the GUI, the card and
+board renderer, card tooltips and the post-game analysis, with a language picker (browser language
+by default, `?lang=` in the URL) and `wonders gallery --lang`. Catalogs are keyed by the English
+text; a test fails on any untranslated GUI or card text. Still open: CLI messages, the documentation,
+fonts / right-to-left for non-Latin scripts.
+
 **Goal.** Play and read everything in your own language.
 
 * **What gets translated:** the GUI (menu, status bar, tooltips, score sheet), the card renderer's

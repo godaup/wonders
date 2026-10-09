@@ -102,6 +102,7 @@ Measured on one core of an Intel i5-12400F unless noted.
   without depending on Gym or PettingZoo.
 * **Evaluation tools** — benchmarks with 95% confidence intervals, head-to-head comparison of
   models at the same tables, exploitability measurement.
+* **Languages** — English and German (GUI, cards and the analysis); more are a JSON file away.
 * **Extensions** — add your own expansions, models and translations as data folders, or card effects
   and agents as pip-installable plugins ([extensions guide](docs/extensions.md)).
 * **Light** — the core is pure Python with `click` as its only runtime dependency; PyTorch is

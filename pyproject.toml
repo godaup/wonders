@@ -61,6 +61,7 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 "wonders.cards" = ["data/*.json"]
+"wonders.i18n" = ["*.json"]
 "wonders.ml" = ["pretrained/*.pt"]
 "wonders.play" = ["static/*.html"]
 

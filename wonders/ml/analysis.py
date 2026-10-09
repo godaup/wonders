@@ -29,6 +29,7 @@ from wonders.agents.bench import _content
 from wonders.cards.base import Color, ScienceSymbol
 from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.record import GameRecord
+from wonders.i18n import Message, Translator, english, msg
 from wonders.ruleset import Ruleset
 
 LABELS: Tuple[Tuple[float, str], ...] = ((5.0, 'blunder'), (2.5, 'mistake'), (1.0, 'inaccuracy'))
@@ -54,7 +55,11 @@ def label(loss: float, se: float, best: bool) -> str:
     return next(name for threshold, name in LABELS + ((0.0, 'inaccuracy'),) if loss >= threshold)
 
 
-def reason(best: Dict[str, float], played: Dict[str, float], limit: int = 2) -> str:
+def _amount(vp: float, category: str) -> Message:
+    return msg('{vp:.1f} {category}', vp=vp, category=msg(CATEGORY_NAMES.get(category, category), 'category'))
+
+
+def reason_message(best: Dict[str, float], played: Dict[str, float], limit: int = 2) -> Message:
     """Why the better move is better: the score categories it gains and gives up a few turns later.
 
     The categories are measured where the lookahead stops; whatever they do not show comes from the
@@ -65,12 +70,17 @@ def reason(best: Dict[str, float], played: Dict[str, float], limit: int = 2) -> 
     costs = sorted((d, k) for k, d in deltas.items() if d <= -0.5)[:limit]
     parts = []
     if gains:
-        parts.append('gains ' + ', '.join(f'{d:.1f} {CATEGORY_NAMES.get(k, k)}' for d, k in gains))
+        parts.append(msg('gains {items}', items=[_amount(d, k) for d, k in gains]))
     if costs:
-        parts.append('gives up ' + ', '.join(f'{-d:.1f} {CATEGORY_NAMES.get(k, k)}' for d, k in costs) + ' now')
+        parts.append(msg('gives up {items} now', items=[_amount(-d, k) for d, k in costs]))
     if not gains:
-        parts.append('the gain is in the longer-term outlook')
-    return '; '.join(parts)
+        parts.append(msg('the gain is in the longer-term outlook'))
+    return {'join': '; ', 'items': parts}
+
+
+def reason(best: Dict[str, float], played: Dict[str, float], limit: int = 2) -> str:
+    """:func:`reason_message` in English."""
+    return english(reason_message(best, played, limit))
 
 
 def _move(action: Action) -> Dict[str, str]:
@@ -121,6 +131,7 @@ def _review(job: Tuple[str, str, int, int, Dict[str, Any]]) -> Dict[str, Any]:
         'loss_se': se,
         'label': label(loss, se, is_best),
         'reason': '' if is_best else reason(best.categories, mine.categories),
+        'reason_msg': None if is_best else reason_message(best.categories, mine.categories),
         'candidates': [{**_move(e.action), 'value': e.mean, 'prior_rank': ranked.index(e.action) + 1} for e in evals],
     }
 
@@ -181,8 +192,29 @@ Pattern = Dict[str, Any]
 Decisions = Sequence[Tuple[Any, Any, Action]]
 
 
-def _pattern(kind: str, title: str, detail: str, vp: float) -> Pattern:
-    return {'kind': kind, 'title': title, 'detail': detail, 'vp': round(vp, 1)}
+def _pattern(kind: str, title: Message, detail: Message, vp: float) -> Pattern:
+    """A pattern in English, keeping its messages for other languages (see :func:`localize`)."""
+    return {
+        'kind': kind,
+        'title': english(title),
+        'detail': english(detail),
+        'title_msg': title,
+        'detail_msg': detail,
+        'vp': round(vp, 1),
+    }
+
+
+def localize(report: Dict[str, Any], t: Translator) -> Dict[str, Any]:
+    """A copy of an :func:`analyse` report with its reasons and patterns in ``t``'s language."""
+    out = dict(report)
+    out['decisions'] = [
+        {**d, 'reason': t.render(d['reason_msg'])} if d.get('reason_msg') else d for d in report['decisions']
+    ]
+    out['patterns'] = [
+        {**p, 'title': t.render(p['title_msg']), 'detail': t.render(p['detail_msg'])} if 'title_msg' in p else p
+        for p in report.get('patterns', [])
+    ]
+    return out
 
 
 def _trade_pattern(decisions: Decisions) -> List[Pattern]:
@@ -197,9 +229,13 @@ def _trade_pattern(decisions: Decisions) -> List[Pattern]:
     return [
         _pattern(
             'trade',
-            f'{trade} coins spent on trade',
-            f'You paid your neighbours {trade} coins for resources — about {trade / 3:.0f} VP, and coins they could '
-            'use against you. More of your own brown / grey production would have kept them.',
+            msg('{n} coins spent on trade', n=trade),
+            msg(
+                'You paid your neighbours {n} coins for resources — about {vp:.0f} VP, and coins they could '
+                'use against you. More of your own brown / grey production would have kept them.',
+                n=trade,
+                vp=trade / 3,
+            ),
             trade / 3,
         )
     ]
@@ -221,15 +257,18 @@ def _military_patterns(game: Any, seat: int, decisions: Decisions, names: List[s
             if not 0 <= theirs - mine <= 1:
                 continue
             if theirs > mine:  # lost by one: one more shield ties (no defeat token), two more win
-                title = f'Age {age}: lost against {names[other]} by one shield'
-                detail = (
-                    f'You had {mine} shields to their {theirs}: one more would have avoided the −1, two more would '
-                    f'have won {AGE_VALUE[age]} VP.'
+                title = msg('Age {age}: lost against {name} by one shield', age=age, name=names[other])
+                detail = msg(
+                    'You had {mine} shields to their {theirs}: one more would have avoided the −1, two more would '
+                    'have won {vp} VP.',
+                    mine=mine,
+                    theirs=theirs,
+                    vp=AGE_VALUE[age],
                 )
                 stake = 1 + AGE_VALUE[age] / 2
             else:  # tied: one more shield wins
-                title = f'Age {age}: tied with {names[other]}'
-                detail = f'You both had {mine} shields: one more would have won {AGE_VALUE[age]} VP.'
+                title = msg('Age {age}: tied with {name}', age=age, name=names[other])
+                detail = msg('You both had {n} shields: one more would have won {vp} VP.', n=mine, vp=AGE_VALUE[age])
                 stake = float(AGE_VALUE[age])
             out.append(_pattern('military', title, detail, stake))
     return out
@@ -246,13 +285,21 @@ def _science_pattern(game: Any, seat: int) -> List[Pattern]:
     symbol, gain = max(gains.items(), key=lambda kv: kv[1])
     if gain < 4:
         return []
-    have = ', '.join(f'{k.value} {v}' for k, v in symbols.items() if v)
-    extra = f', {wilds} of your choice' if wilds else ''
+    have = [msg('{symbol} {n}', symbol=msg(k.value, 'science'), n=v) for k, v in symbols.items() if v]
+    if wilds:
+        have.append(msg('{n} of your choice', n=wilds))
+    name = msg(symbol.value, 'science')
     return [
         _pattern(
             'science',
-            f'One more {symbol.value} was worth {gain} VP',
-            f'Your science ({have}{extra}) scores {now} VP; one more {symbol.value} would have added {gain}.',
+            msg('One more {symbol} was worth {vp} VP', symbol=name, vp=gain),
+            msg(
+                'Your science ({have}) scores {now} VP; one more {symbol} would have added {vp}.',
+                have=have,
+                now=now,
+                symbol=name,
+                vp=gain,
+            ),
             gain / 2,
         )
     ]
@@ -269,8 +316,8 @@ def _wonder_and_coin_patterns(game: Any, seat: int) -> List[Pattern]:
         out.append(
             _pattern(
                 'wonder',
-                f'{total - built} of {total} wonder stages unbuilt',
-                f'The remaining stages were worth at least {vp} VP (plus their other effects).',
+                msg('{n} of {total} wonder stages unbuilt', n=total - built, total=total),
+                msg('The remaining stages were worth at least {vp} VP (plus their other effects).', vp=vp),
                 vp * 0.5,
             )
         )
@@ -278,9 +325,11 @@ def _wonder_and_coin_patterns(game: Any, seat: int) -> List[Pattern]:
         out.append(
             _pattern(
                 'coins',
-                f'Finished with {me.coins} coins',
-                f'They scored only {me.coins // 3} VP; spent earlier on cards or wonder stages they are usually '
-                'worth more.',
+                msg('Finished with {n} coins', n=me.coins),
+                msg(
+                    'They scored only {vp} VP; spent earlier on cards or wonder stages they are usually worth more.',
+                    vp=me.coins // 3,
+                ),
                 me.coins / 6,
             )
         )
@@ -321,13 +370,21 @@ def _passing_and_discard_patterns(
                 passed.append((card, names[down]))
     out = []
     if passed:
-        shown = ', '.join(f'{c} (to {who})' for c, who in passed[:3])
+        shown = [msg('{card} (to {name})', card=msg(c), name=who) for c, who in passed[:3]]
+        title = (
+            '{n} cards you passed were built next door'
+            if len(passed) > 1
+            else '{n} card you passed were built next door'
+        )
         out.append(
             _pattern(
                 'passing',
-                f'{len(passed)} card{"s" if len(passed) > 1 else ""} you passed were built next door',
-                f'{shown} — cards you could have built yourself. Taking or burying a card your neighbour needs '
-                'can be worth more than a small gain of your own.',
+                msg(title, n=len(passed)),
+                msg(
+                    '{cards} — cards you could have built yourself. Taking or burying a card your neighbour needs '
+                    'can be worth more than a small gain of your own.',
+                    cards=shown,
+                ),
                 2 * len(passed),
             )
         )
@@ -335,8 +392,8 @@ def _passing_and_discard_patterns(
         out.append(
             _pattern(
                 'discards',
-                f'{discards} cards discarded for coins',
-                'Each discard gives 3 coins (1 VP); a wonder stage from the same card is usually worth more.',
+                msg('{n} cards discarded for coins', n=discards),
+                msg('Each discard gives 3 coins (1 VP); a wonder stage from the same card is usually worth more.'),
                 discards,
             )
         )
@@ -357,8 +414,8 @@ def _timing_pattern(entries: Sequence[Dict[str, Any]]) -> List[Pattern]:
     return [
         _pattern(
             'timing',
-            f'Most points lost in Age {age}',
-            f"{lost:.1f} VP over that Age's moves (of {sum(by_age.values()):.1f} in total).",
+            msg('Most points lost in Age {age}', age=age),
+            msg("{vp:.1f} VP over that Age's moves (of {total:.1f} in total).", vp=lost, total=sum(by_age.values())),
             lost,
         )
     ]

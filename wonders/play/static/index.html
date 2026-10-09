@@ -45,6 +45,7 @@ header .status .todo { color: var(--ink); }
 header .status .hint { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%;
   border: 1px solid var(--line); font-size: 11px; font-weight: 700; cursor: help; color: var(--muted); }
 header .tools { display: flex; gap: 8px; }
+#h-lang { padding: 5px 6px; }
 
 main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px; }
@@ -183,7 +184,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 #result th, #result td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; }
 #result th:first-child, #result td:first-child { text-align: left; }
 #result tr.winner td { font-weight: 700; }
-#result tr.you td:first-child::after { content: " (you)"; color: var(--muted); font-weight: 400; }
+#result tr.you td:first-child::after { content: var(--you, " (you)"); color: var(--muted); font-weight: 400; }
 #result .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 #r-analysis { margin-top: 18px; display: grid; gap: 14px; }
 .an-summary { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -260,40 +261,41 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
   <h1>Wonders</h1>
   <div class="status" id="status"></div>
   <div class="tools">
-    <span id="h-discard" class="discard hidden" data-tip="Shared discard pile: cards discarded or left over at the end of an Age (face down)"><span class="pile"></span><span id="h-discard-n"></span></span>
-    <button id="btn-theme" title="Toggle light/dark">◐</button>
-    <button id="btn-record" class="hidden">Download record</button>
-    <button id="btn-menu" class="hidden">New game</button>
+    <span id="h-discard" class="discard hidden" data-i18n-attrs="data-tip" data-tip="Shared discard pile: cards discarded or left over at the end of an Age (face down)"><span class="pile"></span><span id="h-discard-n"></span></span>
+    <select id="h-lang" class="hidden" data-i18n-attrs="title" title="Language"></select>
+    <button id="btn-theme" data-i18n-attrs="title" title="Toggle light/dark">◐</button>
+    <button id="btn-record" class="hidden" data-i18n>Download record</button>
+    <button id="btn-menu" class="hidden" data-i18n>New game</button>
   </div>
 </header>
 
 <main>
   <section id="menu" class="hidden">
     <div class="panel">
-      <p class="section-title">Expansions</p>
+      <p class="section-title" data-i18n>Expansions</p>
       <div class="expansions" id="m-expansions"></div>
     </div>
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <p class="section-title" style="margin:0">Players</p>
+        <p class="section-title" style="margin:0" data-i18n>Players</p>
         <div>
-          <button id="m-remove" title="Remove a seat">−</button>
+          <button id="m-remove" data-i18n-attrs="title" title="Remove a seat">−</button>
           <span id="m-count" style="display:inline-block;min-width:24px;text-align:center"></span>
-          <button id="m-add" title="Add a seat">+</button>
+          <button id="m-add" data-i18n-attrs="title" title="Add a seat">+</button>
         </div>
       </div>
       <div id="m-seats"></div>
-      <p class="muted" style="font-size:12px;margin:6px 0 0">Seat order is table order: your left neighbour sits after you, your right neighbour before you.</p>
+      <p class="muted" style="font-size:12px;margin:6px 0 0" data-i18n>Seat order is table order: your left neighbour sits after you, your right neighbour before you.</p>
     </div>
     <div class="panel grid">
-      <div class="field"><label for="m-wonder">Your wonder</label><select id="m-wonder"></select></div>
-      <div class="field"><label for="m-side">Your side</label><select id="m-side"></select></div>
-      <div class="field"><label for="m-oside">Opponents' sides</label><select id="m-oside"></select></div>
-      <div class="field"><label for="m-seed">Seed (blank = random)</label><input id="m-seed" type="number" min="0" placeholder="random"></div>
+      <div class="field"><label for="m-wonder" data-i18n>Your wonder</label><select id="m-wonder"></select></div>
+      <div class="field"><label for="m-side" data-i18n>Your side</label><select id="m-side"></select></div>
+      <div class="field"><label for="m-oside" data-i18n>Opponents' sides</label><select id="m-oside"></select></div>
+      <div class="field"><label for="m-seed" data-i18n>Seed (blank = random)</label><input id="m-seed" type="number" min="0" data-i18n-attrs="placeholder" placeholder="random"></div>
     </div>
     <div style="display:flex;gap:12px;align-items:center">
-      <button class="primary" id="m-start">Start game</button>
-      <button id="m-resume" class="hidden">Resume game</button>
+      <button class="primary" id="m-start" data-i18n>Start game</button>
+      <button id="m-resume" class="hidden" data-i18n>Resume game</button>
       <span class="error" id="m-error"></span>
     </div>
   </section>
@@ -303,18 +305,18 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
       <div class="opponents" id="g-opponents"></div>
       <div class="panel me">
         <div class="board">
-          <img id="g-board" alt="Your wonder board">
+          <img id="g-board" data-i18n-attrs="alt" alt="Your wonder board">
         </div>
         <div class="me-info">
           <div class="city-head"><h3 id="g-name"></h3></div>
           <div class="me-body">
             <div>
               <div class="statgrid" id="g-stats"></div>
-              <p class="section-title">Production</p>
+              <p class="section-title" data-i18n>Production</p>
               <div class="res" id="g-res"></div>
             </div>
             <div>
-              <p class="section-title" style="margin-top:0">Your city</p>
+              <p class="section-title" style="margin-top:0" data-i18n>Your city</p>
               <div class="citygroups" id="g-tableau"></div>
             </div>
           </div>
@@ -322,7 +324,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
         <div class="me-side">
           <span class="score" id="g-score"></span>
           <div id="g-leaders-box" class="hidden">
-            <p class="section-title">Leaders in hand</p>
+            <p class="section-title" data-i18n>Leaders in hand</p>
             <div class="leaders" id="g-leaders"></div>
           </div>
           <dl class="kv" id="g-kv"></dl>
@@ -332,20 +334,20 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
         <div class="hand" id="g-hand"></div>
       </div>
     </div>
-    <aside class="panel log"><p class="section-title">Moves</p><ol id="g-log"></ol></aside>
+    <aside class="panel log"><p class="section-title" data-i18n>Moves</p><ol id="g-log"></ol></aside>
   </section>
 
   <section id="result" class="hidden panel" style="max-width:980px;margin:24px auto">
     <h2 id="r-title" style="margin-bottom:12px"></h2>
     <div style="overflow-x:auto"><table id="r-table"></table></div>
     <div class="actions">
-      <button class="primary" id="r-again">Play again (same settings)</button>
-      <button id="r-menu">Back to menu</button>
-      <button id="r-record">Download record</button>
-      <button id="r-analyse" data-tip="Rate every move you made with network-guided search: what was best, what it cost, and why">Analyse my moves</button>
+      <button class="primary" id="r-again" data-i18n>Play again (same settings)</button>
+      <button id="r-menu" data-i18n>Back to menu</button>
+      <button id="r-record" data-i18n>Download record</button>
+      <button id="r-analyse" data-i18n data-i18n-attrs="data-tip" data-tip="Rate every move you made with network-guided search: what was best, what it cost, and why">Analyse my moves</button>
     </div>
     <div id="r-analysis" class="hidden"></div>
-    <p class="section-title" style="margin-top:18px">Final cities</p>
+    <p class="section-title" style="margin-top:18px" data-i18n>Final cities</p>
     <div class="opponents" id="r-cities"></div>
   </section>
 </main>
@@ -372,18 +374,55 @@ const store = {
   set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable */ } },
 };
 
+/* ---------- translations (catalog from /api/locale, keyed by the English text) ---------- */
+let lang = 'en';
+let L = {};
+const fmtNum = (x, digits) => { const s = digits === undefined ? String(x) : Number(x).toFixed(digits); return L._decimal ? s.replace('.', L._decimal) : s; };
+const lookup = (s, ctx) => (ctx && L[s + '|' + ctx]) || L[s] || s;
+function t(s, vars, ctx) {  // translate s and fill its {fields}
+  const text = lookup(s, ctx);
+  return vars ? text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? (typeof vars[k] === 'number' ? fmtNum(vars[k]) : String(vars[k])) : m)) : text;
+}
+function tn(s, vars, ctx) {  // like t, for fields that are DOM nodes: returns a list of strings and nodes
+  return lookup(s, ctx).split(/(\{\w+\})/).filter(Boolean).map((part) => {
+    const m = part.match(/^\{(\w+)\}$/);
+    if (!m || !(m[1] in vars)) return part;
+    const v = vars[m[1]];
+    return v instanceof Node ? v : typeof v === 'number' ? fmtNum(v) : String(v);
+  });
+}
+const N = (s) => s;  // marks text translated later through a variable (so tests/test_i18n.py finds it)
+const nm = (name) => L[name] || name;  // card and wonder names
+const ordinal = (n) => (L._ordinal ? L._ordinal.replace('{n}', n) : n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th'));
+const withLang = (path) => path + (path.includes('?') ? '&' : '?') + 'lang=' + encodeURIComponent(lang);
+function applyStatic() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach((e) => { if (e.dataset.en === undefined) e.dataset.en = e.textContent; e.textContent = t(e.dataset.en); });
+  document.querySelectorAll('[data-i18n-attrs]').forEach((e) => e.dataset.i18nAttrs.split(',').forEach((a) => {
+    const key = 'en_' + a.replace(/-/g, '_');
+    if (e.dataset[key] === undefined) e.dataset[key] = e.getAttribute(a) || '';
+    e.setAttribute(a, t(e.dataset[key]));
+  }));
+  document.documentElement.style.setProperty('--you', JSON.stringify(' (' + t('you') + ')'));
+}
+async function loadLanguage(code) {
+  lang = code;
+  L = code === 'en' ? {} : await (await fetch('/api/locale?lang=' + encodeURIComponent(code))).json();
+  store.set('lang', code);
+  applyStatic();
+}
+
 const COLORS = ['brown', 'grey', 'yellow', 'red', 'blue', 'green', 'purple', 'white', 'black'];
-const RES = { wood: 'Wood', stone: 'Stone', ore: 'Ore', bricks: 'Clay', glass: 'Glass', linen: 'Loom', paper: 'Papyrus' };
-const SCI = { tablet: 'Tablet', gear: 'Gear', compass: 'Compass' };
 const AGES = ['', 'I', 'II', 'III'];
+const resName = (r) => ((options.resources || {})[r] || {}).name || r;
 const DECISIONS = {
-  play: 'Choose a card: <b>build</b> it, use it for a <b>wonder stage</b>, or <b>discard</b> it for 3 coins. The rest of the hand passes on.',
-  last_card: '<b>Babylon:</b> you may also play the last card of this Age.',
-  discard_build: '<b>Build from the discard pile:</b> choose one discarded Age card and build it for free (Halicarnassus or Solomon).',
-  draft: '<b>Leaders draft:</b> keep one leader and pass the rest.',
-  recruit: '<b>Recruit</b> a leader for this Age, use one for a wonder stage, or discard one for 3 coins.',
-  leader_build: '<b>Rome:</b> recruit an extra leader right away.',
-  copy_leader: "<b>Courtesans' Guild:</b> copy one of your neighbours' leaders.",
+  play: N('Choose a card: <b>build</b> it, use it for a <b>wonder stage</b>, or <b>discard</b> it for 3 coins. The rest of the hand passes on.'),
+  last_card: N('<b>Babylon:</b> you may also play the last card of this Age.'),
+  discard_build: N('<b>Build from the discard pile:</b> choose one discarded Age card and build it for free (Halicarnassus or Solomon).'),
+  draft: N('<b>Leaders draft:</b> keep one leader and pass the rest.'),
+  recruit: N('<b>Recruit</b> a leader for this Age, use one for a wonder stage, or discard one for 3 coins.'),
+  leader_build: N('<b>Rome:</b> recruit an extra leader right away.'),
+  copy_leader: N("<b>Courtesans' Guild:</b> copy one of your neighbours' leaders."),
 };
 
 let options = null;   // /api/options
@@ -392,12 +431,12 @@ let menu = null;      // menu config being edited
 
 async function api(path, body) {
   const init = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
-  const res = await fetch(path, init);
+  const res = await fetch(withLang(path), init);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
 }
-const assetV = () => '&v=' + ((options && options.asset_version) || '0');
+const assetV = () => '&v=' + ((options && options.asset_version) || '0') + '&lang=' + encodeURIComponent(lang);
 const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name) + assetV();
 const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + (built || 0) + assetV();
 const show = (id) => ['menu', 'game', 'result'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
@@ -406,8 +445,8 @@ function viewUrl(src, alt, wide) {
   img.src = src; img.alt = alt; img.classList.toggle('wide', !!wide);
   $('viewer').classList.remove('hidden'); hideTip();
 }
-function viewCard(name) { viewUrl(cardUrl(name), name, false); }
-function viewWonder(name, side, built) { viewUrl(wonderUrl(name, side, built), name, true); }
+function viewCard(name) { viewUrl(cardUrl(name), nm(name), false); }
+function viewWonder(name, side, built) { viewUrl(wonderUrl(name, side, built), nm(name), true); }
 $('viewer').addEventListener('click', () => $('viewer').classList.add('hidden'));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('viewer').classList.add('hidden'); });
 
@@ -438,8 +477,8 @@ $('btn-theme').addEventListener('click', () => {
 });
 
 /* ---------- menu ---------- */
-function agentLabel(id) { const a = options.agents.find((x) => x.id === id); return a ? a.label : id; }
-function agentBlurb(id) { const a = options.agents.find((x) => x.id === id); return (a && a.blurb) || 'A computer opponent.'; }
+function agentLabel(id) { const a = options.agents.find((x) => x.id === id); return a ? a.label : id === 'human' ? t('human') : id; }
+function agentBlurb(id) { const a = options.agents.find((x) => x.id === id); return (a && a.blurb) || t('A computer opponent.'); }
 function availableWonders() {
   const ids = new Set(['base', ...menu.expansions]);
   return options.expansions.filter((e) => ids.has(e.id)).flatMap((e) => e.wonders);
@@ -454,7 +493,7 @@ function renderMenu() {
         renderMenu();
       } });
     exps.append(el('label', { class: 'chip-toggle' + (e.implemented ? '' : ' disabled'), title: e.note || '' }, box, e.name,
-      e.implemented ? null : el('span', { class: 'muted' }, ' (coming)')));
+      e.implemented ? null : el('span', { class: 'muted' }, ' ' + t('(coming)'))));
   }
   const seats = $('m-seats'); seats.replaceChildren();
   menu.seats.forEach((seat, i) => {
@@ -462,12 +501,12 @@ function renderMenu() {
       if (ev.target.value === 'human') menu.seats.forEach((s, j) => { if (j !== i && s.player === 'human') s.player = 'heuristic'; });
       else if (seat.player === 'human') { ev.target.value = 'human'; return; }  // keep exactly one human
       seat.player = ev.target.value; renderMenu();
-    } }, el('option', { value: 'human', selected: seat.player === 'human' }, 'You'),
+    } }, el('option', { value: 'human', selected: seat.player === 'human' }, t('You')),
       options.agents.map((a) => el('option', { value: a.id, selected: seat.player === a.id }, a.label)));
-    const name = el('input', { type: 'text', value: seat.name, placeholder: seat.player === 'human' ? 'You' : agentLabel(seat.player),
+    const name = el('input', { type: 'text', value: seat.name, placeholder: seat.player === 'human' ? t('You') : agentLabel(seat.player),
       oninput: (ev) => { seat.name = ev.target.value; } });
     seats.append(el('div', { class: 'seat-row' }, el('span', { class: 'num' }, '#' + (i + 1)), sel, name));
-    const blurb = seat.player === 'human' ? 'Your seat.' : (options.agents.find((a) => a.id === seat.player) || {}).blurb;
+    const blurb = seat.player === 'human' ? t('Your seat.') : (options.agents.find((a) => a.id === seat.player) || {}).blurb;
     if (blurb) seats.append(el('div', { class: 'seat-row' }, el('span'), el('div', { class: 'blurb' }, blurb)));
   });
   $('m-count').textContent = menu.seats.length;
@@ -475,10 +514,10 @@ function renderMenu() {
   $('m-add').disabled = menu.seats.length >= options.max_players;
   const wonders = availableWonders();
   if (menu.wonder !== 'random' && !wonders.includes(menu.wonder)) menu.wonder = 'random';
-  $('m-wonder').replaceChildren(el('option', { value: 'random' }, 'Random'),
-    wonders.map((w) => el('option', { value: w, selected: menu.wonder === w }, w)));
+  $('m-wonder').replaceChildren(el('option', { value: 'random' }, t('Random')),
+    wonders.map((w) => el('option', { value: w, selected: menu.wonder === w }, nm(w))));
   for (const [id, key] of [['m-side', 'side'], ['m-oside', 'opponent_sides']]) {
-    $(id).replaceChildren(...options.sides.map((s) => el('option', { value: s, selected: menu[key] === s }, s === 'random' ? 'Random' : 'Side ' + s)));
+    $(id).replaceChildren(...options.sides.map((s) => el('option', { value: s, selected: menu[key] === s }, s === 'random' ? t('Random') : t('Side {side}', { side: s }))));
   }
   $('m-seed').value = menu.seed === null || menu.seed === undefined ? '' : menu.seed;
 }
@@ -499,27 +538,27 @@ function openMenu() { $('m-error').textContent = ''; renderMenu(); show('menu');
 async function startGame(config) {
   $('m-error').textContent = '';
   store.set('menu', config);
-  setBusy(true, 'Dealing…');
+  setBusy(true, t('Dealing…'));
   try { state = (await api('/api/new', config)).state; render(); }
   catch (e) { $('m-error').textContent = e.message; show('menu'); }
   finally { setBusy(false); }
 }
 
 /* ---------- game ---------- */
-function setBusy(on, text) { $('busy').textContent = text || 'Opponents are thinking…'; $('busy').classList.toggle('hidden', !on);
+function setBusy(on, text) { $('busy').textContent = text || t('Opponents are thinking…'); $('busy').classList.toggle('hidden', !on);
   document.querySelectorAll('.handcard button').forEach((b) => { b.disabled = on || b.dataset.locked === '1'; }); }
 function playerName(seat) { return state.players[seat].name; }
 function cardTip(name) {
   const info = (state.cards || {})[name] || {};
-  return [name, ...(info.text || [])].join('\n');
+  return [nm(name), ...(info.text || [])].join('\n');
 }
 function chip(name) {
   const info = (state.cards || {})[name] || { color: 'unknown' };
-  return el('button', { class: 'cardchip ' + info.color, style: `background:var(--c-${info.color})`, 'data-tip': cardTip(name), onclick: () => viewCard(name) }, name);
+  return el('button', { class: 'cardchip ' + info.color, style: `background:var(--c-${info.color})`, 'data-tip': cardTip(name), onclick: () => viewCard(name) }, nm(name));
 }
 function scoreEl(points) {
-  return el('span', { class: 'score', 'data-tip': 'Victory points if the game ended now' },
-    el('span', { class: 'laurel' }, '★'), String(points), el('small', {}, 'VP'));
+  return el('span', { class: 'score', 'data-tip': t('Victory points if the game ended now') },
+    el('span', { class: 'laurel' }, '★'), String(points), el('small', {}, t('VP')));
 }
 function icon(key, color, size) {
   const px = size || 18;
@@ -535,21 +574,22 @@ function resChips(city) {
   const chips = [...counts.entries()].map(([k, n]) => {
     const sold = Math.min(n, sellable.get(k) || 0);
     const rs = k.split('|');
-    const names = rs.map((r) => RES[r] || r).join(' / ');
+    const names = rs.map(resName).join(' / ');
     const parts = [];
     rs.forEach((r, i) => { if (i) parts.push(el('span', { class: 'sep' }, '/')); parts.push(resIcon(r, 17)); });
     if (n > 1) parts.push(el('b', { class: 'times' }, '×' + n));
-    const trade = sold === n ? 'Neighbours may buy it.' : sold === 0 ? 'For this city only: neighbours cannot buy it (yellow card or wonder stage).'
-      : sold + ' of ' + n + ' may be bought by neighbours; the rest is for this city only.';
-    return el('span', { class: 'reschip' + (sold ? '' : ' private'), 'data-tip': (rs.length > 1 ? 'Produces one of ' : 'Produces ') + names +
-      ' every turn' + (n > 1 ? ' (×' + n + ')' : '') + '. ' + trade }, parts);
+    const trade = sold === n ? t('Neighbours may buy it.') : sold === 0 ? t('For this city only: neighbours cannot buy it (yellow card or wonder stage).')
+      : t('{sold} of {n} may be bought by neighbours; the rest is for this city only.', { sold, n });
+    const produces = t(rs.length > 1 ? 'Produces one of {names} every turn' : 'Produces {names} every turn', { names });
+    return el('span', { class: 'reschip' + (sold ? '' : ' private'), 'data-tip': produces + (n > 1 ? ' (×' + n + ')' : '') + '. ' + trade }, parts);
   });
-  if (city.private_slots) chips.push(el('span', { class: 'reschip private', 'data-tip': 'Own-use production neighbours cannot buy' }, '+' + city.private_slots + ' private'));
-  if (!chips.length) chips.push(el('span', { class: 'muted', style: 'font-size:12px' }, 'no resources'));
+  if (city.private_slots) chips.push(el('span', { class: 'reschip private', 'data-tip': t('Own-use production neighbours cannot buy') }, t('+{n} private', { n: city.private_slots })));
+  if (!chips.length) chips.push(el('span', { class: 'muted', style: 'font-size:12px' }, t('no resources')));
   return chips;
 }
 function stageTip(stage) {
-  return 'Stage ' + stage.index + (stage.built ? ' (built)' : '') + '\nCost: ' + stage.cost + (stage.effects.length ? '\n' + stage.effects.join('\n') : '');
+  return t('Stage {n}', { n: stage.index }) + (stage.built ? ' ' + t('(built)') : '') + '\n' + t('Cost: {cost}', { cost: stage.cost }) +
+    (stage.effects.length ? '\n' + stage.effects.join('\n') : '');
 }
 function minis(board) {
   return board.stages.map((s) => el('span', { class: 'mini' + (s.built ? ' built' : ''), 'data-tip': stageTip(s) },
@@ -557,12 +597,12 @@ function minis(board) {
 }
 function tableau(names) {
   const color = (n) => COLORS.indexOf(((state.cards || {})[n] || {}).color);
-  return [...names].sort((a, b) => color(a) - color(b) || a.localeCompare(b)).map(chip);
+  return [...names].sort((a, b) => color(a) - color(b) || nm(a).localeCompare(nm(b))).map(chip);
 }
-const SHORT_GROUPS = { brown: 'Raw', grey: 'Goods', yellow: 'Trade', red: 'Mil.', blue: 'Civic', green: 'Sci.',
-  purple: 'Guild', white: 'Lead.', black: 'City' };
-const GROUPS = { brown: 'Raw materials', grey: 'Manufactured', yellow: 'Commercial', red: 'Military', blue: 'Civic',
-  green: 'Science', purple: 'Guilds', white: 'Leaders', black: 'Cities' };
+const SHORT_GROUPS = { brown: N('Raw'), grey: N('Goods'), yellow: N('Trade'), red: N('Mil.'), blue: N('Civic'), green: N('Sci.'),
+  purple: N('Guild'), white: N('Lead.'), black: N('City') };
+const GROUPS = { brown: N('Raw materials'), grey: N('Manufactured'), yellow: N('Commercial'), red: N('Military'), blue: N('Civic'),
+  green: N('Science'), purple: N('Guilds'), white: N('Leaders'), black: N('Cities') };
 function cityGroups(names) {
   const by = {};
   for (const n of names) { const c = ((state.cards || {})[n] || {}).color || 'unknown'; (by[c] = by[c] || []).push(n); }
@@ -570,11 +610,11 @@ function cityGroups(names) {
   for (const color of [...COLORS, 'unknown']) {
     const cards = by[color];
     if (!cards) continue;
-    out.push(el('span', { class: 'cg-label', style: `--cg: var(--c-${color})`, 'data-tip': (GROUPS[color] || 'Other') + ': ' + cards.length },
-      SHORT_GROUPS[color] || 'Other'),
-      el('div', { class: 'tableau' }, cards.sort().map(chip)));
+    out.push(el('span', { class: 'cg-label', style: `--cg: var(--c-${color})`, 'data-tip': t(GROUPS[color] || N('Other')) + ': ' + cards.length },
+      t(SHORT_GROUPS[color] || N('Other'), null, 'short')),
+      el('div', { class: 'tableau' }, cards.sort((a, b) => nm(a).localeCompare(nm(b))).map(chip)));
   }
-  if (!out.length) out.push(el('span', { class: 'muted', style: 'font-size:12px' }, 'nothing built yet'));
+  if (!out.length) out.push(el('span', { class: 'muted', style: 'font-size:12px' }, t('nothing built yet')));
   return out;
 }
 function tokenSum(tokens) { return (tokens || []).reduce((a, b) => a + b, 0); }
@@ -587,20 +627,20 @@ function statGrid(city, cols) {
   const sci = city.science || {};
   const cities = state.expansions.includes('cities');
   const cells = [
-    statCell(icon('coin', 'var(--gold)'), String(city.coins), 'Coins', 'Coins (3 = 1 VP at the end)'),
-    statCell(icon('shield', 'var(--red)'), String(city.shields), 'Shields', 'Military strength, compared with both neighbours at the end of each Age'),
-    statCell(el('span', { class: 'glyph' }, '⚔'), (war >= 0 ? '+' : '') + war, 'Military',
-      'Military tokens: ' + ((city.tokens || []).map((x) => (x > 0 ? '+' : '') + x).join(', ') || 'none')),
-    statCell(el('span', { class: 'glyph' }, '▲'), city.stages_built + '/' + city.stages_total, 'Wonder', 'Wonder stages built'),
+    statCell(icon('coin', 'var(--gold)'), String(city.coins), t('Coins'), t('Coins (3 = 1 VP at the end)')),
+    statCell(icon('shield', 'var(--red)'), String(city.shields), t('Shields'), t('Military strength, compared with both neighbours at the end of each Age')),
+    statCell(el('span', { class: 'glyph' }, '⚔'), (war >= 0 ? '+' : '') + war, t('Military'),
+      t('Military tokens: {list}', { list: (city.tokens || []).map((x) => (x > 0 ? '+' : '') + x).join(', ') || t('none') })),
+    statCell(el('span', { class: 'glyph' }, '▲'), city.stages_built + '/' + city.stages_total, t('Wonder'), t('Wonder stages built')),
     el('div', { class: 'cell', style: `grid-column: span ${cols === 2 || cities ? 2 : 4}`,
-      'data-tip': 'Science symbols: gear, tablet, compass' + (city.science_wilds ? ' (+' + city.science_wilds + ' of your choice)' : '') },
+      'data-tip': t('Science symbols: gear, tablet, compass') + (city.science_wilds ? ' ' + t('(+{n} of your choice)', { n: city.science_wilds }) : '') },
       el('div', { class: 'v' }, ...['gear', 'tablet', 'compass'].flatMap((s) => [icon(s, 'var(--c-green)', 16), el('span', { class: 'n' }, String(sci[s] || 0))]),
-        city.science_wilds ? el('span', { class: 'n' }, '+' + city.science_wilds + ' any') : null),
-      el('div', { class: 'l' }, 'Science')),
+        city.science_wilds ? el('span', { class: 'n' }, t('+{n} any', { n: city.science_wilds })) : null),
+      el('div', { class: 'l' }, t('Science'))),
   ];
   if (cities) {
-    cells.push(statCell(icon('coin', 'var(--red)'), String(city.debt || 0), 'Debt', 'Debt tokens: −1 VP each'));
-    cells.push(statCell(icon('shield', 'var(--accent)'), String(city.diplomacy || 0), 'Diplomacy', 'Diplomacy tokens: sit out the next military conflict'));
+    cells.push(statCell(icon('coin', 'var(--red)'), String(city.debt || 0), t('Debt'), t('Debt tokens: −1 VP each')));
+    cells.push(statCell(icon('shield', 'var(--accent)'), String(city.diplomacy || 0), t('Diplomacy'), t('Diplomacy tokens: sit out the next military conflict')));
   }
   return cells;
 }
@@ -613,14 +653,14 @@ function renderOpponents(obs) {
     const seat = (obs.seat + k) % n;
     const city = obs.table[seat];
     const p = state.players[seat];
-    const tag = seat === obs.left.seat ? '← left neighbour' : seat === obs.right.seat ? 'right neighbour →' : '';
+    const tag = seat === obs.left.seat ? t('← left neighbour') : seat === obs.right.seat ? t('right neighbour →') : '';
     const board = state.boards[seat];
-    const wonder = el('span', { class: 'wonder-link', 'data-tip': 'Starts with ' + board.produces + (board.powers.length ? '\n' + board.powers.join('\n') : '') + '\nClick to view the board',
-      onclick: () => viewWonder(city.wonder, city.wonder_side, city.stages_built) }, city.wonder + ' (' + city.wonder_side + ')');
+    const wonder = el('span', { class: 'wonder-link', 'data-tip': t('Starts with {resource}', { resource: board.produces }) + (board.powers.length ? '\n' + board.powers.join('\n') : '') + '\n' + t('Click to view the board'),
+      onclick: () => viewWonder(city.wonder, city.wonder_side, city.stages_built) }, nm(city.wonder) + ' (' + city.wonder_side + ')');
     // Exactly six rows per city: the panels share them (CSS subgrid), so sections line up.
     box.append(el('div', { class: 'panel city' + (tag ? ' neighbour' : '') },
       el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted sub' },
-        el('span', { class: 'agent', 'data-tip': agentBlurb(p.agent) }, agentLabel(p.agent) + ' agent')), el('div', { class: 'sub' }, wonder)),
+        el('span', { class: 'agent', 'data-tip': agentBlurb(p.agent) }, t('{name} agent', { name: agentLabel(p.agent) }))), el('div', { class: 'sub' }, wonder)),
         scoreEl(city.score)),
       el('div', { class: 'tag' }, tag),
       el('div', { class: 'statgrid' }, statGrid(city)),
@@ -632,43 +672,44 @@ function renderOpponents(obs) {
 
 function renderMe(obs) {
   const me = obs.me;
-  $('g-name').textContent = me.name + ' — ' + me.wonder + ' (' + me.wonder_side + ')';
+  $('g-name').textContent = me.name + ' — ' + nm(me.wonder) + ' (' + me.wonder_side + ')';
   $('g-score').replaceWith(Object.assign(scoreEl(me.score), { id: 'g-score' }));
   const src = wonderUrl(me.wonder, me.wonder_side, me.stages_built);
   if ($('g-board').getAttribute('src') !== src) {
     $('g-board').src = src; $('g-board').onclick = () => viewWonder(me.wonder, me.wonder_side, me.stages_built);
   }
-  $('g-board').dataset.tip = state.boards[obs.seat].stages.map(stageTip).join('\n\n') + '\n\nClick to enlarge';
+  $('g-board').dataset.tip = state.boards[obs.seat].stages.map(stageTip).join('\n\n') + '\n\n' + t('Click to enlarge');
   $('g-stats').replaceChildren(...statGrid(me, 2));
   $('g-res').replaceChildren(...resChips(me));
   const leaders = obs.leaders_hand || [];
   $('g-leaders-box').classList.toggle('hidden', !leaders.length);
-  $('g-leaders').replaceChildren(...leaders.map((name) => el('img', { src: cardUrl(name), alt: name, 'data-tip': cardTip(name), onclick: () => viewCard(name) })));
+  $('g-leaders').replaceChildren(...leaders.map((name) => el('img', { src: cardUrl(name), alt: nm(name), 'data-tip': cardTip(name), onclick: () => viewCard(name) })));
   const kv = $('g-kv'); kv.replaceChildren();
   const add = (k, v, tip) => kv.append(el('dt', {}, k), el('dd', { 'data-tip': tip }, v));
-  if (obs.free_builds_left) add('Free builds', obs.free_builds_left + ' left this Age', 'Build a card from your hand for free');
+  if (obs.free_builds_left) add(t('Free builds'), t('{n} left this Age', { n: obs.free_builds_left }), t('Build a card from your hand for free'));
   kv.classList.toggle('hidden', !kv.children.length);
   $('g-tableau').replaceChildren(...cityGroups(me.cards));
 }
 
-function coinsText(n) { return n + ' coin' + (n === 1 ? '' : 's'); }
+function coinsText(n) { return t(n === 1 ? '{n} coin' : '{n} coins', { n }); }
+const tradeText = (n) => (n ? ' ' + t('({n} trade)', { n }) : '');
 function actionLabel(a, decision) {
-  if (a.kind === 'wonder') return ['Wonder', a.coins ? coinsText(a.coins) + (a.trade ? ' (' + a.trade + ' trade)' : '') : ''];
+  if (a.kind === 'wonder') return [t('Wonder', null, 'action'), a.coins ? coinsText(a.coins) + tradeText(a.trade) : ''];
   if (a.kind === 'build') {
-    const verb = { draft: 'Keep', recruit: 'Recruit', leader_build: 'Recruit', copy_leader: 'Copy' }[decision] || 'Build';
-    let cost = 'free';
-    if (a.chain) cost = 'chain';
-    else if (a.coins) cost = a.coins + ' coin' + (a.coins === 1 ? '' : 's') + (a.trade ? ' (' + a.trade + ' trade)' : '');
-    return [verb, decision === 'draft' || decision === 'copy_leader' ? '' : cost];
+    const verb = { draft: N('Keep'), recruit: N('Recruit'), leader_build: N('Recruit'), copy_leader: N('Copy') }[decision] || N('Build');
+    let cost = t('free');
+    if (a.chain) cost = t('chain');
+    else if (a.coins) cost = coinsText(a.coins) + tradeText(a.trade);
+    return [t(verb), decision === 'draft' || decision === 'copy_leader' ? '' : cost];
   }
-  if (a.kind === 'discard') return ['Discard', '+3 coins'];
-  return ['Build free', decision === 'discard_build' ? 'from discards' : 'board power'];
+  if (a.kind === 'discard') return [t('Discard'), t('+3 coins')];
+  return [t('Build free'), decision === 'discard_build' ? t('from discards') : t('board power')];
 }
 
 const KIND_ORDER = ['build', 'free', 'wonder', 'discard'];
 function payTip(p, obs) {
-  return 'Pay ' + p.left + ' to ' + playerName(obs.left.seat) + ' (left) and ' + p.right + ' to ' + playerName(obs.right.seat) + ' (right)' +
-    (p.total > p.left + p.right ? ', ' + (p.total - p.left - p.right) + ' to the bank' : '');
+  return t('Pay {left} to {lname} (left) and {right} to {rname} (right)', { left: p.left, lname: playerName(obs.left.seat), right: p.right, rname: playerName(obs.right.seat) }) +
+    (p.total > p.left + p.right ? ', ' + t('{n} to the bank', { n: p.total - p.left - p.right }) : '');
 }
 function actionButtons(a, obs) {
   const [label, detail] = actionLabel(a, obs.decision);
@@ -681,16 +722,16 @@ function actionButtons(a, obs) {
     const pill = el('button', { class: k === 0 ? 'on' : '', 'data-tip': payTip(p, obs), onclick: () => {
       choice.payment = [p.left, p.right];
       pills.forEach((x) => x.classList.toggle('on', x === pill));
-      button.querySelector('small').textContent = coinsText(a.coins - a.payments[0].total + p.total) + ' (' + (p.left + p.right) + ' trade)';
+      button.querySelector('small').textContent = coinsText(a.coins - a.payments[0].total + p.total) + tradeText(p.left + p.right);
     } }, '← ' + p.left + ' · ' + p.right + ' →');
     return pill;
   });
-  return [button, el('div', { class: 'pay', 'data-tip': 'Choose whom to buy from: coins to your left · right neighbour' }, pills)];
+  return [button, el('div', { class: 'pay', 'data-tip': t('Choose whom to buy from: coins to your left · right neighbour') }, pills)];
 }
-const SHORT = { play: 'Your turn: pick a card', last_card: 'Babylon: play your last card?', discard_build: 'Build a discarded card for free',
-  draft: 'Leaders draft: keep one', recruit: 'Recruit a leader', leader_build: 'Rome: recruit an extra leader',
-  copy_leader: "Courtesans' Guild: copy a leader" };
-const plain = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent; };
+const SHORT = { play: N('Your turn: pick a card'), last_card: N('Babylon: play your last card?'), discard_build: N('Build a discarded card for free'),
+  draft: N('Leaders draft: keep one'), recruit: N('Recruit a leader'), leader_build: N('Rome: recruit an extra leader'),
+  copy_leader: N("Courtesans' Guild: copy a leader") };
+const plain = (html) => { const d = document.createElement('div'); d.innerHTML = t(html); return d.textContent; };
 function pairUp(buttons) {  // secondary moves sit two per row; a leftover one takes the full row
   const halves = buttons.filter((b) => b.tagName === 'BUTTON' && !b.classList.contains('primary'));
   if (halves.length % 2) halves[halves.length - 1].style.gridColumn = '1 / -1';
@@ -711,26 +752,29 @@ function renderHand(obs) {
   for (const name of names) {
     const acts = (byCard.get(name) || []).sort((x, y) => KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind));
     hand.append(el('div', { class: 'handcard' },
-      el('img', { src: cardUrl(name), alt: name, 'data-tip': cardTip(name) + '\nClick to enlarge', onclick: () => viewCard(name) }),
-      copies[name] > 1 ? el('span', { class: 'count', 'data-tip': copies[name] + ' copies in your hand' }, '×' + copies[name]) : null,
+      el('img', { src: cardUrl(name), alt: nm(name), 'data-tip': cardTip(name) + '\n' + t('Click to enlarge'), onclick: () => viewCard(name) }),
+      copies[name] > 1 ? el('span', { class: 'count', 'data-tip': t('{n} copies in your hand', { n: copies[name] }) }, '×' + copies[name]) : null,
       el('div', { class: 'acts' }, acts.length ? pairUp(acts.flatMap((a) => actionButtons(a, obs))) :
-        el('button', { disabled: true, 'data-locked': '1' }, 'Not playable'))));
+        el('button', { disabled: true, 'data-locked': '1' }, t('Not playable')))));
   }
 }
 
 function cardLink(name) {
-  return el('span', { class: 'logcard', 'data-tip': cardTip(name) + '\nClick to view', onclick: () => viewCard(name) }, name);
+  return el('span', { class: 'logcard', 'data-tip': cardTip(name) + '\n' + t('Click to view'), onclick: () => viewCard(name) }, nm(name));
 }
+const LOG = {  // [your move, someone else's move] per kind, without and with a visible card
+  build: [N('You built {card}'), N('{who} built {card}')],
+  free: [N('You built {card} for free'), N('{who} built {card} for free')],
+  wonder: [N('You built a wonder stage with {card}'), N('{who} built a wonder stage with {card}')],
+  wonder_hidden: [N('You built a wonder stage'), N('{who} built a wonder stage')],
+  discard: [N('You discarded {card}'), N('{who} discarded {card}')],
+  discard_hidden: [N('You discarded a card'), N('{who} discarded a card')],
+};
 function describe(e, obs) {
-  const who = e.seat === obs.seat ? 'You' : playerName(e.seat);
-  const card = e.card ? cardLink(e.card) : null;
-  switch (e.kind) {
-    case 'build': return [who + ' built ', card];
-    case 'free': return [who + ' built ', card, ' for free'];
-    case 'wonder': return card ? [who + ' built a wonder stage with ', card] : [who + ' built a wonder stage'];
-    case 'discard': return card ? [who + ' discarded ', card] : [who + ' discarded a card'];
-    default: return [who + ' ' + e.kind + ' ', card];
-  }
+  const mine = e.seat === obs.seat ? 0 : 1;
+  const forms = (!e.card && LOG[e.kind + '_hidden']) || LOG[e.kind];
+  const vars = { who: playerName(e.seat), card: e.card ? cardLink(e.card) : '' };
+  return forms ? tn(forms[mine], vars) : [(mine ? vars.who : t('You')) + ' ' + e.kind + ' ', vars.card];
 }
 function renderLog(obs) {
   const log = $('g-log'); log.replaceChildren();
@@ -738,10 +782,10 @@ function renderLog(obs) {
   const events = [...obs.history].reverse();
   for (const e of events) {
     const key = e.age + ':' + e.turn;
-    if (key !== last) { log.append(el('li', { class: 'turn' }, 'Age ' + AGES[e.age] + ' · turn ' + (e.turn + 1))); last = key; }
+    if (key !== last) { log.append(el('li', { class: 'turn' }, t('Age {age} · turn {turn}', { age: AGES[e.age], turn: e.turn + 1 }))); last = key; }
     log.append(el('li', { class: e.seat === obs.seat ? 'mine' : '' }, describe(e, obs)));
   }
-  if (!events.length) log.append(el('li', { class: 'muted' }, 'No moves yet.'));
+  if (!events.length) log.append(el('li', { class: 'muted' }, t('No moves yet.')));
 }
 
 function setHeader() {
@@ -750,23 +794,24 @@ function setHeader() {
   $('btn-record').classList.toggle('hidden', !state || inMenu);
   $('m-resume').classList.toggle('hidden', !state || state.done);
   $('h-discard').classList.toggle('hidden', !state || inMenu || state.done);
-  if (state && state.observation) $('h-discard-n').textContent = state.observation.discard_count + ' discarded';
+  if (state && state.observation) $('h-discard-n').textContent = t('{n} discarded', { n: state.observation.discard_count });
   if (!state || inMenu) { $('status').textContent = ''; return; }
-  if (state.done) { $('status').innerHTML = '<b>Game over</b>'; return; }
+  if (state.done) { $('status').replaceChildren(el('b', {}, t('Game over'))); return; }
   const obs = state.observation;
-  const phase = { draft: 'Leaders draft', recruit: 'Recruitment' }[obs.decision];
-  const parts = [phase ? el('b', {}, phase + (obs.age ? ' · before Age ' + AGES[obs.age] : ''))
-    : el('span', {}, el('b', {}, 'Age ' + AGES[obs.age]), ' · turn ' + (obs.turn + 1))];
+  const phase = { draft: N('Leaders draft'), recruit: N('Recruitment') }[obs.decision];
+  const parts = [phase ? el('b', {}, t(phase) + (obs.age ? ' · ' + t('before Age {age}', { age: AGES[obs.age] }) : ''))
+    : el('span', {}, el('b', {}, t('Age {age}', { age: AGES[obs.age] })), ' · ' + t('turn {n}', { n: obs.turn + 1 }))];
   if (obs.decision === 'play' || obs.decision === 'draft') {
     const left = obs.decision === 'draft' || obs.pass_left;
     const to = playerName((left ? obs.left : obs.right).seat);
-    parts.push(el('b', { class: 'pass', 'data-tip': 'Your remaining hand goes to ' + to +
-      (obs.decision === 'draft' ? ' after each draft pick' : ' after every turn this Age') },
-      left ? '⬅ passing left to ' + to : 'passing right to ' + to + ' ➡'));
+    parts.push(el('b', { class: 'pass', 'data-tip': t(obs.decision === 'draft' ? N('Your remaining hand goes to {name} after each draft pick')
+      : N('Your remaining hand goes to {name} after every turn this Age'), { name: to }) },
+      left ? t('⬅ passing left to {name}', { name: to }) : t('passing right to {name} ➡', { name: to })));
   }
-  parts.push(el('span', { class: 'todo' }, SHORT[obs.decision] || 'Your move',
-    el('span', { class: 'hint', 'data-tip': plain(DECISIONS[obs.decision] || 'Your move.') }, '?')));
-  parts.push(el('span', {}, state.expansions.join(' + ')));
+  parts.push(el('span', { class: 'todo' }, t(SHORT[obs.decision] || N('Your move')),
+    el('span', { class: 'hint', 'data-tip': plain(DECISIONS[obs.decision] || N('Your move.')) }, '?')));
+  const expName = (id) => ((options.expansions || []).find((x) => x.id === id) || { name: id }).name;
+  parts.push(el('span', {}, state.expansions.map(expName).join(' + ')));
   $('status').replaceChildren(...parts.flatMap((x, k) => (k ? [' · ', x] : [x])));
 }
 
@@ -780,12 +825,12 @@ function renderScoreTable(cats) {
     const x = value(a, scoreSort.key), y = value(b, scoreSort.key);
     return (x < y ? -1 : x > y ? 1 : 0) * scoreSort.dir || r.scores[b].total - r.scores[a].total;
   });
-  const th = (key, label, color) => el('th', { style: color ? `--cat:${color}` : null, 'data-tip': 'Sort by ' + label.toLowerCase(),
+  const th = (key, label, color) => el('th', { style: color ? `--cat:${color}` : null, 'data-tip': t('Sort by {column}', { column: label }),
     onclick: () => { scoreSort = { key, dir: scoreSort.key === key ? -scoreSort.dir : (key === 'player' ? 1 : -1) }; hideTip(); renderScoreTable(cats); } },
     label, scoreSort.key === key ? el('span', { class: 'arrow' }, scoreSort.dir < 0 ? '▼' : '▲') : null);
-  const head = el('tr', {}, th('player', 'Player'), cats.map((c) => th(c, c[0].toUpperCase() + c.slice(1), CAT_COLOR[c])), th('total', 'Total'));
+  const head = el('tr', {}, th('player', t('Player')), cats.map((c) => th(c, t(c[0].toUpperCase() + c.slice(1), null, 'score'), CAT_COLOR[c])), th('total', t('Total')));
   const body = rows.map((i) => el('tr', { class: (i === r.winner ? 'winner ' : '') + (i === human ? 'you' : '') },
-    el('td', {}, playerName(i) + ' · ' + state.players[i].wonder + ' (' + state.players[i].side + ')'),
+    el('td', {}, playerName(i) + ' · ' + nm(state.players[i].wonder) + ' (' + state.players[i].side + ')'),
     cats.map((c) => el('td', { class: 'cat', style: `--cat:${CAT_COLOR[c] || 'transparent'}` }, String(r.scores[i][c]))),
     el('td', {}, String(r.scores[i].total))));
   $('r-table').replaceChildren(el('thead', {}, head), el('tbody', {}, body));
@@ -793,20 +838,21 @@ function renderScoreTable(cats) {
 /* ---------- post-game analysis ---------- */
 const LABEL_COLOR = { best: 'var(--green)', good: '#5f8f6b', inaccuracy: '#c8951a', mistake: '#d9771c', blunder: 'var(--red)', 'not rated': 'var(--c-unknown)' };
 const LABEL_ORDER = ['best', 'good', 'inaccuracy', 'mistake', 'blunder', 'not rated'];
-const VERB = { build: 'build', wonder: 'wonder stage with', discard: 'discard', free: 'build for free' };
+const VERB = { build: N('build {card}'), wonder: N('wonder stage with {card}'), discard: N('discard {card}'), free: N('build for free {card}') };
 let analysisTimer = null;
-function badge(label) { return el('span', { class: 'an-badge', style: `--lbl:${LABEL_COLOR[label] || 'var(--muted)'}` }, label); }
-function moveText(m) { return VERB[m.kind] ? VERB[m.kind] + ' ' + m.card : m.kind + ' ' + m.card; }
-function thumb(name) { return el('img', { src: cardUrl(name), alt: name, 'data-tip': name, onclick: () => viewCard(name) }); }
+function badge(label) { return el('span', { class: 'an-badge', style: `--lbl:${LABEL_COLOR[label] || 'var(--muted)'}` }, t(label, null, 'rating')); }
+function moveText(m) { return VERB[m.kind] ? t(VERB[m.kind], { card: nm(m.card) }) : m.kind + ' ' + nm(m.card); }
+const kindName = (k) => t(k, null, 'kind');
+function thumb(name) { return el('img', { src: cardUrl(name), alt: nm(name), 'data-tip': nm(name), onclick: () => viewCard(name) }); }
 function analysisGraph(points) {
-  if (!points.length) return el('p', { class: 'muted' }, 'No rated moves.');
+  if (!points.length) return el('p', { class: 'muted' }, t('No rated moves.'));
   const W = 900, H = 200, pad = 28;
   const ys = points.flatMap((p) => [p.played, p.best]);
   const lo = Math.min(0, ...ys), hi = Math.max(0, ...ys);
   const x = (i) => pad + (W - 2 * pad) * (points.length === 1 ? 0.5 : i / (points.length - 1));
   const y = (v) => H - pad - (H - 2 * pad) * ((v - lo) / Math.max(1e-6, hi - lo));
   const line = (key) => points.map((p, i) => `${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`).join(' ');
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected final margin after each of your moves">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('Expected final margin after each of your moves')}">`;
   svg += `<line x1="${pad}" x2="${W - pad}" y1="${y(0)}" y2="${y(0)}" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="4 4"/>`;
   points.forEach((p, i) => { if (i && p.age !== points[i - 1].age) svg += `<line x1="${x(i - 0.5)}" x2="${x(i - 0.5)}" y1="${pad / 2}" y2="${H - pad / 2}" stroke="currentColor" stroke-opacity=".15"/>`; });
   svg += `<polyline points="${line('best')}" fill="none" stroke="var(--green)" stroke-width="2" stroke-dasharray="5 4"/>`;
@@ -817,9 +863,9 @@ function analysisGraph(points) {
   });
   [1, 2, 3].forEach((a) => {
     const idx = points.findIndex((p) => p.age === a);
-    if (idx >= 0) svg += `<text x="${x(idx)}" y="${H - 6}" font-size="12" fill="currentColor" opacity=".6">Age ${AGES[a]}</text>`;
+    if (idx >= 0) svg += `<text x="${x(idx)}" y="${H - 6}" font-size="12" fill="currentColor" opacity=".6">${t('Age {age}', { age: AGES[a] })}</text>`;
   });
-  svg += `<text x="${pad}" y="14" font-size="12" fill="currentColor" opacity=".6">expected final margin (VP) — your moves (solid) vs the best (dashed)</text></svg>`;
+  svg += `<text x="${pad}" y="14" font-size="12" fill="currentColor" opacity=".6">${t('expected final margin (VP) — your moves (solid) vs the best (dashed)')}</text></svg>`;
   const box = el('div', { class: 'an-graph' }); box.innerHTML = svg; return box;
 }
 const PATTERN_COLOR = { trade: 'var(--gold)', military: 'var(--c-red)', science: 'var(--c-green)', wonder: 'var(--c-grey)',
@@ -827,30 +873,31 @@ const PATTERN_COLOR = { trade: 'var(--gold)', military: 'var(--c-red)', science:
 function whatIf(w) {
   if (!w) return null;
   const gain = w.best.mean_margin - w.played.mean_margin;
-  const vp = (x) => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(1) + ' VP';
+  const vp = (x) => (x >= 0 ? '+' : '−') + fmtNum(Math.abs(x), 1) + ' ' + t('VP');
+  const whatIf = el('b', {}, t('What if?') + ' ');
   if (w.runs === 1) {
     const rb = Math.round(w.best.mean_rank), rp = Math.round(w.played.mean_rank);
-    return el('div', { class: 'an-whatif' }, el('span', {}, el('b', {}, 'What if? '),
-      gain < -1 ? `Played out from the real position, your move actually did better (${vp(-gain)}), so this verdict is uncertain.`
-        : rb < rp ? `With the better move you would have finished #${rb} instead of #${rp} (${vp(gain)} against the leader).`
-          : `You would still have finished #${rp}, ${vp(gain)} against the leader.`));
+    return el('div', { class: 'an-whatif' }, el('span', {}, whatIf,
+      gain < -1 ? t('Played out from the real position, your move actually did better ({vp}), so this verdict is uncertain.', { vp: vp(-gain) })
+        : rb < rp ? t('With the better move you would have finished #{better} instead of #{played} ({vp} against the leader).', { better: rb, played: rp, vp: vp(gain) })
+          : t('You would still have finished #{rank}, {vp} against the leader.', { rank: rp, vp: vp(gain) })));
   }
   const bar = (name, v, color) => el('div', { class: 'bar' }, el('span', {}, name),
     el('div', { class: 'track' }, el('div', { style: `width:${Math.round(100 * v)}%;background:${color}` })), el('span', {}, Math.round(100 * v) + '%'));
-  return el('div', { class: 'an-whatif', 'data-tip': `${w.runs} continuations from the real position, every seat then playing the network; later Ages reshuffled the same way for both moves` },
-    el('span', {}, el('b', {}, 'What if? '), gain >= -1
-      ? `Over ${w.runs} continuations from the real position the better move ends ${vp(gain)} against the leader on average ` +
-        `(average rank ${w.best.mean_rank.toFixed(1)} instead of ${w.played.mean_rank.toFixed(1)}).`
-      : `In ${w.runs} continuations from the real position your move actually did better (${vp(-gain)} against the leader), ` +
-        'so this verdict is uncertain: the search judged with only what you could see, the continuations know every hand.'),
-    (w.best.first || w.played.first) ? el('span', { class: 'muted' }, 'First place:') : null,
-    (w.best.first || w.played.first) ? bar('better', w.best.first, 'var(--green)') : null,
-    (w.best.first || w.played.first) ? bar('yours', w.played.first, 'var(--accent)') : null);
+  return el('div', { class: 'an-whatif', 'data-tip': t('{n} continuations from the real position, every seat then playing the network; later Ages reshuffled the same way for both moves', { n: w.runs }) },
+    el('span', {}, whatIf, gain >= -1
+      ? t('Over {n} continuations from the real position the better move ends {vp} against the leader on average (average rank {better} instead of {played}).',
+        { n: w.runs, vp: vp(gain), better: fmtNum(w.best.mean_rank, 1), played: fmtNum(w.played.mean_rank, 1) })
+      : t('In {n} continuations from the real position your move actually did better ({vp} against the leader), so this verdict is uncertain: the search judged with only what you could see, the continuations know every hand.',
+        { n: w.runs, vp: vp(-gain) })),
+    (w.best.first || w.played.first) ? el('span', { class: 'muted' }, t('First place:')) : null,
+    (w.best.first || w.played.first) ? bar(t('better'), w.best.first, 'var(--green)') : null,
+    (w.best.first || w.played.first) ? bar(t('yours'), w.played.first, 'var(--accent)') : null);
 }
-const CAT_LABEL = { total: 'Total', military: 'Military', treasury: 'Coins', wonders: 'Wonder', civilian: 'Civic', commercial: 'Commerce',
-  guilds: 'Guilds', science: 'Science', leaders: 'Leaders', cities: 'Cities' };
+const CAT_LABEL = { total: N('Total'), military: N('Military'), treasury: N('Coins'), wonders: N('Wonder'), civilian: N('Civic'), commercial: N('Commerce'),
+  guilds: N('Guilds'), science: N('Science'), leaders: N('Leaders'), cities: N('Cities') };
+const catLabel = (k) => (CAT_LABEL[k] ? t(CAT_LABEL[k]) : k);
 const RANK_COLOR = ['var(--green)', 'var(--accent)', 'var(--gold)', 'var(--red)'];
-const ordinal = (n) => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
 function rankBadge(rank, players) {
   const color = rank === 1 ? RANK_COLOR[0] : rank === players ? RANK_COLOR[3] : rank <= players / 2 ? RANK_COLOR[1] : RANK_COLOR[2];
   return el('span', { class: 'an-rank', style: `--rk:${color}` }, ordinal(rank));
@@ -863,8 +910,9 @@ function categoryStrip(asp) {
   const order = [...asp.categories].sort((x, y) => (y.key === 'total') - (x.key === 'total'));
   return el('div', { class: 'an-strip' }, order.map((c) => {
     const d = c.mine - c.average;
-    return stat(CAT_LABEL[c.key] || c.key, String(c.mine), `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} vs avg`, CAT_COLOR[c.key],
-      `${CAT_LABEL[c.key] || c.key}: ${c.mine} VP, table average ${c.average}, best opponent ${c.best_other}`, rankBadge(c.rank, asp.players));
+    return stat(catLabel(c.key), String(c.mine), t('{diff} vs avg', { diff: (d >= 0 ? '+' : '−') + fmtNum(Math.abs(d), 1) }), CAT_COLOR[c.key],
+      t('{category}: {mine} VP, table average {average}, best opponent {best}', { category: catLabel(c.key), mine: c.mine, average: c.average, best: c.best_other }),
+      rankBadge(c.rank, asp.players));
   }));
 }
 function categoryBars(asp) {
@@ -874,38 +922,39 @@ function categoryBars(asp) {
   const pos = (v) => (100 * (v - lo) / (hi - lo));
   const rows = cats.flatMap((c) => {
     const a = pos(Math.min(0, c.mine)), b = pos(Math.max(0, c.mine));
-    return [el('span', {}, CAT_LABEL[c.key] || c.key),
-      el('div', { class: 'an-track', 'data-tip': `You ${c.mine} · average ${c.average} · best opponent ${c.best_other}` },
+    return [el('span', {}, catLabel(c.key)),
+      el('div', { class: 'an-track', 'data-tip': t('You {mine} · average {average} · best opponent {best}', { mine: c.mine, average: c.average, best: c.best_other }) },
         el('div', { class: 'fill', style: `left:${a}%;width:${Math.max(1, b - a)}%;background:${CAT_COLOR[c.key] || 'var(--accent)'}` }),
         lo < 0 ? el('div', { class: 'zero', style: `left:${pos(0)}%` }) : null,
         el('div', { class: 'avg', style: `left:${pos(c.average)}%` }), el('div', { class: 'top', style: `left:${pos(c.best_other)}%` })),
       el('span', { style: 'text-align:right;font-variant-numeric:tabular-nums' }, String(c.mine))];
   });
-  return el('div', { class: 'an-box' }, el('h5', {}, 'Points by category'), el('div', { class: 'an-bars' }, rows),
-    el('div', { class: 'an-legend' }, el('span', {}, el('i', { style: 'background:var(--accent)' }), 'you'),
-      el('span', {}, el('i', { style: 'background:var(--ink);opacity:.55' }), 'table average'),
-      el('span', {}, el('i', { style: 'background:var(--red)' }), 'best opponent')));
+  return el('div', { class: 'an-box' }, el('h5', {}, t('Points by category')), el('div', { class: 'an-bars' }, rows),
+    el('div', { class: 'an-legend' }, el('span', {}, el('i', { style: 'background:var(--accent)' }), t('you')),
+      el('span', {}, el('i', { style: 'background:var(--ink);opacity:.55' }), t('table average')),
+      el('span', {}, el('i', { style: 'background:var(--red)' }), t('best opponent'))));
 }
 function impactChart(decisions) {
   const rated = decisions.filter((d) => 'loss' in d);
   if (!rated.length) return null;
   const W = 900, H = 120, pad = 28, bw = (W - 2 * pad) / rated.length;
   const top = Math.max(5, ...rated.map((d) => d.loss));
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Points lost by each move">`;
-  svg += `<text x="${pad}" y="12" font-size="12" fill="currentColor" opacity=".6">points lost by each move (VP)</text>`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('Points lost by each move')}">`;
+  svg += `<text x="${pad}" y="12" font-size="12" fill="currentColor" opacity=".6">${t('points lost by each move (VP)')}</text>`;
   [1, 2.5, 5].forEach((v) => { if (v <= top) { const y = 18 + (H - pad - 18) * (v / top);
     svg += `<line x1="${pad}" x2="${W - pad}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity=".12"/><text x="${W - pad + 4}" y="${y + 4}" font-size="10" fill="currentColor" opacity=".5">${v}</text>`; } });
   rated.forEach((d, i) => {
     const x = pad + i * bw, h = (H - pad - 18) * (d.loss / top);
     if (i && d.age !== rated[i - 1].age) svg += `<line x1="${x}" x2="${x}" y1="14" y2="${H - pad + 4}" stroke="currentColor" stroke-opacity=".2"/>`;
-    const tip = `Age ${AGES[d.age]} turn ${d.turn}: ${moveText(d.played)} — ${d.label}${d.loss ? ' (−' + d.loss.toFixed(1) + ' VP; better: ' + moveText(d.best) + ')' : ''}`;
+    const tip = t('Age {age} turn {turn}: {move} — {rating}', { age: AGES[d.age], turn: d.turn, move: moveText(d.played), rating: t(d.label, null, 'rating') }) +
+      (d.loss ? ' ' + t('(−{vp} VP; better: {move})', { vp: fmtNum(d.loss, 1), move: moveText(d.best) }) : '');
     svg += `<g data-tip="${tip.replace(/"/g, '&quot;')}"><rect x="${x + 1}" y="18" width="${bw - 2}" height="${H - pad - 18}" fill="transparent"/>`;
     svg += d.loss > 0 ? `<rect x="${x + 2}" y="18" width="${bw - 4}" height="${Math.max(2, h)}" rx="2" fill="${LABEL_COLOR[d.label] || 'gray'}"/>`
       : `<circle cx="${x + bw / 2}" cy="20" r="3" fill="${LABEL_COLOR[d.label]}"/>`;
     svg += '</g>';
   });
   [1, 2, 3].forEach((a) => { const i = rated.findIndex((d) => d.age === a);
-    if (i >= 0) svg += `<text x="${pad + i * bw + 2}" y="${H - 8}" font-size="12" fill="currentColor" opacity=".6">Age ${AGES[a]}</text>`; });
+    if (i >= 0) svg += `<text x="${pad + i * bw + 2}" y="${H - 8}" font-size="12" fill="currentColor" opacity=".6">${t('Age {age}', { age: AGES[a] })}</text>`; });
   svg += '</svg>';
   const box = el('div', { class: 'an-graph' }); box.innerHTML = svg; return box;
 }
@@ -913,28 +962,28 @@ function accuracyBox(asp) {
   const bar = (label, s, tip) => [el('span', {}, label),
     el('div', { class: 'an-track', 'data-tip': tip }, el('div', { class: 'fill', style: `left:0;width:${Math.round(100 * (s.accuracy || 0))}%;background:var(--green)` })),
     el('span', { style: 'text-align:right' }, s.accuracy === null ? '–' : Math.round(100 * s.accuracy) + '%')];
-  const rows = asp.by_age.filter((s) => s.moves).flatMap((s) => bar('Age ' + AGES[s.age], s, `${s.moves} moves · ${s.loss.toFixed(1)} VP lost`));
-  const kinds = Object.entries(asp.by_kind).flatMap(([k, s]) => bar(VERB[k] ? k : k, s, `${s.moves} ${k} moves · ${s.loss.toFixed(1)} VP lost`));
-  return el('div', { class: 'an-box' }, el('h5', {}, 'Accuracy'), el('div', { class: 'an-bars' }, rows, kinds));
+  const rows = asp.by_age.filter((s) => s.moves).flatMap((s) => bar(t('Age {age}', { age: AGES[s.age] }), s, t('{n} moves · {vp} VP lost', { n: s.moves, vp: fmtNum(s.loss, 1) })));
+  const kinds = Object.entries(asp.by_kind).flatMap(([k, s]) => bar(kindName(k), s, t('{n} {kind} moves · {vp} VP lost', { n: s.moves, kind: kindName(k), vp: fmtNum(s.loss, 1) })));
+  return el('div', { class: 'an-box' }, el('h5', {}, t('Accuracy')), el('div', { class: 'an-bars' }, rows, kinds));
 }
 function matrixBox(asp) {
   const kinds = ['build', 'wonder', 'discard', 'free'].filter((k) => asp.kind_matrix[k] || Object.values(asp.kind_matrix).some((r) => r[k]));
   const max = Math.max(1, ...Object.values(asp.kind_matrix).flatMap((r) => Object.values(r)));
-  return el('div', { class: 'an-box' }, el('h5', {}, 'Your move type vs the best'),
-    el('table', { class: 'an-grid' }, el('tr', {}, el('th', {}, 'you ↓ / best →'), kinds.map((k) => el('th', {}, k))),
-      kinds.map((k) => el('tr', {}, el('th', {}, k), kinds.map((b) => {
+  return el('div', { class: 'an-box' }, el('h5', {}, t('Your move type vs the best')),
+    el('table', { class: 'an-grid' }, el('tr', {}, el('th', {}, t('you ↓ / best →')), kinds.map((k) => el('th', {}, kindName(k)))),
+      kinds.map((k) => el('tr', {}, el('th', {}, kindName(k)), kinds.map((b) => {
         const n = (asp.kind_matrix[k] || {})[b] || 0;
         const color = k === b ? 'var(--green)' : 'var(--red)';
         return el('td', { style: n ? `background:color-mix(in srgb, ${color} ${Math.round(15 + 55 * n / max)}%, transparent)` : null,
-          'data-tip': `${n} move${n === 1 ? '' : 's'}: you chose ${k}, the best was ${b}` }, n ? String(n) : '');
+          'data-tip': t(n === 1 ? '{n} move: you chose {mine}, the best was {best}' : '{n} moves: you chose {mine}, the best was {best}', { n, mine: kindName(k), best: kindName(b) }) }, n ? String(n) : '');
       })))));
 }
 function cardsBox(asp) {
   const entries = Object.entries(asp.cards).sort((x, y) => COLORS.indexOf(x[0]) - COLORS.indexOf(y[0]));
   const top = Math.max(1, ...entries.flatMap(([, c]) => [c.mine, c.average]));
-  return el('div', { class: 'an-box' }, el('h5', {}, 'Your city by colour'), el('div', { class: 'an-bars' }, entries.flatMap(([col, c]) => [
-    el('span', { 'data-tip': GROUPS[col] || col }, SHORT_GROUPS[col] || col),
-    el('div', { class: 'an-track', 'data-tip': `${GROUPS[col] || col}: ${c.mine} cards · table average ${c.average}` },
+  return el('div', { class: 'an-box' }, el('h5', {}, t('Your city by colour')), el('div', { class: 'an-bars' }, entries.flatMap(([col, c]) => [
+    el('span', { 'data-tip': GROUPS[col] ? t(GROUPS[col]) : col }, SHORT_GROUPS[col] ? t(SHORT_GROUPS[col], null, 'short') : col),
+    el('div', { class: 'an-track', 'data-tip': t('{group}: {n} cards · table average {average}', { group: GROUPS[col] ? t(GROUPS[col]) : col, n: c.mine, average: c.average }) },
       el('div', { class: 'fill', style: `left:0;width:${100 * c.mine / top}%;background:var(--c-${col})` }),
       el('div', { class: 'avg', style: `left:${100 * c.average / top}%` })),
     el('span', { style: 'text-align:right' }, String(c.mine))])));
@@ -942,54 +991,54 @@ function cardsBox(asp) {
 function militaryBox(asp) {
   const sym = { win: ['✓', 'var(--green)'], tie: ['=', 'var(--muted)'], loss: ['✗', 'var(--red)'] };
   const sides = ['left', 'right'];
-  return el('div', { class: 'an-box' }, el('h5', {}, 'Military'),
-    el('table', { class: 'an-grid' }, el('tr', {}, el('th', {}, ''), [1, 2, 3].map((a) => el('th', {}, 'Age ' + AGES[a]))),
+  return el('div', { class: 'an-box' }, el('h5', {}, t('Military')),
+    el('table', { class: 'an-grid' }, el('tr', {}, el('th', {}, ''), [1, 2, 3].map((a) => el('th', {}, t('Age {age}', { age: AGES[a] })))),
       sides.map((side) => {
         const row = asp.military.filter((m) => m.side === side);
         return el('tr', {}, el('th', {}, side === 'left' ? '← ' + (row[0] || {}).opponent : (row[0] || {}).opponent + ' →'),
           [1, 2, 3].map((a) => { const m = row.find((r) => r.age === a); if (!m) return el('td', {}, '');
             const [s, c] = sym[m.result];
-            return el('td', { 'data-tip': `Age ${AGES[a]}: ${m.mine} vs ${m.theirs} shields — ${m.result}` },
+            return el('td', { 'data-tip': t('Age {age}: {mine} vs {theirs} shields — {result}', { age: AGES[a], mine: m.mine, theirs: m.theirs, result: t(m.result, null, 'military') }) },
               el('span', { class: 'an-mil', style: `color:${c}` }, s), el('div', { class: 's', style: 'font-size:11px;color:var(--muted)' }, `${m.mine}–${m.theirs}`)); }));
       })));
 }
 function economyStrip(asp) {
   const e = asp.economy, w = asp.wonder;
   return el('div', { class: 'an-strip' },
-    stat('Trade paid', String(e.trade_paid), 'coins to neighbours', 'var(--gold)', 'Coins you paid neighbours for resources'),
-    stat('Chain builds', String(e.chain_builds), 'built for free', 'var(--c-purple)', 'Cards you built for free through a chain'),
-    stat('Discards', String(e.discards), '+3 coins each', 'var(--c-brown)', 'Cards discarded for coins'),
-    stat('Final coins', String(e.final_coins), Math.floor(e.final_coins / 3) + ' VP', 'var(--gold)', 'Coins left at the end (3 = 1 VP)', rankBadge(e.coins_rank, asp.players)),
-    stat('Wonder', `${w.built}/${w.total}`, w.ages.length ? 'Ages ' + w.ages.map((a) => AGES[a]).join(', ') : 'none built', 'var(--c-grey)', 'Wonder stages built (and in which Ages)'));
+    stat(t('Trade paid'), String(e.trade_paid), t('coins to neighbours'), 'var(--gold)', t('Coins you paid neighbours for resources')),
+    stat(t('Chain builds'), String(e.chain_builds), t('built for free'), 'var(--c-purple)', t('Cards you built for free through a chain')),
+    stat(t('Discards'), String(e.discards), t('+3 coins each'), 'var(--c-brown)', t('Cards discarded for coins')),
+    stat(t('Final coins'), String(e.final_coins), t('{n} VP', { n: Math.floor(e.final_coins / 3) }), 'var(--gold)', t('Coins left at the end (3 = 1 VP)'), rankBadge(e.coins_rank, asp.players)),
+    stat(t('Wonder'), `${w.built}/${w.total}`, w.ages.length ? t('Ages {list}', { list: w.ages.map((a) => AGES[a]).join(', ') }) : t('none built'), 'var(--c-grey)', t('Wonder stages built (and in which Ages)')));
 }
 function renderAnalysis(a) {
   const box = $('r-analysis'); box.classList.remove('hidden');
   if (a.status === 'running') {
     const pct = a.total ? Math.round(100 * a.done / a.total) : 0;
-    box.replaceChildren(el('p', {}, `Analysing your moves… ${a.done || 0}/${a.total || '?'}`),
+    box.replaceChildren(el('p', {}, t('Analysing your moves… {done}/{total}', { done: a.done || 0, total: a.total || '?' })),
       el('div', { class: 'an-progress' }, el('div', { style: `width:${pct}%` })));
     return;
   }
-  if (a.status !== 'done') { box.replaceChildren(el('p', { class: 'error' }, a.error || 'Analysis unavailable.')); return; }
+  if (a.status !== 'done') { box.replaceChildren(el('p', { class: 'error' }, t(a.error || N('Analysis unavailable.')))); return; }
   const r = a.report, s = r.summary, by = {};
   r.decisions.forEach((d) => { by[d.index] = d; });
   const counts = LABEL_ORDER.filter((l) => s.counts[l]).map((l) => el('span', { class: 'an-summary' }, badge(l), ' ' + s.counts[l]));
   const moments = r.key_moments.map((k) => by[k]).map((d) => el('div', { class: 'an-moment' },
-    el('div', {}, badge(d.label), el('div', { class: 'muted', style: 'font-size:12px;margin-top:4px' }, `Age ${AGES[d.age]} · turn ${d.turn}`)),
+    el('div', {}, badge(d.label), el('div', { class: 'muted', style: 'font-size:12px;margin-top:4px' }, t('Age {age} · turn {turn}', { age: AGES[d.age], turn: d.turn }))),
     el('div', { class: 'pair' }, thumb(d.played.card), el('span', { class: 'arrow' }, '→'), thumb(d.best.card)),
     el('div', {},
-      el('h4', {}, `−${d.loss.toFixed(1)} VP (± ${d.loss_se.toFixed(1)})`),
-      el('p', {}, el('b', {}, 'You: '), moveText(d.played)),
-      el('p', {}, el('b', {}, 'Better: '), moveText(d.best)),
+      el('h4', {}, t('−{vp} VP (± {se})', { vp: fmtNum(d.loss, 1), se: fmtNum(d.loss_se, 1) })),
+      el('p', {}, el('b', {}, t('You:') + ' '), moveText(d.played)),
+      el('p', {}, el('b', {}, t('Better:') + ' '), moveText(d.best)),
       el('p', { class: 'muted' }, d.reason),
       whatIf(d.what_if))));
   const rows = r.decisions.map((d) => el('tr', {},
     el('td', {}, `${AGES[d.age]} · ${d.turn}`), el('td', {}, moveText(d.played)), el('td', {}, badge(d.label)),
-    el('td', {}, d.loss ? '−' + d.loss.toFixed(1) : ''), el('td', {}, d.best && d.label !== 'best' ? moveText(d.best) : '')));
+    el('td', {}, d.loss ? '−' + fmtNum(d.loss, 1) : ''), el('td', {}, d.best && d.label !== 'best' ? moveText(d.best) : '')));
   box.replaceChildren(...[
-    el('p', { class: 'section-title' }, 'Analysis of your moves'),
-    el('div', { class: 'an-summary' }, el('span', { class: 'an-big', 'data-tip': 'Moves rated best or within noise of the best' }, Math.round(100 * s.accuracy) + '% accuracy'),
-      el('span', { class: 'muted' }, `${s.rated} rated moves · ${s.total_loss.toFixed(1)} VP left on the table ·`), ...counts),
+    el('p', { class: 'section-title' }, t('Analysis of your moves')),
+    el('div', { class: 'an-summary' }, el('span', { class: 'an-big', 'data-tip': t('Moves rated best or within noise of the best') }, t('{pct}% accuracy', { pct: Math.round(100 * s.accuracy) })),
+      el('span', { class: 'muted' }, t('{n} rated moves · {vp} VP left on the table ·', { n: s.rated, vp: fmtNum(s.total_loss, 1) })), ...counts),
     r.aspects ? categoryStrip(r.aspects) : null,
     analysisGraph(r.graph),
     impactChart(r.decisions),
@@ -997,14 +1046,15 @@ function renderAnalysis(a) {
     r.aspects ? el('div', { class: 'an-row' }, cardsBox(r.aspects), militaryBox(r.aspects)) : null,
     r.aspects ? economyStrip(r.aspects) : null,
     el('div', {}, (r.patterns || []).length ? [
-      el('p', { class: 'section-title' }, 'Patterns in your game'),
+      el('p', { class: 'section-title' }, t('Patterns in your game')),
       el('div', { class: 'an-patterns' }, r.patterns.map((pt) => el('div', { class: 'an-pattern', style: `--pc:${PATTERN_COLOR[pt.kind] || 'var(--muted)'}` },
         el('h4', {}, pt.title), el('p', {}, pt.detail))))] : null),
-    r.key_moments.length ? el('p', { class: 'section-title' }, 'Key moments') : el('p', { class: 'muted' }, 'No clear mistakes — well played.'),
+    r.key_moments.length ? el('p', { class: 'section-title' }, t('Key moments')) : el('p', { class: 'muted' }, t('No clear mistakes — well played.')),
     ...moments,
-    el('details', {}, el('summary', {}, 'Every move'),
-      el('table', { class: 'an-table' }, el('thead', {}, el('tr', {}, ['Age · turn', 'Your move', 'Rating', 'Loss', 'Better'].map((h) => el('th', {}, h)))), el('tbody', {}, rows))),
-    el('p', { class: 'muted', style: 'font-size:12px' }, `Searched ${r.settings.depth} turns ahead in ${r.settings.worlds} sampled games per move, using only what you could see (${r.settings.checkpoint}). Differences under 1 VP or within noise count as good.`)].filter(Boolean));
+    el('details', {}, el('summary', {}, t('Every move')),
+      el('table', { class: 'an-table' }, el('thead', {}, el('tr', {}, [N('Age · turn'), N('Your move'), N('Rating'), N('Loss'), N('Better')].map((h) => el('th', {}, t(h))))), el('tbody', {}, rows))),
+    el('p', { class: 'muted', style: 'font-size:12px' }, t('Searched {depth} turns ahead in {worlds} sampled games per move, using only what you could see ({checkpoint}). Differences under 1 VP or within noise count as good.',
+      { depth: r.settings.depth, worlds: r.settings.worlds, checkpoint: r.settings.checkpoint }))].filter(Boolean));
   $('r-analyse').disabled = true;
 }
 async function pollAnalysis() {
@@ -1030,11 +1080,12 @@ function renderResult() {
   const human = state.human;
   const won = r.winner === human;
   const rank = order.indexOf(human) + 1;
-  $('r-title').textContent = won ? 'You won!' : `${playerName(r.winner)} wins — you finished #${rank} of ${order.length}`;
+  $('r-title').textContent = won ? t('You won!') : t('{name} wins — you finished #{rank} of {n}', { name: playerName(r.winner), rank, n: order.length });
   renderScoreTable(cats);
   $('r-cities').replaceChildren(...state.cities.map((c) => el('div', { class: 'panel city' },
     el('div', { class: 'city-head' }, el('h3', {}, playerName(c.seat)), el('span', { class: 'score' }, String(r.scores[c.seat].total))),
-    el('div', { class: 'muted', style: 'font-size:12px;margin-bottom:6px' }, agentLabel(state.players[c.seat].agent) + ' · ' + c.coins + ' coins · ' + c.stages_built + ' stages'),
+    el('div', { class: 'muted', style: 'font-size:12px;margin-bottom:6px' }, agentLabel(state.players[c.seat].agent) + ' · ' + coinsText(c.coins) + ' · ' +
+      t(c.stages_built === 1 ? '{n} stage' : '{n} stages', { n: c.stages_built })),
     el('div', { class: 'tableau' }, tableau(c.cards)))));
 }
 
@@ -1052,15 +1103,33 @@ async function play(index, payment) {
   finally { setBusy(false); }
 }
 
-$('btn-menu').addEventListener('click', () => { if (!state || state.done || confirm('Abandon this game and return to the menu?')) openMenu(); });
+$('btn-menu').addEventListener('click', () => { if (!state || state.done || confirm(t('Abandon this game and return to the menu?'))) openMenu(); });
 const download = () => { window.location.href = '/api/record'; };
 $('btn-record').addEventListener('click', download);
 $('r-record').addEventListener('click', download);
 $('r-menu').addEventListener('click', openMenu);
 $('r-again').addEventListener('click', () => startGame(Object.assign({}, state.config, { seed: null })));
 
-(async function init() {
+function renderLanguages() {
+  const langs = options.languages || { en: 'English' };
+  $('h-lang').replaceChildren(...Object.entries(langs).map(([code, name]) => el('option', { value: code, selected: code === lang }, name)));
+  $('h-lang').classList.toggle('hidden', Object.keys(langs).length < 2);
+}
+$('h-lang').addEventListener('change', async (e) => {
+  await loadLanguage(e.target.value);
   options = await api('/api/options');
+  state = (await api('/api/state')).state;
+  renderLanguages();
+  if (!$('menu').classList.contains('hidden')) openMenu(); else render();
+  if (state && state.done) pollAnalysis();
+});
+
+(async function init() {
+  const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
+  await loadLanguage(new URLSearchParams(location.search).get('lang') || store.get('lang', null) || browser);
+  options = await api('/api/options');
+  if (!(lang in (options.languages || {}))) { await loadLanguage('en'); options = await api('/api/options'); }
+  renderLanguages();
   menu = store.get('menu', null) || JSON.parse(JSON.stringify(options.defaults));
   if (!menu.seats || !menu.seats.some((s) => s.player === 'human')) menu = JSON.parse(JSON.stringify(options.defaults));
   menu.seats = menu.seats.filter((s) => s.player === 'human' || options.agents.some((a) => a.id === s.player));

@@ -23,8 +23,9 @@ from wonders.engine.actions import Action
 from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
 from wonders.env.environment import WondersEnv
+from wonders.i18n import ENGLISH, Translator, languages
 from wonders.ruleset import EXPANSIONS, Ruleset
-from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, RES_NAME, cost_text, effect_lines
+from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, cost_text, effect_lines, res_name
 
 HUMAN = 'human'
 SIDES = ('A', 'B', 'random')
@@ -61,8 +62,8 @@ class AgentOption:
     checkpoint: Optional[str] = None  # neural agents only
 
 
-def agent_options(checkpoints: Sequence[str] = ()) -> List[AgentOption]:
-    """Built-in agents, plus neural agents when PyTorch is installed.
+def agent_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> List[AgentOption]:
+    """Built-in agents, plus neural agents when PyTorch is installed (blurbs translated by ``t``).
 
     ``checkpoints`` adds extra neural agents (``neural:<file stem>``) next to the bundled one.
     """
@@ -70,7 +71,7 @@ def agent_options(checkpoints: Sequence[str] = ()) -> List[AgentOption]:
 
     registry = ensure_loaded()
     blurbs = {**AGENT_BLURBS, **registry.agent_blurbs}
-    options = [AgentOption(name, name, blurbs.get(name, '')) for name in AGENTS]
+    options = [AgentOption(name, name, t(blurbs[name]) if blurbs.get(name) else '') for name in AGENTS]
     try:
         from wonders.ml import pretrained_path
     except ImportError:  # no PyTorch: scripted agents only
@@ -79,13 +80,18 @@ def agent_options(checkpoints: Sequence[str] = ()) -> List[AgentOption]:
     for i, path in enumerate(dict.fromkeys(os.path.abspath(p) for p in paths)):
         stem = os.path.splitext(os.path.basename(path))[0]
         label = 'neural' if i == 0 else f'neural:{stem}'
-        blurb = 'The bundled trained network.' if i == 0 else f'Trained network from {path}.'
+        blurb = t('The bundled trained network.') if i == 0 else t('Trained network from {path}.', path=path)
         options.append(AgentOption(label, label, blurb, path))
     for model in registry.models.values():  # networks from extensions
         label = f'neural:{model.name}'
         if all(o.id != label for o in options):
             options.append(
-                AgentOption(label, label, model.description or f'Network from {model.extension}.', model.path)
+                AgentOption(
+                    label,
+                    label,
+                    t(model.description) if model.description else t('Network from {name}.', name=model.extension),
+                    model.path,
+                )
             )
     return options
 
@@ -157,8 +163,8 @@ def _asset_version() -> str:
     return digest.hexdigest()[:10]
 
 
-def menu_options(checkpoints: Sequence[str] = ()) -> Dict[str, Any]:
-    """What the game menu can offer: expansions, agents, wonders per expansion, seat limits."""
+def menu_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> Dict[str, Any]:
+    """What the game menu can offer: expansions, agents, wonders per expansion, seat limits, languages."""
     from wonders.extensions import ensure_loaded
 
     ensure_loaded()  # extension expansions join the menu
@@ -169,11 +175,17 @@ def menu_options(checkpoints: Sequence[str] = ()) -> Dict[str, Any]:
             content = load_content(exp.id)
             wonders = list(dict.fromkeys(w.name for w in content.wonders))
         expansions.append(
-            {'id': exp.id, 'name': exp.name, 'implemented': exp.implemented, 'note': exp.note, 'wonders': wonders}
+            {
+                'id': exp.id,
+                'name': t(exp.name, 'expansion'),
+                'implemented': exp.implemented,
+                'note': t(exp.note) if exp.note else '',
+                'wonders': wonders,
+            }
         )
     return {
         'expansions': expansions,
-        'agents': [{'id': a.id, 'label': a.label, 'blurb': a.blurb} for a in agent_options(checkpoints)],
+        'agents': [{'id': a.id, 'label': a.label, 'blurb': a.blurb} for a in agent_options(checkpoints, t)],
         'min_players': MIN_PLAYERS,
         'max_players': MAX_PLAYERS,
         'sides': list(SIDES),
@@ -181,7 +193,9 @@ def menu_options(checkpoints: Sequence[str] = ()) -> Dict[str, Any]:
         # The card renderer's icons (24x24, currentColor), so the page draws the same symbols.
         'icons': dict(ICONS),
         'asset_version': _asset_version(),  # cache-busts card / board images when the renderer changes
-        'resources': {r.value: {'icon': RES_ICON[r], 'color': RES_COLOR[r], 'name': RES_NAME[r]} for r in RES_ICON},
+        'resources': {r.value: {'icon': RES_ICON[r], 'color': RES_COLOR[r], 'name': res_name(r, t)} for r in RES_ICON},
+        'languages': languages(),
+        'lang': t.lang,
     }
 
 
@@ -212,6 +226,7 @@ class HumanSession:
         config: The menu choices.
         checkpoints: Extra neural checkpoints the config may refer to (``neural:<stem>``).
         on_progress: Called after every decision the agents play out (for live UIs).
+        t: Translates the default seat names (``You``).
     """
 
     def __init__(
@@ -219,8 +234,10 @@ class HumanSession:
         config: GameConfig,
         checkpoints: Sequence[str] = (),
         on_progress: Optional[Callable[[], None]] = None,
+        t: Translator = ENGLISH,
     ):
         self.config = config
+        self.t = t
         seats = config.seats
         humans = [i for i, s in enumerate(seats) if s.player == HUMAN]
         if len(humans) != 1:
@@ -281,7 +298,7 @@ class HumanSession:
             else:
                 wonder, side = pool.pop(), config.opponent_sides
             side = rng.choice('AB') if side == 'random' else side
-            name = seat.name or ('You' if i == self.human else f'{seat.player.capitalize()} {i}')
+            name = seat.name or (self.t('You') if i == self.human else f'{seat.player.capitalize()} {i}')
             setups.append(PlayerSetup(name, wonder, side))
         return setups
 
@@ -339,18 +356,20 @@ class HumanSession:
         return game.payment_options(self.human, action)
 
     # -- views -----------------------------------------------------------------
-    def card_info(self, name: str) -> Dict[str, Any]:
+    def card_info(self, name: str, t: Translator = ENGLISH) -> Dict[str, Any]:
+        """Colour, Age and tooltip lines of a card (``title`` is its translated name)."""
         card = self.cards.get(name)
         if card is None:
-            return {'name': name, 'color': 'unknown'}
-        text = ['Cost: ' + cost_text(card.cost.coins, card.cost.resources)] + effect_lines(card.effects)
+            return {'name': name, 'title': t.name(name), 'color': 'unknown'}
+        text = [t('Cost: {cost}', cost=cost_text(card.cost.coins, card.cost.resources, t))]
+        text += effect_lines(card.effects, t)
         if card.chain_requires:
-            text.append('Free if you own ' + card.chain_requires)
+            text.append(t('Free if you own {card}', card=t.name(card.chain_requires)))
         if card.chain_enables:
-            text.append('Unlocks ' + ', '.join(card.chain_enables))
-        return {'name': name, 'color': card.color.value, 'age': card.age, 'text': text}
+            text.append(t('Unlocks {cards}', cards=', '.join(t.name(c) for c in card.chain_enables)))
+        return {'name': name, 'title': t.name(name), 'color': card.color.value, 'age': card.age, 'text': text}
 
-    def boards(self, built: Sequence[int]) -> List[Dict[str, Any]]:
+    def boards(self, built: Sequence[int], t: Translator = ENGLISH) -> List[Dict[str, Any]]:
         """Every seat's wonder board (public): starting resource and stages, ``built[seat]`` built."""
         out = []
         for seat, setup in enumerate(self.setups):
@@ -359,13 +378,14 @@ class HumanSession:
             out.append(
                 {
                     'seat': seat,
-                    'produces': RES_NAME[res] if res is not None else 'nothing',
-                    'powers': effect_lines(wonder.effects),
+                    'title': t.name(setup.wonder),
+                    'produces': res_name(res, t) if res is not None else t('nothing'),
+                    'powers': effect_lines(wonder.effects, t),
                     'stages': [
                         {
                             'index': k + 1,
-                            'cost': cost_text(stage.cost.coins, stage.cost.resources),
-                            'effects': effect_lines(stage.effects),
+                            'cost': cost_text(stage.cost.coins, stage.cost.resources, t),
+                            'effects': effect_lines(stage.effects, t),
                             'built': k < built[seat],
                         }
                         for k, stage in enumerate(wonder.stages)
@@ -393,8 +413,8 @@ class HumanSession:
             out.append(entry)
         return out
 
-    def state(self) -> Dict[str, Any]:
-        """A JSON-ready view for the human seat."""
+    def state(self, t: Translator = ENGLISH) -> Dict[str, Any]:
+        """A JSON-ready view for the human seat (card, board and wonder texts translated by ``t``)."""
         game = self.env.game
         assert game is not None
         state: Dict[str, Any] = {
@@ -403,7 +423,14 @@ class HumanSession:
             'human': self.human,
             'expansions': list(self.ruleset.expansions),
             'players': [
-                {'seat': i, 'name': s.name, 'wonder': s.wonder, 'side': s.side, 'agent': self.config.seats[i].player}
+                {
+                    'seat': i,
+                    'name': s.name,
+                    'wonder': s.wonder,
+                    'wonder_title': t.name(s.wonder),
+                    'side': s.side,
+                    'agent': self.config.seats[i].player,
+                }
                 for i, s in enumerate(self.setups)
             ],
             'done': self.done,
@@ -413,17 +440,17 @@ class HumanSession:
             view = obs.to_dict()
             view['actions'] = self._actions(obs)
             state['observation'] = view
-            state['boards'] = self.boards([city.stages_built for city in obs.table])
+            state['boards'] = self.boards([city.stages_built for city in obs.table], t)
             cards = {c.name for c in obs.hand}
             cards.update(n for city in obs.table for n in city.cards)
             cards.update(e.card for e in obs.history if e.card)
             cards.update(obs.leaders_hand)
-            state['cards'] = {n: self.card_info(n) for n in sorted(cards)}
+            state['cards'] = {n: self.card_info(n, t) for n in sorted(cards)}
         else:
             scores = [game.score(i).as_dict() for i in range(game.n)]
             winner = game.winner()
             state['result'] = {'scores': scores, 'categories': list(CATEGORIES), 'winner': winner}
-            state['cards'] = {n: self.card_info(n) for p in game.players for n in (c.name for c in p.cards)}
+            state['cards'] = {n: self.card_info(n, t) for p in game.players for n in (c.name for c in p.cards)}
             state['cities'] = [
                 {
                     'seat': i,
