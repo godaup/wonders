@@ -199,6 +199,14 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .an-moment p { margin: 2px 0; font-size: 13px; }
 .an-table { border-collapse: collapse; width: 100%; font-size: 13px; }
 .an-table td, .an-table th { padding: 4px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.an-whatif { margin-top: 6px; font-size: 12px; display: grid; gap: 3px; }
+.an-whatif .bar { display: grid; grid-template-columns: 70px minmax(0, 1fr) 46px; gap: 6px; align-items: center; }
+.an-whatif .track { height: 8px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+.an-whatif .track div { height: 100%; }
+.an-patterns { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.an-pattern { padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--pc); border-radius: 10px; background: var(--panel-2); }
+.an-pattern h4 { margin: 0 0 4px; font-size: 13px; }
+.an-pattern p { margin: 0; font-size: 12px; color: var(--muted); }
 .an-progress { height: 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
 .an-progress div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
 
@@ -792,6 +800,31 @@ function analysisGraph(points) {
   svg += `<text x="${pad}" y="14" font-size="12" fill="currentColor" opacity=".6">expected final margin (VP) — your moves (solid) vs the best (dashed)</text></svg>`;
   const box = el('div', { class: 'an-graph' }); box.innerHTML = svg; return box;
 }
+const PATTERN_COLOR = { trade: 'var(--gold)', military: 'var(--c-red)', science: 'var(--c-green)', wonder: 'var(--c-grey)',
+  coins: 'var(--gold)', passing: 'var(--c-purple)', discards: 'var(--c-brown)', timing: 'var(--accent)' };
+function whatIf(w) {
+  if (!w) return null;
+  const gain = w.best.mean_margin - w.played.mean_margin;
+  const vp = (x) => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(1) + ' VP';
+  if (w.runs === 1) {
+    const rb = Math.round(w.best.mean_rank), rp = Math.round(w.played.mean_rank);
+    return el('div', { class: 'an-whatif' }, el('span', {}, el('b', {}, 'What if? '),
+      gain < -1 ? `Played out from the real position, your move actually did better (${vp(-gain)}), so this verdict is uncertain.`
+        : rb < rp ? `With the better move you would have finished #${rb} instead of #${rp} (${vp(gain)} against the leader).`
+          : `You would still have finished #${rp}, ${vp(gain)} against the leader.`));
+  }
+  const bar = (name, v, color) => el('div', { class: 'bar' }, el('span', {}, name),
+    el('div', { class: 'track' }, el('div', { style: `width:${Math.round(100 * v)}%;background:${color}` })), el('span', {}, Math.round(100 * v) + '%'));
+  return el('div', { class: 'an-whatif', 'data-tip': `${w.runs} continuations from the real position, every seat then playing the network; later Ages reshuffled the same way for both moves` },
+    el('span', {}, el('b', {}, 'What if? '), gain >= -1
+      ? `Over ${w.runs} continuations from the real position the better move ends ${vp(gain)} against the leader on average ` +
+        `(average rank ${w.best.mean_rank.toFixed(1)} instead of ${w.played.mean_rank.toFixed(1)}).`
+      : `In ${w.runs} continuations from the real position your move actually did better (${vp(-gain)} against the leader), ` +
+        'so this verdict is uncertain: the search judged with only what you could see, the continuations know every hand.'),
+    (w.best.first || w.played.first) ? el('span', { class: 'muted' }, 'First place:') : null,
+    (w.best.first || w.played.first) ? bar('better', w.best.first, 'var(--green)') : null,
+    (w.best.first || w.played.first) ? bar('yours', w.played.first, 'var(--accent)') : null);
+}
 function renderAnalysis(a) {
   const box = $('r-analysis'); box.classList.remove('hidden');
   if (a.status === 'running') {
@@ -811,7 +844,8 @@ function renderAnalysis(a) {
       el('h4', {}, `−${d.loss.toFixed(1)} VP (± ${d.loss_se.toFixed(1)})`),
       el('p', {}, el('b', {}, 'You: '), moveText(d.played)),
       el('p', {}, el('b', {}, 'Better: '), moveText(d.best)),
-      el('p', { class: 'muted' }, d.reason))));
+      el('p', { class: 'muted' }, d.reason),
+      whatIf(d.what_if))));
   const rows = r.decisions.map((d) => el('tr', {},
     el('td', {}, `${AGES[d.age]} · ${d.turn}`), el('td', {}, moveText(d.played)), el('td', {}, badge(d.label)),
     el('td', {}, d.loss ? '−' + d.loss.toFixed(1) : ''), el('td', {}, d.best && d.label !== 'best' ? moveText(d.best) : '')));
@@ -820,6 +854,10 @@ function renderAnalysis(a) {
     el('div', { class: 'an-summary' }, el('span', { class: 'an-big', 'data-tip': 'Moves rated best or within noise of the best' }, Math.round(100 * s.accuracy) + '% accuracy'),
       el('span', { class: 'muted' }, `${s.rated} rated moves · ${s.total_loss.toFixed(1)} VP left on the table ·`), ...counts),
     analysisGraph(r.graph),
+    el('div', {}, (r.patterns || []).length ? [
+      el('p', { class: 'section-title' }, 'Patterns in your game'),
+      el('div', { class: 'an-patterns' }, r.patterns.map((pt) => el('div', { class: 'an-pattern', style: `--pc:${PATTERN_COLOR[pt.kind] || 'var(--muted)'}` },
+        el('h4', {}, pt.title), el('p', {}, pt.detail))))] : null),
     r.key_moments.length ? el('p', { class: 'section-title' }, 'Key moments') : el('p', { class: 'muted' }, 'No clear mistakes — well played.'),
     ...moments,
     el('details', {}, el('summary', {}, 'Every move'),

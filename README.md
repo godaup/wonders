@@ -120,7 +120,9 @@ any time. Everything runs locally.
 **Analyse my moves.** After the game, the network-guided search reviews every one of your moves —
 judged only with what you could see at the time — and shows your accuracy, the expected margin over
 the game, and your key moments: what you played, what was better, how many points it cost and why
-(e.g. *"gains 4.8 science"*).
+(e.g. *"gains 4.8 science"*) — each replayed from the real position to show how the game would have
+gone. It also spots patterns: coins spent on trade, conflicts lost by one shield, the science symbol
+you were missing, strong cards you passed to a neighbour.
 
 <p align="center">
   <img src="docs/images/cards.png" width="900" alt="Card renderings: raw material, commercial, military, civilian, guild, leader and city cards">

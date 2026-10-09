@@ -102,3 +102,44 @@ def test_replay_observations_reproduce_what_the_seat_saw(seat):
         assert obs.to_dict() == logged
     moves = [a for d, _o, a in agents[seat].log if d != 'draft']
     assert [(a.kind, a.card.name) for _p, _o, a in replayed] == [(a.kind, a.card.name) for a in moves]
+
+
+def test_branch_with_the_recorded_move_reproduces_the_game():
+    import random
+
+    from wonders.agents import HeuristicAgent
+    from wonders.engine.actions import ActionKind
+
+    content = load_content('base')
+    setups = [
+        PlayerSetup(n, w, 'A')
+        for n, w in zip(
+            'ABCD',
+            [
+                'The Pyramids of Giza',
+                'The Colossus of Rhodes',
+                'The Temple of Artemis in Ephesus',
+                'The Lighthouse of Alexandria',
+            ],
+        )
+    ]
+    agents = [HeuristicAgent() for _ in setups]
+    game, record = play_match(content, setups, agents, random.Random(2))
+    finals = [game.score(i).total for i in range(4)]
+    decisions = list(record.replay_observations(content, 1))
+
+    def policy(_game, i, obs, options):
+        return agents[i].act(obs, options)
+
+    same = record.branch(content, 1, 7, decisions[7][2], policy)
+    assert [same.score(i).total for i in range(4)] == finals
+    point, obs, played = decisions[7]
+    other = next(a for a in obs.legal_actions if (a.kind, a.card.name) != (played.kind, played.card.name))
+    branched = record.branch(content, 1, 7, other, policy)
+    mine = [c.name for c in branched.players[1].cards] + ['#%d' % branched.players[1].wonder_stages_built]
+    if other.kind is ActionKind.BUILD:
+        assert other.card.name in mine
+    reshuffled = record.branch(content, 1, 7, other, policy, rng=random.Random(9))
+    assert reshuffled.phase.value == branched.phase.value  # later Ages dealt differently, still a full game
+    with pytest.raises(ValueError):
+        record.branch(content, 1, 99, other, policy)

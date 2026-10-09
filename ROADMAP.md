@@ -63,10 +63,11 @@ teacher exists (step 3 below).
 
 ## 3. Post-game analysis
 
-**Status: first version done** — `wonders analyse` and the GUI's "Analyse my moves": move ratings with
-paired noise estimates, key moments with reasons, the expected-margin graph, every move rated
-(`wonders/ml/analysis.py`, `GameRecord.replay_observations`). Still open: patterns across the game and
-what-if replays.
+**Status: done** — `wonders analyse` and the GUI's "Analyse my moves": move ratings with paired noise
+estimates, key moments with reasons, the expected-margin graph, patterns across the game, and what-if
+continuations of the key moments from the real position (`wonders/ml/analysis.py`,
+`GameRecord.replay_observations` / `GameRecord.branch`). Possible follow-ups: rating the Leaders draft
+and recruitment, and analysing several games for trends.
 
 **Goal.** After a game in `wonders gui`, an "Analyse game" button explains how the human played,
 like a chess engine's game review.

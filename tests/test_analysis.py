@@ -38,7 +38,7 @@ def report():
     content = load_content('base')
     agents = [GreedyAgent(), HeuristicAgent(), HeuristicAgent()]
     _game, record = play_match(content, SETUPS, agents, random.Random(5))
-    return analyse(record, 0, depth=1, worlds=2, candidates=2, seed=1)
+    return analyse(record, 0, depth=1, worlds=2, candidates=2, seed=1, what_if=1, what_if_runs=2)
 
 
 def test_analyse_rates_every_regular_turn(report):
@@ -68,3 +68,18 @@ def test_server_refuses_to_analyse_an_unfinished_game():
     with pytest.raises(ConfigError):
         play.start_analysis()
     assert play.analysis_state() == {'status': 'idle'}
+
+
+def test_patterns_and_what_if(report):
+    kinds = {'trade', 'military', 'science', 'wonder', 'coins', 'passing', 'discards', 'timing'}
+    assert len(report['patterns']) <= 6
+    for p in report['patterns']:
+        assert p['kind'] in kinds and p['title'] and p['detail'] and p['vp'] >= 0
+    assert [p['vp'] for p in report['patterns']] == sorted((p['vp'] for p in report['patterns']), reverse=True)
+    replayed = [d for d in report['decisions'] if 'what_if' in d]
+    assert len(replayed) <= 1  # what_if=1
+    for d in replayed:
+        w = d['what_if']
+        assert w['runs'] in (1, 2)
+        for side in ('played', 'best'):
+            assert 1 <= w[side]['mean_rank'] <= 3 and 0 <= w[side]['first'] <= 1
