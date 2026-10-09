@@ -7,9 +7,9 @@ from typing import Any, Dict, List
 
 import pytest
 
-from wonders.agents.bench import AGENTS
+from wonders.agents.bench import AGENT_NAMES, AGENTS, agent_id, agent_name
 from wonders.play import rating
-from wonders.play.achievements import ACHIEVEMENTS, achievements, earned
+from wonders.play.achievements import ACHIEVEMENTS, GROUPS, POINTS, TIERS, achievements, earned
 from wonders.play.rating import (
     AGENT_ELO,
     RatedGame,
@@ -111,41 +111,129 @@ def test_fit_recovers_the_strength_order() -> None:
 
 
 # -- achievements --------------------------------------------------------------------------------
-def _game(**result: Any) -> Dict[str, Any]:
+CATS = ('military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science')
+
+
+def _game(players: Any = ('human', 'civic', 'greedy'), expansions: Any = ('base',), **result: Any) -> Dict[str, Any]:
+    n = len(players)
     base: Dict[str, Any] = {
-        'places': [1, 2, 3],
-        'colors': [{'blue': 3}, {'red': 2}, {}],
-        'scores': [dict.fromkeys(('military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science'), 2)]
-        * 3,
-        'discard_builds': [0, 0, 0],
+        'totals': [50] + [40] * (n - 1),
+        'coins': [3] * n,
+        'places': list(range(1, n + 1)),
+        'colors': [{'blue': 3, 'red': 1}] + [{}] * (n - 1),
+        'scores': [dict.fromkeys(CATS, 2)] * n,
+        'cards': [18] * n,
+        'chains': [0] * n,
+        'stages': [1] * n,
+        'stages_total': [3] * n,
+        'tokens': [[1, -1]] * n,
+        'debt': [0] * n,
+        'discards': [1] * n,
+        'discard_builds': [0] * n,
+        'traded': 4,
     }
     return {
         'id': 'g',
         'finished': True,
         'finished_at': '2026-10-09T12:00:00+00:00',
         'human': 0,
-        'players': [{'agent': 'human'}, {'agent': 'board'}, {'agent': 'heuristic'}],
+        'expansions': list(expansions),
+        'players': [{'agent': a, 'wonder': f'W{i}'} for i, a in enumerate(players)],
         'result': {**base, **result},
     }
 
 
-def test_achievements_are_checked_from_the_saved_result() -> None:
-    assert {a.id for a in ACHIEVEMENTS} == {'pacifist', 'renaissance', 'dumpster'}
-    assert earned(_game()) == ['pacifist']  # won without red cards
-    assert earned(_game(colors=[{'red': 1}, {}, {}])) == []
-    assert earned(_game(places=[2, 1, 3])) == []
-    allround = dict.fromkeys(('military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science'), 5)
+def test_the_achievement_catalogue_is_well_formed() -> None:
+    ids = [a.id for a in ACHIEVEMENTS]
+    assert len(ids) == len(set(ids)) >= 30
+    for a in ACHIEVEMENTS:
+        assert a.tier in TIERS and a.group in GROUPS and a.icon and a.name and a.description.endswith(('.', '!'))
+        assert (a.check is None) != (a.career is None)
+    tiers = [a.tier for a in ACHIEVEMENTS]
+    assert all(tiers.count(t) >= 2 for t in TIERS)  # a spread of difficulty
+    assert {a.group for a in ACHIEVEMENTS} == set(GROUPS)
+    assert all(sum(a.group == g for a in ACHIEVEMENTS) % 3 == 0 for g in GROUPS)  # full rows of three
+    order = [(GROUPS.index(a.group), TIERS.index(a.tier)) for a in ACHIEVEMENTS]
+    assert order == sorted(order)  # grouped, then bronze to legendary
+    assert tiers.count('legendary') >= 5
+    summary = achievements([])
+    assert all(item['count'] == 0 and item['points'] == POINTS[item['tier']] for item in summary)
+
+
+def test_feats_are_checked_from_the_saved_result() -> None:
+    plain = _game()
+    assert earned(plain) == ['first_steps']  # a 10-point win with nothing special
+    assert earned({**plain, 'finished': False}) == []
+    assert 'pacifist' in earned(_game(colors=[{'blue': 3}, {}, {}]))
+    assert 'wonderwall' in earned(_game(stages=[3, 0, 0]))
+    assert 'full_spectrum' in earned(
+        _game(colors=[dict.fromkeys(('brown', 'grey', 'yellow', 'red', 'blue', 'green', 'purple'), 1), {}, {}])
+    )
+    assert 'chain_reaction' in earned(_game(chains=[4, 0, 0]))
+    assert 'landslide' in earned(_game(totals=[60, 45, 30]))
+    assert 'photo_finish' in earned(_game(totals=[50, 49, 30])) and 'photo_finish' in earned(_game(totals=[50, 50, 30]))
+    assert 'photo_finish' not in earned(_game(totals=[50, 49, 30], places=[2, 1, 3]))
+    assert 'last_drachma' in earned(_game(coins=[0, 3, 3]))
+    assert 'sparta' in earned(_game(tokens=[[1, 1, 3, 3, 5, 5], [], []]))
+    assert 'sparta' not in earned(_game(tokens=[[1, 1, 3, 3, 5, 5, -1], [], []]))
+    assert 'glass_jaw' in earned(_game(tokens=[[-1] * 5, [], []]))
+    assert 'autarky' in earned(_game(traded=0)) and 'autarky' not in earned(_game(traded=0, places=[2, 1, 3]))
+    assert 'less_is_more' in earned(_game(cards=[14, 18, 18]))
+    assert 'recycling' in earned(_game(discards=[4, 0, 0]))
+    assert 'dumpster' in earned(_game(discard_builds=[3, 0, 0], places=[3, 1, 2]))  # winning not needed
+    assert 'seventy' in earned(_game(totals=[70, 40, 40]))
+    allround = dict.fromkeys(CATS, 5)
     assert 'renaissance' in earned(_game(scores=[allround, {}, {}], places=[3, 1, 2]))
-    assert earned(_game(discard_builds=[3, 0, 0], places=[2, 1, 3])) == ['dumpster']
-    assert earned({**_game(), 'finished': False}) == []
+    assert 'nerd_alert' in earned(_game(colors=[{'green': 3}, {}, {}]))
+    assert 'good_neighbour' in earned(_game(traded=10))
+    assert 'participation' in earned(_game(places=[3, 1, 2])) and 'participation' not in earned(_game(places=[2, 1, 2]))
+    sets = dict.fromkeys(('tablet', 'gear', 'compass'), 3)
+    assert 'philosopher_king' in earned(_game(science=[sets, {}, {}]))
+    assert 'philosopher_king' not in earned(_game(science=[{**sets, 'gear': 2}, {}, {}]))
+    monty = earned(_game(tokens=[[1, 1, 3, 3, 5, 5], [], []], stages=[3, 0, 0]))
+    assert {'full_monty', 'sparta', 'wonderwall'} <= set(monty)
+    assert monty.index('wonderwall') < monty.index('sparta') < monty.index('full_monty')  # bronze first
 
 
-def test_achievement_summary_counts_games() -> None:
-    first = {**_game(), 'id': 'one', 'finished_at': '2026-10-01T00:00:00+00:00'}
-    second = {**_game(), 'id': 'two'}
-    summary = {a['id']: a for a in achievements([first, second])}
-    assert summary['pacifist']['count'] == 2 and summary['pacifist']['games'] == ['one', 'two']
-    assert summary['pacifist']['first'] == '2026-10-01T00:00:00+00:00'
-    assert summary['dumpster']['count'] == 0 and summary['dumpster']['first'] is None
-    assert rated_game(first) == RatedGame('one', (1, 2, 3), 0, ('', 'board', 'heuristic'))
-    assert rated_game({**first, 'finished': False}) is None
+def test_expansion_and_opponent_feats() -> None:
+    assert 'hall_of_fame' in earned(_game(expansions=('base', 'leaders'), colors=[{'white': 4}, {}, {}]))
+    assert 'self_made' in earned(_game(expansions=('base', 'leaders')))
+    assert 'self_made' not in earned(_game())  # no leaders to skip in a base game
+    assert 'name_dropper' in earned(_game(expansions=('base', 'leaders'), colors=[{'white': 3}, {}, {}]))
+    assert 'black_sheep' in earned(_game(expansions=('base', 'cities'), colors=[{'black': 1}, {}, {}]))
+    assert 'homeward_bound' in earned(_game(('human', 'heuristic', 'board')))
+    assert 'out_forged' in earned(_game(('human', 'heuristic', 'board')))
+    assert 'shady_dealings' in earned(_game(expansions=('base', 'cities'), colors=[{'black': 4}, {}, {}]))
+    assert 'too_big_to_fail' in earned(_game(debt=[3, 0, 0]))
+    seven = ('human', 'board', 'random', 'greedy', 'civic', 'heuristic', 'table')
+    assert 'packed_house' in earned(_game(seven, ('base', 'leaders', 'cities')))
+    assert 'packed_house' not in earned(_game(seven, ('base', 'leaders')))
+    assert 'fortunes_fool' in earned(_game(('human', 'random', 'board'), places=[2, 1, 3]))
+    assert 'giant_slayer' in earned(_game(('human', 'neural', 'board'), places=[2, 3, 1]))
+    assert 'giant_slayer' not in earned(_game(('human', 'neural', 'board'), places=[2, 1, 3]))
+    boss = ('human', 'neural', 'adaptive', 'rival')
+    assert 'boss_rush' in earned(_game(boss))
+    assert 'boss_rush' not in earned(_game(boss, places=[2, 1, 3, 4]))
+
+
+def test_career_goals_count_across_games() -> None:
+    games = [{**_game(('human',) + ('random',) * (n - 1)), 'id': f'g{n}'} for n in (3, 4, 5, 6, 7)]
+    for k, g in enumerate(games):
+        g['players'][0]['wonder'] = f'Wonder {k % 3}'  # three different winning wonders
+    summary = {a['id']: a for a in achievements(games, [1500, 1600, 1760, 1700, 1800])}
+    assert summary['season_ticket']['games'] == ['g7'] and summary['season_ticket']['progress'] == 5
+    assert summary['full_house']['count'] == 1 and summary['full_house']['games'] == ['g7']
+    assert (summary['globetrotter']['progress'], summary['globetrotter']['goal']) == (3, 4)
+    assert summary['globetrotter']['count'] == 0
+    assert summary['rogues_gallery']['progress'] == 1  # only ever beat the random agent
+    assert summary['rising_star']['games'] == ['g5'] and summary['olympian']['progress'] == 1800
+    assert summary['first_steps']['count'] == 5 and summary['first_steps']['first'] == '2026-10-09T12:00:00+00:00'
+    assert rated_game(games[0]) == RatedGame('g3', (1, 2, 3), 0, ('', 'random', 'random'))
+    assert rated_game({**games[0], 'finished': False}) is None
+
+
+def test_agents_have_display_names() -> None:
+    assert set(AGENTS) | {'neural'} <= set(AGENT_NAMES)
+    assert len(set(AGENT_NAMES.values())) == len(AGENT_NAMES)
+    assert agent_name('neural') == 'Pythia' and agent_name('my-plugin') == 'my-plugin'
+    assert agent_id('pythia') == 'neural' and agent_id('Odysseus') == 'heuristic' and agent_id('board') == 'board'

@@ -343,7 +343,8 @@ def test_server_saves_rates_and_reopens_games(saving_url):
     viewed = _request(saving_url + '/api/games/open', {'id': first})['state']
     assert viewed['done'] and viewed['result'] == state['result']
     achievements = _request(saving_url + '/api/achievements?lang=de')
-    assert achievements['games'] == 1 and len(achievements['achievements']) == 3
+    assert achievements['games'] == 1 and len(achievements['achievements']) >= 30
+    assert achievements['points'] >= 10 and achievements['max_points'] > achievements['points']
     assert any(a['name'] == 'Mülltaucher' for a in achievements['achievements'])
     assert _request(saving_url + '/api/games/delete', {'id': first}) == {'deleted': first}
     assert _request(saving_url + '/api/state') == {'state': None}  # the open game was deleted

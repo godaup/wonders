@@ -92,6 +92,41 @@ AGENTS: Dict[str, AgentSpec] = {
 }
 
 
+# Display names for people: ids stay the technical names (records, checkpoints, benchmarks, CLI), the
+# GUI and default seat names use these. Chosen to hint at the play style and to avoid leader names.
+AGENT_NAMES: Dict[str, str] = {
+    'random': 'Fortuna',  # goddess of luck: any legal move
+    'greedy': 'Icarus',  # grabs the most points now, never mind later
+    'hoarder': 'Diogenes',  # lived in a barrel: discards everything for coins
+    'militarist': 'Ares',
+    'scientist': 'Thales',
+    'civic': 'Solon',  # the lawgiver: blue cards
+    'economist': 'Plutus',  # god of wealth: yellow cards
+    'builder': 'Daedalus',  # the master builder: rushes the wonder
+    'heuristic': 'Odysseus',  # the solid, cunning all-rounder
+    'opportunist': 'Proteus',  # the shape-shifter: switches colour focus
+    'blocker': 'Nemesis',  # denies the neighbour their best card
+    'table': 'Callimachus',  # catalogued the Library of Alexandria: a fixed value table
+    'balanced': 'Harmonia',  # fills the scarcest colour
+    'board': 'Hephaestus',  # the craftsman: plans around the wonder board
+    'board-focus': 'Artemis',  # aims at the colours its board points to
+    'adaptive': 'Metis',  # cunning intelligence: adapts to the game
+    'rival': 'Eris',  # discord: plays against whoever leads
+    'neural': 'Pythia',  # the oracle: the bundled trained network
+}
+
+
+def agent_name(agent_id: str) -> str:
+    """The display name of an agent id (the id itself when it has none)."""
+    return AGENT_NAMES.get(agent_id, agent_id)
+
+
+def agent_id(name: str) -> str:
+    """The agent id for a display name (case-insensitive), or ``name`` unchanged."""
+    lowered = name.lower()
+    return next((k for k, v in AGENT_NAMES.items() if v.lower() == lowered), name)
+
+
 def wilson_interval(wins: float, n: int, z: float = 1.96) -> Tuple[float, float]:
     """95% Wilson score interval for a win rate (well-behaved near 0 and 1)."""
     if n == 0:

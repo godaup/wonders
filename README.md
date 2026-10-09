@@ -174,9 +174,11 @@ name, `neural` for the bundled network, or `neural:<checkpoint.pt>`.
 
 The GUI saves every game as you play (`~/.wonders/games`, or `$WONDERS_HOME/games`; `--no-save` turns
 it off), so a game can be closed and resumed later. "Past games" lists them with your **Elo rating**
-and its graph: every agent has a fixed rating measured in 20,000 games between them (random 1000,
-heuristic ≈1730, board ≈1890, the bundled network ≈2170), and each finished game counts as a match
-against every opponent at the table. "Achievements" shows the feats you have earned so far.
+and its graph: every agent has a fixed rating measured in 20,000 games between them (Fortuna, the
+random agent, 1000; Odysseus/`heuristic` ≈1730; Hephaestus/`board` ≈1890; Pythia, the bundled network,
+≈2170), and each finished game counts as a match against every opponent at the table.
+"Achievements" has 42 feats and career goals from bronze to legendary — win without a red card, beat
+Pythia, build three cards from the discard pile, win a game deep in debt, reach Elo 2000, …
 
 ### Training (needs PyTorch)
 

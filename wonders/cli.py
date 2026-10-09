@@ -23,12 +23,12 @@ def _ml():
 
 def _lineup(agents: str):
     """Parse a lineup into agent specs (built-in names or ``neural:<path>``)."""
-    from wonders.agents.bench import AGENTS, MAX_PLAYERS, MIN_PLAYERS, AgentSpec
+    from wonders.agents.bench import AGENTS, MAX_PLAYERS, MIN_PLAYERS, AgentSpec, agent_id
     from wonders.extensions import ensure_loaded
 
     models = ensure_loaded().models
     specs = []
-    for entry in (a.strip() for a in agents.split(',')):
+    for entry in (agent_id(a.strip()) for a in agents.split(',')):  # display names work too (Pythia, ...)
         if not entry:
             continue
         if entry == 'neural' or entry.startswith('neural:'):
@@ -84,12 +84,14 @@ def main(ctx):
 
 @main.command()
 def agents():
-    """List the built-in agents usable in 'play' and 'bench'."""
-    from wonders.agents.bench import AGENTS
+    """List the built-in agents usable in 'play' and 'bench', with their display names and Elo ratings."""
+    from wonders.agents.bench import AGENTS, agent_name
+    from wonders.play.rating import agent_elo
 
     for name, spec in AGENTS.items():
         doc = (spec.cls.__doc__ or '').strip().splitlines()
-        click.echo(f'{name:<12} {doc[0] if doc else spec.cls.__name__}')
+        persona = f'{agent_name(name)} ({agent_elo(name)})'
+        click.echo(f'{name:<12} {persona:<19} {doc[0] if doc else spec.cls.__name__}')
 
 
 @main.command()
