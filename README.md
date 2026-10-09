@@ -172,6 +172,12 @@ name, `neural` for the bundled network, or `neural:<checkpoint.pt>`.
 
 `wonders gui --checkpoint model.pt` adds your own network as an opponent in the browser table.
 
+The GUI saves every game as you play (`~/.wonders/games`, or `$WONDERS_HOME/games`; `--no-save` turns
+it off), so a game can be closed and resumed later. "Past games" lists them with your **Elo rating**
+and its graph: every agent has a fixed rating measured in 20,000 games between them (random 1000,
+heuristic ≈1730, board ≈1890, the bundled network ≈2170), and each finished game counts as a match
+against every opponent at the table. "Achievements" shows the feats you have earned so far.
+
 ### Training (needs PyTorch)
 
 The [training guide](docs/training.md) explains the full workflow; the main commands:

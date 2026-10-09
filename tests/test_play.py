@@ -9,6 +9,7 @@ from typing import Any, Dict, Iterator, Optional
 
 import pytest
 
+from wonders.play.rating import AGENT_ELO
 from wonders.play.server import make_server
 from wonders.play.session import (
     HUMAN,
@@ -20,6 +21,7 @@ from wonders.play.session import (
     legal_action,
     menu_options,
 )
+from wonders.storage import Store
 
 
 def _config(expansions=('base',), agents=('heuristic', 'board'), human: int = 0, **kwargs: Any) -> GameConfig:
@@ -265,3 +267,98 @@ def test_server_speaks_german(base_url):
     assert _request(base_url + '/api/state')['state']['cards'][card]['text'][0].startswith('Cost: ')
     state = _request(base_url + '/api/act?lang=de', {'index': 0})['state']
     assert all(info['text'][0].startswith('Kosten: ') for info in state['cards'].values())
+
+
+# -- saved games -----------------------------------------------------------------------------
+def test_a_saved_game_restores_mid_game_and_finished():
+    session = HumanSession(_config(expansions=('leaders',), agents=('heuristic', 'board', 'random'), seed=7))
+    for _ in range(8):
+        session.act(len(session.state()['observation']['actions']) - 1)
+    saved = json.loads(json.dumps(session.saved()))  # survives JSON
+    assert saved['finished'] is False and saved['result'] is None and saved['progress']['age'] >= 1
+    assert saved['config']['seed'] == session.seed and saved['players'][1]['agent'] == 'heuristic'
+    restored = HumanSession.restore(saved)
+    assert restored.id == session.id and restored.record_json() == session.record_json()
+    assert restored.state()['observation'] == session.state()['observation']
+    _play_out(restored)
+    saved = json.loads(json.dumps(restored.saved()))
+    result = saved['result']
+    assert saved['finished'] and saved['finished_at'] and saved['progress'] is None
+    assert sorted(result['places'])[0] == 1 and len(result['places']) == 4
+    assert result['totals'] == [s['total'] for s in result['scores']]
+    game = restored.env.game
+    assert game is not None
+    assert [sum(c.values()) for c in result['colors']] == [len(p.cards) for p in game.players]
+    again = HumanSession.restore(saved)
+    assert again.done and again.state()['result'] == restored.state()['result']
+
+
+def test_a_saved_game_that_no_longer_matches_is_refused():
+    session = HumanSession(_config(seed=2))
+    session.act(0)
+    saved = session.saved()
+    saved['log'][0]['moves']['0'] = ['build', 'No Such Card']
+    with pytest.raises(ConfigError, match='no longer matches'):
+        HumanSession.restore(saved)
+
+
+@pytest.fixture
+def saving_url(tmp_path) -> Iterator[str]:
+    httpd = make_server(port=0, store=Store(tmp_path))
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f'http://127.0.0.1:{httpd.server_address[1]}'
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_server_saves_rates_and_reopens_games(saving_url):
+    assert _request(saving_url + '/api/options')['saving'] is True
+    assert _request(saving_url + '/api/games')['games'] == []
+    config = {'seats': [{'player': HUMAN}, {'player': 'random'}, {'player': 'hoarder'}], 'seed': 1}
+    state = _request(saving_url + '/api/new', config)['state']
+    first = state['id']
+    state = _request(saving_url + '/api/act', {'index': 0})['state']
+    games = _request(saving_url + '/api/games')
+    assert [g['id'] for g in games['games']] == [first] and games['games'][0]['current'] is True
+    assert games['games'][0]['finished'] is False and 'log' not in games['games'][0]
+    assert games['rating']['current'] == games['rating']['start'] and games['rating']['history'] == []
+
+    second = _request(saving_url + '/api/new', config)['state']['id']  # the first game stays saved
+    state = _request(saving_url + '/api/games/open', {'id': first})['state']  # ...and resumes
+    assert state['id'] == first and not state['done']
+    while not state['done']:
+        state = _request(saving_url + '/api/act', {'index': 0})['state']
+    games = _request(saving_url + '/api/games')
+    assert [g['id'] for g in games['games']] == [second, first]  # newest first
+    done = games['games'][1]
+    assert done['finished'] and done['rating']['before'] == games['rating']['start']
+    assert games['rating']['games'] == 1 and games['rating']['current'] == done['rating']['after']
+    assert games['rating']['history'][0]['place'] == done['result']['places'][0]
+    assert [p['elo'] for p in done['players']] == [None, AGENT_ELO['random'], AGENT_ELO['hoarder']]
+    record = _request(saving_url + f'/api/games/record?id={first}')
+    assert set(record['moves']) == {'1', '2', '3'}
+    viewed = _request(saving_url + '/api/games/open', {'id': first})['state']
+    assert viewed['done'] and viewed['result'] == state['result']
+    achievements = _request(saving_url + '/api/achievements?lang=de')
+    assert achievements['games'] == 1 and len(achievements['achievements']) == 3
+    assert any(a['name'] == 'Mülltaucher' for a in achievements['achievements'])
+    assert _request(saving_url + '/api/games/delete', {'id': first}) == {'deleted': first}
+    assert _request(saving_url + '/api/state') == {'state': None}  # the open game was deleted
+    assert [g['id'] for g in _request(saving_url + '/api/games')['games']] == [second]
+    with pytest.raises(urllib.error.HTTPError) as err:
+        _request(saving_url + '/api/games/open', {'id': '../etc'})
+    assert err.value.code == 400
+    with pytest.raises(urllib.error.HTTPError) as err:
+        _request(saving_url + '/api/games/record?id=nope')
+    assert err.value.code == 404
+
+
+def test_server_without_a_store_saves_nothing(base_url):
+    assert _request(base_url + '/api/options')['saving'] is False
+    assert _request(base_url + '/api/games')['games'] == []
+    with pytest.raises(urllib.error.HTTPError) as err:
+        _request(base_url + '/api/games/open', {'id': 'x'})
+    assert 'not saved' in json.loads(err.value.read())['error']

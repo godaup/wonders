@@ -151,6 +151,13 @@ scoring categories). It is split into three packages under `wonders/`:
   of all seats once done). `GameConfig` is what the menu picks (expansions, seats, wonder/side,
   seed); neural opponents are checked against their checkpoint vocabulary. `server.py` serves
   `static/index.html` (vanilla JS single page) and a JSON API on 127.0.0.1 (`wonders gui`).
+  Every step of every seat is kept in `HumanSession.log`; `saved()` is the game file (config + seed,
+  log, record, final `result` facts) and `restore()` replays the log on the same seed (not the agents),
+  so saved games survive agent changes. The server saves after each move to `wonders.storage.Store`
+  (`$WONDERS_HOME/games`, default `~/.wonders`; tests point it at a temp dir). `rating.py` holds the
+  agents' fixed Elo (`AGENT_ELO`, fitted by `python -m wonders.play.rating`) and derives the human's
+  rating from the finished games (pairwise vs every opponent); `achievements.py` checks predicates
+  over a saved game's `result` — both are derived, never stored, so new ones count old games.
 
 - **`wonders/ml/`** — the optional learned agent (PyTorch, `[ml]` extra; nothing else
   imports it, so the core stays dependency-free and `tests/test_ml.py` skips without

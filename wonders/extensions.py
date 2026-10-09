@@ -171,8 +171,10 @@ _LOADED = False
 
 
 def extensions_home() -> Path:
-    """Where folder extensions live: ``$WONDERS_EXTENSIONS`` or ``~/.wonders/extensions``."""
-    return Path(os.environ.get(HOME_VARIABLE) or Path.home() / '.wonders' / 'extensions')
+    """Where folder extensions live: ``$WONDERS_EXTENSIONS`` or ``extensions`` under the storage home."""
+    from wonders.storage import home
+
+    return Path(os.environ.get(HOME_VARIABLE) or home() / 'extensions')
 
 
 def _digest(folder: Path, manifest: Manifest) -> str:

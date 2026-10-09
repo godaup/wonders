@@ -127,6 +127,11 @@ class WondersEnv:
         return list(self._point.options) if self._point is not None else []
 
     @property
+    def decision(self) -> Optional[DecisionKind]:
+        """Which kind of decision the acting seats face (``None`` once the game is over)."""
+        return self._point.kind if self._point is not None else None
+
+    @property
     def done(self) -> bool:
         return self.game is not None and self._point is None
 

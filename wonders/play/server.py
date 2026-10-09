@@ -11,11 +11,18 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``POST /api/analyse`` / ``GET /api/analysis`` — start / poll the post-game analysis of the human's moves
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
 - ``GET /api/locale?lang=de`` — the translation catalog the page uses for its own texts
+- ``GET /api/games`` — saved games (newest first) with the rating after each, and the rating history
+- ``POST /api/games/open`` / ``POST /api/games/delete`` — ``{"id": …}``: resume or view / delete a saved game
+- ``GET /api/games/record?id=…`` — a saved game's GameRecord JSON
+- ``GET /api/achievements`` — every achievement and the games that earned it
+
+Games are saved after every move to a :class:`~wonders.storage.Store` (``~/.wonders/games``), unless
+the server runs without one (``wonders gui --no-save``).
 
 Every route takes ``?lang=<code>`` (default English): names, card texts, menu entries and the
 analysis come back translated (see :mod:`wonders.i18n`).
 
-It binds to localhost only and holds one game at a time (one human, all local).
+It binds to localhost only and plays one game at a time (one human, all local).
 """
 
 from __future__ import annotations
@@ -33,8 +40,11 @@ from urllib.parse import parse_qs, urlparse
 
 from wonders.cards.content import Content, load_content
 from wonders.i18n import DEFAULT, ENGLISH, Translator, catalog
+from wonders.play.achievements import achievements, earned
+from wonders.play.rating import AGENT_ELO, DEFAULT_AGENT_ELO, START, agent_elo, player_history, rated_game
 from wonders.play.session import ConfigError, GameConfig, HumanSession, menu_options
 from wonders.ruleset import EXPANSIONS
+from wonders.storage import StorageError, Store
 from wonders.viz.render import card_svg, wonder_svg
 
 
@@ -75,10 +85,11 @@ def _wonder_svg(name: str, side: str, built: str = '0', lang: str = DEFAULT) -> 
 
 
 class PlayServer:
-    """The one game this server hosts, guarded by a lock."""
+    """The one game this server hosts, guarded by a lock; ``store`` keeps every game (``None``: none)."""
 
-    def __init__(self, checkpoints: Sequence[str] = ()):
+    def __init__(self, checkpoints: Sequence[str] = (), store: Optional[Store] = None):
         self.checkpoints = tuple(checkpoints)
+        self.store = store
         self.session: Optional[HumanSession] = None
         self.lock = threading.Lock()
         self._options: Dict[str, Dict[str, Any]] = {}  # per language
@@ -86,14 +97,23 @@ class PlayServer:
 
     def options(self, t: Translator = ENGLISH) -> Dict[str, Any]:
         if t.lang not in self._options:
-            self._options[t.lang] = menu_options(self.checkpoints, t)
+            options = menu_options(self.checkpoints, t)
+            for agent in options['agents']:
+                agent['elo'] = agent_elo(agent['id'])
+            self._options[t.lang] = {**options, 'saving': self.store is not None}
         return self._options[t.lang]
+
+    def _save(self) -> None:
+        """Save the current game (called with the lock held)."""
+        if self.store is not None and self.session is not None:
+            self.store.save_game(self.session.saved())
 
     def new_game(self, data: Dict[str, Any], t: Translator = ENGLISH) -> Dict[str, Any]:
         config = GameConfig.from_dict(data)
         with self.lock:
             self.session = HumanSession(config, self.checkpoints, t=t)
             self.analysis = {'status': 'idle'}
+            self._save()
             return self.session.state(t)
 
     def state(self, t: Translator = ENGLISH) -> Optional[Dict[str, Any]]:
@@ -105,11 +125,99 @@ class PlayServer:
             if self.session is None:
                 raise ConfigError('no game in progress')
             self.session.act(index, payment)
+            self._save()
             return self.session.state(t)
 
     def record(self) -> Optional[str]:
         with self.lock:
             return None if self.session is None else self.session.record_json()
+
+    # -- saved games -------------------------------------------------------------------------
+    def _store(self) -> Store:
+        if self.store is None:
+            raise ConfigError('games are not saved (the server runs with --no-save)')
+        return self.store
+
+    def games(self, t: Translator = ENGLISH) -> Dict[str, Any]:
+        """The saved games, newest first, and the human's rating history over the finished ones."""
+        saved = self.store.list_games() if self.store is not None else []
+        finished = sorted((g for g in saved if rated_game(g)), key=_finished_at)
+        history = player_history(r for r in (rated_game(g) for g in finished) if r is not None)
+        points = {p.id: p for p in history}
+        with self.lock:
+            current = self.session.id if self.session is not None else None
+        games = []
+        for game in reversed(saved):
+            entry = {
+                **game,
+                'current': game['id'] == current,
+                'players': [
+                    {
+                        **p,
+                        'wonder_title': t.name(p['wonder']),
+                        'elo': None if p['agent'] == 'human' else agent_elo(p['agent']),
+                    }
+                    for p in game['players']
+                ],
+                'achievements': earned(game),
+            }
+            point = points.get(game['id'])
+            if point is not None:
+                entry['rating'] = {'before': round(point.before), 'after': round(point.after)}
+            games.append(entry)
+        by_id = {g['id']: g for g in finished}
+        return {
+            'saving': self.store is not None,
+            'games': games,
+            'rating': {
+                'start': START,
+                'current': round(history[-1].after) if history else START,
+                'games': len(history),
+                'history': [
+                    {
+                        'id': p.id,
+                        'rating': round(p.after, 1),
+                        'at': _finished_at(by_id[p.id]),
+                        'place': by_id[p.id]['result']['places'][by_id[p.id]['human']],
+                        'players': len(by_id[p.id]['players']),
+                    }
+                    for p in history
+                ],
+                'agents': dict(AGENT_ELO),
+                'default_agent': DEFAULT_AGENT_ELO,
+            },
+        }
+
+    def open_game(self, game_id: str, t: Translator = ENGLISH) -> Dict[str, Any]:
+        """Make a saved game the current one: an unfinished game continues, a finished one shows its result."""
+        session = HumanSession.restore(self._store().load_game(game_id), self.checkpoints, t=t)
+        with self.lock:
+            self.session = session
+            self.analysis = {'status': 'idle'}
+            return session.state(t)
+
+    def delete_game(self, game_id: str) -> Dict[str, Any]:
+        with self.lock:
+            self._store().delete_game(game_id)
+            if self.session is not None and self.session.id == game_id:
+                self.session = None
+                self.analysis = {'status': 'idle'}
+        return {'deleted': game_id}
+
+    def saved_record(self, game_id: str) -> str:
+        record = self._store().load_game(game_id).get('record')
+        if record is None:
+            raise StorageError(f'saved game {game_id!r} has no record')
+        return json.dumps(record, indent=1)
+
+    def achievements(self, t: Translator = ENGLISH) -> Dict[str, Any]:
+        """Every achievement (translated) with the finished games that earned it."""
+        saved = self.store.list_games() if self.store is not None else []
+        finished = sorted((g for g in saved if g.get('finished')), key=_finished_at)
+        items = achievements(finished)
+        for item in items:
+            item.update(name=t(item['name']), description=t(item['description']))
+        return {'saving': self.store is not None, 'achievements': items, 'games': len(finished)}
 
     # -- post-game analysis ------------------------------------------------------------------
     def start_analysis(self) -> Dict[str, Any]:
@@ -159,6 +267,10 @@ class PlayServer:
         return state
 
 
+def _finished_at(game: Dict[str, Any]) -> str:
+    return str(game.get('finished_at') or game.get('updated') or '')
+
+
 Response = Tuple[int, bytes, str, Tuple[Tuple[str, str], ...]]
 NOT_FOUND = 'not found'
 
@@ -185,6 +297,15 @@ def _record(play: PlayServer) -> Response:
     return HTTPStatus.OK, record.encode('utf-8'), 'application/json', (disposition,)
 
 
+def _saved_record(play: PlayServer, game_id: str) -> Response:
+    try:
+        record = play.saved_record(game_id)
+    except (StorageError, ConfigError) as exc:
+        return _error(str(exc), HTTPStatus.NOT_FOUND)
+    disposition = ('Content-Disposition', f'attachment; filename="wonders-{game_id}.json"')
+    return HTTPStatus.OK, record.encode('utf-8'), 'application/json', (disposition,)
+
+
 GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/': lambda play, q: (HTTPStatus.OK, _index_html(), 'text/html; charset=utf-8', ()),
     '/api/options': lambda play, q: _json(play.options(_t(q))),
@@ -192,6 +313,9 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/state': lambda play, q: _json({'state': play.state(_t(q))}),
     '/api/record': lambda play, q: _record(play),
     '/api/analysis': lambda play, q: _json(play.analysis_state(_t(q))),
+    '/api/games': lambda play, q: _json(play.games(_t(q))),
+    '/api/games/record': lambda play, q: _saved_record(play, q.get('id', '')),
+    '/api/achievements': lambda play, q: _json(play.achievements(_t(q))),
     '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''), _t(q).lang)),
     '/api/wonder.svg': lambda play, q: _svg(
         _wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'), _t(q).lang)
@@ -201,6 +325,8 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
 POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Response]] = {
     '/api/new': lambda play, body, q: _json({'state': play.new_game(body, _t(q))}),
     '/api/analyse': lambda play, body, q: _json(play.start_analysis()),
+    '/api/games/open': lambda play, body, q: _json({'state': play.open_game(str(body.get('id', '')), _t(q))}),
+    '/api/games/delete': lambda play, body, q: _json(play.delete_game(str(body.get('id', '')))),
     '/api/act': lambda play, body, q: _json(
         {'state': play.act(int(body.get('index', -1)), body.get('payment'), _t(q))}
     ),
@@ -244,21 +370,30 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body, dict):
                 raise ConfigError('expected a JSON object')
             self._send(route(self.play, body, {k: v[0] for k, v in parse_qs(url.query).items()}))
-        except (ConfigError, ValueError, TypeError) as exc:
+        except (ConfigError, StorageError, ValueError, TypeError) as exc:
             self._send(_error(str(exc)))
 
 
-def make_server(host: str = '127.0.0.1', port: int = 8765, checkpoints: Sequence[str] = ()) -> ThreadingHTTPServer:
-    """Build (but do not start) the server; ``port=0`` picks a free port."""
-    handler = type('BoundHandler', (Handler,), {'play': PlayServer(checkpoints)})
+def make_server(
+    host: str = '127.0.0.1', port: int = 8765, checkpoints: Sequence[str] = (), store: Optional[Store] = None
+) -> ThreadingHTTPServer:
+    """Build (but do not start) the server; ``port=0`` picks a free port; ``store`` saves the games."""
+    handler = type('BoundHandler', (Handler,), {'play': PlayServer(checkpoints, store)})
     return ThreadingHTTPServer((host, port), handler)
 
 
 def serve(
-    host: str = '127.0.0.1', port: int = 8765, open_browser: bool = True, checkpoints: Sequence[str] = ()
+    host: str = '127.0.0.1',
+    port: int = 8765,
+    open_browser: bool = True,
+    checkpoints: Sequence[str] = (),
+    save: bool = True,
 ) -> None:
-    """Run the UI until interrupted."""
-    httpd = make_server(host, port, checkpoints)
+    """Run the UI until interrupted; ``save`` keeps every game under :func:`wonders.storage.home`."""
+    store = Store() if save else None
+    httpd = make_server(host, port, checkpoints, store)
+    if store is not None:
+        print(f'wonders: saving games to {store.games_dir}')
     url = f'http://{host}:{httpd.server_address[1]}/'
     print(f'wonders: playing at {url} (Ctrl+C to stop)')
     if open_browser:
