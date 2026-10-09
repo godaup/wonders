@@ -156,13 +156,7 @@ class GameRecord:
         ``seat``), so an agent or an analysis sees what the player saw. The Leaders draft is not
         part of a record (only the drafted hands are), so it is not yielded; recruitment is.
         """
-        coins = Ruleset.of(*self.expansions).starting_coins
-        players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
-        game = Game(players, expansions=self.expansions)
-        for i, names in self.leader_hands.items():
-            players[i].leaders_hand = [content.card(n) for n in names]
-        game.leader_box = [content.card(n) for n in self.leader_box]
-        builder = ObservationBuilder()
+        game, builder = self._start(content)
 
         def relay(steps: AgeSteps, choose: Callable[[DecisionPoint], Dict[int, Action]]):
             try:
@@ -171,15 +165,7 @@ class GameRecord:
                     actions = choose(point)
                     if seat in point.options:
                         yield point, builder.build(game, seat, point.options[seat]), actions[seat]
-                    if point.kind is DecisionKind.PLAY:
-                        builder.record(
-                            point.age, point.turn, [(a.kind, a.card.name) for _i, a in sorted(actions.items())]
-                        )
-                    elif point.kind is not DecisionKind.RECRUIT:  # extras are public events; recruitment is not logged
-                        moves = [
-                            (actions[i].kind, actions[i].card.name) if i in actions else None for i in range(game.n)
-                        ]
-                        builder.record(point.age, point.turn, moves)
+                    _log(builder, game, point, actions)
                     point = steps.send(actions)
             except StopIteration:
                 return
@@ -191,6 +177,73 @@ class GameRecord:
             deck = [content.card(name) for name in self.age_decks[age]]
             yield from relay(game.age_steps(age, deal_hands(deck, game.n)), choose)
         game.phase = Phase.FINISHED
+
+    def branch(
+        self,
+        content: Content,
+        seat: int,
+        index: int,
+        action: Action,
+        policy: Callable[[Game, int, Observation, List[Card]], Action],
+        rng: Optional[Any] = None,
+    ) -> Game:
+        """Replay up to ``seat``'s decision ``index``, play ``action`` there instead, then let ``policy`` play.
+
+        ``index`` counts the seat's decisions as :meth:`replay_observations` yields them; ``action``
+        is matched by kind and card name. The other seats keep their recorded moves of that same
+        (simultaneous) turn; from the next decision on ``policy(game, seat, observation, options)``
+        plays every seat. ``rng`` reshuffles the decks of the Ages after the branch point (each
+        keeps its recorded cards), so repeated branches explore different deals. Returns the
+        finished game.
+        """
+        game, builder = self._start(content)
+        mine = 0
+        diverged = False
+
+        def relay(steps: AgeSteps, choose: Callable[[DecisionPoint], Dict[int, Action]]) -> None:
+            nonlocal mine, diverged
+            try:
+                point = next(steps)
+                while True:
+                    if diverged:
+                        actions = {
+                            i: policy(game, i, builder.build(game, i, opts), opts) for i, opts in point.options.items()
+                        }
+                    else:
+                        actions = choose(point)
+                        if seat in point.options:
+                            if mine == index:
+                                card = next(c for c in point.options[seat] if c.name == action.card.name)
+                                actions[seat] = Action(action.kind, card)
+                                diverged = True
+                            mine += 1
+                    _log(builder, game, point, actions)
+                    point = steps.send(actions)
+            except StopIteration:
+                return
+
+        for age in (1, 2, 3):
+            choose = self._chooser(age)
+            if self.leader_hands:
+                relay(game.recruit_steps(age), choose)
+            names = list(self.age_decks[age])
+            if diverged and rng is not None:
+                rng.shuffle(names)
+            relay(game.age_steps(age, deal_hands([content.card(n) for n in names], game.n)), choose)
+        game.phase = Phase.FINISHED
+        if not diverged:
+            raise ValueError(f'seat {seat} has no decision #{index} in this record')
+        return game
+
+    def _start(self, content: Content) -> Tuple[Game, ObservationBuilder]:
+        """A fresh game with the recorded setup (players, leaders, leader box) and an empty history."""
+        coins = Ruleset.of(*self.expansions).starting_coins
+        players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
+        game = Game(players, expansions=self.expansions)
+        for i, names in self.leader_hands.items():
+            players[i].leaders_hand = [content.card(n) for n in names]
+        game.leader_box = [content.card(n) for n in self.leader_box]
+        return game, ObservationBuilder()
 
     def _chooser(self, age: int) -> Callable[[DecisionPoint], Dict[int, Action]]:
         """Answer the engine's decision points for ``age`` from the recorded moves."""
@@ -226,6 +279,15 @@ class GameRecord:
             return actions
 
         return choose
+
+
+def _log(builder: ObservationBuilder, game: Game, point: DecisionPoint, actions: Dict[int, Action]) -> None:
+    """Log an answered decision in the public history, as live play does (recruitment is not logged)."""
+    if point.kind is DecisionKind.PLAY:
+        builder.record(point.age, point.turn, [(a.kind, a.card.name) for _i, a in sorted(actions.items())])
+    elif point.kind is not DecisionKind.RECRUIT:  # extras are public events
+        moves = [(actions[i].kind, actions[i].card.name) if i in actions else None for i in range(game.n)]
+        builder.record(point.age, point.turn, moves)
 
 
 def _move(action: Action) -> List[Any]:

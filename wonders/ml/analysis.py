@@ -21,11 +21,13 @@ from __future__ import annotations
 import math
 import os
 import random
+from collections import Counter
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from wonders._mp import get_context, init_worker
 from wonders.agents.bench import _content
-from wonders.engine.actions import Action, DecisionKind
+from wonders.cards.base import Color, ScienceSymbol
+from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.record import GameRecord
 from wonders.ruleset import Ruleset
 
@@ -123,6 +125,264 @@ def _review(job: Tuple[str, str, int, int, Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def _rank(game: Any, seat: int) -> int:
+    """1-based place of ``seat`` (score, then coins — like :meth:`Game.winner`)."""
+    key = [(game.score(i).total, game.players[i].coins) for i in range(game.n)]
+    return 1 + sum(1 for i in range(game.n) if i != seat and key[i] > key[seat])
+
+
+def _what_if(job: Tuple[str, str, int, int, Dict[str, str], Dict[str, str], int]) -> Dict[str, Any]:
+    """One paired continuation: the played and the better move from the true position (worker process)."""
+    from wonders.ml.agent import NeuralAgent
+
+    record_json, checkpoint, seat, index, played, best, seed = job
+    record = GameRecord.from_json(record_json)
+    content = _content(Ruleset.of(*record.expansions).content_expansions)
+    agent = NeuralAgent(checkpoint)
+
+    def policy(_game: Any, _i: int, obs: Any, options: Any) -> Action:
+        return agent.act(obs, options)
+
+    out: Dict[str, Any] = {'index': index}
+    for name, move in (('played', played), ('best', best)):
+        game = record.branch(
+            content,
+            seat,
+            index,
+            Action(ActionKind(move['kind']), content.card(move['card'])),
+            policy,
+            rng=random.Random(seed),
+        )
+        scores = [game.score(i).total for i in range(game.n)]
+        out[name] = {
+            'rank': _rank(game, seat),
+            'margin': scores[seat] - max(s for i, s in enumerate(scores) if i != seat),
+        }
+    return out
+
+
+def _summarise_what_if(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    n = len(runs)
+    out: Dict[str, Any] = {'runs': n}
+    for name in ('played', 'best'):
+        ranks = [r[name]['rank'] for r in runs]
+        out[name] = {
+            'first': round(sum(1 for x in ranks if x == 1) / n, 3),
+            'mean_rank': round(sum(ranks) / n, 2),
+            'mean_margin': round(sum(r[name]['margin'] for r in runs) / n, 2),
+        }
+    return out
+
+
+AGE_VALUE = {1: 1, 2: 3, 3: 5}  # military victory tokens per Age
+
+
+Pattern = Dict[str, Any]
+Decisions = Sequence[Tuple[Any, Any, Action]]
+
+
+def _pattern(kind: str, title: str, detail: str, vp: float) -> Pattern:
+    return {'kind': kind, 'title': title, 'detail': detail, 'vp': round(vp, 1)}
+
+
+def _trade_pattern(decisions: Decisions) -> List[Pattern]:
+    """Coins paid to neighbours for resources (cards built from hand)."""
+    trade = 0
+    for point, obs, action in decisions:
+        if point.kind is DecisionKind.PLAY and action.kind is ActionKind.BUILD:
+            view = next((c for c in obs.hand if c.name == action.card.name), None)
+            trade += view.trade_coins if view is not None else 0
+    if trade < 6:
+        return []
+    return [
+        _pattern(
+            'trade',
+            f'{trade} coins spent on trade',
+            f'You paid your neighbours {trade} coins for resources — about {trade / 3:.0f} VP, and coins they could '
+            'use against you. More of your own brown / grey production would have kept them.',
+            trade / 3,
+        )
+    ]
+
+
+def _military_patterns(game: Any, seat: int, decisions: Decisions, names: List[str]) -> List[Pattern]:
+    """Conflicts lost or tied by a single shield (shields as they stood when each Age ended)."""
+    n = game.n
+    shields_at: Dict[int, Tuple[int, int, int]] = {}
+    for age in (1, 2):
+        first = next((obs for point, obs, _a in decisions if point.age == age + 1), None)
+        if first is not None:
+            shields_at[age] = (first.me.shields, first.left.shields, first.right.shields)
+    me = game.players[seat]
+    shields_at[3] = (me.shields(), game.left_of(seat).shields(), game.right_of(seat).shields())
+    out = []
+    for age, (mine, left, right) in sorted(shields_at.items()):
+        for theirs, other in ((left, (seat + 1) % n), (right, (seat - 1) % n)):
+            if not 0 <= theirs - mine <= 1:
+                continue
+            if theirs > mine:  # lost by one: one more shield ties (no defeat token), two more win
+                title = f'Age {age}: lost against {names[other]} by one shield'
+                detail = (
+                    f'You had {mine} shields to their {theirs}: one more would have avoided the −1, two more would '
+                    f'have won {AGE_VALUE[age]} VP.'
+                )
+                stake = 1 + AGE_VALUE[age] / 2
+            else:  # tied: one more shield wins
+                title = f'Age {age}: tied with {names[other]}'
+                detail = f'You both had {mine} shields: one more would have won {AGE_VALUE[age]} VP.'
+                stake = float(AGE_VALUE[age])
+            out.append(_pattern('military', title, detail, stake))
+    return out
+
+
+def _science_pattern(game: Any, seat: int) -> List[Pattern]:
+    """What one more science symbol would have been worth."""
+    me = game.players[seat]
+    symbols, wilds = me.science(), me.science_wilds()
+    if sum(symbols.values()) + wilds < 2:
+        return []
+    now = game._science(seat, symbols, wilds)
+    gains = {s: game._science(seat, symbols + Counter({s: 1}), wilds) - now for s in ScienceSymbol}
+    symbol, gain = max(gains.items(), key=lambda kv: kv[1])
+    if gain < 4:
+        return []
+    have = ', '.join(f'{k.value} {v}' for k, v in symbols.items() if v)
+    extra = f', {wilds} of your choice' if wilds else ''
+    return [
+        _pattern(
+            'science',
+            f'One more {symbol.value} was worth {gain} VP',
+            f'Your science ({have}{extra}) scores {now} VP; one more {symbol.value} would have added {gain}.',
+            gain / 2,
+        )
+    ]
+
+
+def _wonder_and_coin_patterns(game: Any, seat: int) -> List[Pattern]:
+    """Wonder stages left unbuilt, and coins left over (one VP per three)."""
+    me = game.players[seat]
+    out = []
+    built, total = me.wonder_stages_built, len(me.wonder.stages)
+    if built < total:
+        ctx = game.context(seat)
+        vp = sum(e.victory_points(ctx) for stage in me.wonder.stages[built:] for e in stage.effects)
+        out.append(
+            _pattern(
+                'wonder',
+                f'{total - built} of {total} wonder stages unbuilt',
+                f'The remaining stages were worth at least {vp} VP (plus their other effects).',
+                vp * 0.5,
+            )
+        )
+    if me.coins >= 8:
+        out.append(
+            _pattern(
+                'coins',
+                f'Finished with {me.coins} coins',
+                f'They scored only {me.coins // 3} VP; spent earlier on cards or wonder stages they are usually '
+                'worth more.',
+                me.coins / 6,
+            )
+        )
+    return out
+
+
+def _valuable(card: Any, ctx: Any) -> bool:
+    """Cards worth denying a neighbour: guilds, science, military and civic cards of 5+ VP."""
+    if card.guild or card.color in (Color.GREEN, Color.RED):
+        return True
+    return card.color is Color.BLUE and sum(e.victory_points(ctx) for e in card.effects) >= 5
+
+
+def _passing_and_discard_patterns(
+    record: GameRecord, seat: int, decisions: Decisions, names: List[str], game: Any
+) -> List[Pattern]:
+    """Valuable cards you could afford, passed to the neighbour who built them next; discards for coins."""
+    content = _content(Ruleset.of(*record.expansions).content_expansions)
+    n = len(record.players)
+    passed = []
+    discards = 0
+    for point, obs, action in decisions:
+        if point.kind is not DecisionKind.PLAY:
+            continue
+        discards += action.kind is ActionKind.DISCARD
+        down = (seat + 1) % n if point.age in (1, 3) else (seat - 1) % n
+        turns = record.moves.get(point.age, [])
+        if point.turn + 1 < len(turns):
+            code, card = turns[point.turn + 1][down][:2]
+            view = next((c for c in obs.hand if c.name == card), None)
+            if (
+                code == 'B'
+                and view is not None
+                and view.can_build
+                and card != action.card.name
+                and _valuable(content.card(card), game.context(down))
+            ):
+                passed.append((card, names[down]))
+    out = []
+    if passed:
+        shown = ', '.join(f'{c} (to {who})' for c, who in passed[:3])
+        out.append(
+            _pattern(
+                'passing',
+                f'{len(passed)} card{"s" if len(passed) > 1 else ""} you passed were built next door',
+                f'{shown} — cards you could have built yourself. Taking or burying a card your neighbour needs '
+                'can be worth more than a small gain of your own.',
+                2 * len(passed),
+            )
+        )
+    if discards >= 3:
+        out.append(
+            _pattern(
+                'discards',
+                f'{discards} cards discarded for coins',
+                'Each discard gives 3 coins (1 VP); a wonder stage from the same card is usually worth more.',
+                discards,
+            )
+        )
+    return out
+
+
+def _timing_pattern(entries: Sequence[Dict[str, Any]]) -> List[Pattern]:
+    """The Age in which most points were lost."""
+    by_age: Dict[int, float] = {}
+    for e in entries:
+        if 'loss' in e:
+            by_age[e['age']] = by_age.get(e['age'], 0.0) + e['loss']
+    if not by_age:
+        return []
+    age, lost = max(by_age.items(), key=lambda kv: kv[1])
+    if lost < 3:
+        return []
+    return [
+        _pattern(
+            'timing',
+            f'Most points lost in Age {age}',
+            f"{lost:.1f} VP over that Age's moves (of {sum(by_age.values()):.1f} in total).",
+            lost,
+        )
+    ]
+
+
+def patterns(
+    record: GameRecord, seat: int, decisions: Decisions, entries: Sequence[Dict[str, Any]], limit: int = 6
+) -> List[Pattern]:
+    """Recurring themes of one player's game, each with an estimate of the VP at stake (largest first)."""
+    content = _content(Ruleset.of(*record.expansions).content_expansions)
+    game = record.replay(content)
+    names = [s.name for s in record.players]
+    found = (
+        _trade_pattern(decisions)
+        + _military_patterns(game, seat, decisions, names)
+        + _science_pattern(game, seat)
+        + _wonder_and_coin_patterns(game, seat)
+        + _passing_and_discard_patterns(record, seat, decisions, names, game)
+        + _timing_pattern(entries)
+    )
+    found.sort(key=lambda f: -f['vp'])
+    return found[:limit]
+
+
 def analyse(
     record: GameRecord,
     seat: int,
@@ -133,8 +393,15 @@ def analyse(
     seed: int = 0,
     processes: int = 1,
     progress: Optional[Callable[[int, int], None]] = None,
+    what_if: int = 3,
+    what_if_runs: int = 24,
 ) -> Dict[str, Any]:
-    """Rate every regular-turn decision of ``seat`` in ``record`` (see the module docstring)."""
+    """Rate every regular-turn decision of ``seat`` in ``record`` (see the module docstring).
+
+    The ``what_if`` costliest key moments are also replayed from the true position with the played
+    and with the better move (``what_if_runs`` paired continuations each, later Ages reshuffled),
+    every seat then playing the network.
+    """
     from wonders.ml import pretrained_path
 
     checkpoint = os.path.abspath(checkpoint or pretrained_path())
@@ -145,21 +412,45 @@ def analyse(
     record_json = record.to_json()
     jobs = [(record_json, checkpoint, seat, k, settings) for k in rated]
     reviews: Dict[int, Dict[str, Any]] = {}
+    continuations: Dict[int, List[Dict[str, Any]]] = {}
+    total = len(jobs) + what_if * what_if_runs
     done = 0
 
-    def collect(results) -> None:
+    def tick() -> None:
         nonlocal done
-        for review in results:
+        done += 1
+        if progress is not None:
+            progress(done, total)
+
+    def what_if_jobs() -> List[Tuple[str, str, int, int, Dict[str, str], Dict[str, str], int]]:
+        costly = sorted(
+            (r for r in reviews.values() if r['label'] in ('inaccuracy', 'mistake', 'blunder')),
+            key=lambda r: -r['loss'],
+        )[:what_if]
+        return [
+            (record_json, checkpoint, seat, r['index'], r['played'], r['best'], seed * 1_000_003 + k)
+            for r in costly
+            for k in range(what_if_runs if r['age'] < 3 else 1)  # Age III: nothing left to reshuffle
+        ]
+
+    def run(pool: Any) -> None:
+        mapper = pool.imap_unordered if pool is not None else map
+        for review in mapper(_review, jobs):
             reviews[review['index']] = review
-            done += 1
-            if progress is not None:
-                progress(done, len(jobs))
+            tick()
+        for result in mapper(_what_if, what_if_jobs()):
+            continuations.setdefault(result['index'], []).append(result)
+            tick()
 
     if processes > 1:
         with get_context().Pool(processes, initializer=init_worker) as pool:
-            collect(pool.imap_unordered(_review, jobs))
+            run(pool)
     else:
-        collect(map(_review, jobs))
+        run(None)
+    for index, runs in continuations.items():
+        reviews[index]['what_if'] = _summarise_what_if(runs)
+    if progress is not None:
+        progress(total, total)
 
     entries: List[Dict[str, Any]] = []
     for k, (point, _obs, action) in enumerate(decisions):
@@ -210,6 +501,7 @@ def analyse(
             }
             for e in rated_entries
         ],
+        'patterns': patterns(record, seat, decisions, entries),
         'decisions': entries,
     }
 
@@ -232,6 +524,18 @@ def summary_text(report: Dict[str, Any], limit: int = 5) -> str:
             f"{e['played']['kind']} {e['played']['card']}, better {e['best']['kind']} {e['best']['card']} "
             f"({e['reason']})"
         )
+        w = e.get('what_if')
+        if w:
+            gain = w['best']['mean_margin'] - w['played']['mean_margin']
+            lines.append(
+                f"    what if ({w['runs']} continuation{'s' if w['runs'] > 1 else ''}): {gain:+.1f} VP against the "
+                f"leader, rank {w['best']['mean_rank']} instead of {w['played']['mean_rank']}, 1st place "
+                f"{100 * w['best']['first']:.0f}% vs {100 * w['played']['first']:.0f}%"
+                + (' — the continuations disagree with the verdict' if gain < -1 else '')
+            )
+    if report.get('patterns'):
+        lines.append('Patterns:')
+        lines.extend(f"  {p['title']} — {p['detail']}" for p in report['patterns'])
     return '\n'.join(lines)
 
 
