@@ -123,6 +123,48 @@ def play(agents, seed, expansion, side, record_path, quiet):
 
 @main.command()
 @click.argument('record_path', type=click.Path(exists=True, dir_okay=False))
+@click.option('--seat', '-s', default=0, type=int, show_default=True, help='Whose moves to rate (0 = first seat).')
+@click.option('--checkpoint', type=click.Path(exists=True, dir_okay=False), help='Network to search with.')
+@click.option('--depth', default=3, type=int, show_default=True, help='Turns searched per candidate.')
+@click.option('--worlds', default=16, type=int, show_default=True, help='Sampled worlds per decision.')
+@click.option(
+    '--candidates', default=4, type=int, show_default=True, help="Network candidates besides the played move."
+)
+@click.option('--processes', '-p', default=4, type=int, show_default=True)
+@click.option('--out', '-o', type=click.Path(dir_okay=False), help='Save the full report as JSON.')
+def analyse(record_path, seat, checkpoint, depth, worlds, candidates, processes, out):
+    """Rate one player's moves in a saved game with network-guided search (needs PyTorch)."""
+    _ml()
+    import json
+
+    from wonders.engine.record import GameRecord
+    from wonders.ml.analysis import analyse as run_analysis
+    from wonders.ml.analysis import summary_text
+
+    with open(record_path, encoding='utf-8') as fh:
+        record = GameRecord.from_json(fh.read())
+    if not 0 <= seat < len(record.players):
+        raise click.BadParameter(f'the game has seats 0-{len(record.players) - 1}', param_hint='--seat')
+    report = run_analysis(
+        record,
+        seat,
+        checkpoint=checkpoint,
+        depth=depth,
+        worlds=worlds,
+        candidates=candidates,
+        processes=processes,
+        progress=lambda done, total: click.echo(f'\ranalysed {done}/{total} moves', nl=False),
+    )
+    click.echo()
+    click.echo(summary_text(report))
+    if out:
+        with open(out, 'w', encoding='utf-8') as fh:
+            json.dump(report, fh, indent=1)
+        click.echo(f'report written to {out}')
+
+
+@main.command()
+@click.argument('record_path', type=click.Path(exists=True, dir_okay=False))
 @click.option('--out', '-o', type=click.Path(dir_okay=False), help='Also render the final table to HTML.')
 @click.option('--quiet', '-q', is_flag=True, help='Only print the final scores.')
 def replay(record_path, out, quiet):

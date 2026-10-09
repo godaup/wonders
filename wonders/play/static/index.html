@@ -185,6 +185,22 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 #result tr.winner td { font-weight: 700; }
 #result tr.you td:first-child::after { content: " (you)"; color: var(--muted); font-weight: 400; }
 #result .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+#r-analysis { margin-top: 18px; display: grid; gap: 14px; }
+.an-summary { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.an-big { font-size: 26px; font-weight: 800; margin-right: 6px; }
+.an-badge { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; color: #fff; background: var(--lbl); white-space: nowrap; }
+.an-graph svg { width: 100%; height: auto; display: block; }
+.an-moment { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); }
+.an-moment img { width: 84px; border-radius: 8px; box-shadow: var(--shadow); cursor: zoom-in; display: block; }
+.an-moment .pair { display: flex; gap: 6px; align-items: center; }
+.an-moment .arrow { color: var(--muted); font-size: 18px; }
+.an-moment h4 { margin: 0 0 4px; font-size: 14px; }
+.an-moment p { margin: 2px 0; font-size: 13px; }
+.an-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.an-table td, .an-table th { padding: 4px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.an-progress { height: 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
+.an-progress div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
 
 /* viewer */
 #viewer { position: fixed; inset: 0; background: rgba(10, 14, 20, .6); display: grid; place-items: center; z-index: 20; }
@@ -296,7 +312,9 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
       <button class="primary" id="r-again">Play again (same settings)</button>
       <button id="r-menu">Back to menu</button>
       <button id="r-record">Download record</button>
+      <button id="r-analyse" data-tip="Rate every move you made with network-guided search: what was best, what it cost, and why">Analyse my moves</button>
     </div>
+    <div id="r-analysis" class="hidden"></div>
     <p class="section-title" style="margin-top:18px">Final cities</p>
     <div class="opponents" id="r-cities"></div>
   </section>
@@ -742,7 +760,90 @@ function renderScoreTable(cats) {
     el('td', {}, String(r.scores[i].total))));
   $('r-table').replaceChildren(el('thead', {}, head), el('tbody', {}, body));
 }
+/* ---------- post-game analysis ---------- */
+const LABEL_COLOR = { best: 'var(--green)', good: '#5f8f6b', inaccuracy: '#c8951a', mistake: '#d9771c', blunder: 'var(--red)', 'not rated': 'var(--c-unknown)' };
+const LABEL_ORDER = ['best', 'good', 'inaccuracy', 'mistake', 'blunder', 'not rated'];
+const VERB = { build: 'build', wonder: 'wonder stage with', discard: 'discard', free: 'build for free' };
+let analysisTimer = null;
+function badge(label) { return el('span', { class: 'an-badge', style: `--lbl:${LABEL_COLOR[label] || 'var(--muted)'}` }, label); }
+function moveText(m) { return VERB[m.kind] ? VERB[m.kind] + ' ' + m.card : m.kind + ' ' + m.card; }
+function thumb(name) { return el('img', { src: cardUrl(name), alt: name, 'data-tip': name, onclick: () => viewCard(name) }); }
+function analysisGraph(points) {
+  if (!points.length) return el('p', { class: 'muted' }, 'No rated moves.');
+  const W = 900, H = 200, pad = 28;
+  const ys = points.flatMap((p) => [p.played, p.best]);
+  const lo = Math.min(0, ...ys), hi = Math.max(0, ...ys);
+  const x = (i) => pad + (W - 2 * pad) * (points.length === 1 ? 0.5 : i / (points.length - 1));
+  const y = (v) => H - pad - (H - 2 * pad) * ((v - lo) / Math.max(1e-6, hi - lo));
+  const line = (key) => points.map((p, i) => `${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`).join(' ');
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected final margin after each of your moves">`;
+  svg += `<line x1="${pad}" x2="${W - pad}" y1="${y(0)}" y2="${y(0)}" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="4 4"/>`;
+  points.forEach((p, i) => { if (i && p.age !== points[i - 1].age) svg += `<line x1="${x(i - 0.5)}" x2="${x(i - 0.5)}" y1="${pad / 2}" y2="${H - pad / 2}" stroke="currentColor" stroke-opacity=".15"/>`; });
+  svg += `<polyline points="${line('best')}" fill="none" stroke="var(--green)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  svg += `<polyline points="${line('played')}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+  points.forEach((p, i) => {
+    const gap = p.best - p.played;
+    if (gap >= 1) svg += `<circle cx="${x(i)}" cy="${y(p.played)}" r="${gap >= 5 ? 6 : gap >= 2.5 ? 5 : 4}" fill="${gap >= 5 ? 'var(--red)' : gap >= 2.5 ? '#d9771c' : '#c8951a'}"/>`;
+  });
+  [1, 2, 3].forEach((a) => {
+    const idx = points.findIndex((p) => p.age === a);
+    if (idx >= 0) svg += `<text x="${x(idx)}" y="${H - 6}" font-size="12" fill="currentColor" opacity=".6">Age ${AGES[a]}</text>`;
+  });
+  svg += `<text x="${pad}" y="14" font-size="12" fill="currentColor" opacity=".6">expected final margin (VP) — your moves (solid) vs the best (dashed)</text></svg>`;
+  const box = el('div', { class: 'an-graph' }); box.innerHTML = svg; return box;
+}
+function renderAnalysis(a) {
+  const box = $('r-analysis'); box.classList.remove('hidden');
+  if (a.status === 'running') {
+    const pct = a.total ? Math.round(100 * a.done / a.total) : 0;
+    box.replaceChildren(el('p', {}, `Analysing your moves… ${a.done || 0}/${a.total || '?'}`),
+      el('div', { class: 'an-progress' }, el('div', { style: `width:${pct}%` })));
+    return;
+  }
+  if (a.status !== 'done') { box.replaceChildren(el('p', { class: 'error' }, a.error || 'Analysis unavailable.')); return; }
+  const r = a.report, s = r.summary, by = {};
+  r.decisions.forEach((d) => { by[d.index] = d; });
+  const counts = LABEL_ORDER.filter((l) => s.counts[l]).map((l) => el('span', { class: 'an-summary' }, badge(l), ' ' + s.counts[l]));
+  const moments = r.key_moments.map((k) => by[k]).map((d) => el('div', { class: 'an-moment' },
+    el('div', {}, badge(d.label), el('div', { class: 'muted', style: 'font-size:12px;margin-top:4px' }, `Age ${AGES[d.age]} · turn ${d.turn}`)),
+    el('div', { class: 'pair' }, thumb(d.played.card), el('span', { class: 'arrow' }, '→'), thumb(d.best.card)),
+    el('div', {},
+      el('h4', {}, `−${d.loss.toFixed(1)} VP (± ${d.loss_se.toFixed(1)})`),
+      el('p', {}, el('b', {}, 'You: '), moveText(d.played)),
+      el('p', {}, el('b', {}, 'Better: '), moveText(d.best)),
+      el('p', { class: 'muted' }, d.reason))));
+  const rows = r.decisions.map((d) => el('tr', {},
+    el('td', {}, `${AGES[d.age]} · ${d.turn}`), el('td', {}, moveText(d.played)), el('td', {}, badge(d.label)),
+    el('td', {}, d.loss ? '−' + d.loss.toFixed(1) : ''), el('td', {}, d.best && d.label !== 'best' ? moveText(d.best) : '')));
+  box.replaceChildren(
+    el('p', { class: 'section-title' }, 'Analysis of your moves'),
+    el('div', { class: 'an-summary' }, el('span', { class: 'an-big', 'data-tip': 'Moves rated best or within noise of the best' }, Math.round(100 * s.accuracy) + '% accuracy'),
+      el('span', { class: 'muted' }, `${s.rated} rated moves · ${s.total_loss.toFixed(1)} VP left on the table ·`), ...counts),
+    analysisGraph(r.graph),
+    r.key_moments.length ? el('p', { class: 'section-title' }, 'Key moments') : el('p', { class: 'muted' }, 'No clear mistakes — well played.'),
+    ...moments,
+    el('details', {}, el('summary', {}, 'Every move'),
+      el('table', { class: 'an-table' }, el('thead', {}, el('tr', {}, ['Age · turn', 'Your move', 'Rating', 'Loss', 'Better'].map((h) => el('th', {}, h)))), el('tbody', {}, rows))),
+    el('p', { class: 'muted', style: 'font-size:12px' }, `Searched ${r.settings.depth} turns ahead in ${r.settings.worlds} sampled games per move, using only what you could see (${r.settings.checkpoint}). Differences under 1 VP or within noise count as good.`));
+  $('r-analyse').disabled = true;
+}
+async function pollAnalysis() {
+  clearTimeout(analysisTimer);
+  try {
+    const a = await api('/api/analysis');
+    if (a.status === 'idle') return;
+    renderAnalysis(a);
+    if (a.status === 'running') analysisTimer = setTimeout(pollAnalysis, 1500);
+  } catch (e) { /* ignore transient errors */ }
+}
+$('r-analyse').addEventListener('click', async () => {
+  $('r-analyse').disabled = true;
+  try { renderAnalysis(await api('/api/analyse', {})); pollAnalysis(); }
+  catch (e) { $('r-analyse').disabled = false; alert(e.message); }
+});
+
 function renderResult() {
+  $('r-analysis').classList.add('hidden'); $('r-analyse').disabled = false; pollAnalysis();
   const r = state.result;
   const cats = r.categories.filter((c) => r.scores.some((s) => s[c] !== 0));
   const order = state.players.map((p, i) => i).sort((a, b) => r.scores[b].total - r.scores[a].total);

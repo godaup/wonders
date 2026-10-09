@@ -117,6 +117,11 @@ from —, every city shows its stats, resources and wonder stages, and hovering 
 it. The final score sheet is colour-coded and sortable, and the game record can be downloaded at
 any time. Everything runs locally.
 
+**Analyse my moves.** After the game, the network-guided search reviews every one of your moves —
+judged only with what you could see at the time — and shows your accuracy, the expected margin over
+the game, and your key moments: what you played, what was better, how many points it cost and why
+(e.g. *"gains 4.8 science"*).
+
 <p align="center">
   <img src="docs/images/cards.png" width="900" alt="Card renderings: raw material, commercial, military, civilian, guild, leader and city cards">
 </p>
@@ -149,6 +154,7 @@ For training on an NVIDIA GPU install the matching PyTorch wheel first, e.g.
 wonders play -a heuristic,greedy,random --record game.json   # one game: transcript and scores
 wonders play -e base -e leaders -e cities -a neural,adaptive,board,heuristic
 wonders replay game.json                                      # re-simulate a record
+wonders analyse game.json --seat 0 -p 4                       # rate one player's moves (needs PyTorch)
 wonders bench -a adaptive,board,heuristic -n 500 -p 4         # win rates with 95% CIs
 wonders agents                                                # the built-in agents
 wonders gui                                                   # play against agents in your browser
