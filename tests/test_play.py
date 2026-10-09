@@ -242,3 +242,26 @@ def test_state_describes_cards_and_every_board():
     assert any('you + neighbours' in line for line in text)
     for name in state['observation']['leaders_hand']:
         assert state['cards'][name]['text']
+
+
+def test_server_speaks_german(base_url):
+    locale = _request(base_url + '/api/locale?lang=de')
+    assert locale['_language'] == 'Deutsch' and locale['Start game'] == 'Partie starten'
+    assert _request(base_url + '/api/locale') == {}  # English needs no catalog
+    menu = _request(base_url + '/api/options?lang=de')
+    assert menu['languages']['de'] == 'Deutsch' and menu['lang'] == 'de'
+    assert next(e for e in menu['expansions'] if e['id'] == 'base')['name'] == 'Grundspiel'
+    assert next(a for a in menu['agents'] if a['id'] == 'greedy')['blurb'] == 'Nimmt sofort die meisten Punkte.'
+    assert _request(base_url + '/api/options')['expansions'][0]['name'] == 'Base game'  # cached per language
+    state = _request(base_url + '/api/new?lang=de', {**menu['defaults'], 'seed': 4})['state']
+    assert state['players'][0]['name'] == 'Du'
+    card = state['observation']['hand'][0]['name']  # names stay English ids; the views are translated
+    assert state['cards'][card]['text'][0].startswith('Kosten: ')
+    me = state['players'][0]
+    assert me['wonder_title'] != me['wonder'] and state['boards'][0]['title'] == me['wonder_title']
+    assert 'Bibliothek' in _request(base_url + '/api/card.svg?name=Library&lang=de')
+    pyramids = f'{base_url}/api/wonder.svg?name=The%20Pyramids%20of%20Giza&side=A&lang=de'
+    assert 'STUFE 1' in _request(pyramids)
+    assert _request(base_url + '/api/state')['state']['cards'][card]['text'][0].startswith('Cost: ')
+    state = _request(base_url + '/api/act?lang=de', {'index': 0})['state']
+    assert all(info['text'][0].startswith('Kosten: ') for info in state['cards'].values())

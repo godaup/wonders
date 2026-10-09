@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* German translation (`wonders/i18n/`): the GUI, cards, wonder boards, tooltips and the post-game
+  analysis; language picker (browser language by default, `?lang=de`), `wonders gallery --lang de`.
+  Further languages are data (`docs/extensions.md#translations`).
 * Extensions (`wonders.extensions`, `docs/extensions.md`): expansions, models and locales from data
   folders; card effects and agents from pip plugins; `wonders ext list | validate | new`; game
   records pin extension versions and hashes.

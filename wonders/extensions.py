@@ -6,7 +6,7 @@ Everything the game can be extended with goes through one :class:`Registry` (:da
 * **card effects** — new effect types for those JSON files (code);
 * **agents** — scripted agents for the CLI, the benchmark and the GUI (code);
 * **models** — trained network checkpoints, usable as ``neural:<name>``;
-* **locales** — translated strings for the upcoming translation support.
+* **locales** — translations (a new language, or more strings for one; see :mod:`wonders.i18n`).
 
 Extensions come from two sources, discovered once and lazily (:func:`ensure_loaded`):
 

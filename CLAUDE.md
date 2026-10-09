@@ -233,6 +233,16 @@ unknown ids, the CLI lineup and the GUI menu): data folders under `$WONDERS_EXTE
 in `GameRecord.extensions`; replays warn on a mismatch. Tests disable discovery
 (`tests/conftest.py`, `WONDERS_NO_EXTENSIONS=1`).
 
+**Translations** (`wonders/i18n/`): flat catalogs keyed by the English text (`de.json`; `"text|context"`
+keys for words with two meanings, `_decimal` / `_ordinal` / `_language` meta keys), extended by extension
+locales. `Translator(lang)` translates and formats; text stored for later rendering is a `msg(...)`
+message (the analysis keeps `reason_msg` / `title_msg` / `detail_msg`, `analysis.localize`). The renderer,
+`HumanSession.state/card_info/boards`, `menu_options` take a translator (English default — English
+output must stay byte-identical); the server takes `?lang=` on every route and `/api/locale` gives the
+page its catalog (`t()` / `tn()` / `nm()` in `index.html`, `N('…')` marks text translated through a
+variable). Names stay English ids everywhere else. `tests/test_i18n.py` fails on any GUI, card or
+analysis text without a German translation and on placeholder mismatches.
+
 `wonders/wonders.py` is now a thin public-API re-export (`from wonders.wonders import
 Game, Player, ...`).
 

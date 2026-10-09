@@ -10,6 +10,10 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``GET /api/record`` — the replayable GameRecord JSON
 - ``POST /api/analyse`` / ``GET /api/analysis`` — start / poll the post-game analysis of the human's moves
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
+- ``GET /api/locale?lang=de`` — the translation catalog the page uses for its own texts
+
+Every route takes ``?lang=<code>`` (default English): names, card texts, menu entries and the
+analysis come back translated (see :mod:`wonders.i18n`).
 
 It binds to localhost only and holds one game at a time (one human, all local).
 """
@@ -28,6 +32,7 @@ from typing import Any, Callable, Dict, Optional, Sequence, Tuple
 from urllib.parse import parse_qs, urlparse
 
 from wonders.cards.content import Content, load_content
+from wonders.i18n import DEFAULT, ENGLISH, Translator, catalog
 from wonders.play.session import ConfigError, GameConfig, HumanSession, menu_options
 from wonders.ruleset import EXPANSIONS
 from wonders.viz.render import card_svg, wonder_svg
@@ -46,16 +51,25 @@ def _index_html() -> bytes:
     return resources.files('wonders.play').joinpath('static', 'index.html').read_bytes()
 
 
-@lru_cache(maxsize=512)
-def _card_svg(name: str) -> Optional[str]:
+@lru_cache(maxsize=16)
+def _translator(lang: str) -> Translator:
+    return Translator(lang)  # an unknown language has an empty catalog: English
+
+
+def _t(query: Dict[str, Any]) -> Translator:
+    return _translator(str(query.get('lang') or DEFAULT)[:16])
+
+
+@lru_cache(maxsize=1024)
+def _card_svg(name: str, lang: str = DEFAULT) -> Optional[str]:
     card = next((c for c in _all_content().cards if c.name == name), None)
-    return None if card is None else card_svg(card)
+    return None if card is None else card_svg(card, _translator(lang))
 
 
-@lru_cache(maxsize=64)
-def _wonder_svg(name: str, side: str, built: str = '0') -> Optional[str]:
+@lru_cache(maxsize=128)
+def _wonder_svg(name: str, side: str, built: str = '0', lang: str = DEFAULT) -> Optional[str]:
     try:
-        return wonder_svg(_all_content().wonder(name, side), built=max(0, int(built or 0)))
+        return wonder_svg(_all_content().wonder(name, side), built=max(0, int(built or 0)), t=_translator(lang))
     except (KeyError, ValueError):
         return None
 
@@ -67,31 +81,31 @@ class PlayServer:
         self.checkpoints = tuple(checkpoints)
         self.session: Optional[HumanSession] = None
         self.lock = threading.Lock()
-        self._options: Optional[Dict[str, Any]] = None
+        self._options: Dict[str, Dict[str, Any]] = {}  # per language
         self.analysis: Dict[str, Any] = {'status': 'idle'}  # post-game analysis of the current game
 
-    def options(self) -> Dict[str, Any]:
-        if self._options is None:
-            self._options = menu_options(self.checkpoints)
-        return self._options
+    def options(self, t: Translator = ENGLISH) -> Dict[str, Any]:
+        if t.lang not in self._options:
+            self._options[t.lang] = menu_options(self.checkpoints, t)
+        return self._options[t.lang]
 
-    def new_game(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def new_game(self, data: Dict[str, Any], t: Translator = ENGLISH) -> Dict[str, Any]:
         config = GameConfig.from_dict(data)
         with self.lock:
-            self.session = HumanSession(config, self.checkpoints)
+            self.session = HumanSession(config, self.checkpoints, t=t)
             self.analysis = {'status': 'idle'}
-            return self.session.state()
+            return self.session.state(t)
 
-    def state(self) -> Optional[Dict[str, Any]]:
+    def state(self, t: Translator = ENGLISH) -> Optional[Dict[str, Any]]:
         with self.lock:
-            return None if self.session is None else self.session.state()
+            return None if self.session is None else self.session.state(t)
 
-    def act(self, index: int, payment: Optional[Sequence[int]] = None) -> Dict[str, Any]:
+    def act(self, index: int, payment: Optional[Sequence[int]] = None, t: Translator = ENGLISH) -> Dict[str, Any]:
         with self.lock:
             if self.session is None:
                 raise ConfigError('no game in progress')
             self.session.act(index, payment)
-            return self.session.state()
+            return self.session.state(t)
 
     def record(self) -> Optional[str]:
         with self.lock:
@@ -135,9 +149,14 @@ class PlayServer:
             if self.session is game:  # a new game started meanwhile: drop the stale result
                 self.analysis = result
 
-    def analysis_state(self) -> Dict[str, Any]:
+    def analysis_state(self, t: Translator = ENGLISH) -> Dict[str, Any]:
         with self.lock:
-            return dict(self.analysis)
+            state = dict(self.analysis)
+        if state.get('status') == 'done' and t.lang != DEFAULT:
+            from wonders.ml.analysis import localize
+
+            state['report'] = localize(state['report'], t)
+        return state
 
 
 Response = Tuple[int, bytes, str, Tuple[Tuple[str, str], ...]]
@@ -168,17 +187,23 @@ def _record(play: PlayServer) -> Response:
 
 GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/': lambda play, q: (HTTPStatus.OK, _index_html(), 'text/html; charset=utf-8', ()),
-    '/api/options': lambda play, q: _json(play.options()),
-    '/api/state': lambda play, q: _json({'state': play.state()}),
+    '/api/options': lambda play, q: _json(play.options(_t(q))),
+    '/api/locale': lambda play, q: _json(catalog(_t(q).lang) if _t(q).lang != DEFAULT else {}),
+    '/api/state': lambda play, q: _json({'state': play.state(_t(q))}),
     '/api/record': lambda play, q: _record(play),
-    '/api/analysis': lambda play, q: _json(play.analysis_state()),
-    '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''))),
-    '/api/wonder.svg': lambda play, q: _svg(_wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'))),
+    '/api/analysis': lambda play, q: _json(play.analysis_state(_t(q))),
+    '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''), _t(q).lang)),
+    '/api/wonder.svg': lambda play, q: _svg(
+        _wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'), _t(q).lang)
+    ),
 }
-POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any]], Response]] = {
-    '/api/new': lambda play, body: _json({'state': play.new_game(body)}),
-    '/api/analyse': lambda play, body: _json(play.start_analysis()),
-    '/api/act': lambda play, body: _json({'state': play.act(int(body.get('index', -1)), body.get('payment'))}),
+# POST routes get the JSON body and the query string (for ``lang``).
+POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Response]] = {
+    '/api/new': lambda play, body, q: _json({'state': play.new_game(body, _t(q))}),
+    '/api/analyse': lambda play, body, q: _json(play.start_analysis()),
+    '/api/act': lambda play, body, q: _json(
+        {'state': play.act(int(body.get('index', -1)), body.get('payment'), _t(q))}
+    ),
 }
 
 
@@ -208,7 +233,8 @@ class Handler(BaseHTTPRequestHandler):
         self._send(route(self.play, query) if route else _error(NOT_FOUND, HTTPStatus.NOT_FOUND))
 
     def do_POST(self) -> None:  # noqa: N802 - http.server API
-        route = POST_ROUTES.get(self.path)
+        url = urlparse(self.path)
+        route = POST_ROUTES.get(url.path)
         if route is None:
             self._send(_error(NOT_FOUND, HTTPStatus.NOT_FOUND))
             return
@@ -217,7 +243,7 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length) or b'{}')
             if not isinstance(body, dict):
                 raise ConfigError('expected a JSON object')
-            self._send(route(self.play, body))
+            self._send(route(self.play, body, {k: v[0] for k, v in parse_qs(url.query).items()}))
         except (ConfigError, ValueError, TypeError) as exc:
             self._send(_error(str(exc)))
 

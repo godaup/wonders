@@ -35,6 +35,7 @@ from wonders.effects.library import (
     Trade,
     VictoryPoints,
 )
+from wonders.i18n import ENGLISH, Translator
 
 _W, _H = 250, 352
 
@@ -171,12 +172,17 @@ def _wrap(name: str, limit: int = 20, maxlines: int = 2) -> List[str]:
     return lines or ['']
 
 
-def _cost_items(coins: int, resources) -> List[Tuple[str, str, int, str]]:
+def res_name(res: Resource, t: Translator = ENGLISH) -> str:
+    """A resource's name (``'Loom'`` is also a card, hence the context)."""
+    return t(RES_NAME[res], 'resource')
+
+
+def _cost_items(coins: int, resources, t: Translator = ENGLISH) -> List[Tuple[str, str, int, str]]:
     items: List[Tuple[str, str, int, str]] = []
     if coins:
-        items.append(('coin', RES_COLOR[Resource.GOLD], coins, 'Coins'))
+        items.append(('coin', RES_COLOR[Resource.GOLD], coins, t('Coins')))
     for res, n in sorted(resources.items(), key=lambda kv: kv[0].value):
-        items.append((RES_ICON[res], RES_COLOR[res], n, RES_NAME[res]))
+        items.append((RES_ICON[res], RES_COLOR[res], n, res_name(res, t)))
     return items
 
 
@@ -195,10 +201,12 @@ def _cost_chip(x: float, y: float, key: str, color: str, count: int, title: str,
     return ''.join(out)
 
 
-def _cost_row(coins: int, resources, x: float, y: float, tile: float = 30, gap: float = 7) -> str:
-    items = _cost_items(coins, resources)
+def _cost_row(
+    coins: int, resources, x: float, y: float, tile: float = 30, gap: float = 7, t: Translator = ENGLISH
+) -> str:
+    items = _cost_items(coins, resources, t)
     if not items:
-        return f'<text x="{x:.0f}" y="{y + 20:.0f}" font-size="12.5" fill="{SCIENCE}">Free</text>'
+        return f'<text x="{x:.0f}" y="{y + 20:.0f}" font-size="12.5" fill="{SCIENCE}">{escape(t("Free"))}</text>'
     out, cx = [], x
     for key, color, count, title in items:
         out.append(_cost_chip(cx, y, key, color, count, title, tile))
@@ -206,17 +214,17 @@ def _cost_row(coins: int, resources, x: float, y: float, tile: float = 30, gap: 
     return ''.join(out)
 
 
-def _resource_rows(effect) -> List[Row]:
+def _resource_rows(effect, t: Translator) -> List[Row]:
     slots = effect.slots if isinstance(effect, MultiProduction) else [effect.options]
     rows: List[Row] = []
     for opts in slots:
         res = sorted(opts, key=lambda r: r.value)
         if set(opts) == RAW_MATERIALS:
-            label = 'Any raw material'
+            label = t('Any raw material')
         elif set(opts) == MANUFACTURED_GOODS:
-            label = 'Any manufactured good'
+            label = t('Any manufactured good')
         else:
-            label = ' / '.join(RES_NAME[r] for r in res)
+            label = ' / '.join(res_name(r, t) for r in res)
         rows.append(([(RES_ICON[r], RES_COLOR[r]) for r in res], label))
     return rows
 
@@ -230,52 +238,67 @@ _POWER_LABELS = {
 }
 
 
-def _describe(effect) -> List[Row]:
+def _scope(scope: str, t: Translator) -> str:
+    return t(SCOPE.get(scope, scope), 'scope')
+
+
+def _tally_label(effect: Tally, t: Translator) -> str:
+    colours = sorted(c.value for c in effect.colors)
+    target = '/'.join(t(c, 'colour') for c in colours) or t(effect.what.replace('_', ' '), 'tally')
+    parts = [
+        p
+        for p in (
+            t('{n} VP', n=effect.vp_each) if effect.vp_each else '',
+            t('{n}c', n=effect.coins_each) if effect.coins_each else '',
+        )
+        if p
+    ]
+    return t('{amount} / {target} ({scope})', amount=' +'.join(parts), target=target, scope=_scope(effect.scope, t))
+
+
+def _describe(effect, t: Translator = ENGLISH) -> List[Row]:  # noqa: C901 - one branch per effect type
     if isinstance(effect, (Production, MultiProduction)):
-        return _resource_rows(effect)
+        return _resource_rows(effect, t)
     if isinstance(effect, Military):
         n = effect.shields_count
-        return [([('shield', MILITARY)], f'{n} Shield' + ('s' if n != 1 else ''))]
+        return [([('shield', MILITARY)], t('{n} Shield' if n == 1 else '{n} Shields', n=n))]
     if isinstance(effect, Science):
-        return [([(effect.symbol.value, SCIENCE)], SCI_NAME[effect.symbol.value])]
+        return [([(effect.symbol.value, SCIENCE)], t(SCI_NAME[effect.symbol.value]))]
     if isinstance(effect, ScienceWild):
-        return [([('tablet', SCIENCE), ('gear', SCIENCE), ('compass', SCIENCE)], 'Any science')]
+        return [([('tablet', SCIENCE), ('gear', SCIENCE), ('compass', SCIENCE)], t('Any science'))]
     if isinstance(effect, VictoryPoints):
-        return [([('vp', CIVIC)], f'{effect.points} Victory pts')]
+        return [([('vp', CIVIC)], t('{n} Victory pts', n=effect.points))]
     if isinstance(effect, Coins):
-        return [([('coin', GOLD)], f'+{effect.amount} Coins')]
+        return [([('coin', GOLD)], t('+{n} Coins', n=effect.amount))]
     if isinstance(effect, Trade):
-        return [([('trade', GOLD)], f'Buy {effect.category} ({effect.side}) {effect.price}c')]
+        label = t(
+            'Buy {category} ({side}) {price}c',
+            category=t(effect.category, 'trade category'),
+            side=t(effect.side, 'side'),
+            price=effect.price,
+        )
+        return [([('trade', GOLD)], label)]
     if isinstance(effect, Debt):
-        return [([('coin', MILITARY)], f'{effect.amount} debt ({effect.scope})')]
+        return [([('coin', MILITARY)], t('{n} debt ({scope})', n=effect.amount, scope=t(effect.scope, 'scope')))]
     if isinstance(effect, Diplomacy):
-        label = 'Diplomacy' + (f' x{effect.count}' if effect.count > 1 else '')
+        label = t('Diplomacy') + (f' x{effect.count}' if effect.count > 1 else '')
         return [([('shield', CIVIC)], label)]
     if isinstance(effect, Plunder):
-        return [([('coin', MILITARY)], f'others -{effect.amount}c ({effect.scope})')]
+        return [([('coin', MILITARY)], t('others -{n}c ({scope})', n=effect.amount, scope=t(effect.scope, 'scope')))]
     if isinstance(effect, Grant):
-        return [([('coin', GOLD)], f'others +{effect.amount}c ({effect.scope})')]
+        return [([('coin', GOLD)], t('others +{n}c ({scope})', n=effect.amount, scope=t(effect.scope, 'scope')))]
     if isinstance(effect, GainToken):
-        return [([('shield', MILITARY)], f'+war token ({effect.value})')]
+        return [([('shield', MILITARY)], t('+war token ({n})', n=effect.value))]
     if type(effect) in _POWER_LABELS:
-        return [([('special', GUILD)], _POWER_LABELS[type(effect)])]
+        return [([('special', GUILD)], t(_POWER_LABELS[type(effect)]))]
     if isinstance(effect, Special):
-        return [([('special', GUILD)], effect.description or effect.power.replace('_', ' '))]
+        return [([('special', GUILD)], t(effect.description or effect.power.replace('_', ' ')))]
     if isinstance(effect, Tally):
-        target = '/'.join(sorted(c.value for c in effect.colors)) or effect.what.replace('_', ' ')
-        parts = [
-            p
-            for p in (
-                f'{effect.vp_each} VP' if effect.vp_each else '',
-                f'{effect.coins_each}c' if effect.coins_each else '',
-            )
-            if p
-        ]
         icon = ('vp', GUILD) if effect.vp_each else ('coin', GUILD)
-        return [([icon], f'{" +".join(parts)} / {target} ({SCOPE.get(effect.scope, effect.scope)})')]
+        return [([icon], _tally_label(effect, t))]
     description = getattr(effect, 'label', None)  # data-driven description (Leaders / Cities powers)
     if description:
-        return [([('special', GUILD)], description)]
+        return [([('special', GUILD)], t(description))]
     return [([('coin', MUTED)], type(effect).__name__)]
 
 
@@ -304,16 +327,19 @@ def _row_svg(
     return ''.join(out), (len(lines) - 1) * step
 
 
-def effect_lines(effects) -> List[str]:
+def effect_lines(effects, t: Translator = ENGLISH) -> List[str]:
     """Plain-text descriptions of ``effects`` (one per rendered row), e.g. for tooltips."""
-    return [label for effect in effects for _icons, label in _describe(effect)]
+    return [label for effect in effects for _icons, label in _describe(effect, t)]
 
 
-def cost_text(coins: int, resources) -> str:
+def cost_text(coins: int, resources, t: Translator = ENGLISH) -> str:
     """A plain-text cost such as ``'2 coins, 2 Stone, 1 Glass'`` (``'free'`` when nothing)."""
-    parts = [f'{coins} coin' + ('s' if coins != 1 else '')] if coins else []
-    parts += [f'{n} {RES_NAME[res]}' for res, n in sorted(resources.items(), key=lambda kv: kv[0].value)]
-    return ', '.join(parts) or 'free'
+    parts = [t('{n} coin' if coins == 1 else '{n} coins', n=coins)] if coins else []
+    parts += [
+        t('{n} {resource}', n=n, resource=res_name(res, t))
+        for res, n in sorted(resources.items(), key=lambda kv: kv[0].value)
+    ]
+    return ', '.join(parts) or t('free')
 
 
 EFFECT_FONTS = (22, 21, 20, 19, 18, 17, 16, 15, 14)  # largest effect text that fits is used
@@ -386,15 +412,16 @@ def _effects_html(
     )
 
 
-def card_svg(card: Card) -> str:
-    """A standalone, self-contained ``<svg>`` element for one card."""
+def card_svg(card: Card, t: Translator = ENGLISH) -> str:
+    """A standalone, self-contained ``<svg>`` element for one card (texts translated by ``t``)."""
     uid = _slug(card.name)
     fill = CARD_FILL[card.color]
-    lines = _wrap(card.name, 22, 2)
+    name = t.name(card.name)
+    lines = _wrap(name, 22, 2)
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {_W} {_H}" width="{_W}" height="{_H}" '
         f'font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif" role="img">',
-        f'<title>{escape(card.name)}</title>',
+        f'<title>{escape(name)}</title>',
         f'<defs><clipPath id="cl{uid}"><rect x="3" y="3" width="{_W - 6}" height="{_H - 6}" rx="16"/></clipPath>'
         f'<linearGradient id="hg{uid}" x1="0" y1="0" x2="0" y2="1">'
         f'<stop offset="0" stop-color="{_shade(fill, 0.82)}"/><stop offset="1" stop-color="{fill}"/></linearGradient>'
@@ -406,7 +433,7 @@ def card_svg(card: Card) -> str:
         f'<rect x="3" y="3" width="{_W - 6}" height="64" fill="url(#hg{uid})"/>',
         f'<rect x="3" y="65" width="{_W - 6}" height="2" fill="{_shade(fill, 0.62)}"/>',
         f'<text x="18" y="26" font-size="10" letter-spacing="1.4" fill="#ffffff" fill-opacity="0.8">'
-        f'{escape(CAT_NAME[card.color].upper())}</text>',
+        f'{escape(t(CAT_NAME[card.color]).upper())}</text>',
     ]
     if len(lines) == 1:
         parts.append(f'<text x="18" y="52" font-size="17" font-weight="700" fill="#fff">{escape(lines[0])}</text>')
@@ -424,33 +451,33 @@ def card_svg(card: Card) -> str:
         )
     parts.append('</g>')
 
-    parts.append(f'<text x="18" y="86" font-size="11" letter-spacing="1.2" fill="{MUTED}">COST</text>')
+    parts.append(f'<text x="18" y="86" font-size="11" letter-spacing="1.2" fill="{MUTED}">{escape(t("COST"))}</text>')
     kinds = len(card.cost.resources) + (1 if card.cost.coins else 0)
     tile = round(min(42.0, (_W - 32 - 5 * max(0, kinds - 1)) / max(1, kinds)), 1)  # many cost types: smaller tiles
-    parts.append(_cost_row(card.cost.coins, card.cost.resources, 16, 92 + (42 - tile) / 2, tile=tile, gap=5))
+    parts.append(_cost_row(card.cost.coins, card.cost.resources, 16, 92 + (42 - tile) / 2, tile=tile, gap=5, t=t))
 
     rows: List[Row] = []
     for effect in card.effects:
-        rows += _describe(effect)
+        rows += _describe(effect, t)
     panel_h = _H - 144 - 34
     parts.append(
         f'<rect x="10" y="144" width="{_W - 20}" height="{panel_h}" rx="12" fill="{fill}" fill-opacity="0.06"/>'
         f'<rect x="10" y="144" width="4" height="{panel_h}" rx="2" fill="{fill}"/>'
-        f'<text x="22" y="162" font-size="11" letter-spacing="1.2" fill="{MUTED}">EFFECTS</text>'
+        f'<text x="22" y="162" font-size="11" letter-spacing="1.2" fill="{MUTED}">{escape(t("EFFECTS"))}</text>'
     )
     chain: Optional[Tuple[str, str]] = None
     if card.chain_requires:
-        chain = (f'free if {card.chain_requires}', GUILD)
+        chain = (t('free if {card}', card=t.name(card.chain_requires)), GUILD)
     elif card.chain_enables:
-        chain = (f'unlocks {card.chain_enables[0]}', MUTED)
+        chain = (t('unlocks {card}', card=t.name(card.chain_enables[0])), MUTED)
     parts.append(_effects_html(rows, chain, x=18, y=167, width=_W - 30, height=_H - 34 - 167))
 
     meta = []
     if card.at_players:
-        meta.append(','.join(str(p) for p in card.at_players) + '+ players')
-    meta.append(card.expansion)
+        meta.append(t('{players}+ players', players=','.join(str(p) for p in card.at_players)))
+    meta.append(t(card.expansion, 'expansion'))
     if card.guild:
-        meta.append('guild')
+        meta.append(t('guild'))
     parts.append(
         f'<text x="{_W / 2:.0f}" y="{_H - 14}" text-anchor="middle" font-size="11.5" fill="{MUTED}">'
         f'{escape(" · ".join(meta))}</text>'
@@ -466,7 +493,7 @@ _WLEFT, _WSTAGE, _WH = 172, 172, 240
 BUILT = '#2f7d46'
 
 
-def _stage_panel(stage: WonderStage, index: int, x: float, built: bool = False) -> str:
+def _stage_panel(stage: WonderStage, index: int, x: float, built: bool = False, t: Translator = ENGLISH) -> str:
     y0, w, h = 18, _WSTAGE - 14, _WH - 36
     fill, line, bar = ('#e8f5ec', BUILT, BUILT) if built else ('#fff', TILE_LINE, GOLD)
     stroke = ' stroke-width="2"' if built else ''
@@ -474,41 +501,44 @@ def _stage_panel(stage: WonderStage, index: int, x: float, built: bool = False) 
         f'<rect x="{x:.0f}" y="{y0}" width="{w}" height="{h}" rx="10" fill="{fill}" stroke="{line}"{stroke}/>',
         f'<rect x="{x:.0f}" y="{y0}" width="{w}" height="{6 if built else 4}" rx="2" fill="{bar}"/>',
         f'<text x="{x + 12:.0f}" y="{y0 + 26}" font-size="12" letter-spacing="1.2" fill="{MUTED}">'
-        f'STAGE {index}</text>',
-        f'<text x="{x + 12:.0f}" y="{y0 + 48}" font-size="10.5" fill="{MUTED}">COST</text>',
-        _cost_row(stage.cost.coins, stage.cost.resources, x + 10, y0 + 54, tile=31, gap=4),
+        f'{escape(t("STAGE {n}", n=index))}</text>',
+        f'<text x="{x + 12:.0f}" y="{y0 + 48}" font-size="10.5" fill="{MUTED}">{escape(t("COST"))}</text>',
+        _cost_row(stage.cost.coins, stage.cost.resources, x + 10, y0 + 54, tile=31, gap=4, t=t),
     ]
     ey = float(y0 + 116)
-    for icons, label in [r for e in stage.effects for r in _describe(e)][:2]:
+    for icons, label in [r for e in stage.effects for r in _describe(e, t)][:2]:
         row, extra = _row_svg(icons, label, x + 10, ey, size=22, font=14, right=x + w - 4, maxlines=3)
         out.append(row)
         ey += 30 + extra
     if built:
+        badge = '✓ ' + t('BUILT')
+        bw = max(62, round(8 + 7.4 * len(badge)))  # wider for longer translations
         out.append(
-            f'<rect x="{x + w - 70:.0f}" y="{y0 + 11}" width="62" height="21" rx="10.5" fill="{BUILT}"/>'
-            f'<text x="{x + w - 39:.0f}" y="{y0 + 26}" text-anchor="middle" font-size="11" font-weight="700" '
-            f'letter-spacing=".6" fill="#fff">✓ BUILT</text>'
+            f'<rect x="{x + w - 8 - bw:.0f}" y="{y0 + 11}" width="{bw}" height="21" rx="10.5" fill="{BUILT}"/>'
+            f'<text x="{x + w - 8 - bw / 2:.0f}" y="{y0 + 26}" text-anchor="middle" font-size="11" font-weight="700" '
+            f'letter-spacing=".6" fill="#fff">{escape(badge)}</text>'
         )
     return ''.join(out)
 
 
-def wonder_svg(wonder: Wonder, built: int = 0) -> str:
+def wonder_svg(wonder: Wonder, built: int = 0, t: Translator = ENGLISH) -> str:
     """A standalone ``<svg>`` board for one wonder (starting resource + stages; the first ``built`` marked built)."""
     uid = _slug(wonder.name + wonder.side)
     n = len(wonder.stages)
     width = _WLEFT + n * _WSTAGE + 12
-    lines = _wrap(wonder.name, 16, 4)
+    name = t.name(wonder.name)
+    lines = _wrap(name, 16, 4)
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {_WH}" width="{width}" height="{_WH}" '
         f'font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif" role="img">',
-        f'<title>{escape(wonder.name)}</title>',
+        f'<title>{escape(name)}</title>',
         f'<defs><filter id="wsh{uid}" x="-4%" y="-6%" width="108%" height="112%">'
         f'<feDropShadow dx="0" dy="2" stdDeviation="3.2" flood-color="#233043" flood-opacity="0.16"/></filter></defs>',
         f'<rect x="3" y="3" width="{width - 6}" height="{_WH - 6}" rx="16" fill="#fbfbfc" stroke="#e2e6ea" '
         f'stroke-width="1.5" filter="url(#wsh{uid})"/>',
         f'<rect x="3" y="3" width="{_WLEFT - 3}" height="{_WH - 6}" rx="16" fill="{SLATE}"/>',
         f'<rect x="{_WLEFT - 14}" y="3" width="14" height="{_WH - 6}" fill="{SLATE}"/>',
-        '<text x="20" y="34" font-size="10" letter-spacing="1.4" fill="#9fb2c7">WONDER</text>',
+        f'<text x="20" y="34" font-size="10" letter-spacing="1.4" fill="#9fb2c7">{escape(t("WONDER"))}</text>',
     ]
     ty = 34 + 22
     for line in lines:
@@ -519,28 +549,33 @@ def wonder_svg(wonder: Wonder, built: int = 0) -> str:
         f'<text x="{_WLEFT - 31}" y="33" text-anchor="middle" font-size="12" font-weight="700" '
         f'fill="#fff">{escape(wonder.side)}</text>'
     )
-    parts.append(f'<text x="20" y="{_WH - 44}" font-size="10" letter-spacing="1.2" fill="#9fb2c7">PRODUCES</text>')
+    parts.append(
+        f'<text x="20" y="{_WH - 44}" font-size="10" letter-spacing="1.2" fill="#9fb2c7">{escape(t("PRODUCES"))}</text>'
+    )
     res = wonder.starting_resource
     if res is not None:
-        parts.append(_icon(RES_ICON[res], 20, _WH - 38, 24, '#e7edf3', RES_NAME[res]))
-        parts.append(f'<text x="50" y="{_WH - 20}" font-size="13" fill="#e7edf3">{escape(RES_NAME[res])}</text>')
+        parts.append(_icon(RES_ICON[res], 20, _WH - 38, 24, '#e7edf3', res_name(res, t)))
+        parts.append(f'<text x="50" y="{_WH - 20}" font-size="13" fill="#e7edf3">{escape(res_name(res, t))}</text>')
     else:
-        parts.append(f'<text x="20" y="{_WH - 20}" font-size="13" fill="#e7edf3">nothing</text>')
+        parts.append(f'<text x="20" y="{_WH - 20}" font-size="13" fill="#e7edf3">{escape(t("nothing"))}</text>')
     for i, stage in enumerate(wonder.stages, 1):
-        parts.append(_stage_panel(stage, i, _WLEFT + (i - 1) * _WSTAGE, built=i <= built))
+        parts.append(_stage_panel(stage, i, _WLEFT + (i - 1) * _WSTAGE, built=i <= built, t=t))
     parts.append('</svg>')
     return ''.join(parts)
 
 
-def gallery_html(cards: Iterable[Card], wonders: Sequence[Wonder] = (), title: str = 'Cards') -> str:
+def gallery_html(
+    cards: Iterable[Card], wonders: Sequence[Wonder] = (), title: str = 'Cards', t: Translator = ENGLISH
+) -> str:
     """A full HTML page with card and (optional) wonder-board grids."""
-    card_cells = ''.join(f'<div class="cell">{card_svg(c)}</div>' for c in cards)
-    body = f'<h2>Cards</h2><div class="grid">{card_cells}</div>' if wonders else f'<div class="grid">{card_cells}</div>'
+    card_cells = ''.join(f'<div class="cell">{card_svg(c, t)}</div>' for c in cards)
+    grid = f'<div class="grid">{card_cells}</div>'
+    body = f'<h2>{escape(t("Cards"))}</h2>{grid}' if wonders else grid
     if wonders:
-        wonder_cells = ''.join(f'<div class="cell">{wonder_svg(w)}</div>' for w in wonders)
-        body += f'<h2>Wonder boards</h2><div class="grid wide">{wonder_cells}</div>'
+        wonder_cells = ''.join(f'<div class="cell">{wonder_svg(w, t=t)}</div>' for w in wonders)
+        body += f'<h2>{escape(t("Wonder boards"))}</h2><div class="grid wide">{wonder_cells}</div>'
     return (
-        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        f'<!doctype html><html lang="{t.lang}"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'<title>{escape(title)}</title><style>'
         'body{background:#eceff3;margin:0;padding:32px 24px 56px;'

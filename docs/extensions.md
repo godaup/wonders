@@ -7,7 +7,7 @@ without changing this repository.
 |---|---|---|---|
 | expansion | cards and wonder boards (JSON) | ✓ | ✓ |
 | model | a network checkpoint (`.pt`), usable as `neural:<name>` | ✓ | ✓ |
-| locale | translated strings (JSON) for the coming translation support | ✓ | ✓ |
+| locale | a translation: a new language, or your cards' names in one (JSON) | ✓ | ✓ |
 | card effect | a new effect type for card JSON | — | ✓ |
 | agent | a scripted agent for the CLI, benchmarks and the GUI | — | ✓ |
 
@@ -178,6 +178,34 @@ Effects compose behaviour through the uniform hooks of `wonders.effects.base.Eff
 (`production`, `shields`, `science`, `victory_points`, `coins_on_build`, `on_build`, …); the engine
 never special-cases effect classes, so a new effect works everywhere — scoring, payments, the card
 renderer (via its `description`), the observation and the scripted agents.
+
+## Translations
+
+A locale is a flat JSON object that maps the **English text** to its translation, exactly like the
+bundled `wonders/i18n/de.json` (the reference for every key the game uses):
+
+```json
+{
+  "_language": "Français",
+  "_decimal": ",",
+  "Start game": "Commencer la partie",
+  "{n} Shields": "{n} boucliers",
+  "Loom|resource": "Tissu",
+  "Workshop": "Atelier"
+}
+```
+
+* `_language` is the name in the language picker; `_decimal` the decimal separator; `_ordinal` (e.g.
+  `"{n}."`) how ranks are written.
+* Keep every `{field}` of the English text (a test checks the bundled catalogs for this).
+* `"text|context"` keys separate words with two meanings (`Loom` the card, `Loom|resource` the
+  resource); a lookup falls back to the bare text, and anything missing stays English.
+* A locale for an existing language extends it — ship the names of your expansion's cards in German
+  next to the expansion itself (`"locales": [{"lang": "de", "file": "de.json"}]`).
+
+The GUI offers every language found (picker in the header, `?lang=de` in the URL, the browser's
+language by default); `wonders gallery --lang de` renders the cards in it. Game records, agents and
+the API keep the English names, so a game played in one language replays in any other.
 
 ## Game records
 
