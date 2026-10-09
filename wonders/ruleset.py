@@ -68,6 +68,11 @@ class Ruleset:
     def of(cls, *ids: str) -> 'Ruleset':
         combined = tuple(dict.fromkeys(('base', *ids)))  # dedupe, base first, keep order
         unknown = [i for i in combined if i not in EXPANSIONS]
+        if unknown:  # maybe an extension expansion: discover extensions (once) and look again
+            from wonders.extensions import ensure_loaded
+
+            ensure_loaded()
+            unknown = [i for i in combined if i not in EXPANSIONS]
         if unknown:
             raise ValueError(f'unknown expansion(s): {unknown}')
         return cls(combined)

@@ -102,6 +102,8 @@ Measured on one core of an Intel i5-12400F unless noted.
   without depending on Gym or PettingZoo.
 * **Evaluation tools** — benchmarks with 95% confidence intervals, head-to-head comparison of
   models at the same tables, exploitability measurement.
+* **Extensions** — add your own expansions, models and translations as data folders, or card effects
+  and agents as pip-installable plugins ([extensions guide](docs/extensions.md)).
 * **Light** — the core is pure Python with `click` as its only runtime dependency; PyTorch is
   only needed for the learned agent. Type-checked with mypy and covered by ~300 tests.
 
@@ -245,6 +247,8 @@ These numbers were measured under the current rules, which the network was train
 ## Documentation
 
 * [Training guide](docs/training.md) — train, evaluate and compare your own agents.
+* [Extensions guide](docs/extensions.md) — custom expansions, card effects, agents, models and
+  translations.
 * [Roadmap](ROADMAP.md) — planned work: stronger networks (retraining, search, expert iteration),
   new ways to play and learn (browser version, difficulty levels, puzzles, post-game analysis,
   translations, accessibility), expansions and extensions, and research benchmarks.

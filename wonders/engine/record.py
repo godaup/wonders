@@ -21,6 +21,7 @@ the shuffle implementation or engine version — only on the rules staying stabl
 from __future__ import annotations
 
 import json
+import warnings
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple
 
@@ -69,6 +70,8 @@ class GameRecord:
     leader_box: List[str] = field(default_factory=list)  # undealt leaders, drawn from the end (Rome B)
     recruits: Dict[int, List[Optional[List[str]]]] = field(default_factory=dict)
     extras: Extras = field(default_factory=dict)
+    # Extensions behind the expansions in play: {id: {version, hash}} (empty for bundled content).
+    extensions: Dict[str, Dict[str, str]] = field(default_factory=dict)
 
     # -- serialization -----------------------------------------------------
     def to_dict(self) -> Dict[str, object]:
@@ -85,6 +88,8 @@ class GameRecord:
             out['recruits'] = {str(a): plays for a, plays in self.recruits.items()}
         if any(self.extras.values()):
             out['extras'] = {str(a): entries for a, entries in self.extras.items()}
+        if self.extensions:
+            out['extensions'] = self.extensions
         return out
 
     @classmethod
@@ -105,6 +110,7 @@ class GameRecord:
             leader_box=list(d.get('leader_box', [])),
             recruits=recruits,
             extras=extras,
+            extensions=dict(d.get('extensions', {})),
         )
 
     def to_json(self, indent: Optional[int] = None) -> str:
@@ -131,8 +137,27 @@ class GameRecord:
         return '\n'.join(lines)
 
     # -- replay ------------------------------------------------------------
+    def check_extensions(self) -> List[str]:
+        """Differences between the extensions this game was played with and those installed now."""
+        from wonders.extensions import ensure_loaded
+
+        installed = ensure_loaded().extensions
+        problems = []
+        for ext_id, pin in self.extensions.items():
+            ext = installed.get(ext_id)
+            if ext is None:
+                problems.append(f'extension {ext_id!r} (version {pin.get("version")}) is not installed')
+            elif ext.digest != pin.get('hash'):
+                problems.append(
+                    f'extension {ext_id!r} differs: recorded {pin.get("version")} ({pin.get("hash")}), '
+                    f'installed {ext.manifest.version} ({ext.digest})'
+                )
+        return problems
+
     def replay(self, content: Content) -> Game:
         """Re-simulate the recorded decisions and return the finished game."""
+        for problem in self.check_extensions():
+            warnings.warn(f'replay may differ: {problem}', stacklevel=2)
         coins = Ruleset.of(*self.expansions).starting_coins
         players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
         game = Game(players, expansions=self.expansions)
@@ -331,6 +356,8 @@ class RecordBuilder:
         self.recruits[age] = [None if a is None else [_CODE[a.kind], a.card.name] for a in actions]
 
     def build(self) -> GameRecord:
+        from wonders.extensions import REGISTRY
+
         return GameRecord(
             self.setups,
             self.expansions,
@@ -340,6 +367,7 @@ class RecordBuilder:
             leader_box=self.leader_box,
             recruits=self.recruits,
             extras=self.extras,
+            extensions=REGISTRY.pins(self.expansions),
         )
 
 

@@ -35,6 +35,9 @@ from wonders.viz.render import card_svg, wonder_svg
 
 @lru_cache(maxsize=1)
 def _all_content() -> Content:
+    from wonders.extensions import ensure_loaded
+
+    ensure_loaded()  # cards of extension expansions render too
     return load_content(*(e.id for e in EXPANSIONS.values() if e.implemented))
 
 

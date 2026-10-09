@@ -66,7 +66,11 @@ def agent_options(checkpoints: Sequence[str] = ()) -> List[AgentOption]:
 
     ``checkpoints`` adds extra neural agents (``neural:<file stem>``) next to the bundled one.
     """
-    options = [AgentOption(name, name, AGENT_BLURBS.get(name, '')) for name in AGENTS]
+    from wonders.extensions import ensure_loaded
+
+    registry = ensure_loaded()
+    blurbs = {**AGENT_BLURBS, **registry.agent_blurbs}
+    options = [AgentOption(name, name, blurbs.get(name, '')) for name in AGENTS]
     try:
         from wonders.ml import pretrained_path
     except ImportError:  # no PyTorch: scripted agents only
@@ -77,6 +81,12 @@ def agent_options(checkpoints: Sequence[str] = ()) -> List[AgentOption]:
         label = 'neural' if i == 0 else f'neural:{stem}'
         blurb = 'The bundled trained network.' if i == 0 else f'Trained network from {path}.'
         options.append(AgentOption(label, label, blurb, path))
+    for model in registry.models.values():  # networks from extensions
+        label = f'neural:{model.name}'
+        if all(o.id != label for o in options):
+            options.append(
+                AgentOption(label, label, model.description or f'Network from {model.extension}.', model.path)
+            )
     return options
 
 
@@ -149,6 +159,9 @@ def _asset_version() -> str:
 
 def menu_options(checkpoints: Sequence[str] = ()) -> Dict[str, Any]:
     """What the game menu can offer: expansions, agents, wonders per expansion, seat limits."""
+    from wonders.extensions import ensure_loaded
+
+    ensure_loaded()  # extension expansions join the menu
     expansions = []
     for exp in EXPANSIONS.values():
         wonders: List[str] = []

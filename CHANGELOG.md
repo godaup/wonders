@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Extensions (`wonders.extensions`, `docs/extensions.md`): expansions, models and locales from data
+  folders; card effects and agents from pip plugins; `wonders ext list | validate | new`; game
+  records pin extension versions and hashes.
 * Post-game analysis: `wonders analyse` and "Analyse my moves" in the GUI rate every move with
   network-guided search (accuracy, key moments with reasons, expected-margin graph), find patterns
   across the game (trade, military by one shield, science, wonder, coins, passed cards, discards) and

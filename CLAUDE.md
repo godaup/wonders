@@ -224,6 +224,15 @@ Design rules to preserve when extending:
   plus coins; `ObservationBuilder` reuses the public table per `Game.tick`, which the
   engine bumps on every state change it makes. Hot enums derive from `IdentityEnum`.
 
+**Extensions** (`wonders/extensions.py`, guide `docs/extensions.md`): `REGISTRY` takes expansions,
+effect types, agents, models and locales and writes through to `EXPANSIONS`, `EFFECT_BUILDERS` and
+`AGENTS`. Sources are discovered once by `ensure_loaded()` (called by `load_content`, `Ruleset.of` on
+unknown ids, the CLI lineup and the GUI menu): data folders under `$WONDERS_EXTENSIONS` /
+`~/.wonders/extensions` (manifest + JSON / `.pt`, never code) and entry points in the
+`wonders.extensions` group (code). `RecordBuilder` pins each extension's version and content hash
+in `GameRecord.extensions`; replays warn on a mismatch. Tests disable discovery
+(`tests/conftest.py`, `WONDERS_NO_EXTENSIONS=1`).
+
 `wonders/wonders.py` is now a thin public-API re-export (`from wonders.wonders import
 Game, Player, ...`).
 
