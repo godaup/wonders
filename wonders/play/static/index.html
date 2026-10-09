@@ -106,6 +106,8 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .agent { cursor: help; text-decoration: underline dotted; }
 .mini { overflow-wrap: anywhere; hyphens: auto; }
 .me-body { display: grid; grid-template-columns: minmax(230px, 300px) minmax(0, 1fr); gap: 18px; align-items: start; }
+/* Too narrow for stats and city side by side (wide board, leaders in hand): stack them instead of overflowing. */
+@container me-info (max-width: 480px) { .me-body { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
 .me-body .statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
 .logcard { cursor: zoom-in; text-decoration: underline dotted; text-underline-offset: 2px; }
 .leaders { display: grid; grid-template-columns: repeat(3, 60px); gap: 6px; }
@@ -132,6 +134,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .cardchip.white { color: #1f2a37; }
 .cardchip.black { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
 .me { display: grid; grid-template-columns: fit-content(50%) minmax(320px, 1fr) auto; gap: 18px; margin-bottom: 12px; align-items: start; }
+.me-info { container: me-info / inline-size; min-width: 0; }
 .board img { width: auto; max-width: 100%; max-height: 270px; border-radius: 10px; display: block; cursor: zoom-in; }
 .me-info .section-title { margin-top: 10px; }
 .stages { display: flex; gap: 6px; margin-top: 8px; }
