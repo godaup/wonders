@@ -7,7 +7,7 @@
   logged decisions); `wonders gui --no-save` turns it off. New GUI pages: "Past games" with the
   player's Elo rating and its graph (agents have fixed ratings fitted on 20,000 simulated games,
   `wonders.play.rating`; `python -m wonders.play.rating` refits them), and "Achievements"
-  (`wonders.play.achievements`): 32 feats and career goals in four tiers (bronze to legendary, worth
+  (`wonders.play.achievements`): 42 feats and career goals in four tiers (bronze to legendary, worth
   points) — general, Leaders, Cities, opponent-specific and career (table sizes, wonders, Elo goals),
   calibrated on 1,500 simulated games. Ratings and achievements are derived from the saved games, so
   new ones count old games too.

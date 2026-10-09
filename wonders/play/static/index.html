@@ -256,28 +256,44 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .place { display: inline-block; min-width: 26px; padding: 0 7px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line);
   font-weight: 700; text-align: center; }
 .place.first { background: var(--gold); border-color: var(--gold); color: #fff; }
-.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-.ach { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px; border: 1px solid var(--line);
-  border-radius: 14px; background: var(--panel); box-shadow: var(--shadow); }
-.ach .icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; background: var(--panel-2);
-  border: 2px solid var(--line); filter: grayscale(1); opacity: .55; }
-.ach.earned .icon { filter: none; opacity: 1; }
-.ach h3 { font-size: 15px; margin-bottom: 4px; }
-.ach-group { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; margin: 18px 0 8px; }
+/* achievements: three per row (every group has a multiple of three); the tier colours the whole tile */
+.ach-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .ach-grid { grid-template-columns: minmax(0, 1fr); } }
+.ach.tier-bronze { --tc: #b0703d; } .ach.tier-silver { --tc: #8a96a3; } .ach.tier-gold { --tc: #d19b16; } .ach.tier-legendary { --tc: #8a55c9; }
+.ach { position: relative; display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px;
+  border-radius: 14px; border: 1px dashed var(--line); background: var(--panel-2); color: var(--muted); }
+.ach .icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; background: var(--panel);
+  border: 2px dashed var(--line); filter: grayscale(1); opacity: .45; }
+.ach h3 { font-size: 15px; margin-bottom: 4px; color: var(--ink); opacity: .7; }
+.ach p { margin: 0 0 4px; font-size: 13px; }
 .ach-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .ach .tier { flex: none; font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; padding: 1px 8px;
-  border-radius: 999px; color: #fff; background: var(--tc); cursor: help; }
-.ach.tier-bronze { --tc: #a0643a; } .ach.tier-silver { --tc: #8a939d; } .ach.tier-gold { --tc: #c8951a; } .ach.tier-legendary { --tc: #7a4fb0; }
-.ach.earned .icon { border-color: var(--tc); background: color-mix(in srgb, var(--tc) 16%, var(--panel)); }
-.ach.tier-legendary.earned { box-shadow: 0 0 0 1px var(--tc), var(--shadow); }
+  border-radius: 999px; cursor: help; color: var(--tc); border: 1px solid color-mix(in srgb, var(--tc) 60%, transparent); }
+.ach .when { font-size: 12px; }
+.ach.earned { border: 2px solid var(--tc); color: var(--ink); box-shadow: var(--shadow);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tc) 30%, var(--panel)), color-mix(in srgb, var(--tc) 10%, var(--panel)) 70%); }
+.ach.earned h3 { opacity: 1; }
+.ach.earned .icon { filter: none; opacity: 1; border: 2px solid var(--tc); background: var(--panel); box-shadow: 0 0 0 4px color-mix(in srgb, var(--tc) 25%, transparent); }
+.ach.earned .tier { color: #fff; background: var(--tc); border-color: var(--tc); }
+.ach.earned .when { font-weight: 700; color: color-mix(in srgb, var(--tc) 65%, var(--ink)); }
+.ach.earned::after { content: "✓"; position: absolute; left: 50px; top: 52px; width: 20px; height: 20px; border-radius: 50%; display: grid;
+  place-items: center; font-size: 12px; font-weight: 800; color: #fff; background: var(--tc); }
+.ach.tier-legendary.earned { box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc) 25%, transparent), var(--shadow); }
+.ach-group { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 13px;
+  letter-spacing: 1px; text-transform: uppercase; margin: 22px 0 10px; }
+.ach-group .count { font-size: 12px; color: var(--muted); letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+.ach-bar { height: 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); overflow: hidden; }
+.ach-bar div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #b0703d, #d19b16 60%, #8a55c9); }
+.ach-group .ach-bar { height: 6px; }
+.ach-total { display: grid; gap: 6px; margin: 4px 0 6px; }
+.ach-total .nums { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.ach-total .nums b { color: var(--ink); font-size: 18px; }
 .ach-progress { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 12px; margin: 2px 0 4px; }
-.ach-progress .an-progress div { transition: none; }
-.ach p { margin: 0 0 4px; font-size: 13px; }
-.ach .when { font-size: 12px; color: var(--muted); }
-.ach.earned .when { color: var(--green); font-weight: 600; }
+.ach-progress .ach-bar div { background: var(--tc); }
 #r-rating { margin: -4px 0 12px; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-#r-rating .new-ach { padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--gold) 18%, var(--panel)); border: 1px solid var(--gold);
+#r-rating .new-ach { padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--tc) 22%, var(--panel)); border: 1px solid var(--tc);
   font-weight: 600; font-size: 13px; }
+.new-ach.tier-bronze { --tc: #b0703d; } .new-ach.tier-silver { --tc: #8a96a3; } .new-ach.tier-gold { --tc: #d19b16; } .new-ach.tier-legendary { --tc: #8a55c9; }
 @media (max-width: 900px) {
   .games .hide-narrow { display: none; }
   .games th, .games td { padding: 6px 4px; }
@@ -1279,7 +1295,7 @@ function renderHistory(data) {
     const me = g.players[g.human];
     const opponents = g.players.filter((p, i) => i !== g.human).map((p) => agentLabel(p.agent) + ' ' + p.elo).join(', ');
     const delta = g.rating ? g.rating.after - g.rating.before : null;
-    const ach = (g.achievements || []).map((id) => achievementInfo[id]).filter(Boolean);
+    const ach = byTier((g.achievements || []).map((id) => achievementInfo[id]).filter(Boolean));
     const open = async () => {
       setBusy(true, t('Loading…'));
       try { state = (await api('/api/games/open', { id: g.id })).state; render(); }
@@ -1307,6 +1323,8 @@ function renderHistory(data) {
   $('h-games').replaceChildren(el('table', { class: 'games' }, el('thead', {}, head), el('tbody', {}, rows)));
 }
 
+const TIER_ORDER = ['legendary', 'gold', 'silver', 'bronze'];
+const byTier = (items) => items.slice().sort((a, b) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier));
 const TIER_NAMES = { bronze: N('Bronze'), silver: N('Silver'), gold: N('Gold'), legendary: N('Legendary') };
 const ACH_GROUPS = [['general', N('Feats')], ['leaders', N('Leaders')], ['cities', N('Cities')], ['opponents', N('Opponents')],
   ['career', N('Career')]];
@@ -1315,23 +1333,29 @@ async function openAchievements() {
   try {
     const data = await api('/api/achievements');
     const earned = data.achievements.filter((a) => a.count).length;
-    $('a-summary').textContent = t('{earned} of {total} earned in {n} finished games', { earned, total: data.achievements.length, n: data.games })
-      + ' · ' + t('{points} of {max} points', { points: data.points, max: data.max_points });
+    const bar = (part, whole) => el('div', { class: 'ach-bar' }, el('div', { style: `width:${whole ? Math.min(100, 100 * part / whole) : 0}%` }));
+    $('a-summary').replaceChildren();
+    const when = (a) => {
+      if (!a.count) return t('Not earned yet');
+      if (a.goal || a.count === 1) return t('Earned on {date}', { date: fmtDate(a.first) });
+      return t('Earned {n} times, first on {date}', { n: a.count, date: fmtDate(a.first) });
+    };
     const card = (a) => el('div', { class: 'ach tier-' + a.tier + (a.count ? ' earned' : '') },
       el('div', { class: 'icon' }, a.icon),
       el('div', {}, el('div', { class: 'ach-head' }, el('h3', {}, a.name),
         el('span', { class: 'tier', 'data-tip': t('{n} points', { n: a.points }) }, t(TIER_NAMES[a.tier]))),
         el('p', {}, a.description),
-        a.goal && !a.count ? el('div', { class: 'ach-progress' }, el('div', { class: 'an-progress' },
-          el('div', { style: `width:${Math.min(100, 100 * a.progress / a.goal)}%` })), el('span', {}, a.progress + ' / ' + a.goal)) : null,
-        el('p', { class: 'when' }, a.count ? (a.goal ? t('Reached on {date}', { date: fmtDate(a.first) })
-          : t(a.count === 1 ? 'Earned once, on {date}' : 'Earned {n} times, first on {date}', { n: a.count, date: fmtDate(a.first) }))
-          : t('Not earned yet'))));
-    $('a-grid').replaceChildren(...ACH_GROUPS.flatMap(([group, title]) => {
+        a.goal && !a.count ? el('div', { class: 'ach-progress' }, bar(a.progress, a.goal), el('span', {}, a.progress + ' / ' + a.goal)) : null,
+        el('p', { class: 'when' }, when(a))));
+    const total = el('div', { class: 'ach-total' },
+      el('div', { class: 'nums' }, el('span', {}, el('b', {}, String(data.points)), ' / ' + t('{n} points', { n: data.max_points })),
+        el('span', {}, t('{earned} of {total} earned in {n} finished games', { earned, total: data.achievements.length, n: data.games }))),
+      bar(data.points, data.max_points));
+    $('a-grid').replaceChildren(total, ...ACH_GROUPS.flatMap(([group, title]) => {
       const items = data.achievements.filter((a) => a.group === group);
       if (!items.length) return [];
       const got = items.filter((a) => a.count).length;
-      return [el('h3', { class: 'ach-group' }, t(title), el('span', { class: 'muted' }, ' ' + got + ' / ' + items.length)),
+      return [el('h3', { class: 'ach-group' }, el('span', {}, t(title)), bar(got, items.length), el('span', { class: 'count' }, got + ' / ' + items.length)),
         el('div', { class: 'ach-grid' }, items.map(card))];
     }));
   } catch (e) { $('a-grid').replaceChildren(el('p', { class: 'error' }, e.message)); }
@@ -1349,8 +1373,8 @@ async function renderRatingChange() {
     $('r-rating').replaceChildren(
       el('span', {}, t('Your Elo: {before} → {after}', { before: g.rating.before, after: g.rating.after }), ' ',
         el('span', { class: 'delta ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : '') }, '(' + signed(delta) + ')')),
-      ...(g.achievements || []).map((id) => info[id]).filter(Boolean).map((a) =>
-        el('span', { class: 'new-ach', 'data-tip': a.description }, a.icon + ' ' + a.name)));
+      ...byTier((g.achievements || []).map((id) => info[id]).filter(Boolean)).map((a) =>
+        el('span', { class: 'new-ach tier-' + a.tier, 'data-tip': a.description }, a.icon + ' ' + a.name)));
   } catch (e) { /* the rating line is optional */ }
 }
 

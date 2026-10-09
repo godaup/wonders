@@ -112,6 +112,16 @@ def _self_made(g: Game, s: int) -> bool:
     return _uses(g, 'leaders') and _won(g, s) and _color(g, s, 'white') == 0
 
 
+def _last(g: Game, s: int) -> bool:
+    places = g['result']['places']
+    return len(places) >= 3 and places[s] == max(places) and places.count(places[s]) == 1
+
+
+def _philosopher_king(g: Game, s: int) -> bool:
+    science = _r(g, 'science', s, {})
+    return _won(g, s) and min(science.get(k, 0) for k in ('tablet', 'gear', 'compass')) >= 3
+
+
 def _boss_rush(g: Game, s: int) -> bool:
     return _won(g, s) and {'neural', 'adaptive', 'rival'} <= set(_agents(g, s))
 
@@ -127,7 +137,7 @@ FEATS: Sequence[Achievement] = (
         'Full Spectrum',
         'Build a brown, grey, yellow, red, blue, green and purple card in one game.',
         '🌈',
-        'silver',
+        'bronze',
         check=lambda g, s: all(_color(g, s, c) for c in BASE_COLORS),
     ),
     Achievement(
@@ -135,7 +145,7 @@ FEATS: Sequence[Achievement] = (
         'Chain Reaction',
         'Build four cards for free through chains in one game.',
         '⛓',
-        'silver',
+        'bronze',
         check=lambda g, s: _r(g, 'chains', s) >= 4,
     ),
     Achievement(
@@ -151,7 +161,7 @@ FEATS: Sequence[Achievement] = (
         "Dragon's Hoard",
         'Finish a game with at least 25 coins.',
         '🐉',
-        'silver',
+        'bronze',
         check=lambda g, s: _r(g, 'coins', s) >= 25,
     ),
     Achievement(
@@ -259,7 +269,56 @@ FEATS: Sequence[Achievement] = (
         'legendary',
         check=_renaissance,
     ),
+    Achievement(
+        'nerd_alert',
+        'Nerd Alert',
+        'Build three science (green) cards in one game.',
+        '🤓',
+        'bronze',
+        check=lambda g, s: _color(g, s, 'green') >= 3,
+    ),
+    Achievement(
+        'good_neighbour',
+        'Good Neighbour',
+        'Pay your neighbours at least 10 coins in one game. They will name a street after you.',
+        '🎁',
+        'bronze',
+        check=lambda g, s: g['result'].get('traded', 0) >= 10,
+    ),
+    Achievement(
+        'participation',
+        'Participation Trophy',
+        'Finish dead last. Somebody has to.',
+        '🧸',
+        'bronze',
+        check=_last,
+    ),
+    Achievement(
+        'philosopher_king',
+        'Philosopher King',
+        'Win with three complete science sets (three tablets, gears and compasses each).',
+        '📜',
+        'legendary',
+        check=_philosopher_king,
+    ),
+    Achievement(
+        'full_monty',
+        'The Full Monty',
+        'Win the game and every military conflict, and build every stage of your wonder.',
+        '💯',
+        'legendary',
+        check=lambda g, s: _sparta(g, s) and _wonderwall(g, s),
+    ),
     # Leaders
+    Achievement(
+        'name_dropper',
+        'Name Dropper',
+        'Recruit three leaders in one game.',
+        '📇',
+        'bronze',
+        'leaders',
+        check=lambda g, s: _uses(g, 'leaders') and _color(g, s, 'white') >= 3,
+    ),
     Achievement(
         'hall_of_fame',
         'Hall of Fame',
@@ -279,6 +338,15 @@ FEATS: Sequence[Achievement] = (
         check=_self_made,
     ),
     # Cities
+    Achievement(
+        'black_sheep',
+        'Black Sheep',
+        'Build a black card. Nobody needs to know where the money came from.',
+        '🐑',
+        'bronze',
+        'cities',
+        check=lambda g, s: _color(g, s, 'black') >= 1,
+    ),
     Achievement(
         'shady_dealings',
         'Shady Dealings',
@@ -302,8 +370,8 @@ FEATS: Sequence[Achievement] = (
         'Packed House',
         'Win a seven-player game with Leaders and Cities.',
         '🎪',
-        'gold',
-        'cities',
+        'legendary',
+        'opponents',
         check=lambda g, s: _won(g, s) and _uses(g, 'leaders', 'cities') and len(g['players']) >= 7,
     ),
     # opponents
@@ -315,6 +383,24 @@ FEATS: Sequence[Achievement] = (
         'bronze',
         'opponents',
         check=lambda g, s: 'random' in _below(g, s),
+    ),
+    Achievement(
+        'homeward_bound',
+        'Homeward Bound',
+        'Finish above Odysseus. His journey home just got a little longer.',
+        '⛵',
+        'silver',
+        'opponents',
+        check=lambda g, s: 'heuristic' in _above(g, s),
+    ),
+    Achievement(
+        'out_forged',
+        'Out-Forged',
+        'Finish above Hephaestus, the best scripted builder.',
+        '🔨',
+        'silver',
+        'opponents',
+        check=lambda g, s: 'board' in _above(g, s),
     ),
     Achievement(
         'giant_slayer',
@@ -352,6 +438,13 @@ def _distinct(goal: int, items: Callable[[Game, int], Sequence[str]]) -> Callabl
     return career
 
 
+def _count(goal: int) -> Callable[..., Progress]:
+    def career(games: Sequence[Game], ratings: Sequence[float]) -> Progress:
+        return min(len(games), goal), goal, goal - 1 if len(games) >= goal else None
+
+    return career
+
+
 def _rating(goal: int) -> Callable[..., Progress]:
     def career(games: Sequence[Game], ratings: Sequence[float]) -> Progress:
         for index, value in enumerate(ratings):
@@ -367,6 +460,15 @@ def _win_wonder(g: Game, s: int) -> List[str]:
 
 
 CAREER: Sequence[Achievement] = (
+    Achievement(
+        'season_ticket',
+        'Season Ticket',
+        'Finish five games.',
+        '🎟',
+        'bronze',
+        'career',
+        career=_count(5),
+    ),
     Achievement(
         'full_house',
         'Full House',
@@ -414,7 +516,10 @@ CAREER: Sequence[Achievement] = (
     ),
 )
 
-ACHIEVEMENTS: Sequence[Achievement] = (*FEATS, *CAREER)
+# Grouped, then from bronze to legendary (the order every list shows them in).
+ACHIEVEMENTS: Sequence[Achievement] = tuple(
+    sorted((*FEATS, *CAREER), key=lambda a: (GROUPS.index(a.group), TIERS.index(a.tier)))
+)
 
 
 def earned(game: Game) -> List[str]:
@@ -422,7 +527,7 @@ def earned(game: Game) -> List[str]:
     if not game.get('finished') or not game.get('result'):
         return []
     seat = int(game['human'])
-    return [a.id for a in FEATS if a.check is not None and a.check(game, seat)]
+    return [a.id for a in ACHIEVEMENTS if a.check is not None and a.check(game, seat)]
 
 
 def achievements(games: Sequence[Game], ratings: Sequence[float] = ()) -> List[Dict[str, Any]]:

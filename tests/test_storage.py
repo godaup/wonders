@@ -114,7 +114,7 @@ def test_fit_recovers_the_strength_order() -> None:
 CATS = ('military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science')
 
 
-def _game(players: Any = ('human', 'board', 'heuristic'), expansions: Any = ('base',), **result: Any) -> Dict[str, Any]:
+def _game(players: Any = ('human', 'civic', 'greedy'), expansions: Any = ('base',), **result: Any) -> Dict[str, Any]:
     n = len(players)
     base: Dict[str, Any] = {
         'totals': [50] + [40] * (n - 1),
@@ -152,6 +152,10 @@ def test_the_achievement_catalogue_is_well_formed() -> None:
     tiers = [a.tier for a in ACHIEVEMENTS]
     assert all(tiers.count(t) >= 2 for t in TIERS)  # a spread of difficulty
     assert {a.group for a in ACHIEVEMENTS} == set(GROUPS)
+    assert all(sum(a.group == g for a in ACHIEVEMENTS) % 3 == 0 for g in GROUPS)  # full rows of three
+    order = [(GROUPS.index(a.group), TIERS.index(a.tier)) for a in ACHIEVEMENTS]
+    assert order == sorted(order)  # grouped, then bronze to legendary
+    assert tiers.count('legendary') >= 5
     summary = achievements([])
     assert all(item['count'] == 0 and item['points'] == POINTS[item['tier']] for item in summary)
 
@@ -180,12 +184,25 @@ def test_feats_are_checked_from_the_saved_result() -> None:
     assert 'seventy' in earned(_game(totals=[70, 40, 40]))
     allround = dict.fromkeys(CATS, 5)
     assert 'renaissance' in earned(_game(scores=[allround, {}, {}], places=[3, 1, 2]))
+    assert 'nerd_alert' in earned(_game(colors=[{'green': 3}, {}, {}]))
+    assert 'good_neighbour' in earned(_game(traded=10))
+    assert 'participation' in earned(_game(places=[3, 1, 2])) and 'participation' not in earned(_game(places=[2, 1, 2]))
+    sets = dict.fromkeys(('tablet', 'gear', 'compass'), 3)
+    assert 'philosopher_king' in earned(_game(science=[sets, {}, {}]))
+    assert 'philosopher_king' not in earned(_game(science=[{**sets, 'gear': 2}, {}, {}]))
+    monty = earned(_game(tokens=[[1, 1, 3, 3, 5, 5], [], []], stages=[3, 0, 0]))
+    assert {'full_monty', 'sparta', 'wonderwall'} <= set(monty)
+    assert monty.index('wonderwall') < monty.index('sparta') < monty.index('full_monty')  # bronze first
 
 
 def test_expansion_and_opponent_feats() -> None:
     assert 'hall_of_fame' in earned(_game(expansions=('base', 'leaders'), colors=[{'white': 4}, {}, {}]))
     assert 'self_made' in earned(_game(expansions=('base', 'leaders')))
     assert 'self_made' not in earned(_game())  # no leaders to skip in a base game
+    assert 'name_dropper' in earned(_game(expansions=('base', 'leaders'), colors=[{'white': 3}, {}, {}]))
+    assert 'black_sheep' in earned(_game(expansions=('base', 'cities'), colors=[{'black': 1}, {}, {}]))
+    assert 'homeward_bound' in earned(_game(('human', 'heuristic', 'board')))
+    assert 'out_forged' in earned(_game(('human', 'heuristic', 'board')))
     assert 'shady_dealings' in earned(_game(expansions=('base', 'cities'), colors=[{'black': 4}, {}, {}]))
     assert 'too_big_to_fail' in earned(_game(debt=[3, 0, 0]))
     seven = ('human', 'board', 'random', 'greedy', 'civic', 'heuristic', 'table')
@@ -204,6 +221,7 @@ def test_career_goals_count_across_games() -> None:
     for k, g in enumerate(games):
         g['players'][0]['wonder'] = f'Wonder {k % 3}'  # three different winning wonders
     summary = {a['id']: a for a in achievements(games, [1500, 1600, 1760, 1700, 1800])}
+    assert summary['season_ticket']['games'] == ['g7'] and summary['season_ticket']['progress'] == 5
     assert summary['full_house']['count'] == 1 and summary['full_house']['games'] == ['g7']
     assert (summary['globetrotter']['progress'], summary['globetrotter']['goal']) == (3, 4)
     assert summary['globetrotter']['count'] == 0

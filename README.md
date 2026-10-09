@@ -177,7 +177,7 @@ it off), so a game can be closed and resumed later. "Past games" lists them with
 and its graph: every agent has a fixed rating measured in 20,000 games between them (Fortuna, the
 random agent, 1000; Odysseus/`heuristic` ≈1730; Hephaestus/`board` ≈1890; Pythia, the bundled network,
 ≈2170), and each finished game counts as a match against every opponent at the table.
-"Achievements" has 32 feats and career goals from bronze to legendary — win without a red card, beat
+"Achievements" has 42 feats and career goals from bronze to legendary — win without a red card, beat
 Pythia, build three cards from the discard pile, win a game deep in debt, reach Elo 2000, …
 
 ### Training (needs PyTorch)
