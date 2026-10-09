@@ -31,7 +31,7 @@
 ## The challenge
 
 * **Players:** `pip install`, run `wonders gui`, and take on the bundled network. It finishes
-  first in 71% of five-player games against the strongest hand-written agents — how often do
+  first in 73% of five-player games against the strongest hand-written agents — how often do
   you?
 * **Developers:** train or script an agent and put it at the same table:
   `wonders train h2h mine=my_model.pt bundled` (or `wonders bench` for scripted agents).
@@ -201,7 +201,8 @@ For throughput, batch games across processes with `wonders.env.SubprocVectorEnv`
 `wonders/ml/pretrained/ppo_universal_v2.pt` (the `neural` agent) plays **every expansion
 combination with 3–7 players**. It is a 256×2 policy/value network over the `table-v2` observation
 encoder: first cloned from the `adaptive` agent, then trained for 50M PPO steps in self-play
-against a mix of scripted agents, its own recent snapshots and the best earlier models — see the
+against a mix of scripted agents, its own recent snapshots and the best earlier models, and
+finally fine-tuned for 10M steps under the current rules — see the
 [training guide](docs/training.md).
 
 **How strong is it?** 4,000 games, every expansion combination and 3–7 players, with
@@ -210,19 +211,19 @@ the network, the two strongest scripted agents and `heuristic` agents filling th
 
 | at the same table | finishes first | ranked above the other | mean score |
 |---|---|---|---|
-| **bundled network** (`neural`) | **74%** | above `adaptive` in **85%**, above `board` in **86%** of games | 70.2 |
-| [`adaptive`](docs/adaptive-agents.md) | 11% | above `board` in 53% | 57.4 |
-| `board` | 10% | | 56.3 |
+| **bundled network** (`neural`) | **76%** | above `adaptive` in **87%**, above `board` in **88%** of games | 71.1 |
+| [`adaptive`](docs/adaptive-agents.md) | 10% | above `board` in 53% | 57.4 |
+| `board` | 9% | | 56.1 |
 | *an even share* | *22%* | *50%* | |
 
-The network averages +12.9 points over `adaptive` and wins about 3.4× as often as an even share.
+The network averages +13.8 points over `adaptive` and wins about 3.5× as often as an even share.
 
 By player count (all expansions), the network's share of first places compared with an even
 share:
 
 | players | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|
-| bundled network | **88%** | **79%** | **71%** | **68%** | **65%** |
+| bundled network | **88%** | **81%** | **73%** | **71%** | **68%** |
 | even share | 33% | 25% | 20% | 17% | 14% |
 
 * [`adaptive`](docs/adaptive-agents.md) — the strongest scripted agent: plans around its wonder
@@ -231,8 +232,7 @@ share:
 * `board` — plans production for its wonder stages and values its board's powers.
 * `heuristic` — a tuned value function over points, science sets, military, economy and chains.
 
-These numbers were measured under the current rules. The network itself was trained before the
-October 2026 rules fixes; retraining under the current rules is next on the [roadmap](ROADMAP.md).
+These numbers were measured under the current rules, which the network was trained under too.
 
 ## Documentation
 

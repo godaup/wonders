@@ -13,7 +13,8 @@ CHECKPOINT_VERSION = 1
 # Bundled with the package: the universal model of training Stage 3 (``sweeps/STAGE3.md``) —
 # 256x2 over the table-v2 encoder, every expansion and player count; imitation of the adaptive
 # agent, then 40M PPO steps against a tiered opponent mix (scripted / recent self / anchors),
-# continued for 10M steps with a linearly decaying learning rate (``s5-anneal``, ``sweeps/OBJECTIVES.md``).
+# continued for 10M steps with a linearly decaying learning rate (``s5-anneal``, ``sweeps/OBJECTIVES.md``),
+# then fine-tuned for 10M steps under the October 2026 rules fixes (``r1-a``, ``sweeps/RETRAIN.md``).
 PRETRAINED = 'ppo_universal_v2.pt'
 
 
