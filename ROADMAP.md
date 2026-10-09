@@ -215,6 +215,11 @@ existing effect types. A custom-expansion feature would make that a first-class 
 
 ## 6. Extensions: custom expansions, agents and models
 
+**Status: steps 1–2 done** (`wonders/extensions.py`, `docs/extensions.md`): one registry for
+expansions, effects, agents, models and locales; data folders and pip plugins (entry point
+`wonders.extensions`); manifests with content hashes pinned in game records; `wonders ext list |
+validate | new`. Still open: the Hugging Face source and curated pull requests (steps 3–4).
+
 **Goal.** Let anyone add expansions, agents and trained models without changing this repository,
 with one mechanism and clear trust rules.
 

@@ -234,10 +234,13 @@ def _read_expansion(expansion: str) -> dict:
 
 
 def load_content(*expansions: str) -> Content:
-    """Load and merge one or more expansions (default: ``'base'``)."""
+    """Load and merge one or more expansions (default: ``'base'``), bundled or from extensions."""
+    from wonders.extensions import REGISTRY, ensure_loaded
+
+    ensure_loaded()
     content = Content()
     for expansion in expansions or ('base',):
-        raw = _read_expansion(expansion)
+        raw = REGISTRY.expansion_raw(expansion) or _read_expansion(expansion)
         content.wonders.extend(build_wonder(w) for w in raw.get('wonders', []))
         content.cards.extend(build_card(c, expansion) for c in raw.get('cards', []))
     return content

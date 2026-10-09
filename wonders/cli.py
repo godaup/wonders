@@ -24,13 +24,17 @@ def _ml():
 def _lineup(agents: str):
     """Parse a lineup into agent specs (built-in names or ``neural:<path>``)."""
     from wonders.agents.bench import AGENTS, MAX_PLAYERS, MIN_PLAYERS, AgentSpec
+    from wonders.extensions import ensure_loaded
 
+    models = ensure_loaded().models
     specs = []
     for entry in (a.strip() for a in agents.split(',')):
         if not entry:
             continue
         if entry == 'neural' or entry.startswith('neural:'):
             path = entry[len('neural:') :] if entry != 'neural' else _ml().pretrained_path()
+            if path in models:  # a model registered by an extension
+                path = models[path].path
             if not os.path.isfile(path):
                 raise click.BadParameter(f'no checkpoint at {path!r}')
             label = f'neural:{os.path.splitext(os.path.basename(path))[0]}'
@@ -38,7 +42,9 @@ def _lineup(agents: str):
         elif entry in AGENTS:
             specs.append(AGENTS[entry])
         else:
-            raise click.BadParameter(f"unknown agent {entry!r}; choose from {', '.join(AGENTS)} or neural:<path>")
+            raise click.BadParameter(
+                f"unknown agent {entry!r}; choose from {', '.join(AGENTS)}, neural, neural:<path> or neural:<model>"
+            )
     if not MIN_PLAYERS <= len(specs) <= MAX_PLAYERS:
         raise click.BadParameter(f'need {MIN_PLAYERS}-{MAX_PLAYERS} agents (one per seat), got {len(specs)}')
     # Seats are pooled by name, so two *different* checkpoints must not share a label.
@@ -202,6 +208,60 @@ def bench(agents, games, seed, expansion, side, processes):
         _lineup(agents), n_games=games, seed=seed, expansions=tuple(expansion), sides=side, processes=processes
     )
     click.echo(result.table())
+
+
+@main.group()
+def ext():
+    """Extensions: custom expansions, card effects, agents, models and translations."""
+
+
+@ext.command(name='list')
+def ext_list():
+    """Show the installed extensions (folders and plugins) and what each provides."""
+    from wonders.extensions import ensure_loaded, extensions_home
+
+    registry = ensure_loaded()
+    click.echo(f'extensions home: {extensions_home()}')
+    if not registry.extensions:
+        click.echo('no extensions installed (try: wonders ext new my-expansion)')
+        return
+    for ext_id, info in sorted(registry.extensions.items()):
+        m = info.manifest
+        click.echo(f'{ext_id} {m.version} [{info.source}] {m.name} — hash {info.digest or "-"}')
+        if m.rules_version is not None:
+            from wonders.ruleset import RULES_VERSION
+
+            note = '' if m.rules_version == RULES_VERSION else f' (engine implements {RULES_VERSION})'
+            click.echo(f'  made for rules version {m.rules_version}{note}')
+        click.echo('  provides: ' + (', '.join(info.provides) or 'nothing'))
+
+
+@ext.command(name='validate')
+@click.argument('folder', type=click.Path(exists=True, file_okay=False))
+def ext_validate(folder):
+    """Check an extension folder: manifest, files, cards, wonders, names and chains."""
+    from wonders.extensions import validate
+
+    problems = validate(folder)
+    for problem in problems:
+        click.echo(f'✗ {problem}')
+    if problems:
+        raise click.ClickException(f'{len(problems)} problem(s) in {folder}')
+    click.echo(f'✓ {folder} is a valid extension')
+
+
+@ext.command(name='new')
+@click.argument('extension_id')
+@click.option('--name', default='', help='Display name (defaults to the id).')
+@click.option(
+    '--dir', 'parent', type=click.Path(file_okay=False), help='Where to create it (default: the extensions home).'
+)
+def ext_new(extension_id, name, parent):
+    """Create a minimal data extension (manifest + one example card) to start from."""
+    from wonders.extensions import extensions_home, scaffold
+
+    folder = scaffold(os.path.join(parent or extensions_home(), extension_id), extension_id, name)
+    click.echo(f'created {folder}: edit cards.json, then run  wonders ext validate {folder}')
 
 
 @main.group()
