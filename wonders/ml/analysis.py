@@ -364,6 +364,121 @@ def _timing_pattern(entries: Sequence[Dict[str, Any]]) -> List[Pattern]:
     ]
 
 
+GOOD = ('best', 'good')
+KINDS = ('build', 'wonder', 'discard', 'free')
+
+
+def _rated_stats(entries: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Move count, accuracy and VP lost of a set of rated decisions."""
+    rated = [e for e in entries if 'loss' in e]
+    return {
+        'moves': len(rated),
+        'accuracy': round(sum(1 for e in rated if e['label'] in GOOD) / len(rated), 3) if rated else None,
+        'loss': round(sum(e['loss'] for e in rated), 2),
+    }
+
+
+def _ranked(values: List[float], seat: int) -> int:
+    """1-based rank of ``values[seat]`` among all seats (higher is better; ties share the better rank)."""
+    return 1 + sum(1 for i, v in enumerate(values) if i != seat and v > values[seat])
+
+
+def aspects(record: GameRecord, seat: int, decisions: Decisions, entries: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Statistics of one player's game for charts, compared with the rest of the table where useful.
+
+    Covers the score categories, accuracy by Age and by move type, the city's card colours, military
+    results per Age and neighbour, the economy and the wonder.
+    """
+    content = _content(Ruleset.of(*record.expansions).content_expansions)
+    game = record.replay(content)
+    n = game.n
+    rows = [game.score(i).as_dict() for i in range(n)]
+    categories = []
+    for key in list(rows[seat]):
+        values = [float(r[key]) for r in rows]
+        others = [v for i, v in enumerate(values) if i != seat]
+        if not any(values):
+            continue
+        categories.append(
+            {
+                'key': key,
+                'mine': values[seat],
+                'average': round(sum(others) / len(others), 2),
+                'best_other': max(others),
+                'rank': _ranked(values, seat),
+            }
+        )
+    rated = [e for e in entries if 'loss' in e]
+    by_age = [{'age': age, **_rated_stats([e for e in rated if e['age'] == age])} for age in (1, 2, 3)]
+    by_kind = {k: _rated_stats([e for e in rated if e['played']['kind'] == k]) for k in KINDS}
+    matrix = {k: {b: 0 for b in KINDS} for k in KINDS}
+    for e in rated:
+        matrix[e['played']['kind']][e['best']['kind']] += 1
+    colors = sorted({c.color.value for p in game.players for c in p.cards})
+    cards = {
+        col: {
+            'mine': sum(1 for c in game.players[seat].cards if c.color.value == col),
+            'average': round(
+                sum(sum(1 for c in game.players[i].cards if c.color.value == col) for i in range(n) if i != seat)
+                / (n - 1),
+                2,
+            ),
+        }
+        for col in colors
+    }
+    trade = chained = 0
+    wonder_ages: List[int] = []
+    for point, obs, action in decisions:
+        if point.kind is not DecisionKind.PLAY:
+            continue
+        view = next((c for c in obs.hand if c.name == action.card.name), None)
+        if action.kind is ActionKind.BUILD and view is not None:
+            trade += view.trade_coins
+            chained += bool(view.chain_free)
+        if action.kind is ActionKind.WONDER:
+            wonder_ages.append(point.age)
+    me = game.players[seat]
+    military = []
+    names = [s.name for s in record.players]
+    shields: Dict[int, List[int]] = {}
+    for age in (1, 2):
+        first = next((obs for point, obs, _a in decisions if point.age == age + 1), None)
+        if first is not None:
+            shields[age] = [c.shields for c in first.table]
+    shields[3] = [p.shields() for p in game.players]
+    for age, row in sorted(shields.items()):
+        for side, other in (('left', (seat + 1) % n), ('right', (seat - 1) % n)):
+            diff = row[seat] - row[other]
+            military.append(
+                {
+                    'age': age,
+                    'side': side,
+                    'opponent': names[other],
+                    'mine': row[seat],
+                    'theirs': row[other],
+                    'result': 'win' if diff > 0 else 'tie' if diff == 0 else 'loss',
+                }
+            )
+    coins = [p.coins for p in game.players]
+    return {
+        'categories': categories,
+        'by_age': by_age,
+        'by_kind': {k: v for k, v in by_kind.items() if v['moves']},
+        'kind_matrix': {k: {b: c for b, c in row.items() if c} for k, row in matrix.items() if any(row.values())},
+        'cards': cards,
+        'military': military,
+        'economy': {
+            'trade_paid': trade,
+            'chain_builds': chained,
+            'discards': sum(1 for e in rated if e['played']['kind'] == 'discard'),
+            'final_coins': me.coins,
+            'coins_rank': _ranked([float(c) for c in coins], seat),
+        },
+        'wonder': {'built': me.wonder_stages_built, 'total': len(me.wonder.stages), 'ages': wonder_ages},
+        'players': n,
+    }
+
+
 def patterns(
     record: GameRecord, seat: int, decisions: Decisions, entries: Sequence[Dict[str, Any]], limit: int = 6
 ) -> List[Pattern]:
@@ -502,6 +617,7 @@ def analyse(
             for e in rated_entries
         ],
         'patterns': patterns(record, seat, decisions, entries),
+        'aspects': aspects(record, seat, decisions, entries),
         'decisions': entries,
     }
 

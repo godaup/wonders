@@ -83,3 +83,21 @@ def test_patterns_and_what_if(report):
         assert w['runs'] in (1, 2)
         for side in ('played', 'best'):
             assert 1 <= w[side]['mean_rank'] <= 3 and 0 <= w[side]['first'] <= 1
+
+
+def test_aspects_compare_the_player_with_the_table(report):
+    asp = report['aspects']
+    assert asp['players'] == 3
+    keys = {c['key'] for c in asp['categories']}
+    assert 'total' in keys
+    for c in asp['categories']:
+        assert 1 <= c['rank'] <= 3 and c['best_other'] >= c['average'] - 1e-9
+    assert [s['age'] for s in asp['by_age']] == [1, 2, 3]
+    assert sum(s['moves'] for s in asp['by_age']) == sum(s['moves'] for s in asp['by_kind'].values()) == 18
+    assert sum(n for row in asp['kind_matrix'].values() for n in row.values()) == 18
+    assert {m['result'] for m in asp['military']} <= {'win', 'tie', 'loss'} and len(asp['military']) == 6
+    assert sum(c['mine'] for c in asp['cards'].values()) > 0
+    assert (
+        0 <= asp['wonder']['built'] <= asp['wonder']['total'] and len(asp['wonder']['ages']) == asp['wonder']['built']
+    )
+    assert asp['economy']['trade_paid'] >= 0 and 1 <= asp['economy']['coins_rank'] <= 3

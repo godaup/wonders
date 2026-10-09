@@ -167,7 +167,7 @@ scoring categories). It is split into three packages under `wonders/`:
   with `GameRecord.replay_observations` (each decision as the seat saw it) and rates every regular
   turn: `SearchAgent.evaluate_detailed` scores the played move next to the policy's top candidates
   in shared worlds (paired loss + standard error, labels, score-category reasons); `analysis.patterns`
-  finds themes across the game, and what-if continuations replay key moments with the better move
+  finds themes across the game, `analysis.aspects` gives per-aspect statistics for the charts, and what-if continuations replay key moments with the better move
   from the real position via `GameRecord.branch` (paired, later Ages reshuffled).
   `expert.collect_search` / `expert.distill` (`wonders train expert`) record the search's soft targets
   (softmax of candidate values) with one searching seat per game and fine-tune the network on them
