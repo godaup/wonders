@@ -72,6 +72,10 @@ class HeuristicAgent(Agent):
     def draft_leader(self, options: List[Card]) -> Card:
         return max(options, key=lambda c: self.leader_value(c.name))
 
+    def entomb_leader(self, options: List[Card], obs: Observation) -> Card:
+        """Entomb the leader whose doubled cost outweighs its power the most (Abu Simbel)."""
+        return max(options, key=lambda c: 2 * c.cost.coins - self.leader_value(c.name))
+
     def recruit(self, leaders: List[Card], obs: Observation) -> Optional[Action]:
         """Recruit the best affordable leader unless a wonder stage or 3 coins is worth more."""
         if not leaders:

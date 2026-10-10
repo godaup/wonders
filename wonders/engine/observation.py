@@ -16,7 +16,7 @@ without touching the engine.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card
 from wonders.engine.actions import Action, ActionKind
@@ -139,6 +139,10 @@ class CityView:
     score_breakdown: Dict[str, int] = field(default_factory=dict)  # ScoreBreakdown.as_dict()
     copied_leaders: List[str] = field(default_factory=list)  # Courtesans' Guild copies
     next_stage_cost: Optional[Dict[str, object]] = None  # cost of the next unbuilt wonder stage
+    # Built stages in build order as [board stage index, variant] (the Great Wall builds in any order; a
+    # Manneken Pis stage copying the Great Wall says which of its stages).
+    stage_slots: List[List[int]] = field(default_factory=list)
+    entombed: List[str] = field(default_factory=list)  # Abu Simbel: leaders placed face down (public)
 
     def to_dict(self) -> Dict[str, object]:
         return self.__dict__.copy()
@@ -213,6 +217,9 @@ class Observation:
     buy_prices: Dict[str, Dict[str, int]] = field(default_factory=dict)  # {'left'/'right': {resource: coins}}
     expansions: List[str] = field(default_factory=list)  # expansions in play
     pass_left: bool = True  # this Age's hands pass to the left (clockwise)
+    # What a WONDER action may build, ``Action.staged(index)`` picks one: per option index, the board
+    # stage (1-based), cost, effects and affordable. One entry unless the board offers a choice.
+    stage_options: List[Dict[str, object]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -274,6 +281,8 @@ def _city_view(game: 'Game', seat: int, breakdown: Optional[Dict[str, int]] = No
         score_breakdown=dict(breakdown),
         copied_leaders=[c.name for c in p.copied_leaders],
         next_stage_cost=_cost_dict(stage) if stage is not None else None,
+        stage_slots=[[slot, variant] for slot, variant in zip(p.built_slots, p.built_variants)],
+        entombed=[c.name for c in p.entombed],
     )
 
 
@@ -347,13 +356,25 @@ def build_observation(
         table = public_table(game)
     if events is None:
         events = _filter_history(history, seat)
-    stage_affordable = game._stage_payment(seat) is not None
-    stage = game.players[seat].next_stage
+    default = game._stage_payment(seat)
+    stage_affordable = default is not None
+    options = game.stage_options(seat)
+    ctx = game.context(seat)
+    stage_options = [
+        {
+            'index': k,
+            'stage': slot + 1,
+            'cost': _cost_dict(stage),
+            'effects': [effect_summary(e, ctx) for e in stage.effects],
+            'affordable': game._stage_payment(seat, k) is not None,
+        }
+        for k, (slot, stage) in enumerate(options)
+    ]
     next_stage_view = None
-    if stage is not None:
-        ctx = game.context(seat)
+    if options:
+        slot, stage = (default[0], default[1]) if default is not None else options[0]
         next_stage_view = WonderStageView(
-            index=game.players[seat].wonder_stages_built + 1,
+            index=slot + 1,
             cost=_cost_dict(stage),
             effects=[effect_summary(e, ctx) for e in stage.effects],
             affordable=stage_affordable,
@@ -388,6 +409,7 @@ def build_observation(
         },
         expansions=list(game.expansions),
         pass_left=game.phase.pass_left if game.age else True,
+        stage_options=stage_options if len(stage_options) > 1 else [],
     )
 
 
@@ -399,17 +421,25 @@ def _board_view(game: 'Game', seat: int) -> WonderBoardView:
         name=wonder.name,
         side=wonder.side,
         starting_resource=wonder.starting_resource.value if wonder.starting_resource is not None else None,
-        stages=[
-            {
-                'index': k + 1,
-                'cost': _cost_dict(stage),
-                'effects': [effect_summary(e, ctx) for e in stage.effects],
-                'built': k < player.wonder_stages_built,
-            }
-            for k, stage in enumerate(wonder.stages)
-        ],
+        stages=[_stage_view(player, k, ctx) for k in range(len(wonder.stages))],
         effects=[effect_summary(e, ctx) for e in wonder.effects],
     )
+
+
+def _stage_view(player: 'Player', k: int, ctx: Any) -> Dict[str, object]:
+    """Board stage ``k``: the built stage, else its first possible form (``variants`` > 1: a choice)."""
+    built = k in player.built_slots
+    variants = player.slots[k]
+    stage = player.stages_built[player.built_slots.index(k)] if built else (variants[0] if variants else None)
+    copy = player.wonder.stages[k].copy
+    return {
+        'index': k + 1,
+        'cost': _cost_dict(stage) if stage is not None else {},
+        'effects': [effect_summary(e, ctx) for e in stage.effects] if stage is not None else [],
+        'built': built,
+        'variants': len(variants),
+        'copies': f'{copy[0]} {copy[1]}' if copy is not None else None,  # e.g. 'left 1', 'right last'
+    }
 
 
 class ObservationBuilder:

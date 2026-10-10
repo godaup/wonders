@@ -177,15 +177,20 @@ def _public_game(obs: Observation, index: ContentIndex) -> Game:
         player = Player(city.name, index.content.wonder(city.wonder, city.wonder_side), city.coins)
         for name in city.cards:
             player.add_card(index.card(name))
-        for stage in player.wonder.stages[: city.stages_built]:
-            player.add_stage(stage)
+        player.entombed = [index.card(name) for name in city.entombed]
         for name in city.copied_leaders:
             player.add_copied_leader(index.card(name))
         player.tokens = list(city.tokens)
         player.debt = city.debt
         player.diplomacy = city.diplomacy
         players.append(player)
-    game = Game(players, expansions=tuple(obs.expansions))
+    game = Game(players, expansions=tuple(obs.expansions))  # resolves copied stages (Manneken Pis)
+    for player, city in zip(players, obs.table):
+        # The buried cards stay hidden: a stage scoring its buried card's colour (Stonehenge B) is rebuilt
+        # without it, as its owner's opponents see it.
+        built = city.stage_slots or [[k, 0] for k in range(city.stages_built)]
+        for slot, variant in built:
+            player.add_stage(player.slots[slot][variant], slot, variant=variant)
     game.age, game.turn, game.phase = obs.age, obs.turn, Phase.for_age(obs.age)
     for seat, player in enumerate(players):
         allowance = player.free_builds_left  # nothing used yet

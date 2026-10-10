@@ -9,7 +9,7 @@ A parameter's ``kind`` says what its value looks like in the spec:
 
 * ``int`` / ``bool`` / ``text`` — a number, a flag, free text;
 * ``choice`` — one of ``choices``;
-* ``resources`` — a list of resource ids (``production``: one of them per turn);
+* ``resource`` / ``resources`` — one resource id / a list of them (``production``: one per turn);
 * ``slots`` — a list of resource-id lists (several productions at once);
 * ``color`` / ``colors`` — one card colour id / a list of them (official or the expansion's own);
 * ``target`` — a card colour id or ``'wonder'``;
@@ -22,8 +22,8 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 SCOPES = ('self', 'neighbours', 'both', 'others')
-TALLY_TARGETS = ('colors', 'wonder_stages', 'defeat_tokens', 'tokens', 'victory_tokens', 'coins')
-KINDS = ('int', 'bool', 'text', 'choice', 'resources', 'slots', 'color', 'colors', 'target', 'symbol')
+TALLY_TARGETS = ('colors', 'wonder_stages', 'defeat_tokens', 'tokens', 'victory_tokens', 'coins', 'resource_symbols')
+KINDS = ('int', 'bool', 'text', 'choice', 'resource', 'resources', 'slots', 'color', 'colors', 'target', 'symbol')
 GROUPS = ('Resources', 'Points', 'Coins', 'Military', 'Science', 'Trade', 'Powers', 'Leaders', 'Cities')
 
 
@@ -154,6 +154,7 @@ EFFECT_SCHEMAS: Dict[str, EffectSchema] = {
             _p('coins_each', 'int', 'Coins each', default=0),
             _p('vp_each', 'int', 'Points each', default=0),
             _p('token_value', 'int', 'Token value', help='for victory tokens: only count tokens of this value'),
+            _p('resource', 'resource', 'Resource', help='for resource symbols: which resource to count'),
         ),
         {'what': 'colors', 'scope': 'both', 'colors': ['brown'], 'coins_each': 1},
     ),
@@ -207,7 +208,10 @@ EFFECT_SCHEMAS: Dict[str, EffectSchema] = {
         'Build from the discard pile',
         'Powers',
         'Build one discarded card for free (Halicarnassus).',
-        (_count(),),
+        (
+            _count(),
+            _p('priority', 'int', 'Order', default=0, help='when several are owed in one turn: lower first'),
+        ),
         {'count': 1},
     ),
     'copy_guild': EffectSchema(
@@ -329,6 +333,20 @@ EFFECT_SCHEMAS: Dict[str, EffectSchema] = {
         'Copy a leader',
         'Leaders',
         "Copy one of your neighbours' leaders (Courtesans' Guild).",
+        (_count(),),
+        {'count': 1},
+    ),
+    'buried_color': EffectSchema(
+        'Colour of the buried card',
+        'Points',
+        "At the end, points per card of the buried card's colour in the chosen cities (Stonehenge B).",
+        (_p('vp_each', 'int', 'Points each', default=1), _scope('neighbours')),
+        {'vp_each': 1},
+    ),
+    'entomb_leader': EffectSchema(
+        'Entomb a leader',
+        'Leaders',
+        'Entomb one of your recruited leaders: its power is lost, it scores twice its cost (Abu Simbel).',
         (_count(),),
         {'count': 1},
     ),

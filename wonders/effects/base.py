@@ -66,6 +66,8 @@ class Context:
     left: 'Player'
     right: 'Player'
     table: Tuple['Player', ...] = ()  # every player, seat order (for "all other players" effects)
+    debt_tokens: bool = True  # debt tokens are in play (Cities): unpaid plunder becomes debt
+    final: bool = False  # the game is over (hidden things are revealed: Stonehenge B's buried card)
 
     @property
     def neighbours(self) -> Tuple['Player', 'Player']:
@@ -153,6 +155,18 @@ class Effect:
 
     def guild_copies(self) -> int:
         return 0
+
+    def discard_build_priority(self) -> int:
+        """Order among discard builds owed in one turn, lowest first (Wonder Pack FAQ)."""
+        return 0
+
+    def leader_entombs(self) -> int:
+        """Abu Simbel: recruited leaders to entomb (decision at the end of the turn)."""
+        return 0
+
+    def buried(self, card: 'Card') -> 'Effect':
+        """This effect of a wonder stage built with ``card`` (Stonehenge B remembers its colour)."""
+        return self
 
     def science_set_bonus(self) -> int:
         return 0

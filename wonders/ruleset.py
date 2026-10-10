@@ -181,6 +181,7 @@ EXPANSIONS: Dict[str, Expansion] = {
     'base': Expansion('base', 'Base game'),
     'leaders': Expansion('leaders', 'Leaders', starting_coins=6),
     'cities': Expansion('cities', 'Cities'),
+    'wonderpack': Expansion('wonderpack', 'Wonder Pack'),  # four boards; Abu Simbel needs Leaders
     'armada': Expansion(
         'armada',
         'Armada',

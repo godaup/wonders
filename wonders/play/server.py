@@ -6,7 +6,8 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``POST /api/new`` — start a game from a :class:`~wonders.play.session.GameConfig` dict
 - ``GET /api/state`` — the human's current view
 - ``POST /api/act`` — ``{"index": i}`` plays the i-th legal action (``"payment": [left, right]``
-  optionally picks one of its listed splits of the purchase between the neighbours)
+  optionally picks one of its listed splits of the purchase between the neighbours, ``"stage": k`` one of
+  its listed wonder stages)
 - ``GET /api/record`` — the replayable GameRecord JSON
 - ``POST /api/analyse`` / ``GET /api/analysis`` — start / poll the post-game analysis of the human's moves
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
@@ -83,8 +84,13 @@ def _card_svg(name: str, lang: str = DEFAULT) -> Optional[str]:
 
 @lru_cache(maxsize=128)
 def _wonder_svg(name: str, side: str, built: str = '0', lang: str = DEFAULT) -> Optional[str]:
+    """``built`` is a count (the first stages) or ``s1,s3``: 1-based stages built in any order (Great Wall)."""
     try:
-        return wonder_svg(_all_content().wonder(name, side), built=max(0, int(built or 0)), t=_translator(lang))
+        wonder = _all_content().wonder(name, side)
+        if built.startswith('s'):
+            stages = [int(x.strip('s')) - 1 for x in built.split(',') if x.strip('s')]
+            return wonder_svg(wonder, built=stages, t=_translator(lang))
+        return wonder_svg(wonder, built=max(0, int(built or 0)), t=_translator(lang))
     except (KeyError, ValueError):
         return None
 
@@ -126,11 +132,13 @@ class PlayServer:
         with self.lock:
             return None if self.session is None else self.session.state(t)
 
-    def act(self, index: int, payment: Optional[Sequence[int]] = None, t: Translator = ENGLISH) -> Dict[str, Any]:
+    def act(
+        self, index: int, payment: Optional[Sequence[int]] = None, t: Translator = ENGLISH, stage: Optional[int] = None
+    ) -> Dict[str, Any]:
         with self.lock:
             if self.session is None:
                 raise ConfigError('no game in progress')
-            self.session.act(index, payment)
+            self.session.act(index, payment, stage)
             self._save()
             return self.session.state(t)
 
@@ -391,7 +399,7 @@ POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Re
     '/api/games/open': lambda play, body, q: _json({'state': play.open_game(str(body.get('id', '')), _t(q))}),
     '/api/games/delete': lambda play, body, q: _json(play.delete_game(str(body.get('id', '')))),
     '/api/act': lambda play, body, q: _json(
-        {'state': play.act(int(body.get('index', -1)), body.get('payment'), _t(q))}
+        {'state': play.act(int(body.get('index', -1)), body.get('payment'), _t(q), body.get('stage'))}
     ),
     '/api/builder/check': lambda play, body, q: _json(builder.check_project(body.get('project') or {})),
     '/api/builder/save': lambda play, body, q: _json(play.builder_save(body)),

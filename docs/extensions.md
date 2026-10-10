@@ -101,6 +101,13 @@ An expansion file uses the same format as the bundled `wonders/cards/data/*.json
   and black cards are drawn at random instead.
 * Resources: `wood`, `stone`, `ore`, `bricks` (clay), `glass`, `linen` (loom), `paper` (papyrus).
 * An effect's optional `description` is the text the card renderer shows.
+* Wonder boards (two entries of the same name, sides `A` and `B`: games pick either) may also say
+  `"starting_resource": null` (none), `"any_order": true` (stages built in any order, like the Great
+  Wall), `"extra_coins": 4` (on top of the starting treasury, like the Manneken Pis) and
+  `"requires": ["leaders"]` (offered only in games with those expansions, like Abu Simbel). A stage
+  may copy a neighbour's stage instead of having its own cost and effects —
+  `{"copy": {"side": "left", "stage": 1}}` or `"stage": "last"` (the Manneken Pis); copying a board
+  whose stages go in any order lets the player choose which one.
 
 ### New card colours
 
@@ -161,6 +168,9 @@ expansions add up (with Leaders, which sets 6 starting coins, `{"add": 2}` gives
 clamped to the rule's range. The older manifest key `starting_coins` still works as a shorthand for
 setting it. The scripted agents value military tokens with the base game's numbers.
 
+Without the Cities expansion there are no debt tokens: a `plunder` / `plunder_per` target that cannot
+pay simply pays what it has (as the Wonder Pack rules say for the Great Wall).
+
 `wonders ext validate` checks that every card and wonder builds, that new colours are well-formed, that names do not clash with the
 bundled cards or each other, and that chains point to existing cards. `wonders ext check` adds the
 contribution rules (complete manifest, data-only files, size limits), warns when new cards change
@@ -184,7 +194,7 @@ Every effect type a card or wonder stage can use, with an example from the bundl
 | `science_wild` | `{"type": "science_wild", "count": 1}` |
 | `trade` | `{"type": "trade", "side": "right", "category": "raw"}` |
 | `victory_points` | `{"type": "victory_points", "points": 3}` |
-| `tally` | `{"type": "tally", "what": "colors", "scope": "both", "colors": ["brown"], "coins_each": 1}` |
+| `tally` | `{"type": "tally", "what": "colors", "scope": "both", "colors": ["brown"], "coins_each": 1}`; `"what": "resource_symbols", "resource": "stone", "colors": ["brown"]` counts symbols (Stonehenge) |
 | `special` | `{"type": "special", "power": "my_power", "description": "text only: no effect on play"}` |
 | `debt` | `{"type": "debt", "amount": 1, "scope": "neighbours"}` |
 | `diplomacy` | `{"type": "diplomacy", "count": 1}` |
@@ -193,7 +203,7 @@ Every effect type a card or wonder stage can use, with an example from the bundl
 | `gain_token` | `{"type": "gain_token", "value": 1}` |
 | `play_last_card` | `{"type": "play_last_card"}` |
 | `free_build` | `{"type": "free_build"}` |
-| `build_from_discard` | `{"type": "build_from_discard"}` |
+| `build_from_discard` | `{"type": "build_from_discard", "priority": 1}` (`priority`: order when several are owed in one turn) |
 | `copy_guild` | `{"type": "copy_guild"}` |
 | `color_sets` | `{"type": "color_sets", "colors": ["blue", "red", "green"], "vp_each": 3, "description": "3 VP per set of one blue + one red + one green card"}` |
 | `science_set_bonus` | `{"type": "science_set_bonus", "points": 3, "description": "+3 VP per completed set of 3 science symbols"}` |
@@ -213,6 +223,8 @@ Every effect type a card or wonder stage can use, with an example from the bundl
 | `leader_draw` | `{"type": "leader_draw", "count": 4, "description": "draw 4 leaders from the box"}` |
 | `extra_recruit` | `{"type": "extra_recruit", "count": 1, "description": "recruit an extra leader now"}` |
 | `copy_leader` | `{"type": "copy_leader", "count": 1, "description": "copy a leader recruited by a neighbour"}` |
+| `buried_color` | `{"type": "buried_color", "vp_each": 1, "scope": "neighbours", "description": "at the end: 1 VP per neighbour card of the buried card's colour"}` |
+| `entomb_leader` | `{"type": "entomb_leader", "description": "entomb a recruited leader: twice its cost in VP"}` |
 
 New mechanics need a new effect type, which is code: see plugins below.
 

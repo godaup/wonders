@@ -12,7 +12,8 @@ decision in the order the engine asked for them.
 
 A move on which the player chose how to split a purchase between the neighbours (see
 :meth:`~wonders.engine.actions.Action.paying`) carries the coins paid as two more numbers,
-``[code, card, left, right]``; moves without them paid the cheapest way.
+``[code, card, left, right]``; moves without them paid the cheapest way. A chosen wonder stage (the Great
+Wall, the Manneken Pis) follows as a fifth entry: ``[code, card, left, right, stage]`` (left/right may be null).
 
 The decks are stored explicitly (not as an RNG seed) so replay does not depend on
 the shuffle implementation or engine version — only on the rules staying stable.
@@ -159,7 +160,7 @@ class GameRecord:
         for problem in self.check_extensions():
             warnings.warn(f'replay may differ: {problem}', stacklevel=2)
         coins = Ruleset.of(*self.expansions).starting_coins
-        players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
+        players = [Player.starting(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
         game = Game(players, expansions=self.expansions)
         for seat, names in self.leader_hands.items():
             players[seat].leaders_hand = [content.card(n) for n in names]
@@ -263,7 +264,7 @@ class GameRecord:
     def _start(self, content: Content) -> Tuple[Game, ObservationBuilder]:
         """A fresh game with the recorded setup (players, leaders, leader box) and an empty history."""
         coins = Ruleset.of(*self.expansions).starting_coins
-        players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
+        players = [Player.starting(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
         game = Game(players, expansions=self.expansions)
         for i, names in self.leader_hands.items():
             players[i].leaders_hand = [content.card(n) for n in names]
@@ -280,7 +281,11 @@ class GameRecord:
             if card is None:
                 raise ReplayError(f'Age {age}: recorded card {name!r} is not among the options')
             action = Action(_KIND[code], card)
-            return action.paying(int(split[0]), int(split[1])) if len(split) == 2 else action
+            if len(split) >= 2 and split[0] is not None:
+                action = action.paying(int(split[0]), int(split[1]))
+            if len(split) >= 3:
+                action = action.staged(int(split[2]))
+            return action
 
         def choose(point: DecisionPoint) -> Dict[int, Action]:
             if point.kind is DecisionKind.PLAY:
@@ -316,10 +321,16 @@ def _log(builder: ObservationBuilder, game: Game, point: DecisionPoint, actions:
 
 
 def _move(action: Action) -> List[Any]:
-    """``[code, card]``, plus ``left, right`` coins when the player chose how to split a purchase."""
+    """A recorded move: ``[code, card]`` plus any choices made.
+
+    ``left, right`` coins when the player chose how to split a purchase, then the stage option when
+    they chose which wonder stage to build (``null, null`` for the cheapest split).
+    """
     move: List[Any] = [_CODE[action.kind], action.card.name]
-    if action.payment is not None:
-        move += list(action.payment)
+    if action.payment is not None or action.stage is not None:
+        move += list(action.payment) if action.payment is not None else [None, None]
+    if action.stage is not None:
+        move.append(action.stage)
     return move
 
 
@@ -393,7 +404,7 @@ def play_and_record(
     ``leader_box`` holds the undealt leaders (Rome B draws from it).
     """
     coins = Ruleset.of(*expansions).starting_coins
-    players = [Player(s.name, content.wonder(s.wonder, s.side), coins) for s in setups]
+    players = [Player.starting(s.name, content.wonder(s.wonder, s.side), coins) for s in setups]
     game = Game(players, expansions=tuple(expansions))
     builder = RecordBuilder(setups, tuple(expansions))
 

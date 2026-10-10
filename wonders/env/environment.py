@@ -139,7 +139,7 @@ class WondersEnv:
         rng = random.Random(seed)
         setups = self.setups or self._random_setups(rng)
         coins = self.ruleset.starting_coins
-        players = [Player(s.name, self.content.wonder(s.wonder, s.side), coins) for s in setups]
+        players = [Player.starting(s.name, self.content.wonder(s.wonder, s.side), coins) for s in setups]
         self.game = Game(players, expansions=self.expansions)
         self._builder = RecordBuilder(setups, self.expansions)
         self._observations = ObservationBuilder()

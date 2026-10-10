@@ -14,12 +14,17 @@ from dataclasses import dataclass
 from typing import Callable, Dict, Generator, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card, Color, Cost, ScienceSymbol
+from wonders.cards.wonder import WonderStage
 from wonders.effects.base import BuildEvent, Context
 from wonders.engine.actions import Action, ActionKind, DecisionKind, DecisionPoint
 from wonders.engine.phase import Phase
 from wonders.engine.player import SCIENCE_SET_VALUE, Player
 from wonders.engine.trade import Payment, cheapest_payment, payment_options
 from wonders.ruleset import Rules, rules_of
+
+# Where owed discard builds come from, in the order they resolve (Wonder Pack FAQ); a board's own
+# stages use their effect's priority (Halicarnassus 0, the Great Wall 1).
+OWN_STAGE, COPIED_STAGE, CARD, COPIED_LEADER = -1, 2, 3, 4
 
 # The base game's values; a game's own come from its expansions' meta rules (``Game.rules``).
 DISCARD_COINS = 3
@@ -110,6 +115,9 @@ class Game:
         self.leader_box: List[Card] = []  # Leaders: undealt leaders, drawn from the end (Rome B)
         self.tick = 0  # bumped on every engine-driven state change (see ObservationBuilder)
         self._totals: Optional[Tuple[int, List[Dict[str, int]]]] = None  # (tick, breakdowns) cache
+        for i, player in enumerate(players):  # copied stages (Manneken Pis) become the neighbours' stages
+            if any(stage.copy is not None for stage in player.wonder.stages):
+                player.resolve_slots(self.left_of(i), self.right_of(i))
 
     # -- neighbours --------------------------------------------------------
     def left_of(self, i: int) -> Player:
@@ -119,7 +127,14 @@ class Game:
         return self.players[(i - 1) % self.n]
 
     def context(self, i: int) -> Context:
-        return Context(self.players[i], self.left_of(i), self.right_of(i), tuple(self.players))
+        return Context(
+            self.players[i],
+            self.left_of(i),
+            self.right_of(i),
+            tuple(self.players),
+            debt_tokens='cities' in self.expansions,
+            final=self.phase is Phase.FINISHED,
+        )
 
     # -- payment -----------------------------------------------------------
     def payment_for(self, i: int, cost: Cost, waivers: int = 0) -> Optional[Payment]:
@@ -205,25 +220,38 @@ class Game:
         """Whether an owned structure unlocks ``card`` for free (chaining)."""
         return any(card.name in owned.chain_enables for owned in self.players[i].cards)
 
-    def _stage_payment(self, i: int):
-        key = ('stage',) + self._state_key(i)
+    def stage_options(self, i: int) -> List[Tuple[int, WonderStage]]:
+        """The (board stage, stage) choices a WONDER action of seat ``i`` has (``Action.staged`` picks one).
+
+        Usually the next stage only; every unbuilt stage on the Great Wall; every Great Wall stage
+        for a Manneken Pis stage that copies it. Affordability is not checked here.
+        """
+        return self.players[i].stage_options()
+
+    def _stage_payment(self, i: int, option: Optional[int] = None):
+        """``(slot, stage, coins to the bank, cheapest payment)`` for stage option ``option`` of seat ``i``.
+
+        ``None`` takes the first affordable option; ``None`` is returned when it cannot be paid.
+        """
+        key = ('stage', option) + self._state_key(i)
         hit = self._payments.get(key)
         if hit is None:
-            hit = (None, self._compute_stage_payment(i))
+            hit = (None, self._compute_stage_payment(i, option))
             self._payments[key] = hit
         return hit[1]
 
-    def _compute_stage_payment(self, i: int):
+    def _compute_stage_payment(self, i: int, option: Optional[int]):
         player = self.players[i]
-        stage = player.next_stage
-        if stage is None:
-            return None
-        pay = self.payment_for(i, stage.cost, waivers=player.resource_discount('wonder'))
-        if pay is None:
-            return None
-        if stage.cost.coins + pay.total > player.coins:
-            return None
-        return (stage, stage.cost.coins, pay)
+        options = player.stage_options()
+        if option is not None:
+            if not 0 <= option < len(options):
+                return None
+            options = [options[option]]
+        for slot, stage in options:
+            pay = self.payment_for(i, stage.cost, waivers=player.resource_discount('wonder'))
+            if pay is not None and stage.cost.coins + pay.total <= player.coins:
+                return (slot, stage, stage.cost.coins, pay)
+        return None
 
     def payment_options(self, i: int, action: Action) -> List[Payment]:
         """Every affordable way to split ``action``'s trade between the neighbours (cheapest first).
@@ -242,10 +270,10 @@ class Game:
                 return [cheapest]
             cost, waivers = action.card.cost, player.resource_discount(action.card.color.value)
         elif action.kind is ActionKind.WONDER:
-            stage_result = self._stage_payment(i)
+            stage_result = self._stage_payment(i, action.stage)
             if stage_result is None:
                 return []
-            stage, coins, cheapest = stage_result
+            _slot, stage, coins, cheapest = stage_result
             if cheapest.total == 0:
                 return [cheapest]
             cost, waivers = stage.cost, player.resource_discount('wonder')
@@ -284,7 +312,7 @@ class Game:
         if action.kind is ActionKind.BUILD:
             self._do_build(i, action.card, action.payment)
         elif action.kind is ActionKind.WONDER:
-            self._do_wonder(i, action.card, action.payment)
+            self._do_wonder(i, action.card, action.payment, action.stage)
         elif action.kind is ActionKind.DISCARD:
             self._do_discard(i, action.card)
         elif action.kind is ActionKind.FREE:
@@ -315,20 +343,30 @@ class Game:
         via_chain = self._chained(i, card)
         self._settle(i, coins_to_bank, pay)
         self.players[i].add_card(card)
-        self._activate(i, card.effects)
+        self._activate(i, card.effects, CARD)
         self._income(i, BuildEvent(card.color.value, via_chain, pay.traded, _sides(pay)))
 
     def _income(self, i: int, event: BuildEvent) -> None:
         """Coins the owner's effects pay out for a build (Xenophon, Vitruvius, Hatshepsut)."""
         self.players[i].coins += self.players[i].build_income(event)
 
-    def _activate(self, i: int, effects) -> None:
-        """Trigger the build-time effects of a newly built card or wonder stage."""
+    def _activate(self, i: int, effects, source: int = OWN_STAGE) -> None:
+        """Trigger the build-time effects of a newly built card or wonder stage.
+
+        ``source`` places owed discard builds in the Wonder Pack FAQ's order: a board's own stages
+        (Halicarnassus, then the Great Wall by their ``priority``), stages the Manneken Pis copies,
+        cards (Solomon), then copied leaders (the Courtesans' Guild).
+        """
         player = self.players[i]
         ctx = self.context(i)
         for effect in effects:
             player.coins += effect.coins_on_build(ctx)  # own coins: immediate
-            player.pending_discard_builds += effect.discard_builds()  # resolved at end of turn
+            owed = effect.discard_builds()  # resolved at end of turn
+            if owed:
+                priority = effect.discard_build_priority() if source == OWN_STAGE else source
+                player.pending_discard_builds += owed
+                player.discard_build_priorities += [priority] * owed
+            player.pending_entombs += effect.leader_entombs()  # resolved at end of turn
             player.pending_extra_recruits += effect.extra_recruits()  # resolved at end of turn
             player.pending_leader_copies += effect.leader_copies()  # resolved at end of turn
             for _ in range(effect.leader_draws()):  # Rome B: draw leaders from the box now
@@ -336,19 +374,28 @@ class Game:
                     player.leaders_hand.append(self.leader_box.pop())
             self._pending.append((ctx, effect))  # cross-player: deferred to end of turn
 
-    def _do_wonder(self, i: int, card: Card, split: Optional[Tuple[int, int]] = None) -> None:
-        result = self._stage_payment(i)
+    def _do_wonder(
+        self, i: int, card: Card, split: Optional[Tuple[int, int]] = None, option: Optional[int] = None
+    ) -> None:
+        result = self._stage_payment(i, option)
         if result is None:
             raise IllegalAction(f'{self.players[i].name} has no buildable wonder stage')
-        stage, coins_to_bank, pay = result
+        slot, stage, coins_to_bank, pay = result
         if split is not None:
-            pay = self._chosen_payment(i, Action.wonder(card), split)
+            pay = self._chosen_payment(
+                i, Action.wonder(card) if option is None else Action.wonder(card).staged(option), split
+            )
         self._settle(i, coins_to_bank, pay)
         player = self.players[i]
-        player.add_stage(stage)
+        variant = next(k for k, s in enumerate(player.slots[slot]) if s is stage)
+        effects = tuple(effect.buried(card) for effect in stage.effects)  # Stonehenge B notes the card
+        if effects != stage.effects:
+            stage = WonderStage(stage.cost, effects)
+        player.add_stage(stage, slot, card, variant)
         # The card is tucked under the board face down (effect ignored): it does not go to the discard
         # pile, so Halicarnassus / Solomon cannot build it later.
-        self._activate(i, stage.effects)
+        copied = player.wonder.stages[slot].copy is not None
+        self._activate(i, stage.effects, COPIED_STAGE if copied else OWN_STAGE)
         self._income(i, BuildEvent(None, traded=pay.traded, neighbours_traded=_sides(pay)))
 
     def _do_discard(self, i: int, card: Card) -> None:
@@ -371,7 +418,7 @@ class Game:
                 raise IllegalAction(f'{player.name} has no free build for {card.name}')
             player.free_builds_used += 1
         player.add_card(card)
-        self._activate(i, card.effects)
+        self._activate(i, card.effects, CARD)
         self._income(i, BuildEvent(card.color.value))
 
     def _can_build_free(self, i: int, card: Card) -> bool:
@@ -386,7 +433,7 @@ class Game:
     def legal_actions(self, i: int, hand: List[Card]) -> List[Action]:
         """Legal actions for seat ``i`` choosing from ``hand`` at the current decision."""
         actions: List[Action] = []
-        if self.decision in (DecisionKind.DRAFT, DecisionKind.COPY_LEADER):  # "build" = take / pick
+        if self.decision in (DecisionKind.DRAFT, DecisionKind.COPY_LEADER, DecisionKind.ENTOMB_LEADER):  # pick
             return [Action.build(card) for card in hand]
         if self.decision is DecisionKind.LEADER_BUILD:  # Rome B: only recruiting is allowed
             return [Action.build(card) for card in hand if self.can_build_card(i, card)]
@@ -485,6 +532,7 @@ class Game:
                 setattr(b, column, getattr(b, column) + vp)
         for card in p.copied_leaders:  # Courtesans' Guild copies score as leaders
             b.leaders += sum(effect.victory_points(ctx) for effect in card.effects)
+        b.wonders += sum(2 * card.cost.coins for card in p.entombed)  # Abu Simbel: twice the leader's cost
         return b
 
     def _copy_guilds(self, i: int, symbols: Counter, wilds: int) -> Tuple[int, Counter, int]:
@@ -664,15 +712,32 @@ class Game:
         progress = True
         while progress:
             progress = False
+            # Discard builds across the table in the Wonder Pack FAQ's order, then by seat.
+            while any(p.pending_discard_builds > 0 for p in self.players):
+                i = min(
+                    (min(p.discard_build_priorities, default=0), k)
+                    for k, p in enumerate(self.players)
+                    if p.pending_discard_builds > 0
+                )[1]
+                player = self.players[i]
+                options = [c for c in self.discard_pile if not player.has(c.name)]
+                if not options:  # nothing to build: the power fizzles
+                    player.pending_discard_builds = 0
+                    player.discard_build_priorities.clear()
+                    continue
+                player.discard_build_priorities.remove(min(player.discard_build_priorities, default=0))
+                self._resolve((yield self._ask(DecisionKind.DISCARD_BUILD, {i: options})))
+                progress = True
             for i in range(self.n):
                 player = self.players[i]
-                while player.pending_discard_builds > 0:
-                    options = [c for c in self.discard_pile if not player.has(c.name)]
-                    if not options:
-                        player.pending_discard_builds = 0  # nothing to build: the power fizzles
-                        break
-                    self._resolve((yield self._ask(DecisionKind.DISCARD_BUILD, {i: options})))
-                    progress = True
+                while player.pending_entombs > 0:
+                    player.pending_entombs -= 1
+                    options = [c for c in player.cards if c.color is Color.WHITE]
+                    if options:  # no recruited leader: the power fizzles
+                        card = (yield self._ask(DecisionKind.ENTOMB_LEADER, {i: options}))[i].card
+                        player.entomb(card)
+                        self.tick += 1
+                        progress = True
                 while player.pending_leader_copies > 0:
                     player.pending_leader_copies -= 1
                     options = [
@@ -681,7 +746,7 @@ class Game:
                     if options:
                         card = (yield self._ask(DecisionKind.COPY_LEADER, {i: options}))[i].card
                         player.add_copied_leader(card)
-                        self._activate(i, card.effects)
+                        self._activate(i, card.effects, COPIED_LEADER)
                         self._flush_pending()
                         progress = True
                 while player.pending_extra_recruits > 0:

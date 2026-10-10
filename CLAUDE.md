@@ -287,6 +287,18 @@ them (`Content.leaders()`); Cities (black) cards carry **no player-count numeral
 player, so Cities deals 8 not 7). `armada` is registered but flagged
 `implemented=False` (`Ruleset.unimplemented`). Babel is not planned.
 
+**Wonder Pack** (`wonderpack.json`, id `wonderpack`): boards may set `any_order` (Great Wall),
+`extra_coins` (Manneken Pis, via `Player.starting`), `requires` (Abu Simbel: `load_content` drops it
+without Leaders) and stages may `copy` a neighbour's stage. `Game.__init__` resolves copies into
+`Player.slots` (per board stage, the stages it may be); `Player.stage_options()` lists what a WONDER
+action may build and `Action.staged(k)` picks one (not part of equality, like `paying`; `None` = first
+affordable). Records store it as a fifth move entry. `Player.built_slots` / `built_variants` /
+`stage_cards` / `entombed` track the board; `CityView.stage_slots` / `entombed` expose it (worlds rebuild
+from them). Effects got hooks `buried(card)` (Stonehenge B binds the buried card's colour, scored only
+when `Context.final`), `leader_entombs()` (power decision `ENTOMB_LEADER`) and
+`discard_build_priority()` (the FAQ order; `_activate(source=...)`). `Context.debt_tokens` is true only
+with Cities: plunder without it creates no debt.
+
 `Color` is an open, interned class (not an `Enum`): the nine official colours are constants
 (`OFFICIAL_COLORS`, fixed order), and an expansion file's `"colors"` entries define more
 (`Color.from_spec`, via `content.define_colors` before its cards are built). A colour carries

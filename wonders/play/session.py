@@ -24,7 +24,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, CATEGORIES, MAX_PLAYERS, MIN_PLAYERS, agent_name
 from wonders.cards.base import Color
-from wonders.cards.content import Content, load_content
+from wonders.cards.content import Content, load_content, read_expansion
 from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
@@ -177,15 +177,18 @@ def _asset_version() -> str:
 
 def menu_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> Dict[str, Any]:
     """What the game menu can offer: expansions, agents, wonders per expansion, seat limits, languages."""
-    from wonders.extensions import ensure_loaded
+    from wonders.extensions import REGISTRY, ensure_loaded
 
     ensure_loaded()  # extension expansions join the menu
     expansions = []
     for exp in EXPANSIONS.values():
         wonders: List[str] = []
+        requires: Dict[str, List[str]] = {}
         if exp.implemented:
-            content = load_content(exp.id)
-            wonders = list(dict.fromkeys(w.name for w in content.wonders))
+            load_content(exp.id)  # it must load
+            raw = REGISTRY.expansion_raw(exp.id) or read_expansion(exp.id)
+            wonders = list(dict.fromkeys(w['name'] for w in raw.get('wonders', [])))
+            requires = {w['name']: list(w['requires']) for w in raw.get('wonders', []) if w.get('requires')}
         expansions.append(
             {
                 'id': exp.id,
@@ -193,6 +196,7 @@ def menu_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> Di
                 'implemented': exp.implemented,
                 'note': t(exp.note) if exp.note else '',
                 'wonders': wonders,
+                'requires': requires,  # boards offered only with other expansions (Abu Simbel: leaders)
             }
         )
     return {
@@ -374,18 +378,23 @@ class HumanSession:
             )
             if found is None:
                 raise ConfigError(f'the saved game no longer matches the rules ({kind.value} {card} is not legal)')
-            actions[seat] = found.paying(int(move[2]), int(move[3])) if len(move) > 3 else found
+            if len(move) > 3 and move[2] is not None:
+                found = found.paying(int(move[2]), int(move[3]))
+            if len(move) > 4:
+                found = found.staged(int(move[4]))
+            actions[seat] = found
         self._step(actions)
 
     def observation(self) -> Optional[Observation]:
         """The human's current Observation (``None`` once the game is over)."""
         return None if self.done else self.env.observation(self.human)
 
-    def act(self, index: int, payment: Optional[Sequence[int]] = None) -> None:
+    def act(self, index: int, payment: Optional[Sequence[int]] = None, stage: Optional[int] = None) -> None:
         """Play the human's ``index``-th legal action (as listed in :meth:`state`).
 
         ``payment`` optionally chooses how to split the purchase between the neighbours, as
-        ``(left, right)`` coins — one of the action's ``payments`` in :meth:`state`.
+        ``(left, right)`` coins — one of the action's ``payments`` in :meth:`state`. ``stage`` picks
+        which wonder stage a WONDER action builds — one of its ``stages`` (the Great Wall, the Manneken Pis).
         """
         obs = self.observation()
         if obs is None:
@@ -394,6 +403,12 @@ class HumanSession:
         if not 0 <= index < len(legal):
             raise ConfigError(f'no legal action #{index}')
         action = legal[index]
+        if stage is not None:
+            if action.kind is not ActionKind.WONDER or not any(
+                o['index'] == stage and o['affordable'] for o in obs.stage_options
+            ):
+                raise ConfigError(f'cannot build wonder stage option {stage}')
+            action = action.staged(int(stage))
         if payment is not None:
             split = (int(payment[0]), int(payment[1]))
             options = self._payments(action)
@@ -426,27 +441,36 @@ class HumanSession:
             text.append(t('Unlocks {cards}', cards=', '.join(t.name(c) for c in card.chain_enables)))
         return {'name': name, 'title': t.name(name), 'color': card.color.value, 'age': card.age, 'text': text}
 
-    def boards(self, built: Sequence[int], t: Translator = ENGLISH) -> List[Dict[str, Any]]:
-        """Every seat's wonder board (public): starting resource and stages, ``built[seat]`` built."""
+    def boards(self, built: Sequence[Any], t: Translator = ENGLISH) -> List[Dict[str, Any]]:
+        """Every seat's wonder board (public): starting resource and stages.
+
+        ``built[seat]`` is a count of stages built in order or the built stages' 0-based indices (the
+        Great Wall builds in any order).
+
+        A stage the Manneken Pis copies shows the copied stage (each Great Wall stage when it copies one).
+        """
+        game = self.env.game
         out = []
         for seat, setup in enumerate(self.setups):
             wonder = self.content.wonder(setup.wonder, setup.side)
+            done = set(range(built[seat])) if isinstance(built[seat], int) else set(built[seat])
+            slots = game.players[seat].slots if game is not None else [(s,) for s in wonder.stages]
             res = wonder.starting_resource
+            stages = []
+            for k, variants in enumerate(slots):
+                lines = [line for v in variants for line in effect_lines(v.effects, t)]
+                cost = ' / '.join(dict.fromkeys(cost_text(v.cost.coins, v.cost.resources, t) for v in variants))
+                stages.append({'index': k + 1, 'cost': cost or '?', 'effects': lines, 'built': k in done})
+            powers = effect_lines(wonder.effects, t)
+            if wonder.any_order:
+                powers.append(t('Its stages may be built in any order.'))
             out.append(
                 {
                     'seat': seat,
                     'title': t.name(setup.wonder),
                     'produces': res_name(res, t) if res is not None else t('nothing'),
-                    'powers': effect_lines(wonder.effects, t),
-                    'stages': [
-                        {
-                            'index': k + 1,
-                            'cost': cost_text(stage.cost.coins, stage.cost.resources, t),
-                            'effects': effect_lines(stage.effects, t),
-                            'built': k < built[seat],
-                        }
-                        for k, stage in enumerate(wonder.stages)
-                    ],
+                    'powers': powers,
+                    'stages': stages,
                 }
             )
         return out
@@ -467,8 +491,29 @@ class HumanSession:
                     entry.update(coins=stage_coins + payments[0].total, trade=payments[0].traded)
                 if len(payments) > 1:  # a real choice of whom to buy from
                     entry['payments'] = [{'left': p.left, 'right': p.right, 'total': p.total} for p in payments]
+            if action.kind.value == 'wonder' and obs.stage_options:  # which stage to build (Great Wall, ...)
+                entry['stages'] = self._stage_choices(action, obs)
             out.append(entry)
         return out
+
+    def _stage_choices(self, action: Action, obs: Observation) -> List[Dict[str, Any]]:
+        """The affordable stage options of a WONDER action, each paid the cheapest way."""
+        choices = []
+        for option in obs.stage_options:
+            if not option['affordable']:
+                continue
+            payments = self._payments(action.staged(int(option['index'])))  # type: ignore[call-overload]
+            cost: Dict[str, Any] = option['cost']  # type: ignore[assignment]
+            coins = int(cost.get('coins', 0) or 0) + (payments[0].total if payments else 0)
+            choices.append(
+                {
+                    'index': option['index'],
+                    'stage': option['stage'],
+                    'coins': coins,
+                    'trade': payments[0].traded if payments else 0,
+                }
+            )
+        return choices
 
     def state(self, t: Translator = ENGLISH) -> Dict[str, Any]:
         """A JSON-ready view for the human seat (card, board and wonder texts translated by ``t``)."""
@@ -498,7 +543,7 @@ class HumanSession:
             view = obs.to_dict()
             view['actions'] = self._actions(obs)
             state['observation'] = view
-            state['boards'] = self.boards([city.stages_built for city in obs.table], t)
+            state['boards'] = self.boards([[slot for slot, _ in city.stage_slots] for city in obs.table], t)
             cards = {c.name for c in obs.hand}
             cards.update(n for city in obs.table for n in city.cards)
             cards.update(e.card for e in obs.history if e.card)
@@ -606,10 +651,16 @@ class HumanSession:
 
 
 def _move(action: Action) -> List[Any]:
-    """A logged move: ``[kind, card]``, plus ``left, right`` coins when the payment was chosen."""
+    """A logged move: ``[kind, card]`` plus any choices made.
+
+    ``left, right`` coins when the payment was chosen, then the wonder stage option when that was
+    chosen (``null, null`` for the cheapest payment).
+    """
     move: List[Any] = [action.kind.value, action.card.name]
-    if action.payment is not None:
-        move += list(action.payment)
+    if action.payment is not None or action.stage is not None:
+        move += list(action.payment) if action.payment is not None else [None, None]
+    if action.stage is not None:
+        move.append(action.stage)
     return move
 
 

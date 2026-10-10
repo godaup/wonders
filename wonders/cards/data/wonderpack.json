@@ -1,0 +1,106 @@
+{
+ "wonders": [
+  {
+   "name": "The Great Wall",
+   "side": "A",
+   "starting_resource": "linen",
+   "any_order": true,
+   "stages": [
+    {"cost": {"resources": {"wood": 2}}, "effects": [{"type": "coins", "amount": 8}]},
+    {"cost": {"resources": {"paper": 1, "glass": 1, "bricks": 1}},
+     "effects": [{"type": "science_wild", "count": 1, "description": "any science symbol at the end"}]},
+    {"cost": {"resources": {"stone": 3}}, "effects": [{"type": "military", "shields": 2}]},
+    {"cost": {"resources": {"ore": 3}},
+     "effects": [{"type": "build_from_discard", "priority": 1, "description": "build a discarded card for free"}]}
+   ]
+  },
+  {
+   "name": "The Great Wall",
+   "side": "B",
+   "starting_resource": "linen",
+   "any_order": true,
+   "stages": [
+    {"cost": {"resources": {"paper": 1, "wood": 1}},
+     "effects": [{"type": "coins", "amount": 8},
+                 {"type": "grant", "amount": 2, "scope": "neighbours", "description": "neighbours take 2 coins"}]},
+    {"cost": {"resources": {"ore": 1, "bricks": 2}},
+     "effects": [{"type": "science_copy", "count": 1, "description": "copy a neighbour's green science symbol"}]},
+    {"cost": {"resources": {"paper": 1, "wood": 2}},
+     "effects": [{"type": "diplomacy", "count": 1, "description": "skip this Age's conflict"},
+                 {"type": "plunder", "amount": 2, "scope": "others", "description": "every other player pays 2 coins"}]},
+    {"cost": {"resources": {"stone": 2}},
+     "effects": [{"type": "produce_unowned", "description": "each turn, a resource your board and brown/grey cards lack"}]}
+   ]
+  },
+  {
+   "name": "Abu Simbel",
+   "side": "A",
+   "starting_resource": "paper",
+   "requires": ["leaders"],
+   "stages": [
+    {"cost": {"resources": {"stone": 1, "bricks": 1}}, "effects": [{"type": "victory_points", "points": 3}]},
+    {"cost": {"resources": {"wood": 1, "ore": 1}}, "effects": [{"type": "victory_points", "points": 5}]},
+    {"cost": {"resources": {"stone": 2, "glass": 1, "linen": 1}},
+     "effects": [{"type": "entomb_leader", "description": "entomb a recruited leader: twice its cost in VP"}]}
+   ]
+  },
+  {
+   "name": "Abu Simbel",
+   "side": "B",
+   "starting_resource": "paper",
+   "requires": ["leaders"],
+   "stages": [
+    {"cost": {"resources": {"linen": 1, "bricks": 2}},
+     "effects": [{"type": "entomb_leader", "description": "entomb a recruited leader: twice its cost in VP"}]},
+    {"cost": {"resources": {"glass": 1, "wood": 2}},
+     "effects": [{"type": "entomb_leader", "description": "entomb a recruited leader: twice its cost in VP"}]}
+   ]
+  },
+  {
+   "name": "Stonehenge",
+   "side": "A",
+   "starting_resource": "wood",
+   "stages": [
+    {"cost": {"resources": {"ore": 1, "bricks": 1}}, "effects": [{"type": "victory_points", "points": 3}]},
+    {"cost": {"resources": {"paper": 1, "bricks": 2}}, "effects": [{"type": "victory_points", "points": 5}]},
+    {"cost": {"resources": {"wood": 3, "linen": 1}},
+     "effects": [{"type": "tally", "what": "resource_symbols", "resource": "stone", "colors": ["brown"], "scope": "self",
+                  "vp_each": 2, "description": "2 VP per stone on your brown cards"}]}
+   ]
+  },
+  {
+   "name": "Stonehenge",
+   "side": "B",
+   "starting_resource": "wood",
+   "stages": [
+    {"cost": {"resources": {"ore": 3}},
+     "effects": [{"type": "tally", "what": "resource_symbols", "resource": "stone", "colors": ["brown"], "scope": "self",
+                  "coins_each": 1, "vp_each": 1, "description": "1 coin now and 1 VP per stone on your brown cards"}]},
+    {"cost": {"resources": {"bricks": 3, "paper": 1}},
+     "effects": [{"type": "buried_color", "vp_each": 1, "scope": "neighbours",
+                  "description": "at the end: 1 VP per neighbour card of the buried card's colour"}]}
+   ]
+  },
+  {
+   "name": "Manneken Pis",
+   "side": "A",
+   "starting_resource": null,
+   "extra_coins": 4,
+   "stages": [
+    {"copy": {"side": "left", "stage": 1}},
+    {"copy": {"side": "right", "stage": 2}},
+    {"copy": {"side": "left", "stage": "last"}}
+   ]
+  },
+  {
+   "name": "Manneken Pis",
+   "side": "B",
+   "starting_resource": null,
+   "extra_coins": 4,
+   "stages": [
+    {"cost": {"resources": {"wood": 1, "stone": 1, "ore": 1, "bricks": 1, "glass": 1, "linen": 1, "paper": 1}},
+     "effects": [{"type": "coins", "amount": 7}, {"type": "victory_points", "points": 7}, {"type": "military", "shields": 1}]}
+   ]
+  }
+ ]
+}

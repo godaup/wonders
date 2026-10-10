@@ -18,7 +18,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass, field
 from importlib import resources
-from typing import Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from wonders.cards.base import Card, Color, Cost, Resource, ScienceSymbol
 from wonders.cards.wonder import Wonder, WonderStage
@@ -28,6 +28,7 @@ from wonders.effects.library import (
     BuildFree,
     BuildFromDiscard,
     BuildIncome,
+    BuriedColorTally,
     CashDefeats,
     CoinDiscount,
     Coins,
@@ -36,6 +37,7 @@ from wonders.effects.library import (
     CopyLeader,
     Debt,
     Diplomacy,
+    EntombLeader,
     ExtraRecruit,
     FreeBuildPerAge,
     GainToken,
@@ -90,6 +92,7 @@ def _tally(spec: dict) -> Effect:
         coins_each=spec.get('coins_each', 0),
         vp_each=spec.get('vp_each', 0),
         token_value=spec.get('token_value'),
+        resource=Resource(spec['resource']) if spec.get('resource') else None,
     )
 
 
@@ -115,7 +118,7 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'gain_token': lambda s: GainToken(s['value']),
     'play_last_card': lambda s: PlayLastCard(),
     'free_build': lambda s: FreeBuildPerAge(s.get('count', 1)),
-    'build_from_discard': lambda s: BuildFromDiscard(s.get('count', 1)),
+    'build_from_discard': lambda s: BuildFromDiscard(s.get('count', 1), s.get('priority', 0)),
     'copy_guild': lambda s: CopyGuild(s.get('count', 1)),
     # Leaders / Cities powers
     'color_sets': lambda s: ColorSets([Color(c) for c in s['colors']], s['vp_each']),
@@ -140,6 +143,9 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'leader_draw': lambda s: LeaderDraw(s.get('count', 4)),
     'extra_recruit': lambda s: ExtraRecruit(s.get('count', 1)),
     'copy_leader': lambda s: CopyLeader(s.get('count', 1)),
+    # Wonder Pack powers
+    'buried_color': lambda s: BuriedColorTally(s.get('vp_each', 1), s.get('scope', 'neighbours')),
+    'entomb_leader': lambda s: EntombLeader(s.get('count', 1)),
 }
 
 
@@ -180,11 +186,24 @@ def build_card(spec: dict, expansion: str) -> Card:
     )
 
 
+def _stage_copy(spec: Optional[dict]) -> Optional[Tuple[str, Union[int, str]]]:
+    """``{"side": "left", "stage": 1}`` (or ``"stage": "last"``): the stage copies a neighbour's."""
+    if spec is None:
+        return None
+    side, which = spec['side'], spec['stage']
+    if side not in ('left', 'right'):
+        raise ValueError(f'a copied stage comes from the left or right neighbour, not {side!r}')
+    if which != 'last' and not (isinstance(which, int) and which >= 1):
+        raise ValueError(f'a copied stage is a stage number (1, 2, ...) or "last", not {which!r}')
+    return (side, which)
+
+
 def build_wonder(spec: dict) -> Wonder:
     stages = tuple(
         WonderStage(
             cost=build_cost(stage.get('cost')),
             effects=tuple(build_effect(e) for e in stage.get('effects', [])),
+            copy=_stage_copy(stage.get('copy')),
         )
         for stage in spec['stages']
     )
@@ -195,6 +214,9 @@ def build_wonder(spec: dict) -> Wonder:
         stages=stages,
         side=spec.get('side', 'A'),
         effects=tuple(build_effect(e) for e in spec.get('effects', [])),
+        any_order=bool(spec.get('any_order', False)),
+        extra_coins=int(spec.get('extra_coins', 0)),
+        requires=tuple(spec.get('requires', ())),
     )
 
 
@@ -228,7 +250,8 @@ class Content:
         return [c for c in self.cards if c.color is Color.WHITE]
 
 
-def _read_expansion(expansion: str) -> dict:
+def read_expansion(expansion: str) -> dict:
+    """The raw JSON of a bundled expansion."""
     path = resources.files(DATA_PACKAGE).joinpath(DATA_DIR, f'{expansion}.json')
     return json.loads(path.read_text(encoding='utf-8'))
 
@@ -245,10 +268,12 @@ def load_content(*expansions: str) -> Content:
     ensure_loaded()
     content = Content()
     for expansion in expansions or ('base',):
-        raw = REGISTRY.expansion_raw(expansion) or _read_expansion(expansion)
+        raw = REGISTRY.expansion_raw(expansion) or read_expansion(expansion)
         define_colors(raw)
         content.wonders.extend(build_wonder(w) for w in raw.get('wonders', []))
         content.cards.extend(build_card(c, expansion) for c in raw.get('cards', []))
+    loaded = set(expansions or ('base',))
+    content.wonders = [w for w in content.wonders if set(w.requires) <= loaded]  # Abu Simbel needs Leaders
     return content
 
 

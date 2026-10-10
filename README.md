@@ -62,7 +62,7 @@
 | Leaders | ✅ playable | 36 leaders with the draft and recruitment phases, 4 extra guilds, the Rome board |
 | Cities | ✅ playable | 42 black cards (debt, diplomacy, plunder, …), the Petra and Byzantium boards |
 | Armada | 🛠 planned | naval boards, ships and naval conflicts, islands |
-| Wonder Pack | 🛠 planned | four extra wonder boards |
+| Wonder Pack | ✅ playable | the Great Wall, Abu Simbel, Stonehenge and the Manneken Pis, with every board power |
 
 Expansions combine freely (any subset with the base game). Every power is mechanized and was
 checked against the official rulebooks. Plans: [ROADMAP.md](ROADMAP.md).

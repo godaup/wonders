@@ -69,7 +69,7 @@ def test_translator_formats_numbers_contexts_and_messages() -> None:
 def test_every_card_board_session_and_menu_text_has_a_german_translation() -> None:
     missing: Set[str] = set()
     t = Translator('de', missing=missing)
-    content = load_content('base', 'leaders', 'cities')
+    content = load_content('base', 'leaders', 'cities', 'wonderpack')
     for card in content.cards:
         card_svg(card, t)
     for wonder in content.wonders:
@@ -80,7 +80,7 @@ def test_every_card_board_session_and_menu_text_has_a_german_translation() -> No
     for achievement in ACHIEVEMENTS:
         t(achievement.name)
         t(achievement.description)
-    for expansions in (['base'], ['base', 'leaders', 'cities']):
+    for expansions in (['base'], ['base', 'leaders', 'cities'], ['base', 'leaders', 'wonderpack']):
         seats = [SeatConfig(), SeatConfig('greedy'), SeatConfig('heuristic')]
         session = HumanSession(GameConfig(expansions=expansions, seats=seats, seed=3), t=t)
         session.state(t)

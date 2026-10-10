@@ -23,10 +23,18 @@ class Action:
     # pays the cheapest way. Not part of equality, so an action with a chosen split still
     # matches its legal action (and its action-space index).
     payment: Optional[Tuple[int, int]] = field(default=None, compare=False)
+    # Optional index into ``Game.stage_options(seat)`` for a WONDER action: which stage to build when
+    # there is a choice (the Great Wall builds its stages in any order; the Manneken Pis picks the
+    # Great Wall stage it copies). ``None`` builds the first affordable option. Not part of equality.
+    stage: Optional[int] = field(default=None, compare=False)
 
     def paying(self, left: int, right: int) -> 'Action':
         """This action with a chosen split of the trade between the neighbours."""
         return replace(self, payment=(left, right))
+
+    def staged(self, option: int) -> 'Action':
+        """This WONDER action building the stage option ``option`` (see ``Game.stage_options``)."""
+        return replace(self, stage=option)
 
     @classmethod
     def build(cls, card: Card) -> 'Action':
@@ -55,6 +63,7 @@ class DecisionKind(IdentityEnum):
     RECRUIT = 'recruit'  # Leaders: start of an Age, play one leader (recruit / wonder / discard)
     LEADER_BUILD = 'leader_build'  # Rome B: recruit an extra leader from hand right away (BUILD)
     COPY_LEADER = 'copy_leader'  # Courtesans' Guild: pick a neighbour's leader to copy (BUILD = pick)
+    ENTOMB_LEADER = 'entomb_leader'  # Abu Simbel: pick a recruited leader to entomb (BUILD = pick)
 
 
 @dataclass

@@ -180,11 +180,16 @@ against the official rulebook before implementing it (as was done for Leaders an
 * Engine: a per-build optional "advance a ship" payment, the naval conflict resolution, island
   decks; observation / encoder: ship positions per seat, naval strength, islands owned.
 
-### Wonder Pack (not yet registered)
+### Wonder Pack (done, October 2026)
 
-Four extra wonder boards (Great Wall, Stonehenge, Manneken Pis, Abu Simbel) with unusual stage
-rules (e.g. stages built in any order, copying a neighbour's board, burying leaders). Mostly data
-plus a few board powers; a natural first step because it reuses the existing turn structure.
+The four boards of the official Wonder Pack (`wonderpack.json`), checked against its rules sheet and
+the board images: the Great Wall (stages in any order, chosen with `Action.staged`), Abu Simbel
+(entomb a recruited leader: its power is lost, twice its cost in VP; Leaders only), Stonehenge (stone
+symbols on brown cards; side B scores the buried card's colour at the end) and the Manneken Pis
+(copies its neighbours' stages, cost included; +4 coins). The FAQ's discard-build order (Halicarnassus,
+Great Wall, Manneken Pis, Solomon, Courtesans) applies to every game. Open: agents that plan the Great
+Wall's stage order (they build the first affordable one), and a network trained with the new boards
+(the bundled one refuses them).
 
 ### Custom expansions
 

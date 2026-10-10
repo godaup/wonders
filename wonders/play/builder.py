@@ -35,7 +35,7 @@ from wonders.ruleset import EXPANSIONS, RULE_SPECS, RULES, RULES_VERSION, apply_
 EXPANSION_FILE = 'cards.json'
 META_KEYS = ('name', 'version', 'author', 'license', 'description')
 CARD_KEYS = ('name', 'color', 'age', 'guild', 'at_players', 'cost', 'chain_requires', 'chain_enables', 'effects')
-WONDER_KEYS = ('name', 'side', 'starting_resource', 'stages', 'effects')
+WONDER_KEYS = ('name', 'side', 'starting_resource', 'any_order', 'extra_coins', 'requires', 'stages', 'effects')
 BALANCE_LINEUP = ('heuristic', 'board', 'greedy', 'builder')
 MAX_BALANCE_GAMES = 400
 
@@ -56,6 +56,7 @@ CHOICE_LABELS = {
         'tokens': 'military tokens',
         'victory_tokens': 'victory tokens',
         'coins': 'coins (per 3)',
+        'resource_symbols': 'symbols of a resource',
     },
 }
 SCORE_LABELS = {
@@ -233,10 +234,21 @@ def clean_wonder(spec: Dict[str, Any]) -> Dict[str, Any]:
     """A wonder side as the file keeps it."""
     wonder = dict(spec)
     wonder['stages'] = [
-        {k: v for k, v in (('cost', _clean_cost(s.get('cost'))), ('effects', _clean_effects(s.get('effects')))) if v}
+        {
+            k: v
+            for k, v in (
+                ('copy', s.get('copy') or None),  # a stage copying a neighbour's stage (Manneken Pis)
+                ('cost', None if s.get('copy') else _clean_cost(s.get('cost'))),
+                ('effects', None if s.get('copy') else _clean_effects(s.get('effects'))),
+            )
+            if v
+        }
         for s in wonder.get('stages') or []
         if isinstance(s, dict)
     ]
+    for flag in ('any_order', 'extra_coins', 'requires'):
+        if not wonder.get(flag):
+            wonder.pop(flag, None)
     wonder['effects'] = _clean_effects(wonder.get('effects'))
     extra = {k: v for k, v in wonder.items() if k not in WONDER_KEYS and not _empty(v)}
     ordered = {k: wonder[k] for k in WONDER_KEYS if k in wonder and not _empty(wonder[k])}
