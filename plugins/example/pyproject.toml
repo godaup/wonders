@@ -1,0 +1,25 @@
+[project]
+name = "wonders-example-plugin"
+version = "0.1.0"
+description = "An example wonders plugin: a new effect type, a guild that uses it and an agent."
+authors = [{ name = "Patrick Godau" }]
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = ["wonders"]
+
+# The game finds the plugin through this entry point: register(registry) runs when wonders starts.
+[project.entry-points."wonders.extensions"]
+example = "wonders_example:register"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["wonders_example"]
+
+[tool.setuptools.package-data]
+wonders_example = ["*.json"]

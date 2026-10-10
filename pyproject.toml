@@ -5,17 +5,17 @@ description = "A 7 Wonders-style card game engine with agents, training environm
 authors = [{ name = "Patrick Godau" }]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.11,<4.0"
 classifiers = [
     'Development Status :: 2 - Pre-Alpha',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
 ]
 dependencies = [
     "click>=8.1,<9",
@@ -28,7 +28,7 @@ Issues = "https://github.com/godaup/wonders/issues"
 [project.optional-dependencies]
 test = [
     "pytest>=8,<9",
-    "black>=24.10,<26",
+    "black>=25.12,<26",
     "isort>=5.13,<6",
     "mypy>=1.11,<2",
     "flake8>=7,<8",
@@ -68,7 +68,7 @@ exclude = ["tests*"]
 [tool.black]
 line-length = 120
 skip-string-normalization = true
-target-version = ['py310', 'py311', 'py312', 'py313']
+target-version = ['py311', 'py312', 'py313', 'py314']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -84,6 +84,10 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pytest.ini_options]
+# plugins/*/tests run against the installed plugin (contributions workflow), not in the main suite
+testpaths = ["tests"]
 
 [tool.isort]
 multi_line_output = 3

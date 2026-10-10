@@ -10,9 +10,9 @@ Everything the game can be extended with goes through one :class:`Registry` (:da
 
 Extensions come from two sources, discovered once and lazily (:func:`ensure_loaded`):
 
-* **Folders** (data only) — every sub-folder of the extensions home (``$WONDERS_EXTENSIONS``, default
-  ``~/.wonders/extensions``) holding a ``manifest.json``. They may bring expansions, models and
-  locales, never code, so they are safe to load automatically.
+* **Folders** (data only) — every sub-folder of the extensions homes (``$WONDERS_EXTENSIONS``, several
+  separated by ``os.pathsep``; default ``~/.wonders/extensions``) holding a ``manifest.json``. They may
+  bring expansions, models and locales, never code, so they are safe to load automatically.
 * **Plugins** (code) — installed Python packages that declare an entry point in the
   ``wonders.extensions`` group pointing to ``register(registry)``. They may also add effects and
   agents. Code only arrives through an explicit ``pip install``; nothing is ever downloaded.
@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sys
 import warnings
 from dataclasses import dataclass, field
 from importlib import metadata
@@ -170,11 +171,21 @@ REGISTRY = Registry()
 _LOADED = False
 
 
-def extensions_home() -> Path:
-    """Where folder extensions live: ``$WONDERS_EXTENSIONS`` or ``extensions`` under the storage home."""
+def extensions_homes() -> List[Path]:
+    """Where folder extensions live: ``$WONDERS_EXTENSIONS``, else ``extensions`` under the storage home.
+
+    The variable may name several folders separated by ``os.pathsep``, e.g. a checkout's ``extensions/``
+    and your own.
+    """
     from wonders.storage import home
 
-    return Path(os.environ.get(HOME_VARIABLE) or home() / 'extensions')
+    configured = [Path(p) for p in os.environ.get(HOME_VARIABLE, '').split(os.pathsep) if p]
+    return configured or [home() / 'extensions']
+
+
+def extensions_home() -> Path:
+    """The first extensions folder: where ``wonders ext new`` creates extensions."""
+    return extensions_homes()[0]
 
 
 def _digest(folder: Path, manifest: Manifest) -> str:
@@ -225,11 +236,19 @@ def load_plugin(
     return ext
 
 
+def plugin_manifest(target: Any) -> Optional[Dict[str, Any]]:
+    """The ``MANIFEST`` dict of an entry point's target: the ``register`` function's module (or the target)."""
+    info = getattr(target, 'MANIFEST', None)
+    if info is None:
+        info = getattr(sys.modules.get(getattr(target, '__module__', '') or ''), 'MANIFEST', None)
+    return info if isinstance(info, dict) else None
+
+
 def _load_entry_points(registry: Registry) -> None:
     for ep in metadata.entry_points(group=ENTRY_POINT_GROUP):
         try:
             target = ep.load()
-            info = getattr(target, 'MANIFEST', None) or {'id': ep.name, 'name': ep.name}
+            info = plugin_manifest(target) or {'id': ep.name, 'name': ep.name}
             version = ''
             if ep.dist is not None:
                 version = ep.dist.version
@@ -247,8 +266,9 @@ def ensure_loaded() -> Registry:
     _LOADED = True
     if os.environ.get(DISABLE_VARIABLE):
         return REGISTRY
-    home = extensions_home()
-    if home.is_dir():
+    for home in extensions_homes():
+        if not home.is_dir():
+            continue
         for folder in sorted(p for p in home.iterdir() if (p / MANIFEST).is_file()):
             try:
                 load_folder(folder)
@@ -321,7 +341,7 @@ def validate(folder: Union[str, Path]) -> List[str]:
     return problems
 
 
-def scaffold(folder: Union[str, Path], extension_id: str, name: str = '') -> Path:
+def scaffold(folder: Union[str, Path], extension_id: str, name: str = '', author: str = '') -> Path:
     """Create a minimal data extension (manifest + one example card) to start from."""
     from wonders.ruleset import RULES_VERSION
 
@@ -331,7 +351,7 @@ def scaffold(folder: Union[str, Path], extension_id: str, name: str = '') -> Pat
         'id': extension_id,
         'name': name or extension_id,
         'version': '0.1.0',
-        'author': '',
+        'author': author,
         'license': 'CC-BY-4.0',
         'description': 'A custom expansion.',
         'rules_version': RULES_VERSION,

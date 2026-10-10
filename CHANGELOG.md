@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+* Contribution checks (`wonders.contrib`, `CONTRIBUTING.md`): data extensions go to `extensions/<id>/`,
+  plugin packages to `plugins/<name>/` (with a complete example plugin), translations of the game to
+  `wonders/i18n/<lang>.json`. `wonders ext check` validates any of them (manifest metadata, data-only
+  files and size limits, clashes, deck sizes, games played and replayed with every expansion, agent
+  and model, translation placeholders and coverage); `wonders ext scorecard` plays a model against
+  the bundled network (ranked-above rate with interval, per combination, player count and score
+  category). GitHub Actions run them on pull requests with the base branch as referee and post the
+  report (`contributions.yml`, `contributions-comment.yml`); merged models are measured again for
+  `LEADERBOARD.md` (`leaderboard.yml`). `WONDERS_EXTENSIONS` takes several folders; `wonders ext new
+  --author`.
+* Fix: a plugin's `MANIFEST` is now read from the module of its `register` function, as documented
+  (it was ignored).
+* Python 3.11–3.14 are supported (3.14 added; 3.10, end of life in October 2026, dropped).
 * Local storage (`wonders.storage`, `$WONDERS_HOME`, default `~/.wonders`): the GUI saves every game
   after each move and can resume or re-open it (`HumanSession.saved` / `restore`: the seed plus the
   logged decisions); `wonders gui --no-save` turns it off. New GUI pages: "Past games" with the

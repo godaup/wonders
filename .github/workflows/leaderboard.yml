@@ -1,0 +1,92 @@
+# After a merge that adds or changes a model in extensions/, measure it again with main's code
+# (scorecard.yml) and open a pull request that updates leaderboard.json and LEADERBOARD.md.
+# Needs "Allow GitHub Actions to create and approve pull requests" in the repository settings.
+
+name: leaderboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'extensions/**'
+  workflow_dispatch:
+    inputs:
+      models:
+        description: 'Models to (re-)measure: JSON list of {"extension": id, "model": name}'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.changed.outputs.models }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install .
+
+      - name: Which models changed
+        id: changed
+        env:
+          BEFORE: ${{ github.event.before }}
+          MODELS: ${{ github.event.inputs.models }}
+          WONDERS_NO_EXTENSIONS: '1'
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            python -c 'import json, os, re; m = json.loads(os.environ["MODELS"]); ok = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$"); assert all(ok.match(x["extension"]) and ok.match(x["model"]) for x in m); print("models=" + json.dumps(m))' >> "$GITHUB_OUTPUT"
+          else
+            git diff --name-only "$BEFORE" "$GITHUB_SHA" | wonders ext changed --github-output "$GITHUB_OUTPUT"
+          fi
+
+  scorecard:
+    needs: detect
+    if: needs.detect.outputs.models != '[]' && needs.detect.outputs.models != ''
+    uses: ./.github/workflows/scorecard.yml
+    with:
+      models: ${{ needs.detect.outputs.models }}
+      referee: ${{ github.sha }}
+      content: ${{ github.sha }}
+
+  update:
+    needs: scorecard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install .
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: scorecard-*
+          path: scorecards
+          merge-multiple: true
+
+      - name: Open a pull request with the new leaderboard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          wonders ext leaderboard scorecards/*.json --data leaderboard.json --markdown LEADERBOARD.md
+          BRANCH="leaderboard/${GITHUB_SHA::8}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add leaderboard.json LEADERBOARD.md
+          git commit -m "Leaderboard: measure the models changed in ${GITHUB_SHA::8}"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "Leaderboard update (${GITHUB_SHA::8})" \
+            --body "Scorecards measured by the leaderboard workflow: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

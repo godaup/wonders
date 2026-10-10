@@ -33,13 +33,13 @@ Run a single test:
 pytest tests/test_wonders.py::test_command_line_interface
 ```
 
-Multi-version testing (py310–py313) is done via `tox`, which mirrors CI.
+Multi-version testing (py311–py314) is done via `tox`, which mirrors CI.
 
-The console entry point `wonders` maps to `wonders.cli:main`, a Click group: `wonders play` (one game, transcript + scores, `--record` saves JSON), `wonders replay <record.json>`, `wonders bench` (win rates with CIs, `-p` processes), `wonders agents`, `wonders gallery`, `wonders table`, `wonders gui` (local browser play). `wonders-gallery` / `wonders-table` remain as aliases.
+The console entry point `wonders` maps to `wonders.cli:main`, a Click group: `wonders play` (one game, transcript + scores, `--record` saves JSON), `wonders replay <record.json>`, `wonders bench` (win rates with CIs, `-p` processes), `wonders agents`, `wonders gallery`, `wonders table`, `wonders gui` (local browser play), `wonders ext` (extensions and contribution checks). `wonders-gallery` / `wonders-table` remain as aliases.
 
 ## CI / Release
 
-- CI (`.github/workflows/dev.yml`, `pre-commit.yml`) runs the tox matrix across Python 3.10–3.13 on Linux/macOS/Windows plus format/lint/build stages defined in `setup.cfg`. CI installs the package (not editable), so a file git does not track fails there — check `git status` for new files.
+- CI (`.github/workflows/dev.yml`, `pre-commit.yml`) runs the tox matrix across Python 3.11–3.14 on Linux/macOS/Windows plus format/lint/build stages defined in `setup.cfg`. CI installs the package (not editable), so a file git does not track fails there — check `git status` for new files.
 - Releasing is tag-driven: bump with `bump2version {major|minor|patch}` (updates `pyproject.toml` and `wonders/__init__.py`, commits, and tags per `.bumpversion.cfg`), then `git push --tags`. `release.yml` builds with `python -m build` and deploys to PyPI on passing tests. Add a `CHANGELOG.md` entry before bumping.
 
 ## Architecture
@@ -240,7 +240,22 @@ unknown ids, the CLI lineup and the GUI menu): data folders under `$WONDERS_EXTE
 `~/.wonders/extensions` (manifest + JSON / `.pt`, never code) and entry points in the
 `wonders.extensions` group (code). `RecordBuilder` pins each extension's version and content hash
 in `GameRecord.extensions`; replays warn on a mismatch. Tests disable discovery
-(`tests/conftest.py`, `WONDERS_NO_EXTENSIONS=1`).
+(`tests/conftest.py`, `WONDERS_NO_EXTENSIONS=1`). `$WONDERS_EXTENSIONS` may list several folders
+(`os.pathsep`); a plugin's `MANIFEST` is read from its `register` function's module (`plugin_manifest`).
+
+**Contributions** (`wonders/contrib.py`, `CONTRIBUTING.md`): data extensions live in top-level
+`extensions/<id>/` (folder = manifest id), pip-installable plugins in `plugins/<name>/` (`plugins/example`
+is a working one; its tests are outside `testpaths` and run in CI against the installed plugin; `make
+format/lint` cover `plugins/`, mypy does not), translations of the game in `wonders/i18n/<lang>.json`
+(`de.json` is the reference key set). `wonders ext check` = `contrib.check` (extension / plugin / locale
+reports with ok / warning / error findings; smoke games are replayed from their records);
+`wonders ext changed` maps a diff to targets and restricts names to `contrib.NAME` (they reach workflow
+shells); `ext scorecard` = `contrib.scorecard` (`head_to_head` vs `bundled`, shards merged by
+`evaluate.merge_head_to_head`), `ext summary` renders the PR report, `ext leaderboard` updates
+`leaderboard.json` + `LEADERBOARD.md`. Workflows: `contributions.yml` (pull_request, read-only; the base
+branch is installed as referee, only contributed files come from the PR), the reusable `scorecard.yml`
+(model × combination matrix), `contributions-comment.yml` (workflow_run; comments only if the PR head
+matches) and `leaderboard.yml` (on merge; opens a PR).
 
 **Translations** (`wonders/i18n/`): flat catalogs keyed by the English text (`de.json`; `"text|context"`
 keys for words with two meanings, `_decimal` / `_ordinal` / `_language` meta keys), extended by extension
@@ -312,5 +327,5 @@ and `cities` (black cards) columns; the official scorecard adds both on one row.
 
 - `black` and `isort` are authoritative for formatting (line length 120, `skip-string-normalization`). Google-style docstrings; `flake8` ignores `E203, E266, W503`.
 - Type annotations are expected — `mypy` runs in the lint gate (over `wonders` and `tests`).
-- Python **3.10+** (`requires-python` in `pyproject.toml`).
+- Python **3.11+** (`requires-python` in `pyproject.toml`).
 - Pre-commit hooks (`.pre-commit-config.yaml`) enforce the above plus CRLF/whitespace fixes; run `make pre-commit` to check all files.

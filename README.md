@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.10%20%E2%80%93%203.13-3776ab?logo=python&logoColor=white" alt="Python 3.10–3.13">
+  <img src="https://img.shields.io/badge/python-3.11%20%E2%80%93%203.14-3776ab?logo=python&logoColor=white" alt="Python 3.11–3.14">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
   <img src="https://img.shields.io/badge/code%20style-black-000000" alt="code style: black">
   <img src="https://img.shields.io/badge/types-mypy-2a6db2" alt="type-checked with mypy">
@@ -37,6 +37,8 @@
   `wonders train h2h mine=my_model.pt bundled` (or `wonders bench` for scripted agents).
   Beat the bundled network over a few thousand games and you have the new state of the art for
   this engine — the [training guide](docs/training.md) shows how the current one was made.
+  Submit it by pull request to [`extensions/`](extensions/README.md): it gets a scorecard against
+  the bundled network and a place on the [leaderboard](LEADERBOARD.md).
 
 ## Contents
 
@@ -104,7 +106,9 @@ Measured on one core of an Intel i5-12400F unless noted.
   models at the same tables, exploitability measurement.
 * **Languages** — English and German (GUI, cards and the analysis); more are a JSON file away.
 * **Extensions** — add your own expansions, models and translations as data folders, or card effects
-  and agents as pip-installable plugins ([extensions guide](docs/extensions.md)).
+  and agents as pip-installable plugins ([extensions guide](docs/extensions.md)); contributions to
+  [`extensions/`](extensions/README.md), [`plugins/`](plugins/README.md) and
+  [`wonders/i18n/`](wonders/i18n/README.md) are checked automatically on every pull request.
 * **Light** — the core is pure Python with `click` as its only runtime dependency; PyTorch is
   only needed for the learned agent. Type-checked with mypy and covered by ~300 tests.
 
@@ -141,7 +145,7 @@ pip install "git+https://github.com/godaup/wonders"            # core
 pip install "wonders[ml] @ git+https://github.com/godaup/wonders"  # + the learned agent (PyTorch)
 ```
 
-For development (Python 3.10+):
+For development (Python 3.11+):
 
 ```
 git clone https://github.com/godaup/wonders && cd wonders
@@ -262,7 +266,8 @@ These numbers were measured under the current rules, which the network was train
   new ways to play and learn (browser version, difficulty levels, puzzles, post-game analysis,
   translations, accessibility), expansions and extensions, and research benchmarks.
 * [Changelog](CHANGELOG.md) — what changed.
-* [Contributing](CONTRIBUTING.md) — how to contribute.
+* [Contributing](CONTRIBUTING.md) — how to contribute, and where expansions, models, translations
+  and plugins go. [Leaderboard](LEADERBOARD.md) — contributed models against the bundled network.
 * [Architecture overview](CLAUDE.md) — the code structure, written for AI coding assistants and
   useful for human contributors too.
 

@@ -1,4 +1,4 @@
-sources = wonders
+sources = wonders plugins
 
 .PHONY: test format lint unittest coverage pre-commit clean
 test: format lint unittest
@@ -9,13 +9,13 @@ format:
 
 lint:
 	flake8 $(sources) tests
-	mypy $(sources) tests
+	mypy wonders tests
 
 unittest:
 	pytest
 
 coverage:
-	pytest --cov=$(sources) --cov-branch --cov-report=term-missing tests
+	pytest --cov=wonders --cov-branch --cov-report=term-missing tests
 
 pre-commit:
 	pre-commit run --all-files

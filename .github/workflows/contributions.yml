@@ -1,0 +1,215 @@
+# Checks contributed content in pull requests (see CONTRIBUTING.md, "Contributing content"):
+#
+# * data extensions in extensions/<id>/ — manifest, files, cards and decks, games played and
+#   replayed, locales, models loaded and played; plus a scorecard (head-to-head against the bundled
+#   network) for every new or changed model;
+# * plugins in plugins/<name>/ — installed, their own tests, entry points, everything they register;
+# * translations of the game in wonders/i18n/<lang>.json — well-formed, placeholders, coverage.
+#
+# The referee is the base branch: the game and the checks are installed from it and only the
+# contributed files come from the pull request, so a data PR cannot change how it is judged.
+# Plugins are code, so the plugin job also runs the PR's code (read-only token, no secrets);
+# maintainers review plugin code. The report is posted by contributions-comment.yml.
+
+name: contributions
+
+on:
+  pull_request:
+    paths:
+      - 'extensions/**'
+      - 'plugins/**'
+      - 'wonders/i18n/*.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contributions-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+  WONDERS_NO_EXTENSIONS: '1'  # load only what a check names
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      any: ${{ steps.changed.outputs.any }}
+      extensions: ${{ steps.changed.outputs.extensions }}
+      plugins: ${{ steps.changed.outputs.plugins }}
+      locales: ${{ steps.changed.outputs.locales }}
+      models: ${{ steps.changed.outputs.models }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: referee
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ./referee
+
+      - name: Which contributions changed
+        id: changed
+        working-directory: pr
+        run: git diff --name-only "$BASE_SHA...$HEAD_SHA" | wonders ext changed --github-output "$GITHUB_OUTPUT"
+
+  check:
+    needs: detect
+    if: needs.detect.outputs.extensions != '[]' || needs.detect.outputs.locales != '[]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: referee
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the referee (CPU PyTorch for the model checks)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install ./referee
+
+      - name: Check extensions and translations
+        working-directory: pr
+        env:
+          # Names are restricted by `wonders ext changed` (no spaces or shell characters).
+          TARGETS: >-
+            ${{ join(fromJSON(needs.detect.outputs.extensions), ' ') }}
+            ${{ join(fromJSON(needs.detect.outputs.locales), ' ') }}
+        run: |
+          read -ra targets <<< "$TARGETS"
+          mkdir -p ../reports
+          wonders ext check "${targets[@]}" --report ../reports/check.md
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report-check
+          path: reports/
+          if-no-files-found: ignore
+
+  plugin:
+    needs: detect
+    if: needs.detect.outputs.plugins != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: ${{ fromJSON(needs.detect.outputs.plugins) }}
+    env:
+      PLUGIN: ${{ matrix.plugin }}
+      WONDERS_NO_EXTENSIONS: ''  # plugins are found through their entry points
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: referee
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the referee and the plugin
+        run: |
+          python -m pip install --upgrade pip
+          pip install ./referee pytest
+          pip install "./pr/plugins/$PLUGIN"
+          pip install --no-deps --force-reinstall ./referee  # the game stays the base branch's
+
+      - name: Run the plugin's tests
+        run: |
+          if [ -d "pr/plugins/$PLUGIN/tests" ]; then python -m pytest -p no:cacheprovider "pr/plugins/$PLUGIN"; fi
+
+      - name: Check the plugin
+        if: always()
+        run: |
+          mkdir -p reports
+          wonders ext check "pr/plugins/$PLUGIN" --report "reports/plugin-$PLUGIN.md"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report-plugin-${{ strategy.job-index }}
+          path: reports/
+          if-no-files-found: ignore
+
+  scorecard:
+    needs: [detect, check]
+    if: needs.detect.outputs.models != '[]' && needs.check.result == 'success'
+    uses: ./.github/workflows/scorecard.yml
+    with:
+      models: ${{ needs.detect.outputs.models }}
+      referee: ${{ github.event.pull_request.base.sha }}
+      content: ${{ github.event.pull_request.head.sha }}
+
+  report:
+    needs: [detect, check, plugin, scorecard]
+    if: always() && needs.detect.outputs.any == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: referee
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ./referee
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: reports
+          merge-multiple: true
+
+      - name: Write the report
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          FAILED: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          mkdir -p reports comment
+          wonders ext summary reports --out comment/comment.md
+          if [ "$FAILED" = "true" ]; then
+            printf '\n❌ A job failed; see the [workflow run](%s).\n' \
+              "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >> comment/comment.md
+          fi
+          cat comment/comment.md >> "$GITHUB_STEP_SUMMARY"
+          echo "$PR_NUMBER" > comment/pr-number
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: contribution-comment
+          path: comment/
+
+      - name: Fail when a check failed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

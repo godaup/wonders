@@ -44,6 +44,27 @@ If you are proposing a feature:
 * Remember that this is a volunteer-driven project, and that contributions
   are welcome :)
 
+### Contribute content: expansions, models, translations, plugins
+
+Content does not need changes to the engine. Each kind has its own place, and a pull request that
+touches one gets an automatic check with a report posted on the pull request
+([`contributions.yml`](.github/workflows/contributions.yml)):
+
+| you contribute | it goes to | checked by |
+|---|---|---|
+| an expansion (cards, wonder boards) built from existing effect types | [`extensions/<id>/`](extensions/README.md) (data) | `wonders ext check`: manifest, cards, decks, games played and replayed |
+| a trained model | [`extensions/<id>/`](extensions/README.md) (data) | the same, plus a **scorecard** against the bundled network |
+| the names of an extension's cards in another language | its [`extensions/<id>/`](extensions/README.md) folder | `wonders ext check`: placeholders, keys |
+| a translation of the game | [`wonders/i18n/<lang>.json`](wonders/i18n/README.md) | `wonders ext check`: placeholders, keys, coverage |
+| a new effect type (mechanic), a scripted agent | [`plugins/<name>/`](plugins/README.md) (a pip package) | its own tests + `wonders ext check` |
+
+Run the same check locally before opening the pull request, e.g.
+`wonders ext check extensions/my-expansion`. For data contributions the referee is the base
+branch: the game and the checks come from it, only your files from the pull request. A model's
+scorecard reports how often it finishes above the bundled network (95% interval) overall, per
+expansion combination, per player count and per score category; merged models are measured again
+for the [leaderboard](LEADERBOARD.md). Format details: [extensions guide](docs/extensions.md).
+
 ## Get Started!
 
 Ready to contribute? Here's how to set up `wonders` for local development.
@@ -101,7 +122,7 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.md.
-3. The pull request should work for Python 3.6, 3.7, 3.8 and 3.9. Check
+3. The pull request should work for Python 3.11, 3.12, 3.13 and 3.14. Check
    https://github.com/godaup/wonders/actions
    and make sure that the tests pass for all supported Python versions.
 

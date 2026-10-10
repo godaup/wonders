@@ -16,7 +16,7 @@ from __future__ import annotations
 import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
-from wonders.agents.bench import AGENTS, AgentSpec, run_bench, wilson_interval
+from wonders.agents.bench import AGENTS, CATEGORIES, AgentSpec, run_bench, wilson_interval
 from wonders.env.vocab import vocab_for
 from wonders.ml.agent import NeuralAgent
 from wonders.ml.model import load_checkpoint
@@ -219,6 +219,7 @@ def compare_agents(
                 'win_rel_ci': [lo * n_players, hi * n_players],
                 'mean_score': s.mean_score,
                 'mean_rank': s.mean_rank,
+                'categories': {c: s.mean_category(c) for c in CATEGORIES},
             }
         combo = cell_key(cell).split('/')[0]
         for i, a in enumerate(present):
@@ -237,6 +238,40 @@ def compare_agents(
         'filler': filler,
         'seating': seating,
         'cells': cell_results,
+        'pairs': _pair_summary(pooled),
+        'pairs_by_combo': {combo: _pair_summary(counts) for combo, counts in by_combo.items()},
+    }
+
+
+def merge_head_to_head(results: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Combine :func:`compare_agents` results over disjoint cells (e.g. one CI job per combination).
+
+    The pooled pairs are recounted from every cell's shares, so the merge equals one run over all cells.
+    """
+    if not results:
+        raise ValueError('nothing to merge')
+    labels = list(dict.fromkeys(m for r in results for m in r['models']))
+    pooled: Dict[Tuple[str, str], List[int]] = {}
+    by_combo: Dict[str, Dict[Tuple[str, str], List[int]]] = {}
+    cells: List[Dict[str, Any]] = []
+    for result in results:
+        for entry in result['cells']:
+            cells.append(entry)
+            combo = entry['cell'].split('/')[0]
+            for pair, share in entry.get('pairs', {}).items():
+                a, _, b = pair.partition(' > ')
+                above = round(share * entry['games'])
+                for counts in (
+                    pooled.setdefault((a, b), [0, 0]),
+                    by_combo.setdefault(combo, {}).setdefault((a, b), [0, 0]),
+                ):
+                    counts[0] += above
+                    counts[1] += entry['games']
+    return {
+        'models': labels,
+        'filler': results[0]['filler'],
+        'seating': results[0]['seating'],
+        'cells': cells,
         'pairs': _pair_summary(pooled),
         'pairs_by_combo': {combo: _pair_summary(counts) for combo, counts in by_combo.items()},
     }
