@@ -260,6 +260,7 @@ def build_age_deck(
     age: int,
     n_players: int,
     rng: Optional[random.Random] = None,
+    extra_guilds: int = GUILDS_OVER_PLAYERS,
 ) -> List[Card]:
     """Assemble the shuffled deck for ``age`` at ``n_players``.
 
@@ -276,7 +277,7 @@ def build_age_deck(
 
     if age == 3:
         guilds = content.guilds()
-        want = n_players + GUILDS_OVER_PLAYERS
+        want = n_players + extra_guilds
         deck.extend(guilds if want >= len(guilds) else rng.sample(guilds, want))
 
     # Cities: draw exactly n_players random black cards from this Age's pool (no

@@ -183,6 +183,11 @@ random agent, 1000; Odysseus/`heuristic` ≈1730; Hephaestus/`board` ≈1890; Py
 "Achievements" has 42 feats and career goals from bronze to legendary — win without a red card, beat
 Pythia, build three cards from the discard pile, win a game deep in debt, reach Elo 2000, …
 
+The **expansion builder** (in the GUI's header) designs your own expansion without writing JSON:
+cards with live previews, new card colours, wonder boards with both sides, and meta rules such as
+the starting coins. Save it and it is in the game menu; a balance check plays it with the scripted
+agents, and it downloads as a zip to share ([extensions guide](docs/extensions.md)).
+
 ### Training (needs PyTorch)
 
 The [training guide](docs/training.md) explains the full workflow; the main commands:

@@ -293,6 +293,21 @@ player, so Cities deals 8 not 7). `armada` is registered but flagged
 `label`, `fill`, `score` (the `ScoreBreakdown` column its cards' VP go to) and `tradeable` (neighbours
 may buy its production, as for brown/grey). Encoders keep one feature per *official* colour only.
 
+**Meta rules** (`ruleset.RULES` / `Rules`): starting and discard coins, coins per treasury point,
+science set bonus, military token values, extra guilds. An expansion overrides them via
+`Expansion.rules` (extension files: `"rules"`); `rules_of(expansions)` resolves them in order (later
+wins) and `Game.rules` holds a game's own, so replays, the env and sampled worlds agree. The module
+constants (`DISCARD_COINS`, `CONFLICT_VALUE`, …) are the base values the scripted agents still use.
+
+**Expansion builder** (`wonders/play/builder.py`, GUI page `#builder`): edits one data extension folder
+per project (manifest + `cards.json` with `rules`/`colors`/`cards`/`wonders`), `check_project` pins
+problems to items, `save_project` writes and `extensions.reload_folder`s it (only without errors),
+`preview` renders unsaved specs (`Color.from_spec(redefine=True)` updates an edited colour in place),
+`balance` plays scripted agents with and without the expansion. Effect forms come from
+`cards/schema.EFFECT_SCHEMAS` (one per `EFFECT_BUILDERS` type; tests enforce it). Builder routes need a
+local `Host` and a JSON content type (no cross-site writes). `load_folder` builds every card and wonder
+of a folder and rolls back on failure, so a broken extension is never half-registered.
+
 `leaders.json` (36 leaders) and `cities.json` (42 black cards) hold the **official
 functional decks** (costs/effects/counts), and **every power is mechanized** — no
 `Special` placeholders remain (`Special` stays available for future content). The

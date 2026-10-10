@@ -120,18 +120,33 @@ class Color(metaclass=_ColorMeta):
         return color
 
     @classmethod
-    def from_spec(cls, spec: Dict[str, Any]) -> 'Color':
-        """Define a colour from its expansion-file entry (``{"id": ..., "label": ..., ...}``)."""
+    def from_spec(cls, spec: Dict[str, Any], redefine: bool = False) -> 'Color':
+        """Define a colour from its expansion-file entry (``{"id": ..., "label": ..., ...}``).
+
+        ``redefine`` updates a non-official colour that exists with other attributes in place (the
+        expansion builder, while a colour is being edited); cards keep referring to the same object.
+        """
         unknown = set(spec) - {'id', 'label', 'fill', 'score', 'tradeable'}
         if unknown:
             raise ValueError(f'colour {spec.get("id")!r}: unknown keys {", ".join(sorted(unknown))}')
-        return cls.define(
+        args = (
             spec['id'],
             spec.get('label', ''),
             spec.get('fill', '#9aa3ad'),
             spec.get('score', 'commercial'),
             bool(spec.get('tradeable', False)),
         )
+        existing = cls._members.get(spec['id'])
+        if redefine and existing is not None and not existing.official:
+            fresh = cls._members.pop(spec['id'])
+            try:
+                probe = cls.define(*args)  # validates and normalises the new attributes
+            finally:
+                cls._members[spec['id']] = fresh
+            for attr in ('label', 'fill', 'score', 'tradeable'):
+                object.__setattr__(existing, attr, getattr(probe, attr))
+            return existing
+        return cls.define(*args)
 
     def __setattr__(self, name: str, value: Any) -> None:
         raise AttributeError('card colours are immutable')

@@ -19,7 +19,9 @@ from wonders.engine.actions import Action, ActionKind, DecisionKind, DecisionPoi
 from wonders.engine.phase import Phase
 from wonders.engine.player import SCIENCE_SET_VALUE, Player
 from wonders.engine.trade import Payment, cheapest_payment, payment_options
+from wonders.ruleset import Rules, rules_of
 
+# The base game's values; a game's own come from its expansions' meta rules (``Game.rules``).
 DISCARD_COINS = 3
 CONFLICT_VALUE = {1: 1, 2: 3, 3: 5}
 DEFEAT_VALUE = -1
@@ -92,7 +94,8 @@ class Game:
         if len(players) < 2:
             raise ValueError('need at least 2 players')
         self.players = players
-        self.expansions: Tuple[str, ...] = tuple(expansions)  # informational (observations)
+        self.expansions: Tuple[str, ...] = tuple(expansions)
+        self.rules: Rules = rules_of(self.expansions)  # meta rules: discard coins, military tokens, ...
         self.n = len(players)
         self.phase = Phase.SETUP
         self.age = 0
@@ -349,7 +352,7 @@ class Game:
         self._income(i, BuildEvent(None, traded=pay.traded, neighbours_traded=_sides(pay)))
 
     def _do_discard(self, i: int, card: Card) -> None:
-        self.players[i].coins += DISCARD_COINS
+        self.players[i].coins += self.rules.discard_coins
         if card.color is not Color.WHITE:  # discarded leaders return to the box (Leaders rulebook), not the pile
             self.discard_pile.append(card)
 
@@ -434,7 +437,7 @@ class Game:
     def resolve_conflict(self, age: int) -> None:
         self.phase = Phase.CONFLICT
         self.tick += 1
-        value = CONFLICT_VALUE[age]
+        value = self.rules.victory(age)
         shields = [p.shields() for p in self.players]
         # Cities diplomacy: a player holding a diplomacy token sits this Age out and
         # spends the token. Remaining ("active") players are adjacent around a ring
@@ -453,7 +456,7 @@ class Game:
                 elif shields[i] < shields[j]:
                     # Tomyris: the loser's defeat token goes to the neighbour who won.
                     loser = self.players[j] if self.players[i].redirects_defeats() else self.players[i]
-                    loser.tokens.append(DEFEAT_VALUE)
+                    loser.tokens.append(self.rules.defeat_points)
 
     # -- scoring -----------------------------------------------------------
     def score(self, i: int) -> ScoreBreakdown:
@@ -461,7 +464,7 @@ class Game:
         ctx = self.context(i)
         b = ScoreBreakdown()
         b.military = sum(p.tokens)
-        b.treasury = p.coins // 3 - p.debt  # Cities debt tokens are -1 VP each
+        b.treasury = p.coins // self.rules.coins_per_point - p.debt  # Cities debt tokens are -1 VP each
         symbols, wilds = p.science(), p.science_wilds()
         b.science = self._science(i, symbols, wilds)
         if p.guild_copies():
@@ -534,7 +537,8 @@ class Game:
             pool.sort(key=_SYMBOL_ORDER.index)
             # De-duplicate (keeping order) the possible multisets of copied symbols.
             options = list(dict.fromkeys(itertools.combinations(pool, min(len(pool), p.science_copies()))))
-        return science_score(symbols, wilds, p.science_set_value(), options)
+        set_value = self.rules.science_set_points + p.science_set_bonus()
+        return science_score(symbols, wilds, set_value, options)
 
     def cached_totals(self) -> List[int]:
         """Every seat's score total, cached per engine state (``tick``).

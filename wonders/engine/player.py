@@ -166,9 +166,13 @@ class Player:
             self._cache['bank'] = sum(effect.bank_purchases() for effect in self.iter_effects())
         return self._cache['bank']  # type: ignore[return-value]
 
+    def science_set_bonus(self) -> int:
+        """Extra points per complete science set (Aristotle)."""
+        return sum(effect.science_set_bonus() for effect in self.iter_effects())
+
     def science_set_value(self) -> int:
-        """Points per complete science set: 7, plus bonuses (Aristotle)."""
-        return SCIENCE_SET_VALUE + sum(effect.science_set_bonus() for effect in self.iter_effects())
+        """Points per complete science set under the base rules: 7, plus bonuses (``Game`` uses its own rules)."""
+        return SCIENCE_SET_VALUE + self.science_set_bonus()
 
     def science_copies(self) -> int:
         return sum(effect.science_copies() for effect in self.iter_effects())

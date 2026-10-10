@@ -15,6 +15,7 @@ from wonders.agents.bench import CATEGORIES
 from wonders.cards.content import load_content
 from wonders.i18n import Translator, catalog, english, languages, msg
 from wonders.play.achievements import ACHIEVEMENTS
+from wonders.play.builder import builder_info
 from wonders.play.session import GameConfig, HumanSession, SeatConfig, menu_options
 from wonders.viz.render import card_svg, gallery_html, wonder_svg
 
@@ -75,6 +76,7 @@ def test_every_card_board_session_and_menu_text_has_a_german_translation() -> No
         wonder_svg(wonder, 1, t)
     gallery_html(content.cards[:1], content.wonders[:1], t=t)
     menu_options((), t)
+    builder_info(t)  # the expansion builder's effect, rule and choice labels
     for achievement in ACHIEVEMENTS:
         t(achievement.name)
         t(achievement.description)

@@ -193,28 +193,17 @@ existing effect types. A custom-expansion feature would make that a first-class 
 
 **Done:** loading expansions through the extension system (item 6) with `wonders ext validate |
 check`; **new card colours** declared in the expansion file (`"colors"`: label, fill, score row,
-tradeable production; `docs/extensions.md`), drawn by the card renderer and grouped in the GUI.
+tradeable production); **meta rules** an expansion may override (`"rules"`: starting / discard coins,
+coins per point, military tokens, science set bonus, guild count; `wonders/ruleset.py`); **effect
+schemas** for every effect type (`wonders/cards/schema.py`, plugins pass one to `register_effect`);
+and the **expansion builder** in `wonders gui` (`wonders/play/builder.py`): colours, cards and both
+sides of wonder boards in forms with live previews, meta rules, per-item checks, save-and-play, a
+balance check against the base game with scripted agents, and zip export. New *mechanics* stay plugin
+code (Python); the builder composes existing effect types.
 
-* **Expansion builder in the GUI** — a page in `wonders gui` to create and edit a data extension
-  without writing JSON. It only writes the same folder format a person would write by hand
-  (`~/.wonders/extensions/<id>/`), so everything downstream (validation, the menu, game records with
-  content hashes, `wonders ext check`, pull requests to `extensions/`) works unchanged. Pieces:
-  1. *Effect schemas* — a parameter description per effect type (name, type, allowed values, default,
-     help text) next to `EFFECT_BUILDERS`, with `register_effect` taking one too. The form for an
-     effect is generated from it, so plugin effects get a form as well; it also generates the effect
-     table in `docs/extensions.md` and gives `validate` precise messages.
-  2. *API* — `GET/PUT /api/builder/<id>` (manifest + expansion file), `POST /api/builder/<id>/check`
-     (runs `extensions.validate` and returns problems per card / field), `GET /api/builder/preview`
-     (the card / board SVG from `viz.render` for an unsaved spec). Writes stay on 127.0.0.1 and only
-     inside the extensions home.
-  3. *Page* — lists of colours, cards and wonder boards; a card form (name, colour, Age, cost,
-     copies per player count, chains, effects added from a type picker) with a live card preview;
-     a board form (starting resource, stages with costs and effects, side A/B); inline problems.
-  4. *Playtest* — "Play with this expansion" opens the menu with it ticked; "Balance check" runs a
-     short `bench` with scripted agents and shows win rates and how often each new card was built.
-  5. *Share* — export as a zip, and the `wonders ext check` report a pull request would get.
-  Effort: schemas ~1 day, API ~1 day, page ~2–3 days, playtest/balance ~1 day. New *mechanics* stay
-  plugin code (Python); the builder composes existing effect types.
+Next for the builder: running the full `wonders ext check` report from the page, importing a zip,
+translations of an expansion's card names (a locale file per extension), and generating the effect
+table in `docs/extensions.md` from the schemas.
 
 * **A documented effect catalogue** — every effect type with its parameters and an example card,
   generated from `EFFECT_BUILDERS`, so designers can compose new cards without reading code; a

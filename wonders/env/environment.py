@@ -249,7 +249,7 @@ class WondersEnv:
 
                 yield from self._relay(game.recruit_steps(age), keep)
                 builder.add_recruits(age, [recruited.get(i) for i in range(game.n)])
-            deck = build_age_deck(self.content, age, game.n, rng)
+            deck = build_age_deck(self.content, age, game.n, rng, game.rules.extra_guilds)
             builder.set_deck(age, [c.name for c in deck])
             yield from self._relay(game.age_steps(age, deal_hands(deck, game.n)), self._record_turn)
         game.phase = Phase.FINISHED

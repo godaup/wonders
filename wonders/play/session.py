@@ -162,12 +162,16 @@ def _asset_version() -> str:
     """A short hash of the card renderer and the card data, so browsers refetch changed images."""
     import hashlib
 
+    from wonders.extensions import REGISTRY
     from wonders.viz import render
 
     digest = hashlib.sha1(Path(render.__file__).read_bytes())
     for exp in EXPANSIONS.values():
         if exp.implemented:
             digest.update(repr([(c.name, c.effects) for c in load_content(exp.id).cards]).encode())
+    # Extension files (wonders, colours, costs) and colours redefined in the builder.
+    digest.update(repr(sorted((k, e.digest) for k, e in REGISTRY.extensions.items())).encode())
+    digest.update(repr([(c.value, c.fill, c.label) for c in Color]).encode())
     return digest.hexdigest()[:10]
 
 
