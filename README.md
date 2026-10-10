@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
   <img src="https://img.shields.io/badge/code%20style-black-000000" alt="code style: black">
   <img src="https://img.shields.io/badge/types-mypy-2a6db2" alt="type-checked with mypy">
-  <img src="https://img.shields.io/badge/expansions-base%20%C2%B7%20leaders%20%C2%B7%20cities-c8951a" alt="expansions: base, leaders, cities">
+  <img src="https://img.shields.io/badge/expansions-base%20%C2%B7%20leaders%20%C2%B7%20cities%20%C2%B7%20wonder%20pack-c8951a" alt="expansions: base, leaders, cities, wonder pack">
   <img src="https://img.shields.io/badge/PyTorch-optional-ee4c2c?logo=pytorch&logoColor=white" alt="PyTorch optional">
 </p>
 
@@ -43,6 +43,7 @@
 ## Contents
 
 * [The challenge](#the-challenge)
+* [What you can do](#what-you-can-do)
 * [What's inside](#whats-inside)
 * [Play in your browser](#play-in-your-browser)
 * [Installation](#installation)
@@ -51,6 +52,39 @@
 * [The bundled network](#the-bundled-network)
 * [Documentation](#documentation)
 * [License](#license)
+
+## What you can do
+
+🎲 **Play in your browser** against up to six opponents, from Fortuna (random) to Pythia (the
+trained network), with any mix of expansions: `wonders gui`.
+
+🔍 **Get your game analysed** like a chess engine's review: accuracy, key moments, what the better
+move was and why, replayed from the real position ([screenshot](docs/images/analysis.png)).
+
+🏆 **Climb the ladder**: every game is saved and resumable, you get an Elo rating against agents
+with fixed ratings, and 42 achievements from bronze to legendary.
+
+🧱 **Design your own expansion** in the GUI's builder: cards, new card colours, wonder boards and
+meta rules with live previews, a balance check and zip export, no JSON by hand.
+
+🧩 **Extend the game in Python**: new card effects and agents as pip-installable plugins, models and
+expansions as data folders, every contribution checked automatically on pull requests.
+
+🤖 **Write an agent**: one method, `decide(observation) -> action`, over an observation that never
+leaks hidden cards; 17 scripted agents are ready as opponents.
+
+🧠 **Train a network**: Gym- and PettingZoo-style environments with legal-action masks,
+multi-process vector envs, imitation learning, PPO with a self-play league, network-guided search.
+
+⚔️ **Take on the bundled network** head to head (`wonders train h2h`) and submit a stronger one to
+the [leaderboard](LEADERBOARD.md).
+
+📊 **Measure balance**: benchmarks with confidence intervals, and the
+[strength of every wonder side](docs/wonder-strength.md) per expansion set and player count.
+
+📜 **Record and replay** any game move by move, like PGN for chess, or branch it from any position.
+
+🃏 **Render cards and boards** as SVG from the game data (`wonders gallery`), in English or German.
 
 ## What's inside
 
@@ -96,20 +130,11 @@ Measured on one core of an Intel i5-12400F unless noted.
 
 ### And also
 
-* **Replayable game records** — like PGN for chess: every game can be saved, shared and replayed
-  move by move (`wonders play --record`, `wonders replay`, the GUI's download button).
-* **Training environments** — a fixed discrete action space with legal-action masks, a
-  PettingZoo-style multi-agent env, a Gym-style single-agent env and multi-process vector envs,
-  without depending on Gym or PettingZoo.
-* **Evaluation tools** — benchmarks with 95% confidence intervals, head-to-head comparison of
-  models at the same tables, exploitability measurement.
+* **Evaluation tools** — head-to-head comparison of models at the same tables with random seating,
+  exploitability measurement, per expansion and player count.
 * **Languages** — English and German (GUI, cards and the analysis); more are a JSON file away.
-* **Extensions** — add your own expansions, models and translations as data folders, or card effects
-  and agents as pip-installable plugins ([extensions guide](docs/extensions.md)); contributions to
-  [`extensions/`](extensions/README.md), [`plugins/`](plugins/README.md) and
-  [`wonders/i18n/`](wonders/i18n/README.md) are checked automatically on every pull request.
 * **Light** — the core is pure Python with `click` as its only runtime dependency; PyTorch is
-  only needed for the learned agent. Type-checked with mypy and covered by ~300 tests.
+  only needed for the learned agent. Type-checked with mypy and covered by ~350 tests.
 
 ## Play in your browser
 
@@ -266,9 +291,11 @@ These numbers were measured under the current rules, which the network was train
 * [Training guide](docs/training.md) — train, evaluate and compare your own agents.
 * [Extensions guide](docs/extensions.md) — custom expansions, card effects, agents, models and
   translations.
-* [Roadmap](ROADMAP.md) — planned work: stronger networks (retraining, search, expert iteration),
-  new ways to play and learn (browser version, difficulty levels, puzzles, post-game analysis,
-  translations, accessibility), expansions and extensions, and research benchmarks.
+* [Wonder strength](docs/wonder-strength.md) — how strong each wonder side is, by expansions and
+  player count.
+* [Roadmap](ROADMAP.md) — planned work: a stronger search teacher, the balance lab, Armada, new ways
+  to play and learn (browser version, difficulty levels, puzzles, table companion, accessibility)
+  and research benchmarks.
 * [Changelog](CHANGELOG.md) — what changed.
 * [Contributing](CONTRIBUTING.md) — how to contribute, and where expansions, models, translations
   and plugins go. [Leaderboard](LEADERBOARD.md) — contributed models against the bundled network.
