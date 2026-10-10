@@ -49,12 +49,6 @@ EXPANSIONS: Dict[str, Expansion] = {
         implemented=False,
         note='naval boards, fleets and naval combat are not yet mechanized',
     ),
-    'babel': Expansion(
-        'babel',
-        'Babel',
-        implemented=False,
-        note='the Tower of Babel and Great Projects modules are not yet mechanized',
-    ),
 }
 
 

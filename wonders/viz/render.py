@@ -12,7 +12,7 @@ import re
 from html import escape
 from typing import Iterable, List, Optional, Sequence, Tuple
 
-from wonders.cards.base import MANUFACTURED_GOODS, RAW_MATERIALS, Card, Color, Resource
+from wonders.cards.base import MANUFACTURED_GOODS, OFFICIAL_COLORS, RAW_MATERIALS, Card, Resource
 from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.library import (
     BuildFromDiscard,
@@ -40,28 +40,8 @@ from wonders.i18n import ENGLISH, Translator
 _W, _H = 250, 352
 
 # --- palette -------------------------------------------------------------
-CARD_FILL = {
-    Color.BROWN: '#8a5a2b',
-    Color.GREY: '#7c828a',
-    Color.BLUE: '#2f6fb0',
-    Color.YELLOW: '#d99a1c',
-    Color.RED: '#b23b3b',
-    Color.GREEN: '#3f9e5a',
-    Color.PURPLE: '#7a4fb0',
-    Color.WHITE: '#c8ccd2',
-    Color.BLACK: '#2b2f36',
-}
-CAT_NAME = {
-    Color.BROWN: 'Raw material',
-    Color.GREY: 'Manufactured good',
-    Color.BLUE: 'Civilian',
-    Color.YELLOW: 'Commercial',
-    Color.RED: 'Military',
-    Color.GREEN: 'Scientific',
-    Color.PURPLE: 'Guild',
-    Color.WHITE: 'Leader',
-    Color.BLACK: 'City',
-}
+CARD_FILL = {c: c.fill for c in OFFICIAL_COLORS}  # card colours (expansions bring their own: ``Color.fill``)
+CAT_NAME = {c: c.label for c in OFFICIAL_COLORS}
 RES_COLOR = {
     Resource.WOOD: '#5f7d22',
     Resource.STONE: '#6b7278',
@@ -415,7 +395,7 @@ def _effects_html(
 def card_svg(card: Card, t: Translator = ENGLISH) -> str:
     """A standalone, self-contained ``<svg>`` element for one card (texts translated by ``t``)."""
     uid = _slug(card.name)
-    fill = CARD_FILL[card.color]
+    fill = card.color.fill
     name = t.name(card.name)
     lines = _wrap(name, 22, 2)
     parts = [
@@ -433,7 +413,7 @@ def card_svg(card: Card, t: Translator = ENGLISH) -> str:
         f'<rect x="3" y="3" width="{_W - 6}" height="64" fill="url(#hg{uid})"/>',
         f'<rect x="3" y="65" width="{_W - 6}" height="2" fill="{_shade(fill, 0.62)}"/>',
         f'<text x="18" y="26" font-size="10" letter-spacing="1.4" fill="#ffffff" fill-opacity="0.8">'
-        f'{escape(t(CAT_NAME[card.color]).upper())}</text>',
+        f'{escape(t(card.color.label).upper())}</text>',
     ]
     if len(lines) == 1:
         parts.append(f'<text x="18" y="52" font-size="17" font-weight="700" fill="#fff">{escape(lines[0])}</text>')

@@ -83,13 +83,46 @@ An expansion file uses the same format as the bundled `wonders/cards/data/*.json
 ```
 
 * `color`: `brown`, `grey`, `yellow`, `red`, `blue`, `green`, `purple` (set `"guild": true`), `white`
-  (leaders), `black` (city cards).
+  (leaders), `black` (city cards), or a colour your expansion defines (below).
 * `at_players` lists the player counts from which a copy is in the deck (one entry per copy). Guilds
   and black cards are drawn at random instead.
 * Resources: `wood`, `stone`, `ore`, `bricks` (clay), `glass`, `linen` (loom), `paper` (papyrus).
 * An effect's optional `description` is the text the card renderer shows.
 
-`wonders ext validate` checks that every card and wonder builds, that names do not clash with the
+### New card colours
+
+An expansion can bring its own card types. Declare them under `"colors"` in the expansion file and
+use the id as a card's `color`, in effect specs that take colours (`tally`, `color_sets`,
+`build_free`, `coin_discount`, `build_income`, `resource_discount`) and in other expansions loaded
+after yours:
+
+```json
+{
+ "colors": [
+  {"id": "harbour", "label": "Harbour", "fill": "#1f8a8a", "score": "civilian", "tradeable": true}
+ ],
+ "cards": [
+  {"name": "Dock", "color": "harbour", "age": 1, "at_players": [3, 5],
+   "effects": [{"type": "production", "resources": ["wood"]}, {"type": "victory_points", "points": 1}]}
+ ]
+}
+```
+
+| key | meaning | default |
+|---|---|---|
+| `id` | lowercase letters, digits, `-` and `_` | required |
+| `label` | the card type shown on cards and as the GUI's group name (translate it in a locale file) | the id, capitalised |
+| `fill` | the card colour, `#rrggbb` | grey |
+| `score` | the scorecard row its cards' victory points go to: `civilian`, `commercial`, `guilds`, `leaders` or `cities` | `commercial` |
+| `tradeable` | neighbours may buy its cards' production, as for brown and grey cards | `false` |
+
+Cards of a new colour are dealt like other Age cards (by `at_players`); everything else a colour does
+comes from its cards' effects. The official colours cannot be redefined, and two expansions that
+define the same id must define it identically. The networks' encoders keep one feature per official
+colour, so a new colour never changes a model's input size (the bundled network still refuses new
+cards; scripted agents play them).
+
+`wonders ext validate` checks that every card and wonder builds, that new colours are well-formed, that names do not clash with the
 bundled cards or each other, and that chains point to existing cards. `wonders ext check` adds the
 contribution rules (complete manifest, data-only files, size limits), warns when new cards change
 hand sizes (hands are deck size // players, so extra Age cards leave cards undealt — guilds and

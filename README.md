@@ -62,7 +62,6 @@
 | Leaders | ✅ playable | 36 leaders with the draft and recruitment phases, 4 extra guilds, the Rome board |
 | Cities | ✅ playable | 42 black cards (debt, diplomacy, plunder, …), the Petra and Byzantium boards |
 | Armada | 🛠 planned | naval boards, ships and naval conflicts, islands |
-| Babel | 🛠 planned | the Tower of Babel and Great Projects |
 | Wonder Pack | 🛠 planned | four extra wonder boards |
 
 Expansions combine freely (any subset with the base game). Every power is mechanized and was

@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, CATEGORIES, MAX_PLAYERS, MIN_PLAYERS, agent_name
+from wonders.cards.base import Color
 from wonders.cards.content import Content, load_content
 from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.observation import Observation
@@ -201,6 +202,8 @@ def menu_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> Di
         'icons': dict(ICONS),
         'asset_version': _asset_version(),  # cache-busts card / board images when the renderer changes
         'resources': {r.value: {'icon': RES_ICON[r], 'color': RES_COLOR[r], 'name': res_name(r, t)} for r in RES_ICON},
+        # Every card colour incl. those extension expansions define (loaded above), for chips and groups.
+        'colors': {c.value: {'fill': c.fill, 'name': t(c.label), 'official': c.official} for c in Color},
         'languages': languages(),
         'lang': t.lang,
     }

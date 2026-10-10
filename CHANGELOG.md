@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* New card colours for custom expansions: an expansion file declares them under `"colors"` (label,
+  fill, scorecard row, whether neighbours may buy their production) and cards use them like the
+  official ones; the card renderer, the GUI and `wonders ext validate` support them. `Color` is now
+  an open class instead of an `Enum` (same constants and behaviour).
+* Babel is removed from the roadmap and from the list of registered expansions.
 * Contribution checks (`wonders.contrib`, `CONTRIBUTING.md`): data extensions go to `extensions/<id>/`,
   plugin packages to `plugins/<name>/` (with a complete example plugin), translations of the game to
   `wonders/i18n/<lang>.json`. `wonders ext check` validates any of them (manifest metadata, data-only

@@ -42,7 +42,7 @@ def test_starting_coins_compose():
 
 
 def test_unimplemented_and_unknown():
-    assert Ruleset.of('armada', 'babel').unimplemented == ('armada', 'babel')
+    assert Ruleset.of('armada').unimplemented == ('armada',)
     assert Ruleset.of('leaders').unimplemented == ()
     assert Ruleset.of('leaders').uses('leaders') and not Ruleset.of('leaders').uses('cities')
     with pytest.raises(ValueError):

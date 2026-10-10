@@ -280,6 +280,7 @@ def ensure_loaded() -> Registry:
 
 def _validate_expansion(folder: Path, entry: Dict[str, Any], known: Set[str]) -> List[str]:
     """Problems in one expansion file of an extension folder."""
+    from wonders.cards.base import Color
     from wonders.cards.content import build_card, build_wonder
 
     path = folder / entry.get('file', '')
@@ -290,6 +291,11 @@ def _validate_expansion(folder: Path, entry: Dict[str, Any], known: Set[str]) ->
     except Exception as exc:
         return [f'{path.name}: not valid JSON ({exc})']
     problems: List[str] = []
+    for color in raw.get('colors', []):
+        try:
+            Color.from_spec(color)
+        except Exception as exc:
+            problems.append(f"colour {color.get('id', '?') if isinstance(color, dict) else color!r}: {exc}")
     names: List[str] = []
     for spec in raw.get('cards', []):
         try:

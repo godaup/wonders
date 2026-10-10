@@ -700,6 +700,16 @@ const SHORT_GROUPS = { brown: N('Raw'), grey: N('Goods'), yellow: N('Trade'), re
   purple: N('Guild'), white: N('Lead.'), black: N('City') };
 const GROUPS = { brown: N('Raw materials'), grey: N('Manufactured'), yellow: N('Commercial'), red: N('Military'), blue: N('Civic'),
   green: N('Science'), purple: N('Guilds'), white: N('Leaders'), black: N('Cities') };
+// Card colours an expansion defines: a CSS variable and a group label each, sorted after the official ones.
+async function loadOptions() {
+  options = await api('/api/options');
+  for (const [id, c] of Object.entries(options.colors || {})) {
+    if (c.official) continue;
+    document.documentElement.style.setProperty('--c-' + id, c.fill);
+    if (!COLORS.includes(id)) COLORS.push(id);
+    GROUPS[id] = SHORT_GROUPS[id] = c.name;
+  }
+}
 function cityGroups(names) {
   const by = {};
   for (const n of names) { const c = ((state.cards || {})[n] || {}).color || 'unknown'; (by[c] = by[c] || []).push(n); }
@@ -1385,7 +1395,7 @@ function renderLanguages() {
 }
 $('h-lang').addEventListener('change', async (e) => {
   await loadLanguage(e.target.value);
-  options = await api('/api/options');
+  await loadOptions();
   state = (await api('/api/state')).state;
   renderLanguages();
   const current = page();
@@ -1397,8 +1407,8 @@ $('h-lang').addEventListener('change', async (e) => {
 (async function init() {
   const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
   await loadLanguage(new URLSearchParams(location.search).get('lang') || store.get('lang', null) || browser);
-  options = await api('/api/options');
-  if (!(lang in (options.languages || {}))) { await loadLanguage('en'); options = await api('/api/options'); }
+  await loadOptions();
+  if (!(lang in (options.languages || {}))) { await loadLanguage('en'); await loadOptions(); }
   renderLanguages();
   menu = store.get('menu', null) || JSON.parse(JSON.stringify(options.defaults));
   if (!menu.seats || !menu.seats.some((s) => s.player === 'human')) menu = JSON.parse(JSON.stringify(options.defaults));

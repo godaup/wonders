@@ -284,8 +284,14 @@ coins), `GainToken` (immediate military token). `Tally` also gained `coins`
 metrics. Leader (white) cards are drafted separately so `build_age_deck` excludes
 them (`Content.leaders()`); Cities (black) cards carry **no player-count numerals** —
 `build_age_deck` draws `n_players` random black cards per Age (one extra card per
-player, so Cities deals 8 not 7). `armada`/`babel` are registered but flagged
-`implemented=False` (`Ruleset.unimplemented`).
+player, so Cities deals 8 not 7). `armada` is registered but flagged
+`implemented=False` (`Ruleset.unimplemented`). Babel is not planned.
+
+`Color` is an open, interned class (not an `Enum`): the nine official colours are constants
+(`OFFICIAL_COLORS`, fixed order), and an expansion file's `"colors"` entries define more
+(`Color.from_spec`, via `content.define_colors` before its cards are built). A colour carries
+`label`, `fill`, `score` (the `ScoreBreakdown` column its cards' VP go to) and `tradeable` (neighbours
+may buy its production, as for brown/grey). Encoders keep one feature per *official* colour only.
 
 `leaders.json` (36 leaders) and `cities.json` (42 black cards) hold the **official
 functional decks** (costs/effects/counts), and **every power is mechanized** — no

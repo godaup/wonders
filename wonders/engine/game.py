@@ -474,21 +474,12 @@ class Game:
             for effect in stage.effects:
                 b.wonders += effect.victory_points(ctx)
 
-        # Card victory points, bucketed by colour for a readable breakdown.
+        # Card victory points, bucketed by colour for a readable breakdown (each colour names its column).
         for card in p.cards:
             vp = sum(effect.victory_points(ctx) for effect in card.effects)
-            if not vp:
-                continue
-            if card.color is Color.BLUE:
-                b.civilian += vp
-            elif card.color is Color.PURPLE:
-                b.guilds += vp
-            elif card.color is Color.WHITE:
-                b.leaders += vp
-            elif card.color is Color.BLACK:
-                b.cities += vp
-            else:
-                b.commercial += vp
+            if vp:
+                column = card.color.score
+                setattr(b, column, getattr(b, column) + vp)
         for card in p.copied_leaders:  # Courtesans' Guild copies score as leaders
             b.leaders += sum(effect.victory_points(ctx) for effect in card.effects)
         return b
