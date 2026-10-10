@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, CATEGORIES, MAX_PLAYERS, MIN_PLAYERS, agent_name
+from wonders.cards.base import Color
 from wonders.cards.content import Content, load_content
 from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.observation import Observation
@@ -161,12 +162,16 @@ def _asset_version() -> str:
     """A short hash of the card renderer and the card data, so browsers refetch changed images."""
     import hashlib
 
+    from wonders.extensions import REGISTRY
     from wonders.viz import render
 
     digest = hashlib.sha1(Path(render.__file__).read_bytes())
     for exp in EXPANSIONS.values():
         if exp.implemented:
             digest.update(repr([(c.name, c.effects) for c in load_content(exp.id).cards]).encode())
+    # Extension files (wonders, colours, costs) and colours redefined in the builder.
+    digest.update(repr(sorted((k, e.digest) for k, e in REGISTRY.extensions.items())).encode())
+    digest.update(repr([(c.value, c.fill, c.label) for c in Color]).encode())
     return digest.hexdigest()[:10]
 
 
@@ -201,6 +206,8 @@ def menu_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> Di
         'icons': dict(ICONS),
         'asset_version': _asset_version(),  # cache-busts card / board images when the renderer changes
         'resources': {r.value: {'icon': RES_ICON[r], 'color': RES_COLOR[r], 'name': res_name(r, t)} for r in RES_ICON},
+        # Every card colour incl. those extension expansions define (loaded above), for chips and groups.
+        'colors': {c.value: {'fill': c.fill, 'name': t(c.label), 'official': c.official} for c in Color},
         'languages': languages(),
         'lang': t.lang,
     }

@@ -21,6 +21,19 @@ to [`plugins/`](../plugins/README.md) and translations of the game to
 [`wonders/i18n/`](../wonders/i18n/README.md) (overview in [CONTRIBUTING](../CONTRIBUTING.md)).
 `wonders ext check` runs the same check locally.
 
+## Quick start: the expansion builder
+
+The easiest way to make an expansion is the **expansion builder** in the browser GUI: run `wonders gui`
+and click "Expansion builder". It edits everything below in forms: card colours, cards (cost, copies
+per player count, chains, effects picked from the effect catalogue with a live card preview), wonder
+boards (both sides, stages, board powers, with a live board preview) and the meta rules. "Check" shows
+problems on the item they belong to; "Save" writes the extension folder and loads it, so the game menu
+offers it at once; "Test & share" plays it against the computer opponents, runs a balance check
+(scripted agents play with and without the expansion on the same seeds: score shifts, how often each
+new card is built and how its builders place, how the new wonders do) and downloads the folder as a
+zip. The builder writes exactly the format below, so a builder-made expansion can be edited by hand
+and vice versa, and contributed like any other.
+
 ## Quick start: a folder extension
 
 ```
@@ -54,7 +67,7 @@ my-expansion/
  "license": "CC-BY-4.0",
  "description": "A custom expansion.",
  "rules_version": 2,
- "expansions": [{"id": "my-expansion", "name": "My Expansion", "file": "cards.json", "starting_coins": 3}],
+ "expansions": [{"id": "my-expansion", "name": "My Expansion", "file": "cards.json"}],
  "models": [{"name": "mynet", "file": "mynet.pt", "description": "Trained on my expansion"}],
  "locales": [{"lang": "de", "file": "de.json"}]
 }
@@ -83,13 +96,72 @@ An expansion file uses the same format as the bundled `wonders/cards/data/*.json
 ```
 
 * `color`: `brown`, `grey`, `yellow`, `red`, `blue`, `green`, `purple` (set `"guild": true`), `white`
-  (leaders), `black` (city cards).
+  (leaders), `black` (city cards), or a colour your expansion defines (below).
 * `at_players` lists the player counts from which a copy is in the deck (one entry per copy). Guilds
   and black cards are drawn at random instead.
 * Resources: `wood`, `stone`, `ore`, `bricks` (clay), `glass`, `linen` (loom), `paper` (papyrus).
 * An effect's optional `description` is the text the card renderer shows.
 
-`wonders ext validate` checks that every card and wonder builds, that names do not clash with the
+### New card colours
+
+An expansion can bring its own card types. Declare them under `"colors"` in the expansion file and
+use the id as a card's `color`, in effect specs that take colours (`tally`, `color_sets`,
+`build_free`, `coin_discount`, `build_income`, `resource_discount`) and in other expansions loaded
+after yours:
+
+```json
+{
+ "colors": [
+  {"id": "harbour", "label": "Harbour", "fill": "#1f8a8a", "score": "civilian", "tradeable": true}
+ ],
+ "cards": [
+  {"name": "Dock", "color": "harbour", "age": 1, "at_players": [3, 5],
+   "effects": [{"type": "production", "resources": ["wood"]}, {"type": "victory_points", "points": 1}]}
+ ]
+}
+```
+
+| key | meaning | default |
+|---|---|---|
+| `id` | lowercase letters, digits, `-` and `_` | required |
+| `label` | the card type shown on cards and as the GUI's group name (translate it in a locale file) | the id, capitalised |
+| `fill` | the card colour, `#rrggbb` | grey |
+| `score` | the scorecard row its cards' victory points go to: `civilian`, `commercial`, `guilds`, `leaders` or `cities` | `commercial` |
+| `tradeable` | neighbours may buy its cards' production, as for brown and grey cards | `false` |
+
+Cards of a new colour are dealt like other Age cards (by `at_players`); everything else a colour does
+comes from its cards' effects. The official colours cannot be redefined, and two expansions that
+define the same id must define it identically. The networks' encoders keep one feature per official
+colour, so a new colour never changes a model's input size (the bundled network still refuses new
+cards; scripted agents play them).
+
+### Meta rules
+
+The numbers the engine itself fixes can be changed by an expansion under `"rules"` in its file,
+either set to a value or changed by an amount (`{"add": n}`, negative to lower it):
+
+```json
+{"rules": {"starting_coins": {"add": 2}, "discard_coins": 2}, "cards": [...]}
+```
+
+| rule | base game | meaning |
+|---|---|---|
+| `starting_coins` | 3 | coins every player starts with (Leaders sets 6) |
+| `discard_coins` | 3 | coins for discarding a card |
+| `coins_per_point` | 3 | at the end, one victory point per this many coins |
+| `science_set_points` | 7 | victory points per complete set of the three science symbols |
+| `victory_age_1` / `_2` / `_3` | 1 / 3 / 5 | victory points of a military victory token in each Age |
+| `defeat_points` | -1 | victory points of a military defeat token |
+| `extra_guilds` | 2 | Age III deals as many guilds as players plus this number |
+
+Rules combine in a fixed order, whatever order the expansions were chosen in: the base game, the
+bundled expansions (Leaders, Cities), then extension expansions by id. Starting from the base value,
+each `{"add": n}` changes the value so far and each plain number replaces it, so changes from several
+expansions add up (with Leaders, which sets 6 starting coins, `{"add": 2}` gives 8), and the result is
+clamped to the rule's range. The older manifest key `starting_coins` still works as a shorthand for
+setting it. The scripted agents value military tokens with the base game's numbers.
+
+`wonders ext validate` checks that every card and wonder builds, that new colours are well-formed, that names do not clash with the
 bundled cards or each other, and that chains point to existing cards. `wonders ext check` adds the
 contribution rules (complete manifest, data-only files, size limits), warns when new cards change
 hand sizes (hands are deck size // players, so extra Age cards leave cards undealt — guilds and
@@ -163,6 +235,7 @@ my-plugin = "my_plugin:register"
 ```python
 from wonders.agents import GreedyAgent
 from wonders.agents.bench import AgentSpec
+from wonders.cards.schema import EffectSchema, Param
 from wonders.effects.base import Effect
 
 MANIFEST = {'id': 'my-plugin', 'name': 'My plugin', 'rules_version': 2}
@@ -178,13 +251,21 @@ class Tithe(Effect):
         return ctx.player.coins // self.per
 
 
+TITHE = EffectSchema(  # optional: lets the GUI's expansion builder offer a form for the effect
+    'Tithe', 'Points', '1 victory point per this many coins at the end.', (Param('per', 'int', 'Coins', required=True),)
+)
+
+
 def register(registry):
-    registry.register_effect('tithe', lambda spec: Tithe(spec['per']))
+    registry.register_effect('tithe', lambda spec: Tithe(spec['per']), schema=TITHE)
     registry.register_agent(AgentSpec.of('greedy-plus', GreedyAgent), blurb='My greedy variant.')
     # registry.register_expansion('my-cards', 'My cards', '/path/to/cards.json')
     # registry.register_model('mynet', '/path/to/mynet.pt', 'description')
     # registry.register_locale('de', {'key': 'Text'})
 ```
+
+An effect type registered without a `schema` (a `wonders.cards.schema.EffectSchema`: label, group,
+help and its parameters) still works everywhere; the expansion builder then edits its fields as JSON.
 
 Effects compose behaviour through the uniform hooks of `wonders.effects.base.Effect`
 (`production`, `shields`, `science`, `victory_points`, `coins_on_build`, `on_build`, …); the engine

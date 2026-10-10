@@ -11,10 +11,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Dict, List, Sequence
 
-from wonders.cards.base import Color, ScienceSymbol
+from wonders.cards.base import OFFICIAL_COLORS, ScienceSymbol
 from wonders.engine.observation import CityView, Observation
 
-_COLORS = [c.value for c in Color]
+_COLORS = [c.value for c in OFFICIAL_COLORS]  # fixed: expansion colours must not resize inputs
 _SYMBOLS = [s.value for s in ScienceSymbol]
 
 

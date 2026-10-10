@@ -122,7 +122,7 @@ def test_config_round_trip():
 def test_menu_options():
     menu = menu_options()
     ids = {e['id']: e for e in menu['expansions']}
-    assert {'base', 'leaders', 'cities', 'armada', 'babel'} <= set(ids)
+    assert {'base', 'leaders', 'cities', 'armada'} <= set(ids)
     assert ids['armada']['implemented'] is False and ids['armada']['wonders'] == []
     assert 'The Colosseum of Rome' in ids['leaders']['wonders']
     agents = {a['id'] for a in menu['agents']}

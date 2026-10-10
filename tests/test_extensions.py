@@ -10,6 +10,7 @@ import wonders.extensions as extensions
 from wonders import cli
 from wonders.agents.bench import AGENTS, AgentSpec
 from wonders.agents.match import play_match
+from wonders.cards.base import Color, Resource
 from wonders.cards.content import EFFECT_BUILDERS, load_content
 from wonders.effects.library import VictoryPoints
 from wonders.engine.record import GameRecord, PlayerSetup
@@ -20,6 +21,7 @@ from wonders.ruleset import EXPANSIONS, Ruleset
 def isolated(monkeypatch, tmp_path):
     """A fresh registry and extensions home; every global the extensions touch is restored afterwards."""
     snapshot = (dict(EXPANSIONS), dict(EFFECT_BUILDERS), dict(AGENTS))
+    monkeypatch.setattr(Color, '_members', dict(Color._members))  # colours the extensions define
     monkeypatch.setattr(extensions, 'REGISTRY', extensions.Registry())
     monkeypatch.setattr(extensions, '_LOADED', False)
     monkeypatch.setenv(extensions.HOME_VARIABLE, str(tmp_path / 'home'))
@@ -89,6 +91,90 @@ def test_games_with_an_extension_expansion_pin_it_in_the_record(isolated):
     assert 'differs' in again.check_extensions()[0]
     with pytest.warns(UserWarning, match='replay may differ'):
         again.replay(content)
+
+
+HARBOUR = {'id': 'harbour', 'label': 'Harbour', 'fill': '#1f8a8a', 'score': 'civilian', 'tradeable': True}
+
+
+def test_an_expansion_defines_a_new_card_colour(isolated):
+    from wonders.agents import GreedyAgent
+    from wonders.agents.encoders import _COLORS, CardEncoder
+    from wonders.cards.library import wonder_gizah_a, wonder_rhodes_a
+    from wonders.engine.game import Game
+    from wonders.engine.player import Player
+    from wonders.play.session import menu_options
+    from wonders.viz.render import card_svg
+
+    folder = extensions.scaffold(isolated / 'home' / 'docks', 'docks', 'Docks')
+    width = CardEncoder([c.name for c in load_content('base').cards]).size
+    data = _cards(folder)
+    data['colors'] = [HARBOUR]
+    data['cards'].append(
+        {
+            'name': 'Dock',
+            'color': 'harbour',
+            'age': 1,
+            'at_players': [3, 4],
+            'effects': [{'type': 'production', 'resources': ['wood']}, {'type': 'victory_points', 'points': 2}],
+        }
+    )
+    data['cards'].append(
+        {
+            'name': 'Harbour Master',
+            'color': 'blue',
+            'age': 2,
+            'at_players': [3],
+            'effects': [{'type': 'tally', 'what': 'colors', 'scope': 'self', 'colors': ['harbour'], 'vp_each': 1}],
+        }
+    )
+    (folder / 'cards.json').write_text(json.dumps(data))
+    assert extensions.validate(folder) == []
+    content = load_content('base', 'docks')
+    harbour = Color('harbour')
+    assert content.card('Dock').color is harbour and harbour in list(Color) and not harbour.official
+    assert (harbour.label, harbour.fill, harbour.score, harbour.tradeable) == ('Harbour', '#1f8a8a', 'civilian', True)
+    assert '#1f8a8a' in card_svg(content.card('Dock')) and 'HARBOUR' in card_svg(content.card('Dock'))
+    colors = menu_options()['colors']
+    assert colors['harbour'] == {'fill': '#1f8a8a', 'name': 'Harbour', 'official': False}
+    assert colors['brown']['official']
+
+    # Scored in the colour's column; its production is tradeable like brown / grey.
+    game = Game([Player('P0', wonder_gizah_a()), Player('P1', wonder_rhodes_a())])
+    game.players[1].add_card(content.card('Dock'))
+    assert frozenset({Resource.WOOD}) in game.players[1].tradeable_slots()
+    assert game.score(1).civilian == 2
+
+    setups = [
+        PlayerSetup(n, w, 'A')
+        for n, w in zip('ABC', ['The Pyramids of Giza', 'The Colossus of Rhodes', 'The Temple of Artemis in Ephesus'])
+    ]
+    played, record = play_match(content, setups, [GreedyAgent() for _ in setups], random.Random(3), ('base', 'docks'))
+    assert [record.replay(content).score(i).total for i in range(3)] == [played.score(i).total for i in range(3)]
+    assert CardEncoder([c.name for c in load_content('base').cards]).size == width and len(_COLORS) == 9  # same inputs
+
+
+def test_bad_colours_are_reported(isolated):
+    folder = extensions.scaffold(isolated / 'odd', 'odd')
+    data = _cards(folder)
+    data['colors'] = [
+        {'id': 'Teal!', 'fill': '#123456'},
+        {'id': 'mauve', 'fill': 'pink'},
+        {'id': 'ochre', 'score': 'military'},
+        {'id': 'brown', 'fill': '#000000'},  # official colours cannot be redefined
+        {'id': 'rose', 'shade': 1},
+    ]
+    data['cards'][0]['color'] = 'violet'
+    (folder / 'cards.json').write_text(json.dumps(data))
+    problems = '\n'.join(extensions.validate(folder))
+    for needle in (
+        'bad colour id',
+        'fill must look like',
+        'score must be one of',
+        'already defined',
+        'shade',
+        'violet',
+    ):
+        assert needle in problems
 
 
 def test_plugins_add_effects_and_agents(isolated):

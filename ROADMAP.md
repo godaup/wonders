@@ -180,18 +180,6 @@ against the official rulebook before implementing it (as was done for Leaders an
 * Engine: a per-build optional "advance a ship" payment, the naval conflict resolution, island
   decks; observation / encoder: ship positions per seat, naval strength, islands owned.
 
-### Babel (registered, `implemented=False`)
-
-Two independent modules:
-
-* **Tower of Babel** — law tiles drafted at the start and placed on a shared tower during the game;
-  the top three active tiles change rules for everyone (costs, trade, military, science, …).
-  Engine: a tile draft, a "place a tile instead of playing a card" action, rule modifiers as
-  global effects queried through the existing hooks.
-* **Great Projects** — a shared project card per Age that players join by building cards of its
-  colour (paying a participation token); completing it rewards participants, failing it penalises
-  them. Engine: per-Age project state, participation payments, end-of-Age resolution.
-
 ### Wonder Pack (not yet registered)
 
 Four extra wonder boards (Great Wall, Stonehenge, Manneken Pis, Abu Simbel) with unusual stage
@@ -201,10 +189,22 @@ plus a few board powers; a natural first step because it reuses the existing tur
 ### Custom expansions
 
 Content is already data, so new cards and boards need no engine changes as long as they use the
-existing effect types. A custom-expansion feature would make that a first-class workflow:
+existing effect types. A custom-expansion feature would make that a first-class workflow.
 
-* **Load your own expansion** — through the extension system (item 6): a JSON expansion dropped
-  into the expansions folder, or a pip-installed plugin when it brings new mechanics.
+**Done:** loading expansions through the extension system (item 6) with `wonders ext validate |
+check`; **new card colours** declared in the expansion file (`"colors"`: label, fill, score row,
+tradeable production); **meta rules** an expansion may override (`"rules"`: starting / discard coins,
+coins per point, military tokens, science set bonus, guild count; `wonders/ruleset.py`); **effect
+schemas** for every effect type (`wonders/cards/schema.py`, plugins pass one to `register_effect`);
+and the **expansion builder** in `wonders gui` (`wonders/play/builder.py`): colours, cards and both
+sides of wonder boards in forms with live previews, meta rules, per-item checks, save-and-play, a
+balance check against the base game with scripted agents, and zip export. New *mechanics* stay plugin
+code (Python); the builder composes existing effect types.
+
+Next for the builder: running the full `wonders ext check` report from the page, importing a zip,
+translations of an expansion's card names (a locale file per extension), and generating the effect
+table in `docs/extensions.md` from the schemas.
+
 * **A documented effect catalogue** — every effect type with its parameters and an example card,
   generated from `EFFECT_BUILDERS`, so designers can compose new cards without reading code; a
   validator that reports unknown effects, broken chains and deck sizes that do not match the
@@ -224,6 +224,7 @@ existing effect types. A custom-expansion feature would make that a first-class 
 * **7 Wonders, 2nd edition** (2020) — different card set, Edifice expansion and some rule changes;
   it would be a separate ruleset rather than an expansion of this one.
 * **7 Wonders Duel** — a different two-player game.
+* **Babel** — dropped (October 2026); custom expansions get the effort instead.
 
 ## 6. Extensions: custom expansions, agents and models
 

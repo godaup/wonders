@@ -299,6 +299,89 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
   .games th, .games td { padding: 6px 4px; }
 }
 
+/* expansion builder */
+#builder { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 12px; align-items: start; }
+.b-side { display: grid; gap: 8px; position: sticky; top: 64px; }
+.b-side #b-projects { display: grid; gap: 6px; }
+.b-project { display: grid; text-align: left; gap: 1px; }
+.b-project.active, .b-item.active, .b-tab.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+.b-home { font-size: 11px; overflow-wrap: anywhere; }
+.b-main { display: grid; gap: 12px; min-width: 0; }
+#b-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; position: sticky; top: 52px; z-index: 3; }
+#b-bar h2 { font-size: 17px; margin-right: 6px; }
+#b-tabs { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+.b-tab { display: inline-flex; align-items: center; gap: 6px; }
+.b-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.b-dot.err { background: var(--red); }
+.b-dot.warn { background: var(--gold); }
+.b-unsaved { color: var(--gold); font-weight: 600; }
+.b-stack { display: grid; gap: 12px; align-content: start; }
+.b-stack h3, .b-list h3 { font-size: 15px; margin-bottom: 6px; }
+.b-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); gap: 10px 14px; align-items: start; }
+.b-wide { grid-column: 1 / -1; }
+.b-field { display: grid; gap: 3px; min-width: 0; }
+.b-field input[type=text], .b-field textarea, .b-field select { width: 100%; }
+.b-field small { font-size: 11px; }
+.b-label { font-size: 12px; color: var(--muted); }
+.b-help { font-size: 12px; margin: 0 0 8px; }
+.b-check { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+textarea { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; min-height: 60px; resize: vertical; }
+textarea.bad { border-color: var(--red); }
+.b-json { font-family: ui-monospace, monospace; font-size: 12px; min-height: 80px; }
+input.tiny { width: 48px; padding: 3px 4px; }
+button.tiny { font-size: 12px; padding: 2px 8px; }
+input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.b-split { display: grid; grid-template-columns: 240px minmax(0, 1fr) 270px; gap: 12px; align-items: start; }
+.b-split.wonders { grid-template-columns: 240px minmax(0, 1fr); }
+.b-list { display: grid; gap: 8px; position: sticky; top: 120px; max-height: calc(100vh - 140px); overflow: auto; }
+.b-list-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.b-items { display: grid; gap: 4px; }
+.b-item { display: flex; align-items: center; gap: 8px; text-align: left; }
+.b-item span:not(.b-dot) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.b-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2); }
+.b-editor { display: grid; gap: 12px; }
+.b-preview { position: sticky; top: 120px; display: grid; gap: 6px; }
+.b-preview-card { width: 100%; border-radius: 12px; box-shadow: var(--shadow); }
+.b-preview-board { width: 100%; border-radius: 10px; box-shadow: var(--shadow); }
+.b-note { font-size: 12px; margin: 0; }
+.b-cost, .b-res { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.b-resin { display: inline-flex; align-items: center; gap: 3px; }
+.b-toggles { display: flex; flex-wrap: wrap; gap: 4px; }
+.b-toggle { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--panel-2); font-size: 12px; }
+.b-slots { display: grid; gap: 6px; }
+.b-slot { display: flex; gap: 6px; align-items: center; }
+.b-effects { display: grid; gap: 8px; }
+.b-effects-head { display: flex; justify-content: space-between; align-items: center; }
+.b-effect { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); }
+.b-effect-head { display: flex; gap: 6px; align-items: center; }
+.b-effect-head .b-type { flex: 1; min-width: 0; }
+.b-stage { display: grid; gap: 8px; padding: 10px; border: 1px dashed var(--line); border-radius: 10px; }
+.b-sides { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 12px; align-items: start; }
+.b-side-box { display: grid; gap: 10px; align-content: start; }
+.b-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.b-problem { font-size: 12px; padding: 4px 8px; border-radius: 6px; margin-top: 4px; }
+.b-problem.error { background: color-mix(in srgb, var(--red) 12%, transparent); color: var(--red); }
+.b-problem.warning { background: color-mix(in srgb, var(--gold) 14%, transparent); }
+.b-problems { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.b-problems li.error a { color: var(--red); font-weight: 600; }
+.b-problems li.warning a { color: var(--gold); font-weight: 600; }
+.b-rules tr.set td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.b-rules input { width: 90px; }
+.b-rule { display: flex; gap: 6px; align-items: center; }
+.b-intro { max-width: 640px; display: grid; gap: 10px; justify-items: start; }
+/* single-column grids must not grow with their widest control (long effect names, phones) */
+.b-effects, .b-effect, .b-stage, .b-side-box, .b-editor, .b-stack, .b-field { grid-template-columns: minmax(0, 1fr); }
+#builder select, #builder input[type=text], #builder textarea { max-width: 100%; }
+@media (max-width: 1250px) { .b-split { grid-template-columns: 220px minmax(0, 1fr); } .b-preview { grid-column: 2; position: static; max-width: 260px; } }
+@media (max-width: 860px) {
+  #builder, .b-split, .b-split.wonders { grid-template-columns: minmax(0, 1fr); }
+  .b-side, .b-list, .b-preview, #b-bar { position: static; max-height: none; }
+  .b-preview { grid-column: auto; }
+  #b-bar h2, #b-tabs { flex-basis: 100%; }
+  .b-split > *, .b-stack > *, .b-sides > * { min-width: 0; }
+}
+
 /* viewer */
 #viewer { position: fixed; inset: 0; background: rgba(10, 14, 20, .6); display: grid; place-items: center; z-index: 20; }
 #viewer img { max-width: min(92vw, 520px); max-height: 88vh; border-radius: 14px; }
@@ -333,6 +416,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
     <button id="btn-record" class="hidden" data-i18n>Download record</button>
     <button id="btn-games" class="hidden" data-i18n>Past games</button>
     <button id="btn-achievements" class="hidden" data-i18n>Achievements</button>
+    <button id="btn-builder" data-i18n>Expansion builder</button>
     <button id="btn-menu" class="hidden" data-i18n>New game</button>
   </div>
 </header>
@@ -437,6 +521,24 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
       <div id="a-grid"></div>
     </div>
   </section>
+  <section id="builder" class="hidden">
+    <aside class="panel b-side">
+      <p class="section-title" data-i18n>Your expansions</p>
+      <div id="b-projects"></div>
+      <button id="b-new" data-i18n>New expansion</button>
+      <p class="muted b-home" id="b-home"></p>
+    </aside>
+    <div class="b-main">
+      <div class="panel hidden" id="b-bar">
+        <h2 id="b-title"></h2>
+        <div id="b-tabs"></div>
+        <span id="b-state" class="muted"></span>
+        <button id="b-check" data-i18n>Check</button>
+        <button id="b-save" class="primary" data-i18n>Save</button>
+      </div>
+      <div id="b-body"></div>
+    </div>
+  </section>
 </main>
 
 <div id="viewer" class="hidden"><img alt=""></div>
@@ -526,8 +628,8 @@ async function api(path, body) {
 const assetV = () => '&v=' + ((options && options.asset_version) || '0') + '&lang=' + encodeURIComponent(lang);
 const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name) + assetV();
 const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + (built || 0) + assetV();
-const PAGES = ['menu', 'game', 'result', 'history', 'achievements'];
-const HASHES = { history: '#games', achievements: '#achievements' };  // pages a reload or link can open
+const PAGES = ['menu', 'game', 'result', 'history', 'achievements', 'builder'];
+const HASHES = { history: '#games', achievements: '#achievements', builder: '#builder' };  // pages a reload or link can open
 const show = (id) => {
   PAGES.forEach((s) => $(s).classList.toggle('hidden', s !== id));
   const hash = HASHES[id] || '';
@@ -700,6 +802,16 @@ const SHORT_GROUPS = { brown: N('Raw'), grey: N('Goods'), yellow: N('Trade'), re
   purple: N('Guild'), white: N('Lead.'), black: N('City') };
 const GROUPS = { brown: N('Raw materials'), grey: N('Manufactured'), yellow: N('Commercial'), red: N('Military'), blue: N('Civic'),
   green: N('Science'), purple: N('Guilds'), white: N('Leaders'), black: N('Cities') };
+// Card colours an expansion defines: a CSS variable and a group label each, sorted after the official ones.
+async function loadOptions() {
+  options = await api('/api/options');
+  for (const [id, c] of Object.entries(options.colors || {})) {
+    if (c.official) continue;
+    document.documentElement.style.setProperty('--c-' + id, c.fill);
+    if (!COLORS.includes(id)) COLORS.push(id);
+    GROUPS[id] = SHORT_GROUPS[id] = c.name;
+  }
+}
 function cityGroups(names) {
   const by = {};
   for (const n of names) { const c = ((state.cards || {})[n] || {}).color || 'unknown'; (by[c] = by[c] || []).push(n); }
@@ -891,11 +1003,13 @@ function setHeader() {
   $('btn-record').classList.toggle('hidden', !state || !inGame);
   $('btn-games').classList.toggle('hidden', !options || !options.saving || current === 'history');
   $('btn-achievements').classList.toggle('hidden', !options || !options.saving || current === 'achievements');
+  $('btn-builder').classList.toggle('hidden', current === 'builder' || current === 'game');
   $('m-resume').classList.toggle('hidden', !state || state.done);
   $('h-discard').classList.toggle('hidden', !state || current !== 'game');
   if (state && state.observation) $('h-discard-n').textContent = t('{n} discarded', { n: state.observation.discard_count });
-  if (current === 'history' || current === 'achievements') {
-    $('status').replaceChildren(el('b', {}, t(current === 'history' ? N('Past games') : N('Achievements')))); return;
+  if (current === 'history' || current === 'achievements' || current === 'builder') {
+    const title = { history: N('Past games'), achievements: N('Achievements'), builder: N('Expansion builder') }[current];
+    $('status').replaceChildren(el('b', {}, t(title))); return;
   }
   if (!state || inMenu) { $('status').textContent = ''; return; }
   if (state.done) { $('status').replaceChildren(el('b', {}, t('Game over'))); return; }
@@ -1385,20 +1499,521 @@ function renderLanguages() {
 }
 $('h-lang').addEventListener('change', async (e) => {
   await loadLanguage(e.target.value);
-  options = await api('/api/options');
+  await loadOptions();
   state = (await api('/api/state')).state;
   renderLanguages();
   const current = page();
   if (current === 'menu') openMenu(); else if (current === 'history') openHistory();
-  else if (current === 'achievements') openAchievements(); else render();
+  else if (current === 'achievements') openAchievements(); else if (current === 'builder') openBuilder(); else render();
   if (state && state.done) pollAnalysis();
 });
+
+/* ---------- expansion builder: colours, cards, wonder boards and meta rules of a data extension ---------- */
+let builder = null;  // { info, projects, project, previousId, isNew, idTouched, tab, dirty, card, wonder, check, balance }
+const B_TABS = [['overview', N('Overview')], ['colors', N('Colours')], ['cards', N('Cards')], ['wonders', N('Wonders')],
+  ['test', N('Test & share')]];
+const B_SECTIONS = { general: 'overview', rules: 'overview', colors: 'colors', cards: 'cards', wonders: 'wonders' };
+const debounce = (fn, ms) => { let timer = null; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); }; };
+const slug = (s) => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+const svgSrc = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
+async function openBuilder() {
+  show('builder'); setHeader();
+  try {
+    const data = await api('/api/builder');
+    builder = { ...(builder || { tab: 'overview', project: null }), info: data.info, projects: data.projects };
+    renderBuilder();
+  } catch (e) { $('b-body').replaceChildren(el('p', { class: 'error' }, e.message)); }
+}
+function blankProject() {
+  return { id: '', name: '', version: '0.1.0', author: '', license: 'CC-BY-4.0', description: '', rules: {}, colors: [], cards: [], wonders: [] };
+}
+function leaveDraft() { return !builder.dirty || confirm(t('Discard the unsaved changes?')); }
+function newProject() {
+  if (!leaveDraft()) return;
+  Object.assign(builder, { project: blankProject(), previousId: '', isNew: true, idTouched: false, tab: 'overview', dirty: false,
+    card: null, wonder: null, check: null, balance: null });
+  renderBuilder();
+}
+async function loadProject(id) {
+  if (!leaveDraft()) return;
+  try {
+    const { project } = await api('/api/builder/project?id=' + encodeURIComponent(id));
+    Object.assign(builder, { project, previousId: project.id, isNew: false, idTouched: true, dirty: false,
+      card: project.cards.length ? 0 : null, wonder: project.wonders.length ? project.wonders[0].name : null, check: null, balance: null });
+    renderBuilder(); runCheck();
+  } catch (e) { alert(e.message); }
+}
+async function saveProject() {
+  const p = builder.project;
+  try {
+    setBusy(true, t('Saving…'));
+    const res = await api('/api/builder/save', { project: p, previous_id: builder.isNew ? '' : builder.previousId });
+    Object.assign(builder, { project: res.project, previousId: res.project.id, isNew: false, idTouched: true, dirty: false,
+      check: res.check, projects: res.projects });
+    await loadOptions();  // the menu offers the expansion (and its colours) right away
+    renderBuilder();
+  } catch (e) { alert(e.message); }
+  finally { setBusy(false); }
+}
+async function deleteProject() {
+  const p = builder.project;
+  if (!confirm(t('Delete the expansion "{name}" and its folder for good?', { name: p.name || p.id }))) return;
+  try {
+    const res = await api('/api/builder/delete', { id: builder.previousId });
+    Object.assign(builder, { project: null, projects: res.projects, dirty: false });
+    menu.expansions = menu.expansions.filter((x) => x !== p.id);
+    await loadOptions(); renderBuilder();
+  } catch (e) { alert(e.message); }
+}
+const runCheck = debounce(async () => {
+  if (!builder || !builder.project) return;
+  try { builder.check = await api('/api/builder/check', { project: builder.project }); renderStatus(); renderMarks(); }
+  catch (e) { /* the check is advisory */ }
+}, 600);
+function changed() { builder.dirty = true; renderStatus(); runCheck(); }
+
+/* ---------- small form helpers (inputs write straight into the project; no re-render while typing) ---------- */
+function bField(label, input, help) {
+  return el('label', { class: 'b-field' }, el('span', { class: 'b-label' }, label), input, help ? el('small', { class: 'muted' }, help) : null);
+}
+function bText(obj, key, opts = {}) {
+  return el(opts.area ? 'textarea' : 'input', { type: 'text', value: obj[key] || '', placeholder: opts.placeholder || '', list: opts.list,
+    oninput: (e) => { const v = e.target.value; if (v || opts.keep) obj[key] = v; else delete obj[key]; changed(); if (opts.after) opts.after(v); },
+    onchange: opts.done || null }, opts.area ? obj[key] || '' : null);
+}
+function bNum(obj, key, opts = {}) {
+  return el('input', { type: 'number', value: obj[key] === undefined || obj[key] === null ? '' : obj[key], min: opts.min, max: opts.max,
+    placeholder: opts.placeholder === undefined ? '' : String(opts.placeholder), class: opts.cls || '',
+    oninput: (e) => { const v = e.target.value; if (v === '') delete obj[key]; else obj[key] = Number(v); changed(); if (opts.after) opts.after(); } });
+}
+function bSelect(obj, key, choices, opts = {}) {
+  const current = obj[key] === undefined || obj[key] === null ? '' : String(obj[key]);
+  return el('select', { onchange: (e) => {
+    const v = e.target.value;
+    if (v === '') delete obj[key]; else obj[key] = opts.number ? Number(v) : v;
+    changed(); if (opts.after) opts.after(v);
+  } }, opts.blank !== undefined ? el('option', { value: '', selected: current === '' }, opts.blank) : null,
+  choices.map(([value, label]) => el('option', { value, selected: String(value) === current }, label)));
+}
+function bCheck(obj, key, label, opts = {}) {
+  return el('label', { class: 'b-check' }, el('input', { type: 'checkbox', checked: !!obj[key], onchange: (e) => {
+    if (e.target.checked) obj[key] = true; else delete obj[key]; changed(); if (opts.after) opts.after();
+  } }), label);
+}
+function colorChoices(withProject = true) {
+  const official = builder.info.official_colors.map((c) => [c, ((options.colors || {})[c] || {}).name || c]);
+  const mine = withProject ? builder.project.colors.filter((c) => c.id).map((c) => [c.id, (c.label || c.id) + ' ★']) : [];
+  return [...official, ...mine];
+}
+const colorFill = (id) => (builder.project.colors.find((c) => c.id === id) || {}).fill || ((options.colors || {})[id] || {}).fill || 'var(--c-unknown)';
+function resourceCounts(obj) {  // a cost's resources: one small number per resource
+  obj.resources = obj.resources || {};
+  return el('div', { class: 'b-res' }, builder.info.resources.map((r) => el('span', { class: 'b-resin', 'data-tip': resName(r) },
+    resIcon(r, 16), bNum(obj.resources, r, { min: 0, max: 9, cls: 'tiny' }))));
+}
+function costEditor(holder) {
+  holder.cost = holder.cost || {};
+  return el('div', { class: 'b-cost' }, el('span', { class: 'b-resin', 'data-tip': t('Coins') }, icon('coin', 'var(--gold)', 16),
+    bNum(holder.cost, 'coins', { min: 0, max: 20, cls: 'tiny' })), resourceCounts(holder.cost));
+}
+
+/* ---------- effects: a form per effect type, generated from its schema ---------- */
+function schemaOf(type) { const e = builder.info.effects.find((x) => x.type === type); return e ? e.schema : null; }
+function typeSelect(effect, rerender) {
+  const groups = {};
+  for (const e of builder.info.effects) { const g = e.schema ? e.schema.group : t('Other'); (groups[g] = groups[g] || []).push(e); }
+  return el('select', { class: 'b-type', onchange: (ev) => {
+    const schema = schemaOf(ev.target.value);
+    for (const k of Object.keys(effect)) delete effect[k];
+    Object.assign(effect, { type: ev.target.value }, JSON.parse(JSON.stringify((schema && schema.example) || {})));
+    changed(); rerender();
+  } }, Object.entries(groups).map(([group, list]) => el('optgroup', { label: group },
+    list.map((e) => el('option', { value: e.type, selected: e.type === effect.type }, e.schema ? e.schema.label : e.type)))));
+}
+function toggles(list, values, label, onChange) {  // checkbox chips writing a list of ids
+  return el('div', { class: 'b-toggles' }, values.map(([value, text, swatch]) => el('label', { class: 'b-toggle' },
+    el('input', { type: 'checkbox', checked: list.includes(value), onchange: (e) => {
+      const i = list.indexOf(value);
+      if (e.target.checked && i < 0) list.push(value); else if (!e.target.checked && i >= 0) list.splice(i, 1);
+      onChange();
+    } }), swatch || null, text)));
+}
+function paramInput(effect, p, rerender) {
+  const dflt = p.default === null || p.default === undefined ? '' : p.default;
+  switch (p.kind) {
+    case 'int': return bNum(effect, p.name, { placeholder: dflt });
+    case 'bool': return bCheck(effect, p.name, '');
+    case 'text': return bText(effect, p.name);
+    case 'choice': return bSelect(effect, p.name, p.choices.map((c) => [c, p.choice_labels[c] || c]),
+      p.required ? {} : { blank: dflt === '' ? '—' : t('default: {value}', { value: p.choice_labels[dflt] || dflt }) });
+    case 'symbol': return bSelect(effect, p.name, builder.info.symbols.map((s) => [s, t(s, null, 'science')]));
+    case 'color': return bSelect(effect, p.name, colorChoices(), { blank: '—' });
+    case 'target': return bSelect(effect, p.name, [...colorChoices(), ['wonder', t('wonder stages')]]);
+    case 'colors': {
+      if (!Array.isArray(effect[p.name])) effect[p.name] = [];
+      return toggles(effect[p.name], colorChoices().map(([c, l]) => [c, l, el('i', { class: 'b-swatch', style: `background:${colorFill(c)}` })]),
+        p.label, changed);
+    }
+    case 'resources': {
+      if (!Array.isArray(effect[p.name])) effect[p.name] = [];
+      return toggles(effect[p.name], builder.info.resources.map((r) => [r, resName(r), resIcon(r, 14)]), p.label, changed);
+    }
+    case 'slots': {
+      if (!Array.isArray(effect[p.name])) effect[p.name] = [];
+      const slots = effect[p.name];
+      return el('div', { class: 'b-slots' }, slots.map((slot, k) => el('div', { class: 'b-slot' },
+        toggles(slot, builder.info.resources.map((r) => [r, resName(r), resIcon(r, 14)]), '', changed),
+        el('button', { class: 'tiny', 'data-tip': t('Remove'), onclick: () => { slots.splice(k, 1); changed(); rerender(); } }, '✕'))),
+      el('button', { class: 'tiny', onclick: () => { slots.push([]); changed(); rerender(); } }, '+ ' + t('Slot')));
+    }
+    default: return bText(effect, p.name);
+  }
+}
+function effectsEditor(list, title) {
+  const box = el('div', { class: 'b-effects' });
+  const rerender = () => box.replaceWith(effectsEditor(list, title));
+  box.append(el('div', { class: 'b-effects-head' }, el('span', { class: 'b-label' }, title),
+    el('button', { class: 'tiny', onclick: () => {
+      list.push({ type: 'victory_points', points: 1 }); changed(); rerender();
+    } }, '+ ' + t('Effect'))));
+  list.forEach((effect, k) => {
+    const schema = schemaOf(effect.type);
+    const head = el('div', { class: 'b-effect-head' }, typeSelect(effect, rerender),
+      el('button', { class: 'tiny', disabled: k === 0, 'data-tip': t('Move up'), onclick: () => { list.splice(k - 1, 0, list.splice(k, 1)[0]); changed(); rerender(); } }, '↑'),
+      el('button', { class: 'tiny', 'data-tip': t('Remove'), onclick: () => { list.splice(k, 1); changed(); rerender(); } }, '✕'));
+    let body;
+    if (schema) {
+      body = [el('p', { class: 'muted b-help' }, schema.help),
+        ...schema.params.map((p) => bField(p.label + (p.required ? ' *' : ''), paramInput(effect, p, rerender), p.help)),
+        bField(t('Card text'), bText(effect, 'description', { placeholder: t('optional: the text the card shows') }))];
+    } else {  // a plugin effect without a schema: edit its spec as JSON
+      const rest = Object.fromEntries(Object.entries(effect).filter(([key]) => key !== 'type'));
+      body = [bField(t('Fields (JSON)'), el('textarea', { class: 'b-json', oninput: (e) => {
+        try { const v = JSON.parse(e.target.value || '{}'); for (const key of Object.keys(effect)) if (key !== 'type') delete effect[key];
+          Object.assign(effect, v); e.target.classList.remove('bad'); changed(); } catch (err) { e.target.classList.add('bad'); }
+      } }, JSON.stringify(rest, null, 1)))];
+    }
+    box.append(el('div', { class: 'b-effect' }, head, ...body));
+  });
+  if (!list.length) box.append(el('p', { class: 'muted b-help' }, t('No effects yet.')));
+  return box;
+}
+
+/* ---------- page ---------- */
+function renderBuilder() {
+  if (!builder) return;
+  $('b-projects').replaceChildren(...(builder.projects.length ? builder.projects.map((p) => el('button', {
+    class: 'b-project' + (builder.project && builder.previousId === p.id ? ' active' : ''), onclick: () => loadProject(p.id) },
+  el('b', {}, p.name || p.id), el('small', { class: 'muted' }, p.error ? t('cannot be read') : t('Cards: {cards} · wonders: {wonders}',
+    { cards: p.cards, wonders: p.wonders }) + (p.loaded ? '' : ' · ' + t('not loaded'))))) : [el('p', { class: 'muted' }, t('No expansions yet.'))]));
+  $('b-home').textContent = t('Saved in {folder}', { folder: builder.info.home });
+  const p = builder.project;
+  $('b-bar').classList.toggle('hidden', !p);
+  if (!p) {
+    $('b-body').replaceChildren(el('div', { class: 'panel b-intro' }, el('h2', {}, t('Expansion builder')),
+      el('p', {}, t('Design your own cards, card colours and wonder boards, change the meta rules such as the starting coins, and play them right away against the computer opponents.')),
+      el('p', { class: 'muted' }, t('An expansion is saved as a folder with JSON files, the same format the extension guide describes, so it can be shared or contributed by pull request.')),
+      el('button', { class: 'primary', onclick: newProject }, t('New expansion'))));
+    return;
+  }
+  $('b-tabs').replaceChildren(...B_TABS.map(([id, label]) => el('button', { class: 'b-tab' + (builder.tab === id ? ' active' : ''),
+    'data-tab': id, onclick: () => { builder.tab = id; renderBuilder(); } }, t(label), el('span', { class: 'b-dot' }))));
+  const view = { overview: renderOverview, colors: renderColors, cards: renderCards, wonders: renderWonders, test: renderTest }[builder.tab];
+  $('b-body').replaceChildren(view());
+  renderStatus(); renderMarks();
+}
+function renderStatus() {
+  const p = builder.project; if (!p) return;
+  $('b-title').textContent = p.name || t('New expansion');
+  $('b-save').disabled = !builder.dirty && !builder.isNew;
+  const c = builder.check;
+  const parts = [builder.dirty ? el('span', { class: 'b-unsaved' }, t('unsaved changes')) : null];
+  if (c) parts.push(el('span', { class: c.errors ? 'error' : 'muted' }, c.errors || c.warnings
+    ? t('{errors} errors, {warnings} warnings', { errors: c.errors, warnings: c.warnings }) : t('no problems found')));
+  $('b-state').replaceChildren(...parts.filter(Boolean).flatMap((x, k) => (k ? [' · ', x] : [x])));
+}
+function problemsFor(section, index) {
+  return ((builder.check && builder.check.problems) || []).filter((x) => x.section === section && (index === undefined || x.index === index));
+}
+function renderMarks() {  // red / amber dots on tabs and list entries with problems
+  document.querySelectorAll('#b-tabs .b-tab').forEach((b) => {
+    const list = ((builder.check && builder.check.problems) || []).filter((x) => B_SECTIONS[x.section] === b.dataset.tab);
+    b.querySelector('.b-dot').className = 'b-dot' + (list.some((x) => x.level === 'error') ? ' err' : list.length ? ' warn' : '');
+  });
+  document.querySelectorAll('[data-problems]').forEach((node) => {
+    const raw = node.dataset.problems, cut = raw.indexOf(':');
+    const section = raw.slice(0, cut), index = raw.slice(cut + 1);
+    const list = section === 'wonders' && index !== ''
+      ? problemsFor('wonders').filter((x) => x.index !== null && (builder.project.wonders[x.index] || {}).name === index)
+      : problemsFor(section, index === '' ? null : Number(index));
+    if (node.dataset.compact !== undefined) {
+      node.className = 'b-dot' + (list.some((x) => x.level === 'error') ? ' err' : list.length ? ' warn' : '');
+      if (list.length) node.setAttribute('data-tip', list.map((x) => x.message).join('\n')); else node.removeAttribute('data-tip');
+    } else node.replaceChildren(...list.map((x) => el('div', { class: 'b-problem ' + x.level }, x.message)));
+  });
+}
+function problemBox(section, index, compact) {
+  const key = section + ':' + (index === null || index === undefined ? '' : index);
+  return el(compact ? 'span' : 'div', { 'data-problems': key, 'data-compact': compact ? '' : null });
+}
+
+function renderOverview() {
+  const p = builder.project;
+  const idInput = bText(p, 'id', { keep: true, after: () => { builder.idTouched = true; } });
+  const meta = el('div', { class: 'panel b-grid' },
+    bField(t('Name'), bText(p, 'name', { keep: true, after: (v) => {
+      if (builder.isNew && !builder.idTouched) { p.id = slug(v); idInput.value = p.id; }
+      $('b-title').textContent = v || t('New expansion');
+    } })),
+    bField(t('Id'), idInput, t('Folder name and id in game records: lowercase letters, digits and dashes.')),
+    bField(t('Version'), bText(p, 'version', { keep: true })),
+    bField(t('Author'), bText(p, 'author', { keep: true })),
+    bField(t('Licence'), bText(p, 'license', { keep: true })),
+    el('div', { class: 'b-wide' }, bField(t('Description'), bText(p, 'description', { keep: true, area: true }))),
+    el('div', { class: 'b-wide' }, problemBox('general')));
+  // Each rule: keep the base value, set it, or change it by a delta ({"add": n}) that adds up with other expansions'.
+  const ruleRow = (r) => {
+    const value = p.rules[r.name];
+    const mode = value === undefined ? 'keep' : typeof value === 'object' ? 'add' : 'set';
+    const holder = { n: mode === 'add' ? value.add : mode === 'set' ? value : undefined };
+    const width = r.max - r.min;
+    const write = () => {
+      const m = modeSel.value;
+      if (m === 'keep' || holder.n === undefined) delete p.rules[r.name];
+      else p.rules[r.name] = m === 'add' ? { add: holder.n } : holder.n;
+      row.classList.toggle('set', p.rules[r.name] !== undefined); changed();
+    };
+    const num = bNum(holder, 'n', mode === 'add' ? { min: -width, max: width, placeholder: '+0', after: write }
+      : { min: r.min, max: r.max, placeholder: r.default, after: write });
+    num.classList.toggle('hidden', mode === 'keep');
+    const modeSel = el('select', { onchange: () => {
+      const m = modeSel.value;
+      num.classList.toggle('hidden', m === 'keep');
+      Object.assign(num, m === 'add' ? { min: -width, max: width, placeholder: '+0' } : { min: r.min, max: r.max, placeholder: r.default });
+      if (m !== 'keep' && holder.n === undefined) { holder.n = m === 'add' ? 0 : r.default; num.value = holder.n; }
+      write();
+    } }, [['keep', t('base value')], ['set', t('set to')], ['add', t('change by')]].map(([v, label]) =>
+      el('option', { value: v, selected: v === mode }, label)));
+    const row = el('tr', { class: mode === 'keep' ? '' : 'set' }, el('td', {}, el('b', {}, r.label), el('div', { class: 'muted' }, r.help)),
+      el('td', { class: 'num' }, String(r.default)), el('td', {}, el('div', { class: 'b-rule' }, modeSel, num)));
+    return row;
+  };
+  const rules = el('div', { class: 'panel' }, el('h3', {}, t('Meta rules')),
+    el('p', { class: 'muted b-help' }, t('Set a rule to a value, or change it by an amount: changes from several expansions add up (Leaders starts with 6 coins, so "change by 2" gives 8 with it). Rules apply in a fixed order, whatever order the expansions are chosen in: the base game, the bundled expansions, then the others by id; a set value replaces what came before it.')),
+    el('table', { class: 'games b-rules' }, el('thead', {}, el('tr', {}, el('th', {}, t('Rule')), el('th', { class: 'num' }, t('Base game')),
+      el('th', {}, t('This expansion')))), el('tbody', {}, builder.info.rules.map(ruleRow))), problemBox('rules'));
+  return el('div', { class: 'b-stack' }, meta, rules);
+}
+
+function renderColors() {
+  const p = builder.project;
+  const rows = p.colors.map((c, k) => el('div', { class: 'panel b-color' },
+    el('div', { class: 'b-grid' },
+      bField(t('Id'), bText(c, 'id', { keep: true })),
+      bField(t('Name'), bText(c, 'label')),
+      bField(t('Card colour'), el('input', { type: 'color', value: c.fill || '#9aa3ad', oninput: (e) => { c.fill = e.target.value; changed(); } })),
+      bField(t('Points count as'), bSelect(c, 'score', Object.entries(builder.info.scores), { blank: t('default: {value}', { value: builder.info.scores.commercial }) })),
+      bCheck(c, 'tradeable', t('Neighbours may buy its production (like brown and grey cards)')),
+      el('button', { onclick: () => { p.colors.splice(k, 1); changed(); renderBuilder(); } }, t('Remove colour'))),
+    problemBox('colors', k)));
+  return el('div', { class: 'b-stack' },
+    el('div', { class: 'panel' }, el('h3', {}, t('Card colours')),
+      el('p', { class: 'muted b-help' }, t('A new colour is a new type of card: cards of it are dealt like other Age cards, and effects can count them. The official colours are always available.')),
+      el('button', { onclick: () => { p.colors.push({ id: 'colour-' + (p.colors.length + 1), label: '', fill: '#1f8a8a' }); changed(); renderBuilder(); } }, '+ ' + t('Colour'))),
+    ...rows);
+}
+
+function cardPreview(spec, img, note) {
+  return debounce(async () => {
+    try {
+      const res = await api('/api/builder/preview', { kind: 'card', spec, colors: builder.project.colors });
+      if (res.svg) { img.src = svgSrc(res.svg); note.textContent = ''; } else note.textContent = res.error;
+    } catch (e) { note.textContent = e.message; }
+  }, 250);
+}
+function renderCards() {
+  const p = builder.project;
+  if (builder.card !== null && !p.cards[builder.card]) builder.card = p.cards.length ? 0 : null;
+  const list = el('div', { class: 'panel b-list' },
+    el('div', { class: 'b-list-head' }, el('h3', {}, t('Cards')),
+      el('button', { onclick: () => {
+        p.cards.push({ name: t('New card') + ' ' + (p.cards.length + 1), color: 'blue', age: 1, at_players: [3], cost: {}, effects: [{ type: 'victory_points', points: 2 }] });
+        builder.card = p.cards.length - 1; changed(); renderBuilder();
+      } }, '+ ' + t('Card'))),
+    p.cards.length ? el('div', { class: 'b-items' }, p.cards.map((c, k) => el('button', { class: 'b-item' + (k === builder.card ? ' active' : ''),
+      onclick: () => { builder.card = k; renderBuilder(); } }, el('i', { class: 'b-swatch', style: `background:${colorFill(c.color)}` }),
+    el('span', {}, c.name || '?'), el('small', { class: 'muted' }, c.age ? AGES[c.age] : '–'), problemBox('cards', k, true))))
+      : el('p', { class: 'muted' }, t('No cards yet.')),
+    problemBox('cards', null));
+  if (builder.card === null) return el('div', { class: 'b-split' }, list);
+  const c = p.cards[builder.card];
+  const img = el('img', { class: 'b-preview-card', alt: '' }), note = el('p', { class: 'error b-note' });
+  const refresh = cardPreview(c, img, note);
+  const wrap = (node) => { node.addEventListener('input', refresh); node.addEventListener('change', refresh); node.addEventListener('click', refresh); return node; };
+  if (!Array.isArray(c.at_players)) c.at_players = [];
+  if (!Array.isArray(c.effects)) c.effects = [];
+  const names = el('datalist', { id: 'b-cardnames' }, [...builder.info.known_cards, ...p.cards.map((x) => x.name)].map((n) => el('option', { value: n })));
+  const editor = wrap(el('div', { class: 'panel b-editor' },
+    el('div', { class: 'b-grid' },
+      bField(t('Name'), bText(c, 'name', { keep: true, done: () => renderBuilder() })),
+      bField(t('Colour'), bSelect(c, 'color', colorChoices(), { after: () => renderBuilder() })),
+      bField(t('Age'), bSelect(c, 'age', [[1, 'I'], [2, 'II'], [3, 'III']], { number: true, blank: '–' })),
+      bField(t('In the deck from … players'), el('input', { type: 'text', value: c.at_players.join(', '), placeholder: '3, 5',
+        oninput: (e) => { c.at_players = e.target.value.split(/[\s,;]+/).filter(Boolean).map(Number).filter((n) => Number.isInteger(n)); changed(); } }),
+      t('One number per copy: "3, 6" puts one copy in games of 3–5 players and two from 6.')),
+      bCheck(c, 'guild', t('Guild (drawn at random in Age III instead)')),
+      el('div', { class: 'b-wide' }, bField(t('Cost'), costEditor(c))),
+      bField(t('Free with (chain from)'), bText(c, 'chain_requires', { list: 'b-cardnames' })),
+      bField(t('Makes free (chain to)'), el('input', { type: 'text', value: (c.chain_enables || []).join(', '), list: 'b-cardnames',
+        oninput: (e) => { c.chain_enables = e.target.value.split(',').map((s) => s.trim()).filter(Boolean); changed(); } }))),
+    names,
+    effectsEditor(c.effects, t('Effects')),
+    el('div', { class: 'b-actions' },
+      el('button', { onclick: () => { p.cards.splice(builder.card + 1, 0, JSON.parse(JSON.stringify({ ...c, name: c.name + ' (2)' })));
+        builder.card += 1; changed(); renderBuilder(); } }, t('Duplicate')),
+      el('button', { onclick: () => { if (confirm(t('Delete this card?'))) { p.cards.splice(builder.card, 1); changed(); renderBuilder(); } } }, t('Delete card'))),
+    problemBox('cards', builder.card)));
+  refresh();
+  return el('div', { class: 'b-split' }, list, editor, el('div', { class: 'b-preview' }, img, note));
+}
+
+function wonderNames() { return [...new Set(builder.project.wonders.map((w) => w.name))]; }
+function renderWonders() {
+  const p = builder.project;
+  const names = wonderNames();
+  if (!names.includes(builder.wonder)) builder.wonder = names[0] || null;
+  const list = el('div', { class: 'panel b-list' },
+    el('div', { class: 'b-list-head' }, el('h3', {}, t('Wonders')),
+      el('button', { onclick: () => {
+        const name = t('New wonder') + ' ' + (names.length + 1);
+        const stage = (pts) => ({ cost: { resources: { stone: 2 } }, effects: [{ type: 'victory_points', points: pts }] });
+        for (const side of ['A', 'B']) p.wonders.push({ name, side, starting_resource: 'wood', stages: [stage(3), stage(5), stage(7)] });
+        builder.wonder = name; changed(); renderBuilder();
+      } }, '+ ' + t('Wonder'))),
+    names.length ? el('div', { class: 'b-items' }, names.map((n) => el('button', { class: 'b-item' + (n === builder.wonder ? ' active' : ''),
+      onclick: () => { builder.wonder = n; renderBuilder(); } }, el('span', {}, n), problemBox('wonders', n, true))))
+      : el('p', { class: 'muted' }, t('No wonders yet.')));
+  if (builder.wonder === null) return el('div', { class: 'b-split wonders' }, list);
+  const name = builder.wonder;
+  const sides = ['A', 'B'].map((s) => p.wonders.find((w) => w.name === name && w.side === s));
+  const nameInput = el('input', { type: 'text', value: name, onchange: (e) => {
+    const v = e.target.value.trim(); if (!v) return;
+    p.wonders.forEach((w) => { if (w.name === name) w.name = v; }); builder.wonder = v; changed(); renderBuilder();
+  } });
+  const sideBoxes = sides.map((w, k) => {
+    const side = ['A', 'B'][k];
+    if (!w) return el('div', { class: 'panel b-side-box' }, el('h3', {}, t('Side {side}', { side })),
+      el('button', { onclick: () => { p.wonders.push({ name, side, starting_resource: 'wood', stages: [] }); changed(); renderBuilder(); } }, t('Add side {side}', { side })));
+    w.stages = w.stages || []; w.effects = w.effects || [];
+    const img = el('img', { class: 'b-preview-board', alt: '' }), note = el('p', { class: 'error b-note' });
+    const refresh = debounce(async () => {
+      try { const res = await api('/api/builder/preview', { kind: 'wonder', spec: w, colors: p.colors });
+        if (res.svg) { img.src = svgSrc(res.svg); note.textContent = ''; } else note.textContent = res.error; } catch (e) { note.textContent = e.message; }
+    }, 250);
+    const box = el('div', { class: 'panel b-side-box' },
+      el('div', { class: 'b-list-head' }, el('h3', {}, t('Side {side}', { side })),
+        k === 1 && sides[0] ? el('button', { class: 'tiny', onclick: () => {
+          if (!confirm(t('Replace side B with a copy of side A?'))) return;
+          Object.assign(w, JSON.parse(JSON.stringify({ ...sides[0], side: 'B' }))); changed(); renderBuilder();
+        } }, t('Copy side A')) : null),
+      img, note,
+      bField(t('Starting resource'), bSelect(w, 'starting_resource', builder.info.resources.map((r) => [r, resName(r)]), { blank: t('none') })),
+      ...w.stages.map((stage, s) => el('div', { class: 'b-stage' },
+        el('div', { class: 'b-list-head' }, el('b', {}, t('Stage {n}', { n: s + 1 })),
+          el('button', { class: 'tiny', 'data-tip': t('Remove'), onclick: () => { w.stages.splice(s, 1); changed(); renderBuilder(); } }, '✕')),
+        bField(t('Cost'), costEditor(stage)),
+        effectsEditor(stage.effects = stage.effects || [], t('Effects')))),
+      el('button', { onclick: () => { w.stages.push({ cost: {}, effects: [{ type: 'victory_points', points: 3 }] }); changed(); renderBuilder(); } }, '+ ' + t('Stage')),
+      effectsEditor(w.effects, t('Board powers (always active)')));
+    ['input', 'change', 'click'].forEach((ev) => box.addEventListener(ev, refresh));
+    refresh();
+    return box;
+  });
+  const editor = el('div', { class: 'b-stack' },
+    el('div', { class: 'panel b-grid' }, bField(t('Name'), nameInput),
+      el('div', { class: 'b-actions' }, el('button', { onclick: () => {
+        if (!confirm(t('Delete this wonder (both sides)?'))) return;
+        builder.project.wonders = p.wonders.filter((w) => w.name !== name); changed(); renderBuilder();
+      } }, t('Delete wonder'))),
+      el('div', { class: 'b-wide' }, problemBox('wonders', name))),
+    el('div', { class: 'b-sides' }, sideBoxes));
+  return el('div', { class: 'b-split wonders' }, list, editor);
+}
+
+function renderTest() {
+  const p = builder.project, c = builder.check;
+  const saved = !builder.isNew && !builder.dirty;
+  const loaded = saved && builder.projects.some((x) => x.id === p.id && x.loaded);
+  const problems = c && c.problems.length ? el('ul', { class: 'b-problems' }, c.problems.map((x) => el('li', { class: x.level },
+    el('a', { href: '#builder', onclick: (e) => {
+      e.preventDefault(); builder.tab = B_SECTIONS[x.section] || 'overview';
+      if (x.section === 'cards' && x.index !== null) builder.card = x.index;
+      if (x.section === 'wonders' && x.index !== null) builder.wonder = p.wonders[x.index].name;
+      renderBuilder();
+    } }, t(x.level === 'error' ? N('Error') : N('Warning'))), ': ', x.message)))
+    : el('p', { class: 'muted' }, c ? t('No problems found.') : t('Checking…'));
+  const games = { n: 100, players: 4 };
+  const out = el('div', {});
+  const play = el('div', { class: 'panel' }, el('h3', {}, t('Play')),
+    el('p', { class: 'muted b-help' }, loaded ? t('The expansion is in the game menu. Start a game with it against the computer opponents.')
+      : t('Save the expansion without errors to play it.')),
+    el('button', { class: 'primary', disabled: !loaded, onclick: () => {
+      if (!menu.expansions.includes(p.id)) menu.expansions = [...menu.expansions, p.id];
+      openMenu();
+    } }, t('Play with this expansion')));
+  const balance = el('div', { class: 'panel' }, el('h3', {}, t('Balance check')),
+    el('p', { class: 'muted b-help' }, t('Computer opponents play many games with your expansion and without it (same seeds): how the scores shift, how often each new card is built and how its builders place, and how the new wonders do.')),
+    el('div', { class: 'b-actions' },
+      bField(t('Games'), bNum(games, 'n', { min: 10, max: 400 })),
+      bField(t('Players'), bSelect(games, 'players', [3, 4, 5, 6, 7].map((n) => [n, String(n)]), { number: true })),
+      el('button', { disabled: !loaded, onclick: async () => {
+        setBusy(true, t('Playing test games…'));
+        try { builder.balance = await api('/api/builder/balance', { id: p.id, games: games.n || 100, players: games.players || 4 }); out.replaceChildren(balanceReport(builder.balance)); }
+        catch (e) { out.replaceChildren(el('p', { class: 'error' }, e.message)); }
+        finally { setBusy(false); }
+      } }, t('Run'))),
+    out);
+  if (builder.balance) out.replaceChildren(balanceReport(builder.balance));
+  const share = el('div', { class: 'panel' }, el('h3', {}, t('Share')),
+    el('p', { class: 'muted b-help' }, t('The expansion is a folder in your extensions home. Send the zip to friends (they unpack it into their own), or contribute it to the project by pull request: see CONTRIBUTING.md.')),
+    el('div', { class: 'b-actions' },
+      el('button', { disabled: builder.isNew, onclick: () => { window.location.href = '/api/builder/export?id=' + encodeURIComponent(builder.previousId); } }, t('Download as zip')),
+      el('button', { disabled: builder.isNew, onclick: deleteProject }, t('Delete expansion'))));
+  return el('div', { class: 'b-stack' }, el('div', { class: 'panel' }, el('h3', {}, t('Check')), problems), play, balance, share);
+}
+function balanceReport(r) {
+  const pct = (x) => (x === null || x === undefined ? '–' : fmtNum(Math.round(100 * x)) + '%');
+  const num = (x, d) => (x === null || x === undefined ? '–' : fmtNum(x, d));
+  const cats = ['total', 'military', 'treasury', 'wonders', 'civilian', 'commercial', 'guilds', 'science'];
+  const scores = el('table', { class: 'games' }, el('thead', {}, el('tr', {}, el('th', {}, t('Mean score per player')),
+    el('th', { class: 'num' }, t('Base game')), el('th', { class: 'num' }, t('With the expansion')))),
+  el('tbody', {}, cats.map((k) => el('tr', {}, el('td', {}, t(CAT_LABEL[k] || k)), el('td', { class: 'num' }, num(r.base[k], 1)),
+    el('td', { class: 'num' }, num(r.expansion[k], 1))))));
+  const cards = r.cards.length ? el('table', { class: 'games' }, el('thead', {}, el('tr', {}, el('th', {}, t('Card')),
+    el('th', { class: 'num' }, t('Built per game')), el('th', { class: 'num' }, t('Mean place of builders')), el('th', { class: 'num' }, t('Wins of builders')))),
+  el('tbody', {}, r.cards.map((c) => el('tr', {}, el('td', {}, c.name), el('td', { class: 'num' }, num(c.built_per_game, 2)),
+    el('td', { class: 'num' }, num(c.mean_place, 2)), el('td', { class: 'num' }, pct(c.win_rate)))))) : null;
+  const wonders = r.wonders.length ? el('table', { class: 'games' }, el('thead', {}, el('tr', {}, el('th', {}, t('Wonder')),
+    el('th', { class: 'num' }, t('Played')), el('th', { class: 'num' }, t('Mean score')), el('th', { class: 'num' }, t('Mean place')), el('th', { class: 'num' }, t('Wins')))),
+  el('tbody', {}, r.wonders.map((w) => el('tr', {}, el('td', {}, w.name), el('td', { class: 'num' }, String(w.seats)),
+    el('td', { class: 'num' }, num(w.mean_score, 1)), el('td', { class: 'num' }, num(w.mean_place, 2)), el('td', { class: 'num' }, pct(w.win_rate)))))) : null;
+  return el('div', { class: 'b-stack' },
+    el('p', { class: 'muted b-help' }, t('{games} games with {players} players ({lineup}); an even share of wins is {share}. With few games the numbers are rough.',
+      { games: r.games, players: r.players, lineup: r.lineup.map(agentLabel).join(', '), share: pct(r.expected_win_rate) })),
+    scores, cards, wonders);
+}
+$('b-new').addEventListener('click', newProject);
+$('b-save').addEventListener('click', saveProject);
+$('b-check').addEventListener('click', () => { builder.tab = 'test'; renderBuilder(); runCheck(); });
+$('btn-builder').addEventListener('click', openBuilder);
+window.addEventListener('beforeunload', (e) => { if (builder && builder.dirty) { e.preventDefault(); e.returnValue = ''; } });
 
 (async function init() {
   const browser = (navigator.language || 'en').slice(0, 2).toLowerCase();
   await loadLanguage(new URLSearchParams(location.search).get('lang') || store.get('lang', null) || browser);
-  options = await api('/api/options');
-  if (!(lang in (options.languages || {}))) { await loadLanguage('en'); options = await api('/api/options'); }
+  await loadOptions();
+  if (!(lang in (options.languages || {}))) { await loadLanguage('en'); await loadOptions(); }
   renderLanguages();
   menu = store.get('menu', null) || JSON.parse(JSON.stringify(options.defaults));
   if (!menu.seats || !menu.seats.some((s) => s.player === 'human')) menu = JSON.parse(JSON.stringify(options.defaults));
@@ -1406,6 +2021,7 @@ $('h-lang').addEventListener('change', async (e) => {
   state = (await api('/api/state')).state;
   if (options.saving && location.hash === HASHES.history) openHistory();
   else if (options.saving && location.hash === HASHES.achievements) openAchievements();
+  else if (location.hash === HASHES.builder) openBuilder();
   else render();
 })();
 </script>

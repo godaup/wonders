@@ -17,7 +17,7 @@ from wonders.effects.base import BuildEvent, Effect
 STARTING_COINS = 3
 DEFAULT_TRADE_PRICE = 2
 SCIENCE_SET_VALUE = 7  # points per complete set of the three science symbols
-BASIC_COLORS = frozenset({Color.BROWN, Color.GREY})  # raw-material / manufactured cards
+BASIC_COLORS = frozenset(c for c in Color if c.tradeable)  # the official tradeable colours: brown / grey
 
 
 class Player:
@@ -103,7 +103,7 @@ class Player:
         slots = self._cache.get('trade_slots')
         if slots is None:
             slots = [self.wonder.starting_production] if self.wonder.starting_resource is not None else []
-            slots += [s for c in self.cards if c.color in BASIC_COLORS for e in c.effects for s in e.production()]
+            slots += [s for c in self.cards if c.color.tradeable for e in c.effects for s in e.production()]
             self._cache['trade_slots'] = slots
         return slots  # type: ignore[return-value]
 
@@ -142,7 +142,7 @@ class Player:
         if slots is None:
             # Black Market / Secret Warehouse look only at brown/grey cards and the board.
             basic = [self.wonder.starting_production]
-            basic += [s for c in self.cards if c.color in BASIC_COLORS for e in c.effects for s in e.production()]
+            basic += [s for c in self.cards if c.color.tradeable for e in c.effects for s in e.production()]
             produced = frozenset().union(*basic)
             slots = [slot for effect in self.iter_effects() for slot in effect.private_production(produced)]
             self._cache['private_slots'] = slots
@@ -166,9 +166,13 @@ class Player:
             self._cache['bank'] = sum(effect.bank_purchases() for effect in self.iter_effects())
         return self._cache['bank']  # type: ignore[return-value]
 
+    def science_set_bonus(self) -> int:
+        """Extra points per complete science set (Aristotle)."""
+        return sum(effect.science_set_bonus() for effect in self.iter_effects())
+
     def science_set_value(self) -> int:
-        """Points per complete science set: 7, plus bonuses (Aristotle)."""
-        return SCIENCE_SET_VALUE + sum(effect.science_set_bonus() for effect in self.iter_effects())
+        """Points per complete science set under the base rules: 7, plus bonuses (``Game`` uses its own rules)."""
+        return SCIENCE_SET_VALUE + self.science_set_bonus()
 
     def science_copies(self) -> int:
         return sum(effect.science_copies() for effect in self.iter_effects())

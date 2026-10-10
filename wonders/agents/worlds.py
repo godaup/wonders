@@ -106,7 +106,7 @@ class World:
         for age in range(game.age + 1, 4):
             if leaders:
                 yield from game.recruit_steps(age)
-            deck = build_age_deck(self.index.content, age, game.n, self.rng)
+            deck = build_age_deck(self.index.content, age, game.n, self.rng, game.rules.extra_guilds)
             yield from game.age_steps(age, deal_hands(deck, game.n))
         game.phase = Phase.FINISHED
 
@@ -132,7 +132,7 @@ def sample_world(obs: Observation, rng: random.Random) -> World:
     hand = [index.card(c.name, age) for c in obs.hand]
     known = Counter(c.name for c in hand) + Counter(e.card for e in this_age if e.card is not None)
     seen = Counter(obs.seen_cards)
-    unknown = _age_deck(index, age, n, known + seen, rng) - known
+    unknown = _age_deck(index, age, n, known + seen, rng, game.rules.extra_guilds) - known
     slots = (n - 1) * len(hand) + len(hidden)
     pick = list((seen & unknown).elements())
     rest = list((unknown - seen).elements())
@@ -197,11 +197,13 @@ def _public_game(obs: Observation, index: ContentIndex) -> Game:
     return game
 
 
-def _age_deck(index: ContentIndex, age: int, n: int, include: Counter, rng: random.Random) -> Counter:
+def _age_deck(
+    index: ContentIndex, age: int, n: int, include: Counter, rng: random.Random, extra_guilds: int = GUILDS_OVER_PLAYERS
+) -> Counter:
     """A plausible full deck for ``age`` (name counts) whose random draws contain ``include``."""
     deck = index.fixed(age, n)
     if age == 3:
-        deck.update(c.name for c in _draw(index.guilds, n + GUILDS_OVER_PLAYERS, include, rng))
+        deck.update(c.name for c in _draw(index.guilds, n + extra_guilds, include, rng))
     deck.update(c.name for c in _draw(index.black(age), n, include, rng))
     return deck
 

@@ -15,6 +15,10 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``POST /api/games/open`` / ``POST /api/games/delete`` — ``{"id": …}``: resume or view / delete a saved game
 - ``GET /api/games/record?id=…`` — a saved game's GameRecord JSON
 - ``GET /api/achievements`` — every achievement and the games that earned it
+- ``GET /api/builder`` — the expansion builder's forms (effect schemas, meta rules, …) and the projects
+- ``GET /api/builder/project?id=…`` / ``GET /api/builder/export?id=…`` — one project / its folder as a zip
+- ``POST /api/builder/check`` / ``save`` / ``delete`` / ``preview`` / ``balance`` — see
+  :mod:`wonders.play.builder`; these need a JSON body and a local ``Host`` (no cross-site writes)
 
 Games are saved after every move to a :class:`~wonders.storage.Store` (``~/.wonders/games``), unless
 the server runs without one (``wonders gui --no-save``).
@@ -36,10 +40,11 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import resources
 from typing import Any, Callable, Dict, Optional, Sequence, Tuple
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, urlsplit
 
 from wonders.cards.content import Content, load_content
 from wonders.i18n import DEFAULT, ENGLISH, Translator, catalog
+from wonders.play import builder
 from wonders.play.achievements import achievements, earned
 from wonders.play.rating import AGENT_ELO, DEFAULT_AGENT_ELO, START, agent_elo, player_history, rated_game
 from wonders.play.session import ConfigError, GameConfig, HumanSession, menu_options
@@ -92,6 +97,7 @@ class PlayServer:
         self.store = store
         self.session: Optional[HumanSession] = None
         self.lock = threading.Lock()
+        self.builder_lock = threading.Lock()  # builder writes change the expansion registry
         self._options: Dict[str, Dict[str, Any]] = {}  # per language
         self.analysis: Dict[str, Any] = {'status': 'idle'}  # post-game analysis of the current game
 
@@ -226,6 +232,37 @@ class PlayServer:
             'max_points': sum(item['points'] for item in items),
         }
 
+    # -- expansion builder -------------------------------------------------------------------
+    def builder_state(self, t: Translator = ENGLISH) -> Dict[str, Any]:
+        return {'info': builder.builder_info(t), 'projects': builder.projects()}
+
+    def builder_save(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        with self.builder_lock:
+            result = builder.save_project(body.get('project') or {}, str(body.get('previous_id') or ''))
+            self._content_changed()
+            return {**result, 'projects': builder.projects()}
+
+    def builder_delete(self, project_id: str) -> Dict[str, Any]:
+        with self.builder_lock:
+            builder.delete_project(project_id)
+            self._content_changed()
+            return {'deleted': project_id, 'projects': builder.projects()}
+
+    def builder_preview(self, body: Dict[str, Any], t: Translator = ENGLISH) -> Dict[str, Any]:
+        with self.builder_lock:
+            try:
+                return {
+                    'svg': builder.preview(str(body.get('kind')), body.get('spec') or {}, body.get('colors') or [], t)
+                }
+            except Exception as exc:  # an unfinished card is normal while editing
+                return {'error': builder._reason(exc)}
+
+    def _content_changed(self) -> None:
+        """An expansion changed on disk: menus, renderings and image versions are rebuilt."""
+        self._options.clear()
+        for cache in (_all_content, _card_svg, _wonder_svg):
+            cache.cache_clear()
+
     # -- post-game analysis ------------------------------------------------------------------
     def start_analysis(self) -> Dict[str, Any]:
         """Rate the human's moves of the finished game in a background thread (needs PyTorch)."""
@@ -304,6 +341,22 @@ def _record(play: PlayServer) -> Response:
     return HTTPStatus.OK, record.encode('utf-8'), 'application/json', (disposition,)
 
 
+def _guarded(handler: Callable[[], Any]) -> Response:
+    try:
+        return _json(handler())
+    except (builder.BuilderError, ValueError, OSError) as exc:
+        return _error(str(exc))
+
+
+def _export(project_id: str) -> Response:
+    try:
+        data = builder.export_project(project_id)
+    except (builder.BuilderError, OSError) as exc:
+        return _error(str(exc), HTTPStatus.NOT_FOUND)
+    disposition = ('Content-Disposition', f'attachment; filename="{project_id}.zip"')
+    return HTTPStatus.OK, data, 'application/zip', (disposition,)
+
+
 def _saved_record(play: PlayServer, game_id: str) -> Response:
     try:
         record = play.saved_record(game_id)
@@ -327,6 +380,9 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/wonder.svg': lambda play, q: _svg(
         _wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'), _t(q).lang)
     ),
+    '/api/builder': lambda play, q: _json(play.builder_state(_t(q))),
+    '/api/builder/project': lambda play, q: _guarded(lambda: {'project': builder.load_project(q.get('id', ''))}),
+    '/api/builder/export': lambda play, q: _export(q.get('id', '')),
 }
 # POST routes get the JSON body and the query string (for ``lang``).
 POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Response]] = {
@@ -337,7 +393,15 @@ POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Re
     '/api/act': lambda play, body, q: _json(
         {'state': play.act(int(body.get('index', -1)), body.get('payment'), _t(q))}
     ),
+    '/api/builder/check': lambda play, body, q: _json(builder.check_project(body.get('project') or {})),
+    '/api/builder/save': lambda play, body, q: _json(play.builder_save(body)),
+    '/api/builder/delete': lambda play, body, q: _json(play.builder_delete(str(body.get('id', '')))),
+    '/api/builder/preview': lambda play, body, q: _json(play.builder_preview(body, _t(q))),
+    '/api/builder/balance': lambda play, body, q: _json(
+        builder.balance(str(body.get('id', '')), int(body.get('games', 100)), int(body.get('players', 4)))
+    ),
 }
+LOCAL_HOSTS = ('127.0.0.1', 'localhost', '::1')
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -359,10 +423,20 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _local(self) -> bool:
+        """Whether the request names this machine (a page on another site cannot rebind to it)."""
+        try:
+            return urlsplit('//' + (self.headers.get('Host') or '')).hostname in LOCAL_HOSTS
+        except ValueError:
+            return False
+
     def do_GET(self) -> None:  # noqa: N802 - http.server API
         url = urlparse(self.path)
         route = GET_ROUTES.get('/' if url.path == '/index.html' else url.path)
         query = {k: v[0] for k, v in parse_qs(url.query).items()}
+        if url.path.startswith('/api/builder') and not self._local():
+            self._send(_error('the builder only answers local requests', HTTPStatus.FORBIDDEN))
+            return
         self._send(route(self.play, query) if route else _error(NOT_FOUND, HTTPStatus.NOT_FOUND))
 
     def do_POST(self) -> None:  # noqa: N802 - http.server API
@@ -371,13 +445,18 @@ class Handler(BaseHTTPRequestHandler):
         if route is None:
             self._send(_error(NOT_FOUND, HTTPStatus.NOT_FOUND))
             return
+        if url.path.startswith('/api/builder') and (
+            not self._local() or not (self.headers.get('Content-Type') or '').startswith('application/json')
+        ):  # a JSON content type needs a CORS preflight, which this server never grants: no cross-site writes
+            self._send(_error('the builder only answers local JSON requests', HTTPStatus.FORBIDDEN))
+            return
         try:
             length = int(self.headers.get('Content-Length') or 0)
             body = json.loads(self.rfile.read(length) or b'{}')
             if not isinstance(body, dict):
                 raise ConfigError('expected a JSON object')
             self._send(route(self.play, body, {k: v[0] for k, v in parse_qs(url.query).items()}))
-        except (ConfigError, StorageError, ValueError, TypeError) as exc:
+        except (ConfigError, StorageError, ValueError, TypeError, OSError) as exc:
             self._send(_error(str(exc)))
 
 

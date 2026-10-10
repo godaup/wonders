@@ -9,9 +9,10 @@ that the effect system can depend on these enums without an import cycle. The
 from __future__ import annotations
 
 import enum
+import re
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Iterator, Optional, Tuple
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from wonders.effects.base import Effect
@@ -31,18 +32,156 @@ class IdentityEnum(enum.Enum):
     __hash__ = object.__hash__
 
 
-class Color(IdentityEnum):
-    """Card categories. WHITE/BLACK are reserved for the Leaders/Cities expansions."""
+SCORE_COLUMNS = ('civilian', 'commercial', 'guilds', 'leaders', 'cities')  # where a colour's card VP are scored
+_COLOR_ID = re.compile(r'[a-z][a-z0-9_-]{0,31}')
+_HEX = re.compile(r'#[0-9a-fA-F]{6}')
 
-    BROWN = 'brown'  # raw materials
-    GREY = 'grey'  # manufactured goods
-    BLUE = 'blue'  # civilian (victory points)
-    YELLOW = 'yellow'  # commercial (coins / trade / resources)
-    RED = 'red'  # military
-    GREEN = 'green'  # science
-    PURPLE = 'purple'  # guilds (Age III only)
-    WHITE = 'white'  # Leaders expansion
-    BLACK = 'black'  # Cities expansion
+
+class _ColorMeta(type):
+    def __iter__(cls) -> Iterator['Color']:
+        return iter(list(cls._members.values()))  # type: ignore[attr-defined]
+
+    def __len__(cls) -> int:
+        return len(cls._members)  # type: ignore[attr-defined]
+
+
+class Color(metaclass=_ColorMeta):
+    """A card colour: the nine official ones, plus any colour an expansion defines.
+
+    Behaves like the enum it replaced: ``Color('brown') is Color.BROWN``, members compare and hash by
+    identity, ``.value`` is the JSON id and ``list(Color)`` iterates every defined colour. Expansion
+    files declare new colours under ``"colors"`` (:meth:`define`); a colour is data, never code:
+
+    * ``label`` — the category name shown on cards and in the GUI.
+    * ``fill`` — the card colour (``#rrggbb``).
+    * ``score`` — the :class:`~wonders.engine.game.ScoreBreakdown` column its cards' VP count towards.
+    * ``tradeable`` — whether neighbours may buy its cards' production (true for brown / grey).
+    """
+
+    __slots__ = ('value', 'name', 'label', 'fill', 'score', 'tradeable', 'official')
+    _members: ClassVar[Dict[str, 'Color']] = {}
+
+    BROWN: ClassVar['Color']  # raw materials
+    GREY: ClassVar['Color']  # manufactured goods
+    BLUE: ClassVar['Color']  # civilian (victory points)
+    YELLOW: ClassVar['Color']  # commercial (coins / trade / resources)
+    RED: ClassVar['Color']  # military
+    GREEN: ClassVar['Color']  # science
+    PURPLE: ClassVar['Color']  # guilds (Age III only)
+    WHITE: ClassVar['Color']  # Leaders expansion
+    BLACK: ClassVar['Color']  # Cities expansion
+
+    value: str
+    name: str
+    label: str
+    fill: str
+    score: str
+    tradeable: bool
+    official: bool
+
+    def __new__(cls, value: str) -> 'Color':
+        try:
+            return cls._members[value]
+        except KeyError:
+            raise ValueError(f'{value!r} is not a known card colour') from None
+
+    @classmethod
+    def define(
+        cls,
+        value: str,
+        label: str = '',
+        fill: str = '#9aa3ad',
+        score: str = 'commercial',
+        tradeable: bool = False,
+        official: bool = False,
+    ) -> 'Color':
+        """Define a colour (idempotent for identical attributes) and return it.
+
+        Raises:
+            ValueError: a malformed id, fill or score column, or a colour already defined differently
+                (the official colours cannot be redefined).
+        """
+        label = label or value.replace('_', ' ').replace('-', ' ').title()
+        existing = cls._members.get(value)
+        if existing is not None:
+            if (existing.label, existing.fill, existing.score, existing.tradeable) != (label, fill, score, tradeable):
+                raise ValueError(f'card colour {value!r} is already defined differently')
+            return existing
+        if not _COLOR_ID.fullmatch(value):
+            raise ValueError(f'bad colour id {value!r} (lowercase letters, digits, - and _)')
+        if not _HEX.fullmatch(fill):
+            raise ValueError(f'colour {value!r}: fill must look like #a1b2c3, not {fill!r}')
+        if score not in SCORE_COLUMNS:
+            raise ValueError(f'colour {value!r}: score must be one of {", ".join(SCORE_COLUMNS)}, not {score!r}')
+        color = object.__new__(cls)
+        for attr, val in zip(cls.__slots__, (value, value.upper(), label, fill, score, bool(tradeable), official)):
+            object.__setattr__(color, attr, val)
+        cls._members[value] = color
+        return color
+
+    @classmethod
+    def from_spec(cls, spec: Dict[str, Any], redefine: bool = False) -> 'Color':
+        """Define a colour from its expansion-file entry (``{"id": ..., "label": ..., ...}``).
+
+        ``redefine`` updates a non-official colour that exists with other attributes in place (the
+        expansion builder, while a colour is being edited); cards keep referring to the same object.
+        """
+        unknown = set(spec) - {'id', 'label', 'fill', 'score', 'tradeable'}
+        if unknown:
+            raise ValueError(f'colour {spec.get("id")!r}: unknown keys {", ".join(sorted(unknown))}')
+        args = (
+            spec['id'],
+            spec.get('label', ''),
+            spec.get('fill', '#9aa3ad'),
+            spec.get('score', 'commercial'),
+            bool(spec.get('tradeable', False)),
+        )
+        existing = cls._members.get(spec['id'])
+        if redefine and existing is not None and not existing.official:
+            fresh = cls._members.pop(spec['id'])
+            try:
+                probe = cls.define(*args)  # validates and normalises the new attributes
+            finally:
+                cls._members[spec['id']] = fresh
+            for attr in ('label', 'fill', 'score', 'tradeable'):
+                object.__setattr__(existing, attr, getattr(probe, attr))
+            return existing
+        return cls.define(*args)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        raise AttributeError('card colours are immutable')
+
+    __hash__ = object.__hash__  # identity, like IdentityEnum
+
+    def __repr__(self) -> str:
+        return f'Color.{self.name}'
+
+    def __reduce__(self) -> Tuple[Any, ...]:
+        # Pickled by definition, so worker processes get extension colours they have not loaded yet.
+        return (Color.define, (self.value, self.label, self.fill, self.score, self.tradeable, self.official))
+
+    def __copy__(self) -> 'Color':
+        return self
+
+    def __deepcopy__(self, memo: Dict[int, Any]) -> 'Color':
+        return self
+
+
+for _attr, _value, _label, _fill, _score in (
+    ('BROWN', 'brown', 'Raw material', '#8a5a2b', 'commercial'),
+    ('GREY', 'grey', 'Manufactured good', '#7c828a', 'commercial'),
+    ('BLUE', 'blue', 'Civilian', '#2f6fb0', 'civilian'),
+    ('YELLOW', 'yellow', 'Commercial', '#d99a1c', 'commercial'),
+    ('RED', 'red', 'Military', '#b23b3b', 'commercial'),
+    ('GREEN', 'green', 'Scientific', '#3f9e5a', 'commercial'),
+    ('PURPLE', 'purple', 'Guild', '#7a4fb0', 'guilds'),
+    ('WHITE', 'white', 'Leader', '#c8ccd2', 'leaders'),
+    ('BLACK', 'black', 'City', '#2b2f36', 'cities'),
+):
+    setattr(
+        Color, _attr, Color.define(_value, _label, _fill, _score, tradeable=_attr in ('BROWN', 'GREY'), official=True)
+    )
+OFFICIAL_COLORS: Tuple[Color, ...] = tuple(Color)  # fixed order: encoders keep one feature per official colour
 
 
 class Resource(IdentityEnum):

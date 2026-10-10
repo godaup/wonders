@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+* New card colours for custom expansions: an expansion file declares them under `"colors"` (label,
+  fill, scorecard row, whether neighbours may buy their production) and cards use them like the
+  official ones; the card renderer, the GUI and `wonders ext validate` support them. `Color` is now
+  an open class instead of an `Enum` (same constants and behaviour).
+* Babel is removed from the roadmap and from the list of registered expansions.
+* Expansion builder in the GUI ("Expansion builder" in the header, `#builder`): create and edit an
+  extension's card colours, cards and wonder boards (both sides, stages, board powers) in forms with
+  live card and board previews, change its meta rules, see problems on the items they belong to, save
+  it into the extensions home (the game menu offers it right away), play it, run a balance check with
+  scripted agents against the base game, and download it as a zip.
+* Meta rules: expansions may change starting coins, coins for a discard, coins per treasury point,
+  the science set bonus, military token values and the number of extra guilds (`"rules"` in an
+  expansion file; `wonders.ruleset.RULES`), setting a value or changing it by a delta (`{"add": n}`).
+  Rules apply in a fixed order whatever order the expansions were chosen in (base, bundled, then
+  extensions by id): deltas add up, a set value replaces what came before, the result is clamped to the
+  rule's range (before, starting coins took the maximum; the bundled expansions are unaffected).
+* Effect schemas (`wonders.cards.schema`): a parameter description for every effect type;
+  `Registry.register_effect(..., schema=...)` lets plugins describe theirs.
+* Extension folders are built when they load; a folder whose cards or wonders do not build is skipped
+  with a warning instead of being registered half-way. Plugins now load before folders, so folders can
+  use their effect types.
 * Contribution checks (`wonders.contrib`, `CONTRIBUTING.md`): data extensions go to `extensions/<id>/`,
   plugin packages to `plugins/<name>/` (with a complete example plugin), translations of the game to
   `wonders/i18n/<lang>.json`. `wonders ext check` validates any of them (manifest metadata, data-only

@@ -38,11 +38,11 @@ def test_starting_coins_compose():
     assert Ruleset.of().starting_coins == 3
     assert Ruleset.of('cities').starting_coins == 3
     assert Ruleset.of('leaders').starting_coins == 6
-    assert Ruleset.of('leaders', 'cities').starting_coins == 6  # max wins
+    assert Ruleset.of('leaders', 'cities').starting_coins == 6  # Cities sets no starting coins
 
 
 def test_unimplemented_and_unknown():
-    assert Ruleset.of('armada', 'babel').unimplemented == ('armada', 'babel')
+    assert Ruleset.of('armada').unimplemented == ('armada',)
     assert Ruleset.of('leaders').unimplemented == ()
     assert Ruleset.of('leaders').uses('leaders') and not Ruleset.of('leaders').uses('cities')
     with pytest.raises(ValueError):

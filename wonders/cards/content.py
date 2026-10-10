@@ -233,6 +233,11 @@ def _read_expansion(expansion: str) -> dict:
     return json.loads(path.read_text(encoding='utf-8'))
 
 
+def define_colors(raw: dict) -> List[Color]:
+    """Define the card colours an expansion file declares (``"colors"``); call before building its cards."""
+    return [Color.from_spec(spec) for spec in raw.get('colors', [])]
+
+
 def load_content(*expansions: str) -> Content:
     """Load and merge one or more expansions (default: ``'base'``), bundled or from extensions."""
     from wonders.extensions import REGISTRY, ensure_loaded
@@ -241,6 +246,7 @@ def load_content(*expansions: str) -> Content:
     content = Content()
     for expansion in expansions or ('base',):
         raw = REGISTRY.expansion_raw(expansion) or _read_expansion(expansion)
+        define_colors(raw)
         content.wonders.extend(build_wonder(w) for w in raw.get('wonders', []))
         content.cards.extend(build_card(c, expansion) for c in raw.get('cards', []))
     return content
@@ -254,6 +260,7 @@ def build_age_deck(
     age: int,
     n_players: int,
     rng: Optional[random.Random] = None,
+    extra_guilds: int = GUILDS_OVER_PLAYERS,
 ) -> List[Card]:
     """Assemble the shuffled deck for ``age`` at ``n_players``.
 
@@ -270,7 +277,7 @@ def build_age_deck(
 
     if age == 3:
         guilds = content.guilds()
-        want = n_players + GUILDS_OVER_PLAYERS
+        want = n_players + extra_guilds
         deck.extend(guilds if want >= len(guilds) else rng.sample(guilds, want))
 
     # Cities: draw exactly n_players random black cards from this Age's pool (no

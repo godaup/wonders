@@ -51,7 +51,7 @@ class Manifest:
     license: str = ''
     description: str = ''
     rules_version: Optional[int] = None  # the rules version it was made for (wonders.ruleset.RULES_VERSION)
-    expansions: List[Dict[str, Any]] = field(default_factory=list)  # {id, name, file, starting_coins}
+    expansions: List[Dict[str, Any]] = field(default_factory=list)  # {id, name, file[, starting_coins]}
     models: List[Dict[str, Any]] = field(default_factory=list)  # {name, file, description}
     locales: List[Dict[str, Any]] = field(default_factory=list)  # {lang, file}
 
@@ -96,13 +96,22 @@ class Registry:
         self._current: Optional[Extension] = None  # the extension registering right now
 
     # -- registration API (used by folders and plugins) ---------------------------------------
-    def register_effect(self, type_name: str, builder: Callable[[Dict[str, Any]], Any]) -> None:
-        """A new effect type for card / wonder JSON: ``builder(spec) -> Effect``."""
+    def register_effect(
+        self, type_name: str, builder: Callable[[Dict[str, Any]], Any], schema: Optional[Any] = None
+    ) -> None:
+        """A new effect type for card / wonder JSON: ``builder(spec) -> Effect``.
+
+        ``schema`` (a :class:`~wonders.cards.schema.EffectSchema`) describes its fields, so the GUI's
+        expansion builder offers a form for it; without one the builder edits it as JSON.
+        """
         from wonders.cards.content import EFFECT_BUILDERS
+        from wonders.cards.schema import EFFECT_SCHEMAS
 
         if type_name in EFFECT_BUILDERS:
             raise ValueError(f'effect type {type_name!r} already exists')
         EFFECT_BUILDERS[type_name] = builder
+        if schema is not None:
+            EFFECT_SCHEMAS[type_name] = schema
         self._provides(f'effect:{type_name}')
 
     def register_agent(self, spec: Any, blurb: str = '') -> None:
@@ -117,15 +126,31 @@ class Registry:
         self._provides(f'agent:{spec.name}')
 
     def register_expansion(
-        self, expansion_id: str, name: str, data: Union[str, Path, Dict[str, Any]], starting_coins: int = 3
+        self,
+        expansion_id: str,
+        name: str,
+        data: Union[str, Path, Dict[str, Any]],
+        starting_coins: Optional[int] = None,
     ) -> None:
-        """An expansion: cards and wonders as a JSON file (path) or already-parsed data."""
-        from wonders.ruleset import EXPANSIONS, Expansion
+        """An expansion: cards, wonders, colours and meta rules as a JSON file (path) or already-parsed data.
+
+        The data's ``"rules"`` override meta rules (:data:`wonders.ruleset.RULES`); ``starting_coins`` is the
+        older shorthand for ``rules['starting_coins']``.
+        """
+        from wonders.ruleset import EXPANSIONS, Expansion, check_rules
 
         if expansion_id in EXPANSIONS:
             raise ValueError(f'expansion id {expansion_id!r} is taken')
-        EXPANSIONS[expansion_id] = Expansion(expansion_id, name, starting_coins=starting_coins)
-        self.expansion_data[expansion_id] = Path(data) if isinstance(data, (str, Path)) else data
+        source = Path(data) if isinstance(data, (str, Path)) else data
+        raw = json.loads(source.read_text(encoding='utf-8')) if isinstance(source, Path) else source
+        rules = dict(raw.get('rules') or {})
+        if starting_coins is not None:
+            rules.setdefault('starting_coins', starting_coins)
+        problems = check_rules(rules)
+        if problems:
+            raise ValueError(f'expansion {expansion_id!r}: ' + '; '.join(problems))
+        EXPANSIONS[expansion_id] = Expansion(expansion_id, name, rules=rules)
+        self.expansion_data[expansion_id] = source
         self.expansion_owner[expansion_id] = self._current.manifest.id if self._current else ''
         self._provides(f'expansion:{expansion_id}')
 
@@ -206,17 +231,69 @@ def load_folder(folder: Union[str, Path], registry: Optional[Registry] = None) -
         raise ValueError(f'extension {manifest.id!r} is already loaded')
     ext = Extension(manifest, 'folder', str(folder), _digest(folder, manifest))
     registry._current = ext
+    registry.extensions[manifest.id] = ext
     try:
         for e in manifest.expansions:
-            registry.register_expansion(e['id'], e.get('name', e['id']), folder / e['file'], e.get('starting_coins', 3))
+            registry.register_expansion(e['id'], e.get('name', e['id']), folder / e['file'], e.get('starting_coins'))
+            _build_check(registry, e['id'])
         for m in manifest.models:
             registry.register_model(m['name'], folder / m['file'], m.get('description', ''))
         for loc in manifest.locales:
             registry.register_locale(loc['lang'], json.loads((folder / loc['file']).read_text(encoding='utf-8')))
+    except Exception:
+        unload(manifest.id, registry)  # nothing half-loaded: the menu and renderers load every expansion
+        raise
     finally:
         registry._current = None
-    registry.extensions[manifest.id] = ext
     return ext
+
+
+def _build_check(registry: Registry, expansion_id: str) -> None:
+    """Build an expansion's colours, cards and wonders once, so a broken file fails to load at all."""
+    from wonders.cards.content import build_card, build_wonder, define_colors
+
+    raw = registry.expansion_raw(expansion_id) or {}
+    define_colors(raw)
+    for spec in raw.get('cards', []):
+        try:
+            build_card(spec, expansion_id)
+        except Exception as exc:
+            raise ValueError(f"card {spec.get('name', '?')!r}: {exc}") from exc
+    for spec in raw.get('wonders', []):
+        try:
+            build_wonder(spec)
+        except Exception as exc:
+            raise ValueError(f"wonder {spec.get('name', '?')!r}: {exc}") from exc
+
+
+def unload(extension_id: str, registry: Optional[Registry] = None) -> None:
+    """Forget a folder extension's expansions and models (its locale strings stay merged)."""
+    from wonders.ruleset import EXPANSIONS
+
+    registry = registry or REGISTRY
+    ext = registry.extensions.pop(extension_id, None)
+    if ext is None:
+        return
+    for item in ext.provides:
+        kind, _, name = item.partition(':')
+        if kind == 'expansion':
+            EXPANSIONS.pop(name, None)
+            registry.expansion_data.pop(name, None)
+            registry.expansion_owner.pop(name, None)
+        elif kind == 'model':
+            registry.models.pop(name, None)
+
+
+def reload_folder(folder: Union[str, Path], registry: Optional[Registry] = None) -> Extension:
+    """Load a folder extension again after its files changed (e.g. saved by the expansion builder)."""
+    registry = registry or REGISTRY
+    folder = Path(folder)
+    manifest = Manifest.from_dict(json.loads((folder / MANIFEST).read_text(encoding='utf-8')))
+    old = registry.extensions.get(manifest.id)
+    if old is not None and old.source != 'folder':
+        raise ValueError(f'extension {manifest.id!r} is a plugin, not a folder')
+    unload(manifest.id, registry)
+    return load_folder(folder, registry)
 
 
 def load_plugin(
@@ -266,6 +343,7 @@ def ensure_loaded() -> Registry:
     _LOADED = True
     if os.environ.get(DISABLE_VARIABLE):
         return REGISTRY
+    _load_entry_points(REGISTRY)  # first: folders may use the effect types plugins add
     for home in extensions_homes():
         if not home.is_dir():
             continue
@@ -274,8 +352,23 @@ def ensure_loaded() -> Registry:
                 load_folder(folder)
             except Exception as exc:  # a broken folder must not break the game
                 warnings.warn(f'extension folder {folder} failed to load: {exc}', stacklevel=2)
-    _load_entry_points(REGISTRY)
     return REGISTRY
+
+
+def _rule_and_colour_problems(filename: str, raw: Dict[str, Any], entry: Dict[str, Any]) -> List[str]:
+    """Problems with an expansion file's meta rules and colours (which it defines on the way)."""
+    from wonders.cards.base import Color
+    from wonders.ruleset import check_rules
+
+    problems = [f'{filename}: {p}' for p in check_rules(raw.get('rules') or {})]
+    if 'starting_coins' in entry:
+        problems += [f'manifest: {p}' for p in check_rules({'starting_coins': entry['starting_coins']})]
+    for color in raw.get('colors', []):
+        try:
+            Color.from_spec(color)
+        except Exception as exc:
+            problems.append(f"colour {color.get('id', '?') if isinstance(color, dict) else color!r}: {exc}")
+    return problems
 
 
 def _validate_expansion(folder: Path, entry: Dict[str, Any], known: Set[str]) -> List[str]:
@@ -289,7 +382,7 @@ def _validate_expansion(folder: Path, entry: Dict[str, Any], known: Set[str]) ->
         raw = json.loads(path.read_text(encoding='utf-8'))
     except Exception as exc:
         return [f'{path.name}: not valid JSON ({exc})']
-    problems: List[str] = []
+    problems = _rule_and_colour_problems(path.name, raw, entry)
     names: List[str] = []
     for spec in raw.get('cards', []):
         try:

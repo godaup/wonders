@@ -424,7 +424,7 @@ def play_and_record(
 
             drive(game.recruit_steps(age), recruit)
             builder.add_recruits(age, [recruited.get(i) for i in range(game.n)])
-        deck = build_age_deck(content, age, game.n, rng)
+        deck = build_age_deck(content, age, game.n, rng, game.rules.extra_guilds)
         builder.set_deck(age, [c.name for c in deck])
         hands = deal_hands(deck, game.n)
 
