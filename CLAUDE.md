@@ -131,6 +131,10 @@ scoring categories). It is split into three packages under `wonders/`:
   scripted agents keep the base `Agent` cost proxy (≈ random). `ablation.LeaderAblation` swaps an
   agent's leader decisions for random / cost-proxy ones; PPO pools accept `name[mode]` for it
   (e.g. `board[cost]`, the pre-Stage-2 behaviour).
+  `wonder_values.estimate_wonder_values` measures the board sides' strength (VP of margin vs the
+  average side, per expansion set × player count) for one agent in every seat: deals are replayed with
+  the boards rotated (common random numbers), `fit_wonder_values` regresses margins on own and
+  opponents' sides with empirical-Bayes pooling of the table deviations; report in `docs/wonder-strength.md`.
 - **`wonders/env/`** — training environments. `ActionSpace` is a fixed discrete space
   (card name × `ActionKind`, index = `card * 4 + kind`) with `mask(legal)` /
   `to_action(index, legal)`. `WondersEnv` is a PettingZoo-`ParallelEnv`-style

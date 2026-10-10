@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Strength of the wonder board sides (`wonders.agents.wonder_values`, `python -m wonders.agents.wonder_values`):
+  random deals played with the board assignment rotated over the same decks, regressed on the sides
+  at the table (own side and opponents'), with a value per side and a partially pooled deviation per
+  expansion set and player count, cluster-robust standard errors; results in `docs/wonder-strength.md`.
 * The Wonder Pack (expansion `wonderpack`): the Great Wall (stages in any order), Abu Simbel (entomb a
   leader for twice its cost; needs Leaders), Stonehenge (stone symbols; side B scores the buried card's
   colour at the end) and the Manneken Pis (copies its neighbours' stages; +4 coins), every power
