@@ -8,7 +8,7 @@ query one object rather than walking cards itself.
 from __future__ import annotations
 
 from collections import Counter
-from typing import Dict, Iterator, List
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from wonders.cards.base import Card, Color, Resource
 from wonders.cards.wonder import Wonder, WonderStage
@@ -28,6 +28,13 @@ class Player:
         self.cards: List[Card] = []
         self._names: set = set()  # built structure names, for chaining & duplicate checks
         self.stages_built: List[WonderStage] = []
+        # Each board stage as the stages it may be (one, or several when the Manneken Pis copies a Great
+        # Wall stage); ``Game`` resolves copied stages once it knows the neighbours (``resolve_slots``).
+        self.slots: List[Tuple[WonderStage, ...]] = [(s,) for s in wonder.stages]
+        self.built_slots: List[int] = []  # board stage index of each built stage, in build order
+        self.built_variants: List[int] = []  # which of the slot's stages each one is (Manneken Pis copies)
+        self.stage_cards: List[Card] = []  # the card buried under each built stage, in build order
+        self.entombed: List[Card] = []  # Abu Simbel: leaders placed face down (power lost, 2x cost in VP)
         # Aggregates derived from built cards/stages (production, trade prices, ...).
         # Only add_card/add_stage change those, and both clear this cache.
         self._cache: Dict[object, object] = {}
@@ -40,7 +47,14 @@ class Player:
         self.pending_discard_builds = 0  # free builds from the discard pile still owed
         self.pending_extra_recruits = 0  # Rome B: extra leader recruits still owed
         self.pending_leader_copies = 0  # Courtesans' Guild: neighbour leaders still to copy
+        self.pending_entombs = 0  # Abu Simbel: recruited leaders still to entomb
+        self.discard_build_priorities: List[int] = []  # one per owed discard build (FAQ order)
         self.copied_leaders: List[Card] = []  # Courtesans' Guild: copied (not owned) leaders
+
+    @classmethod
+    def starting(cls, name: str, wonder: Wonder, coins: int = STARTING_COINS) -> 'Player':
+        """A player at the start of a game: the treasury plus the board's extra coins (the Manneken Pis)."""
+        return cls(name, wonder, coins + wonder.extra_coins)
 
     # -- construction ------------------------------------------------------
     def has(self, name: str) -> bool:
@@ -52,21 +66,55 @@ class Player:
         self._cache.clear()
         self.version += 1
 
-    def add_stage(self, stage: WonderStage) -> None:
+    def add_stage(
+        self, stage: WonderStage, slot: Optional[int] = None, card: Optional[Card] = None, variant: int = 0
+    ) -> None:
+        """Build ``stage`` on board stage ``slot`` (default: the next one) with ``card`` buried under it."""
+        self.built_slots.append(len(self.stages_built) if slot is None else slot)
+        self.built_variants.append(variant)
         self.stages_built.append(stage)
+        if card is not None:
+            self.stage_cards.append(card)
         self._cache.clear()
         self.version += 1
+
+    def entomb(self, card: Card) -> None:
+        """Abu Simbel: place a recruited leader face down — it stops working (and is no leader in the city)."""
+        self.cards.remove(card)
+        self.entombed.append(card)
+        self._cache.clear()
+        self.version += 1
+
+    def resolve_slots(self, left: 'Player', right: 'Player') -> None:
+        """Turn copied stages (Manneken Pis) into the neighbours' stages they copy."""
+        slots: List[Tuple[WonderStage, ...]] = []
+        for stage in self.wonder.stages:
+            if stage.copy is None:
+                slots.append((stage,))
+            else:
+                side, which = stage.copy
+                slots.append((left if side == 'left' else right).wonder.stage_variants(which))
+        self.slots = slots
 
     @property
     def wonder_stages_built(self) -> int:
         return len(self.stages_built)
 
+    def open_slots(self) -> List[int]:
+        """Board stages that may be built now: the next one, or every unbuilt one (the Great Wall)."""
+        if self.wonder.any_order:
+            return [k for k in range(len(self.slots)) if k not in self.built_slots and self.slots[k]]
+        k = len(self.built_slots)
+        return [k] if k < len(self.slots) and self.slots[k] else []
+
+    def stage_options(self) -> List[Tuple[int, WonderStage]]:
+        """Every (board stage, stage) a WONDER action may build now, in board order."""
+        return [(k, stage) for k in self.open_slots() for stage in self.slots[k]]
+
     @property
     def next_stage(self):
-        idx = len(self.stages_built)
-        if idx < len(self.wonder.stages):
-            return self.wonder.stages[idx]
-        return None
+        options = self.stage_options()
+        return options[0][1] if options else None
 
     # -- effect aggregation ------------------------------------------------
     def add_copied_leader(self, card: Card) -> None:

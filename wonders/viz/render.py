@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from html import escape
-from typing import Iterable, List, Optional, Sequence, Tuple
+from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 from wonders.cards.base import MANUFACTURED_GOODS, OFFICIAL_COLORS, RAW_MATERIALS, Card, Resource
 from wonders.cards.wonder import Wonder, WonderStage
@@ -182,15 +182,23 @@ def _cost_chip(x: float, y: float, key: str, color: str, count: int, title: str,
 
 
 def _cost_row(
-    coins: int, resources, x: float, y: float, tile: float = 30, gap: float = 7, t: Translator = ENGLISH
+    coins: int,
+    resources,
+    x: float,
+    y: float,
+    tile: float = 30,
+    gap: float = 7,
+    t: Translator = ENGLISH,
+    per_row: int = 0,
 ) -> str:
+    """The cost as chips in a row; with ``per_row`` they wrap after that many."""
     items = _cost_items(coins, resources, t)
     if not items:
         return f'<text x="{x:.0f}" y="{y + 20:.0f}" font-size="12.5" fill="{SCIENCE}">{escape(t("Free"))}</text>'
-    out, cx = [], x
-    for key, color, count, title in items:
-        out.append(_cost_chip(cx, y, key, color, count, title, tile))
-        cx += tile + gap
+    out = []
+    for k, (key, color, count, title) in enumerate(items):
+        row, col = divmod(k, per_row) if per_row else (0, k)
+        out.append(_cost_chip(x + col * (tile + gap), y + row * (tile + gap), key, color, count, title, tile))
     return ''.join(out)
 
 
@@ -275,6 +283,9 @@ def _describe(effect, t: Translator = ENGLISH) -> List[Row]:  # noqa: C901 - one
         return [([('special', GUILD)], t(effect.description or effect.power.replace('_', ' ')))]
     if isinstance(effect, Tally):
         icon = ('vp', GUILD) if effect.vp_each else ('coin', GUILD)
+        if effect.what == 'resource_symbols' and effect.resource is not None:  # Stonehenge: per stone symbol
+            label = getattr(effect, 'label', None) or t('per {resource} symbol', resource=res_name(effect.resource, t))
+            return [([icon, (RES_ICON[effect.resource], RES_COLOR[effect.resource])], t(label))]
         return [([icon], _tally_label(effect, t))]
     description = getattr(effect, 'label', None)  # data-driven description (Leaders / Cities powers)
     if description:
@@ -483,13 +494,39 @@ def _stage_panel(stage: WonderStage, index: int, x: float, built: bool = False, 
         f'<text x="{x + 12:.0f}" y="{y0 + 26}" font-size="12" letter-spacing="1.2" fill="{MUTED}">'
         f'{escape(t("STAGE {n}", n=index))}</text>',
         f'<text x="{x + 12:.0f}" y="{y0 + 48}" font-size="10.5" fill="{MUTED}">{escape(t("COST"))}</text>',
-        _cost_row(stage.cost.coins, stage.cost.resources, x + 10, y0 + 54, tile=31, gap=4, t=t),
     ]
-    ey = float(y0 + 116)
-    for icons, label in [r for e in stage.effects for r in _describe(e, t)][:2]:
-        row, extra = _row_svg(icons, label, x + 10, ey, size=22, font=14, right=x + w - 4, maxlines=3)
+    many = False  # more than four cost items wrap into two rows of smaller chips
+    if stage.copy is not None:  # Manneken Pis: cost and effect are the copied stage's
+        side, which = stage.copy
+        what = (
+            t('the last stage of the board to the left')
+            if (side, which) == ('left', 'last')
+            else (
+                t('the last stage of the board to the right')
+                if which == 'last'
+                else (
+                    t('stage {n} of the board to the left', n=which)
+                    if side == 'left'
+                    else t('stage {n} of the board to the right', n=which)
+                )
+            )
+        )
+        out.append(f'<text x="{x + 14:.0f}" y="{y0 + 80}" font-size="26" font-weight="700" fill="{MUTED}">?</text>')
+        row, _extra = _row_svg([], t('Copies {what}', what=what), x + 10, float(y0 + 116), size=22, font=14,
+                               right=x + w - 4, maxlines=4)  # fmt: skip
         out.append(row)
-        ey += 30 + extra
+    else:
+        many = len(_cost_items(stage.cost.coins, stage.cost.resources, t)) > 4  # Manneken Pis B: all seven
+        tile, gap = (22, 3) if many else (31, 4)
+        out.append(_cost_row(stage.cost.coins, stage.cost.resources, x + 10, y0 + 54, tile, gap, t, per_row=5))
+    ey = float(y0 + 116 + (12 if many else 0))
+    rows = [r for e in stage.effects for r in _describe(e, t)]
+    for icons, label in rows[:3]:
+        row, extra = _row_svg(
+            icons, label, x + 10, ey, size=22, font=14, right=x + w - 4, maxlines=3 if len(rows) < 3 else 1
+        )
+        out.append(row)
+        ey += (30 if len(rows) < 3 else 26) + extra
     if built:
         badge = '✓ ' + t('BUILT')
         bw = max(62, round(8 + 7.4 * len(badge)))  # wider for longer translations
@@ -501,8 +538,13 @@ def _stage_panel(stage: WonderStage, index: int, x: float, built: bool = False, 
     return ''.join(out)
 
 
-def wonder_svg(wonder: Wonder, built: int = 0, t: Translator = ENGLISH) -> str:
-    """A standalone ``<svg>`` board for one wonder (starting resource + stages; the first ``built`` marked built)."""
+def wonder_svg(wonder: Wonder, built: Union[int, Iterable[int]] = 0, t: Translator = ENGLISH) -> str:
+    """A standalone ``<svg>`` board for one wonder (starting resource + stages).
+
+    ``built`` marks stages built: the first ``built`` ones, or the given 0-based stage indices (the Great
+    Wall builds its stages in any order).
+    """
+    done = set(range(built)) if isinstance(built, int) else set(built)
     uid = _slug(wonder.name + wonder.side)
     n = len(wonder.stages)
     width = _WLEFT + n * _WSTAGE + 12
@@ -538,8 +580,17 @@ def wonder_svg(wonder: Wonder, built: int = 0, t: Translator = ENGLISH) -> str:
         parts.append(f'<text x="50" y="{_WH - 20}" font-size="13" fill="#e7edf3">{escape(res_name(res, t))}</text>')
     else:
         parts.append(f'<text x="20" y="{_WH - 20}" font-size="13" fill="#e7edf3">{escape(t("nothing"))}</text>')
+    if wonder.any_order:
+        parts.append(
+            f'<text x="20" y="{_WH - 64}" font-size="10.5" fill="#c9d6e3">{escape(t("stages in any order"))}</text>'
+        )
+    if wonder.extra_coins:
+        parts.append(
+            f'<text x="20" y="{_WH - 64}" font-size="10.5" fill="#c9d6e3">'
+            f'{escape(t("+{n} coins at the start", n=wonder.extra_coins))}</text>'
+        )
     for i, stage in enumerate(wonder.stages, 1):
-        parts.append(_stage_panel(stage, i, _WLEFT + (i - 1) * _WSTAGE, built=i <= built, t=t))
+        parts.append(_stage_panel(stage, i, _WLEFT + (i - 1) * _WSTAGE, built=i - 1 in done, t=t))
     parts.append('</svg>')
     return ''.join(parts)
 

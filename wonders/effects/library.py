@@ -139,12 +139,20 @@ class FreeBuildPerAge(Effect):
 
 @dataclass
 class BuildFromDiscard(Effect):
-    """Halicarnassus: at the end of the turn, build one discarded card for free."""
+    """Halicarnassus: at the end of the turn, build one discarded card for free.
+
+    ``priority`` orders several discard builds of one turn (Wonder Pack FAQ: Halicarnassus 0,
+    the Great Wall 1, a stage the Manneken Pis copies 2, Solomon 3, the Courtesans' Guild 4).
+    """
 
     count: int = 1
+    priority: int = 0
 
     def discard_builds(self) -> int:
         return self.count
+
+    def discard_build_priority(self) -> int:
+        return self.priority
 
 
 @dataclass
@@ -183,6 +191,8 @@ class Tally(Effect):
       - Arena: ``Tally('wonder_stages', 'self', coins_each=3, vp_each=1)``
       - Builders Guild: ``Tally('wonder_stages', 'both', vp_each=1)``
     * ``what='defeat_tokens'`` counts military defeats (Strategists Guild, neighbours).
+    * ``what='resource_symbols'`` counts the ``resource`` symbols on the production of cards of
+      ``colors`` (Stonehenge: stone on brown cards; a choice card shows the symbol once).
     """
 
     what: str
@@ -191,6 +201,7 @@ class Tally(Effect):
     coins_each: int = 0
     vp_each: int = 0
     token_value: Optional[int] = None  # for what='victory_tokens': only count tokens of this value
+    resource: Optional[Resource] = None  # for what='resource_symbols'
 
     def __post_init__(self) -> None:
         self.colors = frozenset(self.colors)
@@ -210,6 +221,15 @@ class Tally(Effect):
             return sum(1 for t in player.tokens if t > 0)
         if self.what == 'coins':  # 1 unit per 3 coins (Midas, Gamers' Guild)
             return player.coins // 3
+        if self.what == 'resource_symbols':
+            return sum(
+                1
+                for c in player.cards
+                if c.color in self.colors
+                for e in c.effects
+                for slot in e.production()
+                if self.resource in slot
+            )
         raise ValueError(f'unknown tally target {self.what!r}')
 
     def _count(self, ctx: Context) -> int:
@@ -259,6 +279,40 @@ class Diplomacy(Effect):
 
 
 @dataclass
+class BuriedColorTally(Effect):
+    """Stonehenge B: at the end, points per card of the buried card's colour in the neighbours' cities.
+
+    The card used to build the stage stays hidden until the end of the game, so the stage scores
+    nothing before (``Context.final``) and its summary does not name the colour.
+    """
+
+    vp_each: int = 1
+    scope: str = 'neighbours'
+    color: Optional[Color] = None  # set when the stage is built (see :meth:`buried`)
+
+    def buried(self, card: 'Card') -> 'Effect':
+        return BuriedColorTally(self.vp_each, self.scope, card.color)
+
+    def victory_points(self, ctx: Context) -> int:
+        if not ctx.final or self.color is None:
+            return 0
+        return self.vp_each * sum(1 for p in _targets(ctx, self.scope) for c in p.cards if c.color is self.color)
+
+    def counts(self) -> Optional[Dict[str, object]]:
+        return {'what': 'buried_color', 'scope': self.scope, 'colors': [], 'vp_each': self.vp_each}
+
+
+@dataclass
+class EntombLeader(Effect):
+    """Abu Simbel: entomb one of your recruited leaders — its power is lost, it scores twice its cost."""
+
+    count: int = 1
+
+    def leader_entombs(self) -> int:
+        return self.count
+
+
+@dataclass
 class Plunder(Effect):
     """Cities: each target loses ``amount`` coins; any shortfall becomes debt.
 
@@ -272,7 +326,8 @@ class Plunder(Effect):
         for player in _targets(ctx, self.scope):
             lost = min(self.amount, player.coins)
             player.coins -= lost
-            player.debt += self.amount - lost
+            if ctx.debt_tokens:  # without Cities a player short of coins just pays what they have
+                player.debt += self.amount - lost
 
 
 @dataclass
@@ -505,7 +560,8 @@ class PlunderPer(Effect):
             owed = self.amount * metric._metric(player)
             paid = min(owed, player.coins)
             player.coins -= paid
-            player.debt += owed - paid
+            if ctx.debt_tokens:
+                player.debt += owed - paid
 
 
 @dataclass

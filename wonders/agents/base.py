@@ -33,6 +33,8 @@ class Agent(ABC):
         """
         if obs.decision == 'draft':
             return Action.build(self.draft_leader(options))
+        if obs.decision == 'entomb_leader':
+            return Action.build(self.entomb_leader(options, obs))
         if obs.decision == 'recruit':
             action = self.recruit(options, obs)
             if action is not None:
@@ -40,6 +42,13 @@ class Agent(ABC):
         return self.decide(obs)
 
     # -- Leaders expansion hooks (sane defaults; override for smarter play) --
+    def entomb_leader(self, options: List[Card], obs: Observation) -> Card:
+        """Abu Simbel: pick one of your recruited leaders to entomb (it scores twice its cost).
+
+        Default: the costliest (the most points).
+        """
+        return max(options, key=lambda c: c.cost.coins)
+
     def draft_leader(self, options: List[Card]) -> Card:
         """Pick one leader to keep from ``options`` during the pre-game draft.
 

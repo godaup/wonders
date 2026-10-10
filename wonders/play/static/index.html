@@ -612,6 +612,7 @@ const DECISIONS = {
   recruit: N('<b>Recruit</b> a leader for this Age, use one for a wonder stage, or discard one for 3 coins.'),
   leader_build: N('<b>Rome:</b> recruit an extra leader right away.'),
   copy_leader: N("<b>Courtesans' Guild:</b> copy one of your neighbours' leaders."),
+  entomb_leader: N("<b>Abu Simbel:</b> entomb one of your recruited leaders: its power is lost, it scores twice its cost."),
 };
 
 let options = null;   // /api/options
@@ -627,7 +628,11 @@ async function api(path, body) {
 }
 const assetV = () => '&v=' + ((options && options.asset_version) || '0') + '&lang=' + encodeURIComponent(lang);
 const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name) + assetV();
-const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + (built || 0) + assetV();
+// ``built``: a count, or a city (its built stages by index: the Great Wall builds in any order).
+const builtParam = (built) => (built && typeof built === 'object'
+  ? (built.stage_slots && built.stage_slots.length ? built.stage_slots.map((s) => 's' + (s[0] + 1)).join(',') : built.stages_built || 0)
+  : built || 0);
+const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + builtParam(built) + assetV();
 const PAGES = ['menu', 'game', 'result', 'history', 'achievements', 'builder'];
 const HASHES = { history: '#games', achievements: '#achievements', builder: '#builder' };  // pages a reload or link can open
 const show = (id) => {
@@ -678,7 +683,8 @@ function agentElo(id) { const a = options.agents.find((x) => x.id === id); retur
 function agentBlurb(id) { const a = options.agents.find((x) => x.id === id); return (a && a.blurb) || t('A computer opponent.'); }
 function availableWonders() {
   const ids = new Set(['base', ...menu.expansions]);
-  return options.expansions.filter((e) => ids.has(e.id)).flatMap((e) => e.wonders);
+  const ok = (e, w) => ((e.requires || {})[w] || []).every((r) => ids.has(r));  // Abu Simbel needs Leaders
+  return options.expansions.filter((e) => ids.has(e.id)).flatMap((e) => e.wonders.filter((w) => ok(e, w)));
 }
 function renderMenu() {
   const exps = $('m-expansions'); exps.replaceChildren();
@@ -865,7 +871,7 @@ function renderOpponents(obs) {
     const tag = seat === obs.left.seat ? t('← left neighbour') : seat === obs.right.seat ? t('right neighbour →') : '';
     const board = state.boards[seat];
     const wonder = el('span', { class: 'wonder-link', 'data-tip': t('Starts with {resource}', { resource: board.produces }) + (board.powers.length ? '\n' + board.powers.join('\n') : '') + '\n' + t('Click to view the board'),
-      onclick: () => viewWonder(city.wonder, city.wonder_side, city.stages_built) }, nm(city.wonder) + ' (' + city.wonder_side + ')');
+      onclick: () => viewWonder(city.wonder, city.wonder_side, city) }, nm(city.wonder) + ' (' + city.wonder_side + ')');
     // Exactly six rows per city: the panels share them (CSS subgrid), so sections line up.
     box.append(el('div', { class: 'panel city' + (tag ? ' neighbour' : '') },
       el('div', { class: 'city-head' }, el('div', {}, el('h3', {}, city.name), el('div', { class: 'muted sub' },
@@ -883,9 +889,9 @@ function renderMe(obs) {
   const me = obs.me;
   $('g-name').textContent = me.name + ' — ' + nm(me.wonder) + ' (' + me.wonder_side + ')';
   $('g-score').replaceWith(Object.assign(scoreEl(me.score), { id: 'g-score' }));
-  const src = wonderUrl(me.wonder, me.wonder_side, me.stages_built);
+  const src = wonderUrl(me.wonder, me.wonder_side, me);
   if ($('g-board').getAttribute('src') !== src) {
-    $('g-board').src = src; $('g-board').onclick = () => viewWonder(me.wonder, me.wonder_side, me.stages_built);
+    $('g-board').src = src; $('g-board').onclick = () => viewWonder(me.wonder, me.wonder_side, me);
   }
   $('g-board').dataset.tip = state.boards[obs.seat].stages.map(stageTip).join('\n\n') + '\n\n' + t('Click to enlarge');
   $('g-stats').replaceChildren(...statGrid(me, 2));
@@ -905,11 +911,12 @@ const tradeText = (n) => (n ? ' ' + t('({n} trade)', { n }) : '');
 function actionLabel(a, decision) {
   if (a.kind === 'wonder') return [t('Wonder', null, 'action'), a.coins ? coinsText(a.coins) + tradeText(a.trade) : ''];
   if (a.kind === 'build') {
-    const verb = { draft: N('Keep'), recruit: N('Recruit'), leader_build: N('Recruit'), copy_leader: N('Copy') }[decision] || N('Build');
+    const verb = { draft: N('Keep'), recruit: N('Recruit'), leader_build: N('Recruit'), copy_leader: N('Copy'),
+      entomb_leader: N('Entomb') }[decision] || N('Build');
     let cost = t('free');
     if (a.chain) cost = t('chain');
     else if (a.coins) cost = coinsText(a.coins) + tradeText(a.trade);
-    return [t(verb), decision === 'draft' || decision === 'copy_leader' ? '' : cost];
+    return [t(verb), decision === 'draft' || decision === 'copy_leader' || decision === 'entomb_leader' ? '' : cost];
   }
   if (a.kind === 'discard') return [t('Discard'), t('+3 coins')];
   return [t('Build free'), decision === 'discard_build' ? t('from discards') : t('board power')];
@@ -922,9 +929,23 @@ function payTip(p, obs) {
 }
 function actionButtons(a, obs) {
   const [label, detail] = actionLabel(a, obs.decision);
-  const choice = { payment: null };
-  const button = el('button', { class: a.kind === 'build' || a.kind === 'free' ? 'primary' : '', onclick: () => play(a.index, choice.payment) },
-    label, detail ? el('small', {}, detail) : null);
+  const choice = { payment: null, stage: null };
+  const button = el('button', { class: a.kind === 'build' || a.kind === 'free' ? 'primary' : '',
+    onclick: () => play(a.index, choice.payment, choice.stage) }, label, detail ? el('small', {}, detail) : null);
+  if (a.stages && a.stages.length > 1) {
+    // The Great Wall (stages in any order) or a Manneken Pis stage copying it: pick the stage, paid the cheapest way.
+    const pills = a.stages.map((s, k) => {
+      const board = state.boards[obs.seat].stages[s.stage - 1] || {};
+      const pill = el('button', { class: k === 0 ? 'on' : '', 'data-tip': stageTip(board) + '\n' + coinsText(s.coins), onclick: () => {
+        choice.stage = s.index;
+        pills.forEach((x) => x.classList.toggle('on', x === pill));
+        button.querySelector('small').textContent = coinsText(s.coins) + tradeText(s.trade);
+      } }, t('Stage {n}', { n: s.stage }));
+      return pill;
+    });
+    choice.stage = a.stages[0].index;
+    return [button, el('div', { class: 'pay', 'data-tip': t('Choose which wonder stage to build') }, pills)];
+  }
   if (!a.payments) return [button];
   // Several ways to split the purchase between the neighbours: let the player pick (cheapest first).
   const pills = a.payments.map((p, k) => {
@@ -939,7 +960,7 @@ function actionButtons(a, obs) {
 }
 const SHORT = { play: N('Your turn: pick a card'), last_card: N('Babylon: play your last card?'), discard_build: N('Build a discarded card for free'),
   draft: N('Leaders draft: keep one'), recruit: N('Recruit a leader'), leader_build: N('Rome: recruit an extra leader'),
-  copy_leader: N("Courtesans' Guild: copy a leader") };
+  copy_leader: N("Courtesans' Guild: copy a leader"), entomb_leader: N('Abu Simbel: entomb a leader') };
 const plain = (html) => { const d = document.createElement('div'); d.innerHTML = t(html); return d.textContent; };
 function pairUp(buttons) {  // secondary moves sit two per row; a leftover one takes the full row
   const halves = buttons.filter((b) => b.tagName === 'BUTTON' && !b.classList.contains('primary'));
@@ -1313,9 +1334,12 @@ function render() {
   setHeader();
 }
 
-async function play(index, payment) {
+async function play(index, payment, stage) {
   setBusy(true); hideTip();
-  try { state = (await api('/api/act', payment ? { index, payment } : { index })).state; render(); }
+  const body = { index };
+  if (payment) body.payment = payment;
+  if (stage !== null && stage !== undefined) body.stage = stage;
+  try { state = (await api('/api/act', body)).state; render(); }
   catch (e) { alert(e.message); }
   finally { setBusy(false); }
 }
@@ -1648,6 +1672,7 @@ function paramInput(effect, p, rerender) {
     case 'choice': return bSelect(effect, p.name, p.choices.map((c) => [c, p.choice_labels[c] || c]),
       p.required ? {} : { blank: dflt === '' ? '—' : t('default: {value}', { value: p.choice_labels[dflt] || dflt }) });
     case 'symbol': return bSelect(effect, p.name, builder.info.symbols.map((s) => [s, t(s, null, 'science')]));
+    case 'resource': return bSelect(effect, p.name, builder.info.resources.map((r) => [r, resName(r)]), { blank: '—' });
     case 'color': return bSelect(effect, p.name, colorChoices(), { blank: '—' });
     case 'target': return bSelect(effect, p.name, [...colorChoices(), ['wonder', t('wonder stages')]]);
     case 'colors': {
@@ -1919,11 +1944,31 @@ function renderWonders() {
         } }, t('Copy side A')) : null),
       img, note,
       bField(t('Starting resource'), bSelect(w, 'starting_resource', builder.info.resources.map((r) => [r, resName(r)]), { blank: t('none') })),
-      ...w.stages.map((stage, s) => el('div', { class: 'b-stage' },
-        el('div', { class: 'b-list-head' }, el('b', {}, t('Stage {n}', { n: s + 1 })),
-          el('button', { class: 'tiny', 'data-tip': t('Remove'), onclick: () => { w.stages.splice(s, 1); changed(); renderBuilder(); } }, '✕')),
-        bField(t('Cost'), costEditor(stage)),
-        effectsEditor(stage.effects = stage.effects || [], t('Effects')))),
+      el('div', { class: 'b-grid' },
+        bField(t('Extra starting coins'), bNum(w, 'extra_coins', { min: 0, max: 20, placeholder: 0 })),
+        bCheck(w, 'any_order', t('Stages may be built in any order')),
+        el('label', { class: 'b-check' }, el('input', { type: 'checkbox', checked: (w.requires || []).includes('leaders'), onchange: (e) => {
+          if (e.target.checked) w.requires = ['leaders']; else delete w.requires; changed();
+        } }), t('Only in games with Leaders'))),
+      ...w.stages.map((stage, s) => {
+        // A stage either has its own cost and effects or copies one of a neighbour's stages (Manneken Pis).
+        const copy = stage.copy ? stage.copy.side + ':' + stage.copy.stage : '';
+        const copySel = el('select', { onchange: (e) => {
+          const v = e.target.value;
+          if (!v) { delete stage.copy; stage.cost = stage.cost || {}; stage.effects = stage.effects || []; }
+          else { const [side, which] = v.split(':'); stage.copy = { side, stage: which === 'last' ? 'last' : Number(which) }; }
+          changed(); renderBuilder();
+        } }, [['', t('its own cost and effects')], ...['left', 'right'].flatMap((side) => [1, 2, 3, 'last'].map((which) =>
+          [side + ':' + which, which === 'last' ? t(side === 'left' ? N('the last stage of the board to the left') : N('the last stage of the board to the right'))
+            : t(side === 'left' ? N('stage {n} of the board to the left') : N('stage {n} of the board to the right'), { n: which })]))]
+          .map(([v, label]) => el('option', { value: v, selected: v === copy }, label)));
+        return el('div', { class: 'b-stage' },
+          el('div', { class: 'b-list-head' }, el('b', {}, t('Stage {n}', { n: s + 1 })),
+            el('button', { class: 'tiny', 'data-tip': t('Remove'), onclick: () => { w.stages.splice(s, 1); changed(); renderBuilder(); } }, '✕')),
+          bField(t('Copies'), copySel),
+          stage.copy ? null : bField(t('Cost'), costEditor(stage)),
+          stage.copy ? null : effectsEditor(stage.effects = stage.effects || [], t('Effects')));
+      }),
       el('button', { onclick: () => { w.stages.push({ cost: {}, effects: [{ type: 'victory_points', points: 3 }] }); changed(); renderBuilder(); } }, '+ ' + t('Stage')),
       effectsEditor(w.effects, t('Board powers (always active)')));
     ['input', 'change', 'click'].forEach((ev) => box.addEventListener(ev, refresh));

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* The Wonder Pack (expansion `wonderpack`): the Great Wall (stages in any order), Abu Simbel (entomb a
+  leader for twice its cost; needs Leaders), Stonehenge (stone symbols; side B scores the buried card's
+  colour at the end) and the Manneken Pis (copies its neighbours' stages; +4 coins), every power
+  mechanized from the official rules sheet. A WONDER action may choose its stage (`Action.staged`,
+  `Game.stage_options`, stage pills in the GUI; stored in records); the board renderer draws stages built
+  out of order and copied stages; the GUI menu offers Abu Simbel only with Leaders. Discard builds owed
+  in one turn resolve in the FAQ's order (Halicarnassus, Great Wall, Manneken Pis, Solomon, Courtesans).
+  Without Cities, plunder no longer creates debt (no debt tokens in play).
 * New card colours for custom expansions: an expansion file declares them under `"colors"` (label,
   fill, scorecard row, whether neighbours may buy their production) and cards use them like the
   official ones; the card renderer, the GUI and `wonders ext validate` support them. `Color` is now

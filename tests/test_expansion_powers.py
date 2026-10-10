@@ -19,7 +19,8 @@ CONTENT = load_content('base', 'leaders', 'cities')
 
 def game(n=3):
     wonders = [wonder_gizah_a, wonder_rhodes_a, wonder_ephesos_a]
-    return Game([Player(f'P{i}', wonders[i % 3]()) for i in range(n)])
+    players = [Player(f'P{i}', wonders[i % 3]()) for i in range(n)]
+    return Game(players, expansions=('base', 'leaders', 'cities'))  # the powers tested here come from both
 
 
 def own(g, seat, name):

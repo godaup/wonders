@@ -24,7 +24,7 @@ SETUPS = [
 
 def _game(n=3):
     content = load_content('base')
-    return Game([Player(s.name, content.wonder(s.wonder, s.side)) for s in SETUPS[:n]])
+    return Game([Player(s.name, content.wonder(s.wonder, s.side)) for s in SETUPS[:n]], expansions=('base', 'cities'))
 
 
 # -- ruleset composition --------------------------------------------------
