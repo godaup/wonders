@@ -774,7 +774,6 @@
   "Licence": "Lizenz",
   "Description": "Beschreibung",
   "Meta rules": "Grundregeln",
-  "Leave a field empty to keep the base game value. When several expansions change the same rule, the one listed last in the game wins.": "Lass ein Feld leer, um den Wert des Grundspiels zu behalten. Ändern mehrere Erweiterungen dieselbe Regel, gilt die zuletzt gewählte.",
   "Rule": "Regel",
   "Base game": "Grundspiel",
   "This expansion": "Diese Erweiterung",
@@ -971,5 +970,9 @@
   "defeat tokens": "Niederlagenplättchen",
   "military tokens": "Militärplättchen",
   "victory tokens": "Siegesplättchen",
-  "coins (per 3)": "Münzen (je 3)"
+  "coins (per 3)": "Münzen (je 3)",
+  "base value": "Grundwert",
+  "set to": "setzen auf",
+  "change by": "ändern um",
+  "Set a rule to a value, or change it by an amount: changes from several expansions add up (Leaders starts with 6 coins, so \"change by 2\" gives 8 with it). Rules apply in a fixed order, whatever order the expansions are chosen in: the base game, the bundled expansions, then the others by id; a set value replaces what came before it.": "Setze eine Regel auf einen Wert oder ändere sie um einen Betrag: Änderungen mehrerer Erweiterungen addieren sich (Leaders startet mit 6 Münzen, „ändern um 2“ ergibt damit 8). Regeln gelten in fester Reihenfolge, egal in welcher die Erweiterungen gewählt werden: Grundspiel, mitgelieferte Erweiterungen, dann die übrigen nach Kennung; ein gesetzter Wert ersetzt, was vorher kam."
 }

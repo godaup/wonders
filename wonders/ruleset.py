@@ -12,15 +12,18 @@ just a union — no special-casing in the engine.
 
 The few numbers the engine itself fixes — starting coins, coins for a discard, coins per treasury
 point, military tokens, the science set bonus, the guild count — are **meta rules** (:data:`RULES`):
-an expansion may override any of them (``Expansion.rules``; extension files say ``"rules": {...}``).
-:class:`Rules` resolves them for a combination: defaults, then each expansion's overrides in order,
-so a later expansion wins. ``Game`` resolves its own rules from its expansions (:func:`rules_of`).
+an expansion may change any of them (``Expansion.rules``; extension files say ``"rules": {...}``),
+either setting a value (``"discard_coins": 2``) or changing it by a delta
+(``"starting_coins": {"add": 2}``). :func:`rules_of` resolves a combination from the base values,
+applying the expansions in a fixed order however they were chosen — ``base``, the bundled expansions,
+then extension expansions by id — so deltas add up, a set replaces what came before it, and the result
+is clamped to the rule's range. ``Game`` resolves its own rules from its expansions.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 DEFAULT_STARTING_COINS = 3
 
@@ -83,8 +86,19 @@ class Rules:
         return {f.name: getattr(self, f.name) for f in fields(self) if getattr(self, f.name) != f.default}
 
 
+RuleValue = Union[int, Mapping[str, int]]  # a value to set, or {"add": delta}
+
+
+def _whole(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 def check_rules(rules: Any) -> List[str]:
-    """Problems with an expansion's ``"rules"`` overrides (an empty list means they are fine)."""
+    """Problems with an expansion's ``"rules"`` (an empty list means they are fine).
+
+    Each rule is a whole number to set, within the rule's range, or ``{"add": n}`` to change it by
+    ``n`` (at most the width of the range either way).
+    """
     if not isinstance(rules, Mapping):
         return ['rules must be an object of rule name to number']
     problems = []
@@ -92,11 +106,22 @@ def check_rules(rules: Any) -> List[str]:
         spec = RULE_SPECS.get(name)
         if spec is None:
             problems.append(f'unknown rule {name!r} (known: {", ".join(RULE_SPECS)})')
-        elif not isinstance(value, int) or isinstance(value, bool):
-            problems.append(f'rule {name!r} must be a whole number, not {value!r}')
+        elif isinstance(value, Mapping):
+            width = spec.maximum - spec.minimum
+            if set(value) != {'add'} or not _whole(value['add']):
+                problems.append(f'rule {name!r}: a change is written {{"add": n}} with a whole number n, not {value!r}')
+            elif not -width <= value['add'] <= width:
+                problems.append(f'rule {name!r}: a change must be between {-width} and {width}, not {value["add"]}')
+        elif not _whole(value):
+            problems.append(f'rule {name!r} must be a whole number or {{"add": n}}, not {value!r}')
         elif not spec.minimum <= value <= spec.maximum:
             problems.append(f'rule {name!r} must be between {spec.minimum} and {spec.maximum}, not {value}')
     return problems
+
+
+def apply_rule(current: int, value: RuleValue) -> int:
+    """One expansion's rule applied to the value so far: a number sets it, ``{"add": n}`` changes it."""
+    return current + int(value['add']) if isinstance(value, Mapping) else int(value)
 
 
 @dataclass(frozen=True)
@@ -108,29 +133,45 @@ class Expansion:
     # only). They can still be listed in a ruleset; the engine flags the gap.
     implemented: bool = True
     note: str = ''
-    rules: Mapping[str, int] = field(default_factory=dict)  # meta-rule overrides (see RULES)
+    rules: Mapping[str, RuleValue] = field(default_factory=dict)  # meta-rule changes (see RULES)
 
     @property
-    def overrides(self) -> Dict[str, int]:
-        """The meta rules this expansion sets."""
+    def overrides(self) -> Dict[str, RuleValue]:
+        """The meta rules this expansion sets or changes."""
         out = dict(self.rules)
         if self.starting_coins is not None:
             out.setdefault('starting_coins', self.starting_coins)
         return out
 
 
+def rule_order(expansions: Sequence[str]) -> List[str]:
+    """The order meta rules apply in, whatever order the expansions were chosen in.
+
+    ``base`` first, then the bundled expansions (in their registry order), then extension expansions by id.
+    """
+    unique = list(dict.fromkeys(expansions))
+    return sorted(unique, key=lambda i: (0, BUNDLED.index(i), '') if i in BUNDLED else (1, 0, i))
+
+
 def rules_of(expansions: Sequence[str]) -> Rules:
-    """The meta rules of a combination: defaults, then each expansion's overrides in order (later wins)."""
+    """The meta rules of a combination of expansions.
+
+    The base values with every expansion's rules applied in :func:`rule_order` (deltas add up, a set
+    replaces what came before), clamped to each rule's range.
+    """
     if any(i not in EXPANSIONS for i in expansions):
         from wonders.extensions import ensure_loaded
 
         ensure_loaded()  # an extension expansion: discover extensions (once)
-    overrides: Dict[str, int] = {}
-    for i in expansions:
+    values: Dict[str, int] = {}
+    for i in rule_order(expansions):
         exp = EXPANSIONS.get(i)
         if exp is not None:
-            overrides.update(exp.overrides)
-    return Rules(**overrides) if overrides else _DEFAULT_RULES
+            for name, value in exp.overrides.items():
+                values[name] = apply_rule(values.get(name, RULE_SPECS[name].default), value)
+    if not values:
+        return _DEFAULT_RULES
+    return Rules(**{n: min(max(v, RULE_SPECS[n].minimum), RULE_SPECS[n].maximum) for n, v in values.items()})
 
 
 _DEFAULT_RULES = Rules()
@@ -147,6 +188,7 @@ EXPANSIONS: Dict[str, Expansion] = {
         note='naval boards, fleets and naval combat are not yet mechanized',
     ),
 }
+BUNDLED: Tuple[str, ...] = tuple(EXPANSIONS)  # the expansions this package ships (registered above)
 
 
 @dataclass(frozen=True)

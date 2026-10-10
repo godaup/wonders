@@ -137,10 +137,11 @@ cards; scripted agents play them).
 
 ### Meta rules
 
-The numbers the engine itself fixes can be changed by an expansion under `"rules"` in its file:
+The numbers the engine itself fixes can be changed by an expansion under `"rules"` in its file,
+either set to a value or changed by an amount (`{"add": n}`, negative to lower it):
 
 ```json
-{"rules": {"starting_coins": 5, "discard_coins": 2}, "cards": [...]}
+{"rules": {"starting_coins": {"add": 2}, "discard_coins": 2}, "cards": [...]}
 ```
 
 | rule | base game | meaning |
@@ -153,10 +154,12 @@ The numbers the engine itself fixes can be changed by an expansion under `"rules
 | `defeat_points` | -1 | victory points of a military defeat token |
 | `extra_guilds` | 2 | Age III deals as many guilds as players plus this number |
 
-Rules combine in the order the expansions are listed for a game: a later expansion overrides an
-earlier one (the builder and the menu list extension expansions after the bundled ones). The older
-manifest key `starting_coins` still works as a shorthand. The scripted agents value military tokens
-with the base game's numbers.
+Rules combine in a fixed order, whatever order the expansions were chosen in: the base game, the
+bundled expansions (Leaders, Cities), then extension expansions by id. Starting from the base value,
+each `{"add": n}` changes the value so far and each plain number replaces it, so changes from several
+expansions add up (with Leaders, which sets 6 starting coins, `{"add": 2}` gives 8), and the result is
+clamped to the rule's range. The older manifest key `starting_coins` still works as a shorthand for
+setting it. The scripted agents value military tokens with the base game's numbers.
 
 `wonders ext validate` checks that every card and wonder builds, that new colours are well-formed, that names do not clash with the
 bundled cards or each other, and that chains point to existing cards. `wonders ext check` adds the

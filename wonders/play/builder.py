@@ -30,7 +30,7 @@ from wonders.cards.content import Content, build_age_deck, build_card, build_won
 from wonders.cards.schema import describe
 from wonders.extensions import MANIFEST, extensions_home, reload_folder, unload
 from wonders.i18n import ENGLISH, Translator
-from wonders.ruleset import EXPANSIONS, RULES, RULES_VERSION, check_rules
+from wonders.ruleset import EXPANSIONS, RULE_SPECS, RULES, RULES_VERSION, apply_rule, check_rules
 
 EXPANSION_FILE = 'cards.json'
 META_KEYS = ('name', 'version', 'author', 'license', 'description')
@@ -368,9 +368,9 @@ def check_project(project: Dict[str, Any]) -> Dict[str, Any]:
     out = _check_meta(project) + _check_colors(project['colors'])
     problems, mine = _check_cards(project, {c.name for c in known.cards})
     out += problems + _check_wonders(project['wonders'], {w.name for w in known.wonders})
-    extra = project['rules'].get('extra_guilds', 2)
-    if isinstance(extra, int) and not check_rules({'extra_guilds': extra}):
-        out += _deck_warnings(mine, extra)
+    rule = project['rules'].get('extra_guilds', 2)
+    if not check_rules({'extra_guilds': rule}):  # deck sizes as this expansion alone makes them
+        out += _deck_warnings(mine, min(max(apply_rule(2, rule), 0), RULE_SPECS['extra_guilds'].maximum))
     errors = sum(p['level'] == 'error' for p in out)
     return {'ok': not errors, 'errors': errors, 'warnings': len(out) - errors, 'problems': out}
 

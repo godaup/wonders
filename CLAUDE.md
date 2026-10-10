@@ -294,9 +294,11 @@ player, so Cities deals 8 not 7). `armada` is registered but flagged
 may buy its production, as for brown/grey). Encoders keep one feature per *official* colour only.
 
 **Meta rules** (`ruleset.RULES` / `Rules`): starting and discard coins, coins per treasury point,
-science set bonus, military token values, extra guilds. An expansion overrides them via
-`Expansion.rules` (extension files: `"rules"`); `rules_of(expansions)` resolves them in order (later
-wins) and `Game.rules` holds a game's own, so replays, the env and sampled worlds agree. The module
+science set bonus, military token values, extra guilds. An expansion sets (`n`) or changes
+(`{"add": n}`) them via `Expansion.rules` (extension files: `"rules"`); `rules_of(expansions)` applies
+them in `rule_order` (base, `BUNDLED`, extensions by id — never the chosen order; content order is
+untouched), clamps to each rule's range, and `Game.rules` holds a game's own, so replays, the env and
+sampled worlds agree. The module
 constants (`DISCARD_COINS`, `CONFLICT_VALUE`, …) are the base values the scripted agents still use.
 
 **Expansion builder** (`wonders/play/builder.py`, GUI page `#builder`): edits one data extension folder

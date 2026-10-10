@@ -24,7 +24,7 @@ from wonders.engine.game import Game
 from wonders.engine.player import Player
 from wonders.play import builder
 from wonders.play.server import make_server
-from wonders.ruleset import EXPANSIONS, RULES, Expansion, Rules, Ruleset, check_rules, rules_of
+from wonders.ruleset import EXPANSIONS, RULES, Expansion, Rules, Ruleset, check_rules, rule_order, rules_of
 
 
 # -- meta rules -------------------------------------------------------------------------------
@@ -34,20 +34,35 @@ def test_rule_specs_match_the_rules_defaults():
     assert Ruleset.of('leaders').rules.changed() == {'starting_coins': 6}
 
 
-def test_later_expansions_override_earlier_ones(monkeypatch):
+def test_rules_apply_in_a_fixed_order_and_deltas_add_up(monkeypatch):
     monkeypatch.setitem(
         EXPANSIONS, 'cheap', Expansion('cheap', 'Cheap', rules={'starting_coins': 2, 'discard_coins': 1})
     )
-    assert rules_of(('base', 'leaders', 'cheap')).starting_coins == 2
-    assert rules_of(('base', 'cheap', 'leaders')).starting_coins == 6
-    assert rules_of(('base', 'cheap', 'leaders')).discard_coins == 1
-    assert Ruleset.of('cheap').starting_coins == 2
+    monkeypatch.setitem(EXPANSIONS, 'rich', Expansion('rich', 'Rich', rules={'starting_coins': {'add': 2}}))
+    monkeypatch.setitem(EXPANSIONS, 'zany', Expansion('zany', 'Zany', rules={'starting_coins': {'add': -1}}))
+    assert rule_order(['zany', 'cheap', 'leaders', 'base']) == ['base', 'leaders', 'cheap', 'zany']
+    # Whatever order they are chosen in: base 3, Leaders sets 6, extensions by id.
+    for combo in (('base', 'leaders', 'rich'), ('rich', 'leaders')):
+        assert rules_of(combo).starting_coins == 8
+    assert rules_of(('leaders', 'rich', 'zany')).starting_coins == 7
+    assert rules_of(('rich', 'cheap', 'leaders')).starting_coins == 4  # cheap sets 2 after leaders, rich adds 2
+    assert rules_of(('cheap', 'leaders')).discard_coins == 1
+    assert Ruleset.of('rich').starting_coins == 5
+
+
+def test_rules_are_clamped_to_their_range(monkeypatch):
+    monkeypatch.setitem(EXPANSIONS, 'poor', Expansion('poor', 'Poor', rules={'coins_per_point': {'add': -10}}))
+    monkeypatch.setitem(EXPANSIONS, 'meek', Expansion('meek', 'Meek', rules={'defeat_points': {'add': 5}}))
+    assert rules_of(('poor', 'meek')).coins_per_point == 1 and rules_of(('meek',)).defeat_points == 0
 
 
 def test_check_rules():
     assert check_rules({'discard_coins': 2, 'defeat_points': -2}) == []
+    assert check_rules({'starting_coins': {'add': -3}, 'victory_age_3': {'add': 20}}) == []
     problems = check_rules({'nope': 1, 'discard_coins': 'x', 'coins_per_point': 0, 'extra_guilds': True})
     assert len(problems) == 4 and 'unknown rule' in problems[0]
+    problems = check_rules({'starting_coins': {'add': 31}, 'discard_coins': {'plus': 1}, 'extra_guilds': {'add': 1.5}})
+    assert len(problems) == 3 and 'between -30 and 30' in problems[0]
     assert check_rules([1]) == ['rules must be an object of rule name to number']
 
 
@@ -110,7 +125,7 @@ def _project(**over: Any) -> Dict[str, Any]:
         'id': 'docks',
         'name': 'Docks',
         'version': '0.1.0',
-        'rules': {'starting_coins': 5, 'discard_coins': 2},
+        'rules': {'starting_coins': {'add': 2}, 'discard_coins': 2},
         'colors': [{'id': 'harbour', 'label': 'Harbour', 'fill': '#1f8a8a', 'score': 'civilian', 'tradeable': True}],
         'cards': [
             {
@@ -145,8 +160,9 @@ def test_save_load_play_and_delete_a_project(isolated):  # noqa: F811
     manifest = json.loads((folder / 'manifest.json').read_text())
     assert manifest['expansions'] == [{'id': 'docks', 'name': 'Docks', 'file': 'cards.json'}]
     assert extensions.validate(folder) == []
-    assert builder.load_project('docks')['rules'] == {'starting_coins': 5, 'discard_coins': 2}
+    assert builder.load_project('docks')['rules'] == {'starting_coins': {'add': 2}, 'discard_coins': 2}
     assert Ruleset.of('docks').rules.changed() == {'starting_coins': 5, 'discard_coins': 2}
+    assert Ruleset.of('docks', 'leaders').starting_coins == 8  # the delta adds to Leaders' 6
     assert load_content('docks').card('Dock').color is Color('harbour')
     assert [p['id'] for p in builder.projects()] == ['docks']
 

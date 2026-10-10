@@ -14,8 +14,10 @@
   scripted agents against the base game, and download it as a zip.
 * Meta rules: expansions may change starting coins, coins for a discard, coins per treasury point,
   the science set bonus, military token values and the number of extra guilds (`"rules"` in an
-  expansion file; `wonders.ruleset.RULES`). Rules of several expansions combine in order, a later
-  one winning (before, starting coins took the maximum; the bundled expansions are unaffected).
+  expansion file; `wonders.ruleset.RULES`), setting a value or changing it by a delta (`{"add": n}`).
+  Rules apply in a fixed order whatever order the expansions were chosen in (base, bundled, then
+  extensions by id): deltas add up, a set value replaces what came before, the result is clamped to the
+  rule's range (before, starting coins took the maximum; the bundled expansions are unaffected).
 * Effect schemas (`wonders.cards.schema`): a parameter description for every effect type;
   `Registry.register_effect(..., schema=...)` lets plugins describe theirs.
 * Extension folders are built when they load; a folder whose cards or wonders do not build is skipped

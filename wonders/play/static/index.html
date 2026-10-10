@@ -368,6 +368,7 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
 .b-problems li.warning a { color: var(--gold); font-weight: 600; }
 .b-rules tr.set td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
 .b-rules input { width: 90px; }
+.b-rule { display: flex; gap: 6px; align-items: center; }
 .b-intro { max-width: 640px; display: grid; gap: 10px; justify-items: start; }
 /* single-column grids must not grow with their widest control (long effect names, phones) */
 .b-effects, .b-effect, .b-stage, .b-side-box, .b-editor, .b-stack, .b-field { grid-template-columns: minmax(0, 1fr); }
@@ -1771,18 +1772,37 @@ function renderOverview() {
     bField(t('Licence'), bText(p, 'license', { keep: true })),
     el('div', { class: 'b-wide' }, bField(t('Description'), bText(p, 'description', { keep: true, area: true }))),
     el('div', { class: 'b-wide' }, problemBox('general')));
-  const rows = builder.info.rules.map((r) => {
-    const set = p.rules[r.name] !== undefined;
-    return el('tr', { class: set ? 'set' : '' }, el('td', {}, el('b', {}, r.label), el('div', { class: 'muted' }, r.help)),
-      el('td', { class: 'num' }, String(r.default)),
-      el('td', {}, bNum(p.rules, r.name, { min: r.min, max: r.max, placeholder: r.default, after: () => {
-        const row = rows[builder.info.rules.indexOf(r)]; row.classList.toggle('set', p.rules[r.name] !== undefined);
-      } })));
-  });
+  // Each rule: keep the base value, set it, or change it by a delta ({"add": n}) that adds up with other expansions'.
+  const ruleRow = (r) => {
+    const value = p.rules[r.name];
+    const mode = value === undefined ? 'keep' : typeof value === 'object' ? 'add' : 'set';
+    const holder = { n: mode === 'add' ? value.add : mode === 'set' ? value : undefined };
+    const width = r.max - r.min;
+    const write = () => {
+      const m = modeSel.value;
+      if (m === 'keep' || holder.n === undefined) delete p.rules[r.name];
+      else p.rules[r.name] = m === 'add' ? { add: holder.n } : holder.n;
+      row.classList.toggle('set', p.rules[r.name] !== undefined); changed();
+    };
+    const num = bNum(holder, 'n', mode === 'add' ? { min: -width, max: width, placeholder: '+0', after: write }
+      : { min: r.min, max: r.max, placeholder: r.default, after: write });
+    num.classList.toggle('hidden', mode === 'keep');
+    const modeSel = el('select', { onchange: () => {
+      const m = modeSel.value;
+      num.classList.toggle('hidden', m === 'keep');
+      Object.assign(num, m === 'add' ? { min: -width, max: width, placeholder: '+0' } : { min: r.min, max: r.max, placeholder: r.default });
+      if (m !== 'keep' && holder.n === undefined) { holder.n = m === 'add' ? 0 : r.default; num.value = holder.n; }
+      write();
+    } }, [['keep', t('base value')], ['set', t('set to')], ['add', t('change by')]].map(([v, label]) =>
+      el('option', { value: v, selected: v === mode }, label)));
+    const row = el('tr', { class: mode === 'keep' ? '' : 'set' }, el('td', {}, el('b', {}, r.label), el('div', { class: 'muted' }, r.help)),
+      el('td', { class: 'num' }, String(r.default)), el('td', {}, el('div', { class: 'b-rule' }, modeSel, num)));
+    return row;
+  };
   const rules = el('div', { class: 'panel' }, el('h3', {}, t('Meta rules')),
-    el('p', { class: 'muted b-help' }, t('Leave a field empty to keep the base game value. When several expansions change the same rule, the one listed last in the game wins.')),
+    el('p', { class: 'muted b-help' }, t('Set a rule to a value, or change it by an amount: changes from several expansions add up (Leaders starts with 6 coins, so "change by 2" gives 8 with it). Rules apply in a fixed order, whatever order the expansions are chosen in: the base game, the bundled expansions, then the others by id; a set value replaces what came before it.')),
     el('table', { class: 'games b-rules' }, el('thead', {}, el('tr', {}, el('th', {}, t('Rule')), el('th', { class: 'num' }, t('Base game')),
-      el('th', {}, t('This expansion')))), el('tbody', {}, rows)), problemBox('rules'));
+      el('th', {}, t('This expansion')))), el('tbody', {}, builder.info.rules.map(ruleRow))), problemBox('rules'));
   return el('div', { class: 'b-stack' }, meta, rules);
 }
 
