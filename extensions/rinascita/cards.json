@@ -1,0 +1,906 @@
+{
+ "colors": [
+  {
+   "id": "arts",
+   "label": "Arts",
+   "fill": "#c2477a",
+   "score": "civilian",
+   "tradeable": false
+  }
+ ],
+ "cards": [
+  {
+   "name": "Quarantine Station",
+   "color": "blue",
+   "age": 1,
+   "cost": {
+    "resources": {
+     "stone": 1,
+     "glass": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "diplomacy",
+     "count": 1
+    },
+    {
+     "type": "victory_points",
+     "points": 3
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Plague Doctor",
+   "color": "green",
+   "age": 1,
+   "cost": {
+    "resources": {
+     "linen": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "science",
+     "symbol": "gear"
+    },
+    {
+     "type": "plunder",
+     "amount": 1,
+     "scope": "neighbours",
+     "description": "neighbours lose 1 coin"
+    }
+   ],
+   "chain_enables": [
+    "Laboratory"
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Flagellants",
+   "color": "red",
+   "age": 1,
+   "cost": {
+    "resources": {
+     "bricks": 1,
+     "ore": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "military",
+     "shields": 2
+    },
+    {
+     "type": "debt",
+     "amount": 3,
+     "scope": "self",
+     "description": "you take 3 debt"
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Grave Robbers",
+   "color": "yellow",
+   "age": 1,
+   "cost": {},
+   "effects": [
+    {
+     "type": "coins",
+     "amount": 4
+    },
+    {
+     "type": "plunder",
+     "amount": 1,
+     "scope": "others",
+     "description": "all others lose 1 coin"
+    }
+   ],
+   "at_players": [
+    4
+   ]
+  },
+  {
+   "name": "Abandoned Farmstead",
+   "color": "brown",
+   "age": 1,
+   "cost": {
+    "coins": 2
+   },
+   "effects": [
+    {
+     "type": "production",
+     "resources": [
+      "wood",
+      "stone",
+      "ore",
+      "bricks"
+     ]
+    }
+   ],
+   "at_players": [
+    5
+   ]
+  },
+  {
+   "name": "Plague Pit",
+   "color": "blue",
+   "age": 1,
+   "cost": {
+    "resources": {
+     "wood": 2,
+     "stone": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 3
+    },
+    {
+     "type": "plunder",
+     "amount": 1,
+     "scope": "others",
+     "description": "all others lose 1 coin"
+    }
+   ],
+   "at_players": [
+    6
+   ]
+  },
+  {
+   "name": "Rat Catchers",
+   "color": "red",
+   "age": 1,
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "ore": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "military",
+     "shields": 1
+    },
+    {
+     "type": "coins",
+     "amount": 1
+    }
+   ],
+   "at_players": [
+    7
+   ]
+  },
+  {
+   "name": "Fresco Workshop",
+   "color": "arts",
+   "age": 2,
+   "cost": {
+    "resources": {
+     "bricks": 1,
+     "glass": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 2
+    },
+    {
+     "type": "build_income",
+     "coins": 1,
+     "color": "arts",
+     "description": "+1 coin for each Arts card you build"
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Sculptor's Studio",
+   "color": "arts",
+   "age": 2,
+   "cost": {
+    "resources": {
+     "stone": 2,
+     "ore": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 4
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Patron's Palazzo",
+   "color": "arts",
+   "age": 2,
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "bricks": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "tally",
+     "what": "coins",
+     "scope": "self",
+     "vp_each": 1,
+     "description": "1 VP per 3 coins at the end"
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Medici Bank",
+   "color": "yellow",
+   "age": 2,
+   "cost": {
+    "resources": {
+     "stone": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "bank_purchase",
+     "count": 1
+    },
+    {
+     "type": "coins",
+     "amount": 2
+    },
+    {
+     "type": "grant",
+     "amount": 1,
+     "scope": "others",
+     "description": "all others gain 1 coin"
+    }
+   ],
+   "at_players": [
+    4
+   ]
+  },
+  {
+   "name": "Public Festival",
+   "color": "blue",
+   "age": 2,
+   "cost": {
+    "resources": {
+     "linen": 1,
+     "glass": 1,
+     "wood": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 5
+    },
+    {
+     "type": "grant",
+     "amount": 2,
+     "scope": "neighbours",
+     "description": "neighbours gain 2 coins"
+    }
+   ],
+   "at_players": [
+    5
+   ]
+  },
+  {
+   "name": "Theatre of the Republic",
+   "color": "arts",
+   "age": 2,
+   "cost": {
+    "resources": {
+     "wood": 2,
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "tally",
+     "what": "colors",
+     "scope": "both",
+     "colors": [
+      "arts"
+     ],
+     "vp_each": 1,
+     "description": "1 VP per Arts card: yours and your neighbours'"
+    }
+   ],
+   "at_players": [
+    6
+   ]
+  },
+  {
+   "name": "Condottieri",
+   "color": "red",
+   "age": 2,
+   "cost": {
+    "coins": 5,
+    "resources": {
+     "ore": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "military",
+     "shields": 3
+    },
+    {
+     "type": "debt",
+     "amount": 1,
+     "scope": "self",
+     "description": "you take 1 debt"
+    }
+   ],
+   "at_players": [
+    7
+   ]
+  },
+  {
+   "name": "Orrery",
+   "color": "green",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "glass": 1,
+     "paper": 1,
+     "linen": 1,
+     "ore": 2
+    }
+   },
+   "effects": [
+    {
+     "type": "science_wild",
+     "count": 1
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Encyclopédie",
+   "color": "green",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "paper": 2,
+     "wood": 2
+    }
+   },
+   "effects": [
+    {
+     "type": "science_copy",
+     "count": 1
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Royal Academy",
+   "color": "blue",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "stone": 2,
+     "glass": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 3
+    },
+    {
+     "type": "science_set_bonus",
+     "points": 2
+    }
+   ],
+   "at_players": [
+    3
+   ]
+  },
+  {
+   "name": "Salon",
+   "color": "arts",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "linen": 1,
+     "glass": 1,
+     "bricks": 2
+    }
+   },
+   "effects": [
+    {
+     "type": "color_sets",
+     "colors": [
+      "arts",
+      "green",
+      "blue"
+     ],
+     "vp_each": 3
+    }
+   ],
+   "at_players": [
+    4
+   ]
+  },
+  {
+   "name": "Printing Press",
+   "color": "yellow",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "paper": 1,
+     "ore": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "tally",
+     "what": "colors",
+     "scope": "self",
+     "colors": [
+      "green"
+     ],
+     "coins_each": 2,
+     "vp_each": 1
+    }
+   ],
+   "at_players": [
+    5
+   ]
+  },
+  {
+   "name": "Inquisition",
+   "color": "red",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "ore": 2,
+     "stone": 1,
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "military",
+     "shields": 3
+    },
+    {
+     "type": "plunder",
+     "amount": 2,
+     "scope": "neighbours",
+     "description": "neighbours lose 2 coins"
+    }
+   ],
+   "at_players": [
+    6
+   ]
+  },
+  {
+   "name": "Grand Tour",
+   "color": "yellow",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "glass": 1,
+     "linen": 1,
+     "wood": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "tally",
+     "what": "colors",
+     "scope": "neighbours",
+     "colors": [
+      "arts"
+     ],
+     "coins_each": 1,
+     "vp_each": 1
+    }
+   ],
+   "at_players": [
+    7
+   ]
+  },
+  {
+   "name": "Patrons' Guild",
+   "color": "purple",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "linen": 1,
+     "glass": 1,
+     "paper": 1,
+     "stone": 2
+    }
+   },
+   "effects": [
+    {
+     "type": "tally",
+     "what": "colors",
+     "scope": "both",
+     "colors": [
+      "arts"
+     ],
+     "vp_each": 1
+    }
+   ],
+   "guild": true
+  },
+  {
+   "name": "Academicians' Guild",
+   "color": "purple",
+   "age": 3,
+   "cost": {
+    "resources": {
+     "paper": 1,
+     "glass": 1,
+     "bricks": 2,
+     "wood": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "color_sets",
+     "colors": [
+      "green",
+      "arts",
+      "blue"
+     ],
+     "vp_each": 2
+    }
+   ],
+   "guild": true
+  }
+ ],
+ "wonders": [
+  {
+   "name": "The Duomo of Florence",
+   "side": "A",
+   "starting_resource": "stone",
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "wood": 2
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "bricks": 2,
+       "glass": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "resource_discount",
+       "target": "arts",
+       "amount": 1,
+       "description": "Arts cards cost 1 resource less"
+      },
+      {
+       "type": "victory_points",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "ore": 2,
+       "linen": 1,
+       "paper": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 7
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "The Duomo of Florence",
+   "side": "B",
+   "starting_resource": "stone",
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "bricks": 2
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 2
+      },
+      {
+       "type": "grant",
+       "amount": 2,
+       "scope": "neighbours",
+       "description": "neighbours gain 2 coins"
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "wood": 3
+      }
+     },
+     "effects": [
+      {
+       "type": "build_income",
+       "coins": 2,
+       "color": "arts",
+       "description": "+2 coins for each Arts card you build"
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "stone": 3,
+       "paper": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "tally",
+       "what": "colors",
+       "scope": "self",
+       "colors": [
+        "arts"
+       ],
+       "vp_each": 2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Uraniborg",
+   "side": "A",
+   "starting_resource": "glass",
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "stone": 2
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "paper": 2,
+       "wood": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "science_set_bonus",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "ore": 3,
+       "linen": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 7
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Uraniborg",
+   "side": "B",
+   "starting_resource": "glass",
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "bricks": 2
+      }
+     },
+     "effects": [
+      {
+       "type": "science_copy",
+       "count": 1
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "linen": 1,
+       "paper": 1,
+       "stone": 2
+      }
+     },
+     "effects": [
+      {
+       "type": "science_wild",
+       "count": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "The Plague Column of Vienna",
+   "side": "A",
+   "starting_resource": "ore",
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "wood": 2
+      }
+     },
+     "effects": [
+      {
+       "type": "diplomacy",
+       "count": 1
+      },
+      {
+       "type": "victory_points",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "bricks": 3
+      }
+     },
+     "effects": [
+      {
+       "type": "cash_defeats",
+       "coins_each": 2
+      },
+      {
+       "type": "victory_points",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "stone": 4
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 7
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "The Plague Column of Vienna",
+   "side": "B",
+   "starting_resource": "ore",
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "stone": 2
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 2
+      },
+      {
+       "type": "plunder",
+       "amount": 1,
+       "scope": "others",
+       "description": "all others lose 1 coin"
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "wood": 2,
+       "linen": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 4
+      },
+      {
+       "type": "debt",
+       "amount": 1,
+       "scope": "neighbours",
+       "description": "neighbours take 1 debt"
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "bricks": 3,
+       "glass": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 6
+      },
+      {
+       "type": "gain_token",
+       "value": 3
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
