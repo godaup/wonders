@@ -1064,5 +1064,8 @@
   "simulated": "simuliert",
   "simulated with the expansion": "mit der Erweiterung simuliert",
   "simulating… {pct}": "Simulation … {pct}",
-  "Typical error of the rate card on the official items": "Typischer Fehler der Bewertungstabelle bei den offiziellen Elementen"
+  "Typical error of the rate card on the official items": "Typischer Fehler der Bewertungstabelle bei den offiziellen Elementen",
+  "{players} players: {cards} cards": "{players} Spieler: {cards} Karten",
+  "({n} left over)": "({n} übrig)",
+  "Age III with the base game:": "Zeitalter III mit dem Grundspiel:"
 }

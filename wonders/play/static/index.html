@@ -370,6 +370,7 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
 .b-rules input { width: 90px; }
 .b-rule { display: flex; gap: 6px; align-items: center; }
 .b-intro { max-width: 640px; display: grid; gap: 10px; justify-items: start; }
+.b-decks { margin-top: 4px; }
 .b-strength { display: grid; gap: 6px; font-size: 12px; }
 .b-strength h4 { font-size: 13px; margin: 0; }
 .b-value { display: flex; align-items: baseline; gap: 6px; }
@@ -1611,9 +1612,19 @@ async function deleteProject() {
     await loadOptions(); renderBuilder();
   } catch (e) { alert(e.message); }
 }
+// Age III deck sizes with the base game per player count (from the last check), under the extra guilds rule.
+function deckSizes() {
+  const decks = builder.check && builder.check.decks;
+  if (!decks) return [];
+  const age3 = decks[3] || decks['3'];
+  const items = Object.entries(age3).map(([n, d]) => el('span', { class: d.leftover ? 'error' : d.cards !== d.base ? 'b-stale' : '' },
+    t('{players} players: {cards} cards', { players: n, cards: d.cards }) + (d.leftover ? ' ' + t('({n} left over)', { n: d.leftover }) : '')));
+  return [el('small', {}, t('Age III with the base game:') + ' ', ...items.flatMap((x, k) => (k ? [' · ', x] : [x])))];
+}
 const runCheck = debounce(async () => {
   if (!builder || !builder.project) return;
-  try { builder.check = await api('/api/builder/check', { project: builder.project }); renderStatus(); renderMarks(); }
+  try { builder.check = await api('/api/builder/check', { project: builder.project }); renderStatus(); renderMarks();
+    const decks = $('b-decks'); if (decks) decks.replaceChildren(...deckSizes()); }
   catch (e) { /* the check is advisory */ }
 }, 600);
 function changed() { builder.dirty = true; renderStatus(); runCheck(); }
@@ -1844,7 +1855,8 @@ function renderOverview() {
       write();
     } }, [['keep', t('base value')], ['set', t('set to')], ['add', t('change by')]].map(([v, label]) =>
       el('option', { value: v, selected: v === mode }, label)));
-    const row = el('tr', { class: mode === 'keep' ? '' : 'set' }, el('td', {}, el('b', {}, r.label), el('div', { class: 'muted' }, r.help)),
+    const row = el('tr', { class: mode === 'keep' ? '' : 'set' }, el('td', {}, el('b', {}, r.label), el('div', { class: 'muted' }, r.help),
+      r.name === 'extra_guilds' ? el('div', { id: 'b-decks', class: 'b-decks' }, deckSizes()) : null),
       el('td', { class: 'num' }, String(r.default)), el('td', {}, el('div', { class: 'b-rule' }, modeSel, num)));
     return row;
   };

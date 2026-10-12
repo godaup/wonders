@@ -132,7 +132,7 @@ def _project(**over: Any) -> Dict[str, Any]:
                 'name': 'Dock',
                 'color': 'harbour',
                 'age': 1,
-                'at_players': [3, 4, 5, 6, 7],
+                'at_players': [3, 3, 3, 4, 5, 6, 7],
                 'cost': {'coins': 0, 'resources': {'wood': 1, 'ore': 0}},
                 'effects': [{'type': 'production', 'resources': ['wood'], 'description': ''}],
                 'chain_enables': [],
@@ -153,7 +153,7 @@ def test_save_load_play_and_delete_a_project(isolated):  # noqa: F811
         'name': 'Dock',
         'color': 'harbour',
         'age': 1,
-        'at_players': [3, 4, 5, 6, 7],
+        'at_players': [3, 3, 3, 4, 5, 6, 7],
         'cost': {'resources': {'wood': 1}},
         'effects': [{'type': 'production', 'resources': ['wood']}],
     }  # empty values are dropped

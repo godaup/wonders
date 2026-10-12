@@ -58,7 +58,9 @@ scoring categories). It is split into three packages under `wonders/`:
   *effect spec* (`{"type": "production", ...}`) to `Effect` objects via
   `EFFECT_BUILDERS`. `content.build_age_deck(content, age, n_players, rng)` assembles
   a deck honouring per-card copy counts (`at_players` thresholds ≤ N) and drawing
-  `n_players + 2` guilds into Age III. To add a card, edit JSON; to add a *mechanic*,
+  `n_players + 2` guilds into Age III. `decks.py` counts deck sizes without dealing and `check_decks`
+  requires every Age deck to split evenly into the hands (3–7 players, alone and with Leaders / Cities,
+  the expansion's `extra_guilds` applied last): leftovers are errors in the builder and `ext check`. To add a card, edit JSON; to add a *mechanic*,
   add an effect + register it. `library.py` is now thin loader-backed accessors for
   tests/demos. `data/base.json` is the complete base deck (68 cards,
   10 guilds, 7 wonders with A/B sides); the base deck supports 3–7 players. JSON is bundled via `[tool.setuptools.package-data]` and
