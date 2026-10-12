@@ -116,9 +116,7 @@ def test_post_game_analysis_messages_have_a_german_translation() -> None:
         for node in tree.body
         if isinstance(node, ast.Assign) and getattr(node.targets[0], 'id', None) == 'CATEGORY_NAMES'
     )
-    keys |= {f'{name}|category' for name in names.values()} | {
-        f'{s}|science' for s in ('tablet', 'gear', 'compass')
-    }
+    keys |= {f'{name}|category' for name in names.values()} | {f'{s}|science' for s in ('tablet', 'gear', 'compass')}
     assert len(keys) > 25
     assert sorted(keys - set(catalog('de'))) == []
 
