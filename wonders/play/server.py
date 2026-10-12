@@ -11,6 +11,7 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``GET /api/record`` — the replayable GameRecord JSON
 - ``POST /api/analyse`` / ``GET /api/analysis`` — start / poll the post-game analysis of the human's moves
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
+- ``GET /favicon.svg`` — the project logo (``static/logo.svg``, a copy of ``docs/images/logo.svg``)
 - ``GET /api/locale?lang=de`` — the translation catalog the page uses for its own texts
 - ``GET /api/games`` — saved games (newest first) with the rating after each, and the rating history
 - ``POST /api/games/open`` / ``POST /api/games/delete`` — ``{"id": …}``: resume or view / delete a saved game
@@ -68,6 +69,11 @@ def _all_content() -> Content:
 @lru_cache(maxsize=1)
 def _index_html() -> bytes:
     return resources.files('wonders.play').joinpath('static', 'index.html').read_bytes()
+
+
+@lru_cache(maxsize=1)
+def _favicon() -> bytes:
+    return resources.files('wonders.play').joinpath('static', 'logo.svg').read_bytes()
 
 
 @lru_cache(maxsize=16)
@@ -399,6 +405,7 @@ def _saved_record(play: PlayServer, game_id: str) -> Response:
 
 GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/': lambda play, q: (HTTPStatus.OK, _index_html(), 'text/html; charset=utf-8', ()),
+    '/favicon.svg': lambda play, q: (HTTPStatus.OK, _favicon(), 'image/svg+xml', (('Cache-Control', 'max-age=86400'),)),
     '/api/options': lambda play, q: _json(play.options(_t(q))),
     '/api/locale': lambda play, q: _json(catalog(_t(q).lang) if _t(q).lang != DEFAULT else {}),
     '/api/state': lambda play, q: _json({'state': play.state(_t(q))}),

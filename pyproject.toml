@@ -65,7 +65,7 @@ exclude = ["tests*"]
 "wonders.cards" = ["data/*.json"]
 "wonders.i18n" = ["*.json"]
 "wonders.ml" = ["pretrained/*.pt"]
-"wonders.play" = ["static/*.html"]
+"wonders.play" = ["static/*.html", "static/*.svg"]
 
 [tool.black]
 line-length = 120

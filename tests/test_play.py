@@ -173,6 +173,7 @@ def _request(url: str, body: Optional[Dict[str, Any]] = None) -> Any:
 
 def test_server_plays_a_game(base_url):
     assert '<title>Wonders Table</title>' in _request(base_url + '/')
+    assert _request(base_url + '/favicon.svg').startswith('<svg')
     assert _request(base_url + '/api/state') == {'state': None}
     menu = _request(base_url + '/api/options')
     assert menu['defaults']['seats'][0]['player'] == HUMAN
@@ -363,3 +364,11 @@ def test_server_without_a_store_saves_nothing(base_url):
     with pytest.raises(urllib.error.HTTPError) as err:
         _request(base_url + '/api/games/open', {'id': 'x'})
     assert 'not saved' in json.loads(err.value.read())['error']
+
+
+def test_favicon_is_the_project_logo():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    favicon = root / 'wonders' / 'play' / 'static' / 'logo.svg'
+    assert favicon.read_bytes() == (root / 'docs' / 'images' / 'logo.svg').read_bytes()
