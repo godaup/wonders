@@ -26,11 +26,12 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from wonders import extensions
 from wonders.cards.base import OFFICIAL_COLORS, Card, Color, Resource, ScienceSymbol
-from wonders.cards.content import Content, build_age_deck, build_card, build_wonder, load_content
+from wonders.cards.content import Content, build_card, build_wonder, load_content
+from wonders.cards.decks import check_decks, deck_table, summary
 from wonders.cards.schema import describe
 from wonders.extensions import MANIFEST, extensions_home, reload_folder, unload
 from wonders.i18n import ENGLISH, Translator
-from wonders.ruleset import EXPANSIONS, RULE_SPECS, RULES, RULES_VERSION, apply_rule, check_rules
+from wonders.ruleset import EXPANSIONS, RULES, RULES_VERSION, check_rules
 
 EXPANSION_FILE = 'cards.json'
 META_KEYS = ('name', 'version', 'author', 'license', 'description')
@@ -380,11 +381,16 @@ def check_project(project: Dict[str, Any]) -> Dict[str, Any]:
     out = _check_meta(project) + _check_colors(project['colors'])
     problems, mine = _check_cards(project, {c.name for c in known.cards})
     out += problems + _check_wonders(project['wonders'], {w.name for w in known.wonders})
-    rule = project['rules'].get('extra_guilds', 2)
-    if not check_rules({'extra_guilds': rule}):  # deck sizes as this expansion alone makes them
-        out += _deck_warnings(mine, min(max(apply_rule(2, rule), 0), RULE_SPECS['extra_guilds'].maximum))
+    extra_guilds = project['rules'].get('extra_guilds')
+    out += _deck_problems(mine, extra_guilds)
     errors = sum(p['level'] == 'error' for p in out)
-    return {'ok': not errors, 'errors': errors, 'warnings': len(out) - errors, 'problems': out}
+    return {
+        'ok': not errors,
+        'errors': errors,
+        'warnings': len(out) - errors,
+        'problems': out,
+        'decks': deck_table(mine, extra_guilds),  # with the base game: what the GUI shows next to the rules
+    }
 
 
 def _check_meta(project: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -497,22 +503,23 @@ def _card_warnings(card: Any, index: int) -> List[Dict[str, Any]]:
     return out
 
 
-def _deck_warnings(cards: Sequence[Any], extra_guilds: int) -> List[Dict[str, Any]]:
-    """Hand sizes are deck // players: warn when the new cards change them or leave cards undealt."""
-    base = load_content('base')
-    ours = Content(cards=base.cards + list(cards), wonders=base.wonders)
-    notes = []
-    for n in range(3, 8):
-        for age in (1, 2, 3):
-            mine = len(build_age_deck(ours, age, n, random.Random(0), extra_guilds))
-            theirs = len(build_age_deck(base, age, n, random.Random(0)))
-            if mine // n != theirs // n or mine % n:
-                notes.append(f'Age {age} at {n} players: {mine} cards, hands of {mine // n} ({mine % n} undealt)')
-    if not notes:
-        return []
-    more = f' (+{len(notes) - 4} more)' if len(notes) > 4 else ''
-    message = 'deck sizes change: ' + '; '.join(notes[:4]) + more
-    return [_problem('cards', None, message, 'warning')]
+def _deck_problems(cards: Sequence[Any], extra_guilds: Any) -> List[Dict[str, Any]]:
+    """Every Age deck must split evenly into the hands, alone and with Leaders / Cities (:mod:`wonders.cards.decks`).
+
+    Leftover cards are an error; a changed hand size or too small a guild pool a warning. Problems an
+    ``extra_guilds`` rule causes in Age III are pinned to the meta rules, the rest to the cards.
+    """
+    problems = check_decks(cards, extra_guilds)
+    out = []
+    for level in ('error', 'warning'):
+        for section, chosen in (
+            ('rules', [p for p in problems if extra_guilds is not None and p.age == 3]),
+            ('cards', [p for p in problems if extra_guilds is None or p.age != 3]),
+        ):
+            text = summary(chosen, level)
+            if text:
+                out.append(_problem(section, None, text, level))
+    return out
 
 
 # --- previews --------------------------------------------------------------------------------

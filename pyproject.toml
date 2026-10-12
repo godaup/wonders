@@ -28,6 +28,7 @@ Issues = "https://github.com/godaup/wonders/issues"
 [project.optional-dependencies]
 test = [
     "pytest>=8,<9",
+    "numpy>=1.26",  # the leader-value and wonder-value estimates (tests/test_leader_values.py)
     "black>=25.12,<26",
     "isort>=5.13,<6",
     "mypy>=1.11,<2",
@@ -60,6 +61,7 @@ include = ["wonders*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
+"wonders.agents" = ["data/*.json"]
 "wonders.cards" = ["data/*.json"]
 "wonders.i18n" = ["*.json"]
 "wonders.ml" = ["pretrained/*.pt"]

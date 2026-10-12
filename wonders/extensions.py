@@ -456,7 +456,7 @@ def scaffold(folder: Union[str, Path], extension_id: str, name: str = '', author
                 'name': f'{name or extension_id} Workshop',
                 'color': 'blue',
                 'age': 1,
-                'at_players': [3],
+                'at_players': [3, 3, 3, 4, 5, 6, 7],  # one copy per player: every Age deck still deals evenly
                 'cost': {'resources': {'wood': 1}},
                 'effects': [{'type': 'victory_points', 'points': 2}],
             }

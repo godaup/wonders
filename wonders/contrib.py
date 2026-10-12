@@ -411,23 +411,20 @@ def _check_expansion(report: Report, expansion: str, games: int) -> None:
 
 
 def _check_decks(report: Report, expansion: str) -> None:
-    """Warn when the expansion changes hand sizes or leaves cards undealt (hands are ``len(deck) // n``)."""
-    from wonders.cards.content import build_age_deck, load_content
+    """Every Age deck must split evenly into the hands, with the expansion's meta rules (:mod:`wonders.cards.decks`)."""
+    from wonders.cards.content import load_content
+    from wonders.cards.decks import check_decks, summary
+    from wonders.ruleset import EXPANSIONS
 
-    with_it, without = load_content('base', expansion), load_content('base')
-    notes = []
-    for n in range(3, 8):
-        for age in (1, 2, 3):
-            ours = len(build_age_deck(with_it, age, n, random.Random(0)))
-            theirs = len(build_age_deck(without, age, n, random.Random(0)))
-            if ours // n != theirs // n or ours % n:
-                notes.append(f'Age {age} at {n}p: {ours} cards ({theirs} in the base game)')
-    if notes:
-        report.warning(
-            'decks change hand sizes or leave cards undealt (hands are deck // players): '
-            + '; '.join(notes[:5])
-            + (' …' if len(notes) > 5 else '')
-        )
+    rule = EXPANSIONS[expansion].overrides.get('extra_guilds') if expansion in EXPANSIONS else None
+    problems = check_decks(load_content(expansion).cards, rule)
+    errors, warnings = summary(problems, 'error', limit=6), summary(problems, 'warning', limit=6)
+    if errors:
+        report.error(f'expansion {expansion}: {errors}')
+    if warnings:
+        report.warning(f'expansion {expansion}: {warnings}')
+    if not problems:
+        report.ok(f'expansion {expansion}: every Age deck deals evenly at 3–7 players')
 
 
 def _smoke(report: Report, combo: Sequence[str], lineup: Sequence[Any], games: int, label: str = '') -> None:
@@ -645,6 +642,8 @@ def scorecard(
 
 def merge_scorecards(cards: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Merge scorecards of the same model run in shards (e.g. one CI job per expansion combination)."""
+    if not cards:  # e.g. only a translation or an expansion was checked: no PyTorch needed
+        return []
     from wonders.ml.evaluate import merge_head_to_head
 
     groups: Dict[Tuple[str, str, str], List[Dict[str, Any]]] = {}

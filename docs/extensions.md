@@ -34,6 +34,13 @@ new card is built and how its builders place, how the new wonders do) and downlo
 zip. The builder writes exactly the format below, so a builder-made expansion can be edited by hand
 and vice versa, and contributed like any other.
 
+**Strength.** While you edit a card or a wonder side, the builder shows its value in victory points
+next to the preview: the *rate card*, with the contribution of each effect and cost and where it falls
+among the official cards of the same Age and colour (or the official sides). After saving, every
+changed card and board is simulated in the background, and the overview lists all of them with the
+best estimate so far; "Simulate the whole expansion" plays them together and recalibrates the rate
+card to the results. The method is described in [card-strength.md](card-strength.md).
+
 ## Quick start: a folder extension
 
 ```
@@ -83,7 +90,7 @@ An expansion file uses the same format as the bundled `wonders/cards/data/*.json
 ```json
 {
  "cards": [
-  {"name": "Mint", "color": "yellow", "age": 2, "at_players": [3, 5],
+  {"name": "Mint", "color": "yellow", "age": 2, "at_players": [3, 3, 3, 4, 5, 6, 7],
    "cost": {"resources": {"ore": 1, "glass": 1}},
    "effects": [{"type": "coins", "amount": 5}],
    "chain_requires": "Marketplace"}
@@ -99,6 +106,15 @@ An expansion file uses the same format as the bundled `wonders/cards/data/*.json
   (leaders), `black` (city cards), or a colour your expansion defines (below).
 * `at_players` lists the player counts from which a copy is in the deck (one entry per copy). Guilds
   and black cards are drawn at random instead.
+* **Every Age deck must split evenly into the hands** at 3 to 7 players, alone and with Leaders and
+  Cities; otherwise the cards left over would silently stay out of the game, so the builder and
+  `wonders ext check` report it as an error. The base decks have 7 cards per player, so an Age's new
+  cards together need a multiple of the player count at every count: one copy per player is
+  `"at_players": [3, 3, 3, 4, 5, 6, 7]` (hands of 8, a warning only), and two cards `[3, 5]` and
+  `[3, 3, 4, 6, 7]` share the same 3, 4, 5, 6, 7 copies between them, while a single `[3, 5]` leaves
+  cards over at every count. The `extra_guilds` rule adds guilds to every Age III deck at every count,
+  so raising it by `n` needs Age III cards that remove or add up to a multiple of the player count
+  again; the builder shows the Age III deck sizes next to the rule.
 * Resources: `wood`, `stone`, `ore`, `bricks` (clay), `glass`, `linen` (loom), `paper` (papyrus).
 * An effect's optional `description` is the text the card renderer shows.
 * Wonder boards (two entries of the same name, sides `A` and `B`: games pick either) may also say
@@ -122,7 +138,7 @@ after yours:
   {"id": "harbour", "label": "Harbour", "fill": "#1f8a8a", "score": "civilian", "tradeable": true}
  ],
  "cards": [
-  {"name": "Dock", "color": "harbour", "age": 1, "at_players": [3, 5],
+  {"name": "Dock", "color": "harbour", "age": 1, "at_players": [3, 3, 3, 4, 5, 6, 7],
    "effects": [{"type": "production", "resources": ["wood"]}, {"type": "victory_points", "points": 1}]}
  ]
 }

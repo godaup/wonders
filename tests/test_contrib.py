@@ -86,8 +86,21 @@ def test_a_scaffolded_extension_passes_and_games_are_played(isolated):
     assert report.passed, report.markdown()
     texts = [text for _, text in report.findings]
     assert any('leaders+cities+mini/7p: 1 game(s) played and replayed' in t for t in texts)
-    assert any(level == 'warning' and 'undealt' in text for level, text in report.findings)  # one extra Age I card
+    assert any(level == 'warning' and 'hands of 8 instead of 7' in t for level, t in report.findings)  # one per player
     assert report.markdown().startswith('#### ✅ extension')
+
+
+def test_an_extension_that_leaves_cards_undealt_fails(isolated):
+    folder = _extension(isolated)
+    data = json.loads((folder / 'cards.json').read_text())
+    data['cards'][0]['at_players'] = [3]  # one copy at every count: a card left over at 4-7 players
+    data['rules'] = {'extra_guilds': {'add': 1}}
+    (folder / 'cards.json').write_text(json.dumps(data))
+    report = contrib.check(folder, games=1)
+    assert not report.passed
+    (error,) = [t for level, t in report.findings if level == 'error']
+    assert 'left over when dealing' in error and 'Age I at 4 players' in error and 'Age III at 3 players' in error
+    assert report.markdown().startswith('#### ❌ extension')
 
 
 def test_extension_check_reports_contribution_problems(isolated):
@@ -171,3 +184,9 @@ def test_scorecards_merge_render_and_feed_the_leaderboard(isolated):
     entries = json.loads(data.read_text())['entries']
     assert len(entries) == 1 and entries[0]['date'] == '2026-10-10' and entries[0]['games'] == 4
     assert '| 1 | `ppo_universal_v2` |' in markdown.read_text()
+
+
+def test_summary_of_reports_without_scorecards_needs_no_pytorch(tmp_path):
+    (tmp_path / 'locale.md').write_text('#### ✅ locale `wonders/i18n/de.json`\n', encoding='utf-8')
+    text = contrib.summary(tmp_path)  # a translation-only pull request: no model, no scorecard
+    assert '✅ all checks passed' in text and contrib.merge_scorecards([]) == []

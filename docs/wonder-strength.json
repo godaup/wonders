@@ -1,0 +1,3111 @@
+{
+ "agent": "board",
+ "games": 120000,
+ "rotations": 2,
+ "sigma": 9.8,
+ "tau": 1.124,
+ "main": {
+  "Abu Simbel A": {
+   "value": 0.59,
+   "se": 0.173,
+   "games": 3590
+  },
+  "Abu Simbel B": {
+   "value": 0.061,
+   "se": 0.173,
+   "games": 3574
+  },
+  "Manneken Pis A": {
+   "value": -1.483,
+   "se": 0.117,
+   "games": 8530
+  },
+  "Manneken Pis B": {
+   "value": 5.369,
+   "se": 0.11,
+   "games": 8352
+  },
+  "Stonehenge A": {
+   "value": -1.807,
+   "se": 0.112,
+   "games": 8618
+  },
+  "Stonehenge B": {
+   "value": -3.305,
+   "se": 0.11,
+   "games": 8596
+  },
+  "The Al-Khazneh of Petra A": {
+   "value": -0.384,
+   "se": 0.092,
+   "games": 14054
+  },
+  "The Al-Khazneh of Petra B": {
+   "value": -5.044,
+   "se": 0.093,
+   "games": 14150
+  },
+  "The Colosseum of Rome A": {
+   "value": -1.076,
+   "se": 0.088,
+   "games": 14820
+  },
+  "The Colosseum of Rome B": {
+   "value": -0.568,
+   "se": 0.096,
+   "games": 14912
+  },
+  "The Colossus of Rhodes A": {
+   "value": -0.014,
+   "se": 0.062,
+   "games": 32646
+  },
+  "The Colossus of Rhodes B": {
+   "value": 3.247,
+   "se": 0.059,
+   "games": 32478
+  },
+  "The Great Wall A": {
+   "value": 3.723,
+   "se": 0.116,
+   "games": 8442
+  },
+  "The Great Wall B": {
+   "value": -2.614,
+   "se": 0.108,
+   "games": 8522
+  },
+  "The Hagia Sophia of Byzantium A": {
+   "value": 1.026,
+   "se": 0.084,
+   "games": 14144
+  },
+  "The Hagia Sophia of Byzantium B": {
+   "value": -3.748,
+   "se": 0.085,
+   "games": 13950
+  },
+  "The Hanging Gardens of Babylon A": {
+   "value": -1.095,
+   "se": 0.061,
+   "games": 32592
+  },
+  "The Hanging Gardens of Babylon B": {
+   "value": 1.373,
+   "se": 0.061,
+   "games": 32538
+  },
+  "The Lighthouse of Alexandria A": {
+   "value": 0.892,
+   "se": 0.057,
+   "games": 32678
+  },
+  "The Lighthouse of Alexandria B": {
+   "value": 1.63,
+   "se": 0.059,
+   "games": 32410
+  },
+  "The Mausoleum of Halicarnassus A": {
+   "value": -2.003,
+   "se": 0.06,
+   "games": 32476
+  },
+  "The Mausoleum of Halicarnassus B": {
+   "value": -0.757,
+   "se": 0.063,
+   "games": 32672
+  },
+  "The Pyramids of Giza A": {
+   "value": -0.079,
+   "se": 0.061,
+   "games": 32546
+  },
+  "The Pyramids of Giza B": {
+   "value": 0.984,
+   "se": 0.061,
+   "games": 32400
+  },
+  "The Statue of Zeus in Olympia A": {
+   "value": 1.667,
+   "se": 0.057,
+   "games": 32528
+  },
+  "The Statue of Zeus in Olympia B": {
+   "value": 0.907,
+   "se": 0.058,
+   "games": 32600
+  },
+  "The Temple of Artemis in Ephesus A": {
+   "value": -0.504,
+   "se": 0.057,
+   "games": 32788
+  },
+  "The Temple of Artemis in Ephesus B": {
+   "value": 3.011,
+   "se": 0.058,
+   "games": 32394
+  }
+ },
+ "tables": {
+  "base/3p": {
+   "The Colossus of Rhodes A": {
+    "value": 0.987,
+    "se": 0.317,
+    "games": 868
+   },
+   "The Colossus of Rhodes B": {
+    "value": 5.313,
+    "se": 0.29,
+    "games": 856
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": 0.114,
+    "se": 0.295,
+    "games": 880
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": -1.087,
+    "se": 0.299,
+    "games": 876
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.157,
+    "se": 0.294,
+    "games": 820
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 2.628,
+    "se": 0.322,
+    "games": 898
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -4.275,
+    "se": 0.294,
+    "games": 880
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -3.219,
+    "se": 0.329,
+    "games": 824
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.151,
+    "se": 0.319,
+    "games": 780
+   },
+   "The Pyramids of Giza B": {
+    "value": -1.046,
+    "se": 0.315,
+    "games": 856
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 2.859,
+    "se": 0.291,
+    "games": 860
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 1.22,
+    "se": 0.289,
+    "games": 896
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -3.09,
+    "se": 0.299,
+    "games": 858
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": -0.712,
+    "se": 0.277,
+    "games": 848
+   }
+  },
+  "base/4p": {
+   "The Colossus of Rhodes A": {
+    "value": -0.169,
+    "se": 0.244,
+    "games": 1234
+   },
+   "The Colossus of Rhodes B": {
+    "value": 3.295,
+    "se": 0.265,
+    "games": 1048
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.728,
+    "se": 0.254,
+    "games": 1168
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.233,
+    "se": 0.247,
+    "games": 1136
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.475,
+    "se": 0.246,
+    "games": 1154
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.177,
+    "se": 0.255,
+    "games": 1074
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.658,
+    "se": 0.253,
+    "games": 1112
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -1.072,
+    "se": 0.247,
+    "games": 1162
+   },
+   "The Pyramids of Giza A": {
+    "value": -1.189,
+    "se": 0.255,
+    "games": 1118
+   },
+   "The Pyramids of Giza B": {
+    "value": -0.602,
+    "se": 0.252,
+    "games": 1182
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 2.463,
+    "se": 0.248,
+    "games": 1126
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.221,
+    "se": 0.26,
+    "games": 1112
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -1.067,
+    "se": 0.225,
+    "games": 1170
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.367,
+    "se": 0.208,
+    "games": 1204
+   }
+  },
+  "base/5p": {
+   "The Colossus of Rhodes A": {
+    "value": -0.662,
+    "se": 0.232,
+    "games": 1418
+   },
+   "The Colossus of Rhodes B": {
+    "value": 3.473,
+    "se": 0.22,
+    "games": 1458
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.616,
+    "se": 0.226,
+    "games": 1436
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 0.061,
+    "se": 0.218,
+    "games": 1408
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.18,
+    "se": 0.219,
+    "games": 1374
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.82,
+    "se": 0.21,
+    "games": 1496
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.343,
+    "se": 0.219,
+    "games": 1496
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -1.371,
+    "se": 0.228,
+    "games": 1382
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.455,
+    "se": 0.23,
+    "games": 1408
+   },
+   "The Pyramids of Giza B": {
+    "value": -0.018,
+    "se": 0.222,
+    "games": 1426
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.723,
+    "se": 0.206,
+    "games": 1470
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.778,
+    "se": 0.217,
+    "games": 1412
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.811,
+    "se": 0.208,
+    "games": 1480
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.526,
+    "se": 0.213,
+    "games": 1336
+   }
+  },
+  "base/6p": {
+   "The Colossus of Rhodes A": {
+    "value": -0.168,
+    "se": 0.213,
+    "games": 1776
+   },
+   "The Colossus of Rhodes B": {
+    "value": 3.161,
+    "se": 0.204,
+    "games": 1668
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -2.079,
+    "se": 0.197,
+    "games": 1758
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 0.334,
+    "se": 0.187,
+    "games": 1704
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.575,
+    "se": 0.196,
+    "games": 1738
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.862,
+    "se": 0.198,
+    "games": 1624
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.168,
+    "se": 0.198,
+    "games": 1762
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.714,
+    "se": 0.203,
+    "games": 1704
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.743,
+    "se": 0.211,
+    "games": 1730
+   },
+   "The Pyramids of Giza B": {
+    "value": -0.334,
+    "se": 0.197,
+    "games": 1662
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.958,
+    "se": 0.198,
+    "games": 1728
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.979,
+    "se": 0.201,
+    "games": 1722
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.68,
+    "se": 0.19,
+    "games": 1658
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.362,
+    "se": 0.18,
+    "games": 1766
+   }
+  },
+  "base/7p": {
+   "The Colossus of Rhodes A": {
+    "value": -0.52,
+    "se": 0.194,
+    "games": 1968
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.663,
+    "se": 0.193,
+    "games": 2032
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -2.383,
+    "se": 0.182,
+    "games": 2042
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": -0.294,
+    "se": 0.181,
+    "games": 1958
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.83,
+    "se": 0.181,
+    "games": 2038
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.252,
+    "se": 0.188,
+    "games": 1962
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.383,
+    "se": 0.194,
+    "games": 1914
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.361,
+    "se": 0.188,
+    "games": 2086
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.872,
+    "se": 0.19,
+    "games": 1986
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.256,
+    "se": 0.189,
+    "games": 2014
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.985,
+    "se": 0.185,
+    "games": 2010
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.61,
+    "se": 0.195,
+    "games": 1990
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.843,
+    "se": 0.183,
+    "games": 1956
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.7,
+    "se": 0.17,
+    "games": 2044
+   }
+  },
+  "base+leaders/3p": {
+   "The Colosseum of Rome A": {
+    "value": -2.711,
+    "se": 0.342,
+    "games": 708
+   },
+   "The Colosseum of Rome B": {
+    "value": -3.867,
+    "se": 0.371,
+    "games": 762
+   },
+   "The Colossus of Rhodes A": {
+    "value": 0.917,
+    "se": 0.382,
+    "games": 770
+   },
+   "The Colossus of Rhodes B": {
+    "value": 4.078,
+    "se": 0.349,
+    "games": 736
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -0.034,
+    "se": 0.365,
+    "games": 738
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": -0.587,
+    "se": 0.367,
+    "games": 806
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.159,
+    "se": 0.344,
+    "games": 754
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 3.284,
+    "se": 0.369,
+    "games": 746
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.984,
+    "se": 0.345,
+    "games": 736
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -2.503,
+    "se": 0.389,
+    "games": 700
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.747,
+    "se": 0.351,
+    "games": 744
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.529,
+    "se": 0.354,
+    "games": 742
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.924,
+    "se": 0.341,
+    "games": 756
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 2.859,
+    "se": 0.319,
+    "games": 766
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -1.89,
+    "se": 0.322,
+    "games": 748
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 0.574,
+    "se": 0.352,
+    "games": 788
+   }
+  },
+  "base+leaders/4p": {
+   "The Colosseum of Rome A": {
+    "value": -0.625,
+    "se": 0.265,
+    "games": 1070
+   },
+   "The Colosseum of Rome B": {
+    "value": -0.869,
+    "se": 0.299,
+    "games": 1046
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.755,
+    "se": 0.293,
+    "games": 1016
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.624,
+    "se": 0.299,
+    "games": 970
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -2.543,
+    "se": 0.284,
+    "games": 998
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.706,
+    "se": 0.282,
+    "games": 970
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.968,
+    "se": 0.288,
+    "games": 1040
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 1.27,
+    "se": 0.301,
+    "games": 968
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.973,
+    "se": 0.275,
+    "games": 976
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.808,
+    "se": 0.284,
+    "games": 1006
+   },
+   "The Pyramids of Giza A": {
+    "value": -2.216,
+    "se": 0.277,
+    "games": 1000
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.59,
+    "se": 0.274,
+    "games": 988
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.943,
+    "se": 0.279,
+    "games": 982
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.134,
+    "se": 0.279,
+    "games": 1024
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.953,
+    "se": 0.267,
+    "games": 996
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.775,
+    "se": 0.282,
+    "games": 950
+   }
+  },
+  "base+leaders/5p": {
+   "The Colosseum of Rome A": {
+    "value": -1.33,
+    "se": 0.257,
+    "games": 1174
+   },
+   "The Colosseum of Rome B": {
+    "value": -0.7,
+    "se": 0.259,
+    "games": 1288
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.814,
+    "se": 0.265,
+    "games": 1288
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.372,
+    "se": 0.248,
+    "games": 1248
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.808,
+    "se": 0.252,
+    "games": 1252
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 0.286,
+    "se": 0.252,
+    "games": 1322
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.776,
+    "se": 0.239,
+    "games": 1262
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 0.93,
+    "se": 0.262,
+    "games": 1208
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.319,
+    "se": 0.247,
+    "games": 1280
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.61,
+    "se": 0.267,
+    "games": 1194
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.592,
+    "se": 0.248,
+    "games": 1288
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.394,
+    "se": 0.27,
+    "games": 1186
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.07,
+    "se": 0.255,
+    "games": 1286
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 0.071,
+    "se": 0.27,
+    "games": 1190
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.372,
+    "se": 0.236,
+    "games": 1316
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.646,
+    "se": 0.25,
+    "games": 1218
+   }
+  },
+  "base+leaders/6p": {
+   "The Colosseum of Rome A": {
+    "value": -0.671,
+    "se": 0.216,
+    "games": 1566
+   },
+   "The Colosseum of Rome B": {
+    "value": 0.081,
+    "se": 0.23,
+    "games": 1418
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.685,
+    "se": 0.242,
+    "games": 1450
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.06,
+    "se": 0.22,
+    "games": 1568
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.675,
+    "se": 0.229,
+    "games": 1576
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 0.146,
+    "se": 0.223,
+    "games": 1458
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.187,
+    "se": 0.222,
+    "games": 1544
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 0.331,
+    "se": 0.239,
+    "games": 1510
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.969,
+    "se": 0.236,
+    "games": 1398
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.917,
+    "se": 0.243,
+    "games": 1530
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.473,
+    "se": 0.236,
+    "games": 1484
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.251,
+    "se": 0.229,
+    "games": 1518
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.518,
+    "se": 0.223,
+    "games": 1536
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.235,
+    "se": 0.237,
+    "games": 1456
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": 0.097,
+    "se": 0.214,
+    "games": 1440
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.326,
+    "se": 0.208,
+    "games": 1548
+   }
+  },
+  "base+leaders/7p": {
+   "The Colosseum of Rome A": {
+    "value": -0.851,
+    "se": 0.218,
+    "games": 1762
+   },
+   "The Colosseum of Rome B": {
+    "value": -0.104,
+    "se": 0.223,
+    "games": 1748
+   },
+   "The Colossus of Rhodes A": {
+    "value": -1.333,
+    "se": 0.235,
+    "games": 1786
+   },
+   "The Colossus of Rhodes B": {
+    "value": 1.747,
+    "se": 0.214,
+    "games": 1722
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -2.209,
+    "se": 0.221,
+    "games": 1722
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": -0.186,
+    "se": 0.224,
+    "games": 1734
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.019,
+    "se": 0.225,
+    "games": 1776
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 0.774,
+    "se": 0.211,
+    "games": 1770
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.002,
+    "se": 0.222,
+    "games": 1714
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": 0.005,
+    "se": 0.22,
+    "games": 1750
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.031,
+    "se": 0.217,
+    "games": 1794
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.765,
+    "se": 0.232,
+    "games": 1676
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.155,
+    "se": 0.213,
+    "games": 1728
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.402,
+    "se": 0.207,
+    "games": 1786
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.706,
+    "se": 0.21,
+    "games": 1694
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 3.337,
+    "se": 0.208,
+    "games": 1838
+   }
+  },
+  "base+cities/3p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -1.298,
+    "se": 0.366,
+    "games": 680
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -6.487,
+    "se": 0.334,
+    "games": 678
+   },
+   "The Colossus of Rhodes A": {
+    "value": 1.018,
+    "se": 0.367,
+    "games": 674
+   },
+   "The Colossus of Rhodes B": {
+    "value": 4.787,
+    "se": 0.35,
+    "games": 664
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 0.895,
+    "se": 0.334,
+    "games": 678
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -3.444,
+    "se": 0.346,
+    "games": 630
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": 1.213,
+    "se": 0.349,
+    "games": 712
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.519,
+    "se": 0.366,
+    "games": 636
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.486,
+    "se": 0.37,
+    "games": 678
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 3.578,
+    "se": 0.347,
+    "games": 666
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -3.304,
+    "se": 0.373,
+    "games": 684
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -3.421,
+    "se": 0.429,
+    "games": 650
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.827,
+    "se": 0.384,
+    "games": 648
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.076,
+    "se": 0.373,
+    "games": 656
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.937,
+    "se": 0.337,
+    "games": 674
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 2.344,
+    "se": 0.337,
+    "games": 650
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -2.335,
+    "se": 0.348,
+    "games": 632
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 0.61,
+    "se": 0.357,
+    "games": 710
+   }
+  },
+  "base+cities/4p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -0.149,
+    "se": 0.304,
+    "games": 912
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -4.642,
+    "se": 0.302,
+    "games": 872
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.248,
+    "se": 0.32,
+    "games": 924
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.75,
+    "se": 0.311,
+    "games": 852
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 2.261,
+    "se": 0.283,
+    "games": 818
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -2.567,
+    "se": 0.283,
+    "games": 924
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.949,
+    "se": 0.318,
+    "games": 870
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 3.684,
+    "se": 0.299,
+    "games": 878
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.632,
+    "se": 0.304,
+    "games": 852
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 1.3,
+    "se": 0.301,
+    "games": 838
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.861,
+    "se": 0.314,
+    "games": 898
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.939,
+    "se": 0.312,
+    "games": 928
+   },
+   "The Pyramids of Giza A": {
+    "value": -1.81,
+    "se": 0.296,
+    "games": 990
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.004,
+    "se": 0.31,
+    "games": 908
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.269,
+    "se": 0.284,
+    "games": 884
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 0.82,
+    "se": 0.296,
+    "games": 884
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.958,
+    "se": 0.281,
+    "games": 910
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 3.405,
+    "se": 0.286,
+    "games": 858
+   }
+  },
+  "base+cities/5p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -0.044,
+    "se": 0.269,
+    "games": 1086
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -4.899,
+    "se": 0.261,
+    "games": 1158
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.401,
+    "se": 0.283,
+    "games": 1128
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.694,
+    "se": 0.27,
+    "games": 1160
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 2.151,
+    "se": 0.242,
+    "games": 1140
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -3.65,
+    "se": 0.24,
+    "games": 1066
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.332,
+    "se": 0.271,
+    "games": 1040
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.94,
+    "se": 0.264,
+    "games": 1160
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.159,
+    "se": 0.246,
+    "games": 1150
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 0.371,
+    "se": 0.255,
+    "games": 1110
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.736,
+    "se": 0.259,
+    "games": 1032
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -1.463,
+    "se": 0.288,
+    "games": 1070
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.668,
+    "se": 0.271,
+    "games": 1140
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.853,
+    "se": 0.264,
+    "games": 1092
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.29,
+    "se": 0.249,
+    "games": 1108
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 0.449,
+    "se": 0.251,
+    "games": 1104
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.361,
+    "se": 0.237,
+    "games": 1252
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 3.648,
+    "se": 0.262,
+    "games": 1004
+   }
+  },
+  "base+cities/6p": {
+   "The Al-Khazneh of Petra A": {
+    "value": 0.214,
+    "se": 0.234,
+    "games": 1344
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -3.364,
+    "se": 0.25,
+    "games": 1298
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.472,
+    "se": 0.259,
+    "games": 1296
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.886,
+    "se": 0.232,
+    "games": 1372
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 2.082,
+    "se": 0.206,
+    "games": 1342
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -3.329,
+    "se": 0.217,
+    "games": 1378
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.698,
+    "se": 0.247,
+    "games": 1214
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.786,
+    "se": 0.232,
+    "games": 1456
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.304,
+    "se": 0.244,
+    "games": 1284
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.306,
+    "se": 0.232,
+    "games": 1304
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.835,
+    "se": 0.234,
+    "games": 1318
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.911,
+    "se": 0.247,
+    "games": 1336
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.357,
+    "se": 0.255,
+    "games": 1232
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.719,
+    "se": 0.242,
+    "games": 1414
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.641,
+    "se": 0.231,
+    "games": 1328
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.076,
+    "se": 0.222,
+    "games": 1416
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.844,
+    "se": 0.223,
+    "games": 1370
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 3.453,
+    "se": 0.233,
+    "games": 1298
+   }
+  },
+  "base+cities/7p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -0.018,
+    "se": 0.233,
+    "games": 1492
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -3.681,
+    "se": 0.239,
+    "games": 1596
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.739,
+    "se": 0.244,
+    "games": 1524
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.08,
+    "se": 0.238,
+    "games": 1548
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 1.891,
+    "se": 0.206,
+    "games": 1608
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -2.474,
+    "se": 0.215,
+    "games": 1502
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -2.963,
+    "se": 0.234,
+    "games": 1510
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.429,
+    "se": 0.228,
+    "games": 1598
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.016,
+    "se": 0.221,
+    "games": 1518
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 0.586,
+    "se": 0.214,
+    "games": 1618
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.635,
+    "se": 0.22,
+    "games": 1580
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": 0.312,
+    "se": 0.252,
+    "games": 1514
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.046,
+    "se": 0.235,
+    "games": 1528
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.671,
+    "se": 0.236,
+    "games": 1574
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.446,
+    "se": 0.22,
+    "games": 1560
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 0.695,
+    "se": 0.227,
+    "games": 1578
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.458,
+    "se": 0.213,
+    "games": 1610
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 3.796,
+    "se": 0.21,
+    "games": 1542
+   }
+  },
+  "base+leaders+cities/3p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -0.573,
+    "se": 0.404,
+    "games": 622
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -7.163,
+    "se": 0.387,
+    "games": 612
+   },
+   "The Colosseum of Rome A": {
+    "value": -2.257,
+    "se": 0.386,
+    "games": 628
+   },
+   "The Colosseum of Rome B": {
+    "value": -2.742,
+    "se": 0.444,
+    "games": 618
+   },
+   "The Colossus of Rhodes A": {
+    "value": 0.448,
+    "se": 0.44,
+    "games": 556
+   },
+   "The Colossus of Rhodes B": {
+    "value": 4.153,
+    "se": 0.382,
+    "games": 634
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": -0.826,
+    "se": 0.369,
+    "games": 600
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -3.978,
+    "se": 0.357,
+    "games": 618
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": 0.633,
+    "se": 0.427,
+    "games": 570
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.217,
+    "se": 0.439,
+    "games": 618
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 2.024,
+    "se": 0.397,
+    "games": 584
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 4.644,
+    "se": 0.398,
+    "games": 618
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.241,
+    "se": 0.379,
+    "games": 638
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -2.066,
+    "se": 0.464,
+    "games": 550
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.007,
+    "se": 0.397,
+    "games": 626
+   },
+   "The Pyramids of Giza B": {
+    "value": 2.06,
+    "se": 0.465,
+    "games": 572
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.862,
+    "se": 0.396,
+    "games": 532
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 3.913,
+    "se": 0.381,
+    "games": 626
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.456,
+    "se": 0.373,
+    "games": 608
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 1.355,
+    "se": 0.417,
+    "games": 570
+   }
+  },
+  "base+leaders+cities/4p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -1.038,
+    "se": 0.344,
+    "games": 776
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -5.081,
+    "se": 0.346,
+    "games": 780
+   },
+   "The Colosseum of Rome A": {
+    "value": -0.81,
+    "se": 0.314,
+    "games": 828
+   },
+   "The Colosseum of Rome B": {
+    "value": 0.522,
+    "se": 0.33,
+    "games": 850
+   },
+   "The Colossus of Rhodes A": {
+    "value": -1.114,
+    "se": 0.343,
+    "games": 806
+   },
+   "The Colossus of Rhodes B": {
+    "value": 1.386,
+    "se": 0.333,
+    "games": 776
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 1.815,
+    "se": 0.32,
+    "games": 804
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -3.275,
+    "se": 0.344,
+    "games": 750
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.959,
+    "se": 0.343,
+    "games": 830
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 3.568,
+    "se": 0.361,
+    "games": 770
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.552,
+    "se": 0.321,
+    "games": 780
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 3.74,
+    "se": 0.339,
+    "games": 788
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.557,
+    "se": 0.339,
+    "games": 812
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.257,
+    "se": 0.331,
+    "games": 818
+   },
+   "The Pyramids of Giza A": {
+    "value": -2.763,
+    "se": 0.335,
+    "games": 860
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.176,
+    "se": 0.377,
+    "games": 752
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": -0.083,
+    "se": 0.326,
+    "games": 732
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 0.898,
+    "se": 0.325,
+    "games": 792
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.733,
+    "se": 0.32,
+    "games": 842
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 5.014,
+    "se": 0.315,
+    "games": 854
+   }
+  },
+  "base+leaders+cities/5p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -0.705,
+    "se": 0.299,
+    "games": 960
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -5.422,
+    "se": 0.301,
+    "games": 1052
+   },
+   "The Colosseum of Rome A": {
+    "value": -1.448,
+    "se": 0.299,
+    "games": 942
+   },
+   "The Colosseum of Rome B": {
+    "value": 0.739,
+    "se": 0.324,
+    "games": 958
+   },
+   "The Colossus of Rhodes A": {
+    "value": -1.456,
+    "se": 0.29,
+    "games": 1080
+   },
+   "The Colossus of Rhodes B": {
+    "value": 1.786,
+    "se": 0.303,
+    "games": 938
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 0.785,
+    "se": 0.278,
+    "games": 984
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -4.165,
+    "se": 0.265,
+    "games": 1030
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -2.084,
+    "se": 0.293,
+    "games": 1000
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.948,
+    "se": 0.314,
+    "games": 994
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.727,
+    "se": 0.267,
+    "games": 1024
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 2.641,
+    "se": 0.296,
+    "games": 1040
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.128,
+    "se": 0.301,
+    "games": 982
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": 0.265,
+    "se": 0.312,
+    "games": 1032
+   },
+   "The Pyramids of Giza A": {
+    "value": -1.314,
+    "se": 0.282,
+    "games": 978
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.053,
+    "se": 0.303,
+    "games": 986
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.372,
+    "se": 0.272,
+    "games": 1082
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 1.924,
+    "se": 0.284,
+    "games": 954
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.055,
+    "se": 0.306,
+    "games": 994
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 4.537,
+    "se": 0.305,
+    "games": 990
+   }
+  },
+  "base+leaders+cities/6p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -0.362,
+    "se": 0.262,
+    "games": 1240
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -4.566,
+    "se": 0.285,
+    "games": 1152
+   },
+   "The Colosseum of Rome A": {
+    "value": -0.476,
+    "se": 0.268,
+    "games": 1210
+   },
+   "The Colosseum of Rome B": {
+    "value": 0.245,
+    "se": 0.274,
+    "games": 1258
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.71,
+    "se": 0.284,
+    "games": 1166
+   },
+   "The Colossus of Rhodes B": {
+    "value": 1.873,
+    "se": 0.275,
+    "games": 1182
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 1.163,
+    "se": 0.255,
+    "games": 1298
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -4.114,
+    "se": 0.25,
+    "games": 1170
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.586,
+    "se": 0.286,
+    "games": 1178
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.543,
+    "se": 0.27,
+    "games": 1194
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.711,
+    "se": 0.269,
+    "games": 1104
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 2.186,
+    "se": 0.265,
+    "games": 1238
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.053,
+    "se": 0.261,
+    "games": 1180
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.908,
+    "se": 0.286,
+    "games": 1234
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.789,
+    "se": 0.265,
+    "games": 1252
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.718,
+    "se": 0.295,
+    "games": 1184
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.47,
+    "se": 0.25,
+    "games": 1152
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 0.914,
+    "se": 0.268,
+    "games": 1226
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": 0.129,
+    "se": 0.275,
+    "games": 1186
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 4.613,
+    "se": 0.275,
+    "games": 1196
+   }
+  },
+  "base+leaders+cities/7p": {
+   "The Al-Khazneh of Petra A": {
+    "value": -0.493,
+    "se": 0.263,
+    "games": 1394
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -4.556,
+    "se": 0.267,
+    "games": 1380
+   },
+   "The Colosseum of Rome A": {
+    "value": -1.171,
+    "se": 0.263,
+    "games": 1358
+   },
+   "The Colosseum of Rome B": {
+    "value": -0.165,
+    "se": 0.261,
+    "games": 1436
+   },
+   "The Colossus of Rhodes A": {
+    "value": -1.291,
+    "se": 0.271,
+    "games": 1370
+   },
+   "The Colossus of Rhodes B": {
+    "value": 1.953,
+    "se": 0.253,
+    "games": 1422
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 1.322,
+    "se": 0.238,
+    "games": 1376
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -3.36,
+    "se": 0.247,
+    "games": 1428
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.734,
+    "se": 0.26,
+    "games": 1424
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.491,
+    "se": 0.278,
+    "games": 1320
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.967,
+    "se": 0.234,
+    "games": 1412
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 2.272,
+    "se": 0.27,
+    "games": 1378
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.763,
+    "se": 0.255,
+    "games": 1488
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.035,
+    "se": 0.274,
+    "games": 1346
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.28,
+    "se": 0.256,
+    "games": 1412
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.163,
+    "se": 0.252,
+    "games": 1422
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.33,
+    "se": 0.256,
+    "games": 1350
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 1.147,
+    "se": 0.257,
+    "games": 1480
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": 0.057,
+    "se": 0.251,
+    "games": 1430
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 4.147,
+    "se": 0.257,
+    "games": 1374
+   }
+  },
+  "base+wonderpack/3p": {
+   "Manneken Pis A": {
+    "value": -1.364,
+    "se": 0.396,
+    "games": 588
+   },
+   "Manneken Pis B": {
+    "value": 3.65,
+    "se": 0.364,
+    "games": 586
+   },
+   "Stonehenge A": {
+    "value": -2.418,
+    "se": 0.366,
+    "games": 592
+   },
+   "Stonehenge B": {
+    "value": -1.998,
+    "se": 0.36,
+    "games": 614
+   },
+   "The Colossus of Rhodes A": {
+    "value": 2.022,
+    "se": 0.365,
+    "games": 612
+   },
+   "The Colossus of Rhodes B": {
+    "value": 6.111,
+    "se": 0.36,
+    "games": 584
+   },
+   "The Great Wall A": {
+    "value": 1.704,
+    "se": 0.369,
+    "games": 550
+   },
+   "The Great Wall B": {
+    "value": -3.942,
+    "se": 0.335,
+    "games": 588
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": 0.684,
+    "se": 0.357,
+    "games": 648
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": -1.023,
+    "se": 0.365,
+    "games": 660
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.068,
+    "se": 0.357,
+    "games": 562
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 1.745,
+    "se": 0.357,
+    "games": 624
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -3.484,
+    "se": 0.386,
+    "games": 578
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -3.401,
+    "se": 0.415,
+    "games": 602
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.476,
+    "se": 0.378,
+    "games": 576
+   },
+   "The Pyramids of Giza B": {
+    "value": -0.495,
+    "se": 0.401,
+    "games": 612
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 2.859,
+    "se": 0.327,
+    "games": 644
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 1.925,
+    "se": 0.357,
+    "games": 644
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -2.705,
+    "se": 0.341,
+    "games": 582
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": -0.416,
+    "se": 0.359,
+    "games": 554
+   }
+  },
+  "base+wonderpack/4p": {
+   "Manneken Pis A": {
+    "value": -2.111,
+    "se": 0.292,
+    "games": 854
+   },
+   "Manneken Pis B": {
+    "value": 6.386,
+    "se": 0.291,
+    "games": 826
+   },
+   "Stonehenge A": {
+    "value": -1.714,
+    "se": 0.283,
+    "games": 812
+   },
+   "Stonehenge B": {
+    "value": -2.53,
+    "se": 0.281,
+    "games": 772
+   },
+   "The Colossus of Rhodes A": {
+    "value": 0.155,
+    "se": 0.313,
+    "games": 754
+   },
+   "The Colossus of Rhodes B": {
+    "value": 3.727,
+    "se": 0.295,
+    "games": 782
+   },
+   "The Great Wall A": {
+    "value": 1.812,
+    "se": 0.286,
+    "games": 814
+   },
+   "The Great Wall B": {
+    "value": -3.703,
+    "se": 0.28,
+    "games": 836
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.644,
+    "se": 0.292,
+    "games": 812
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.478,
+    "se": 0.286,
+    "games": 840
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.314,
+    "se": 0.273,
+    "games": 860
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.526,
+    "se": 0.297,
+    "games": 740
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.718,
+    "se": 0.298,
+    "games": 782
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.786,
+    "se": 0.296,
+    "games": 818
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.513,
+    "se": 0.299,
+    "games": 788
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.286,
+    "se": 0.278,
+    "games": 826
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 2.048,
+    "se": 0.286,
+    "games": 780
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -1.458,
+    "se": 0.279,
+    "games": 780
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -1.157,
+    "se": 0.281,
+    "games": 768
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.282,
+    "se": 0.267,
+    "games": 756
+   }
+  },
+  "base+wonderpack/5p": {
+   "Manneken Pis A": {
+    "value": -1.645,
+    "se": 0.265,
+    "games": 1018
+   },
+   "Manneken Pis B": {
+    "value": 5.555,
+    "se": 0.259,
+    "games": 938
+   },
+   "Stonehenge A": {
+    "value": -1.772,
+    "se": 0.242,
+    "games": 1022
+   },
+   "Stonehenge B": {
+    "value": -4.259,
+    "se": 0.258,
+    "games": 1020
+   },
+   "The Colossus of Rhodes A": {
+    "value": 0.511,
+    "se": 0.263,
+    "games": 1024
+   },
+   "The Colossus of Rhodes B": {
+    "value": 4.078,
+    "se": 0.256,
+    "games": 1066
+   },
+   "The Great Wall A": {
+    "value": 1.349,
+    "se": 0.266,
+    "games": 1006
+   },
+   "The Great Wall B": {
+    "value": -3.432,
+    "se": 0.253,
+    "games": 1010
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.3,
+    "se": 0.271,
+    "games": 1014
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 0.996,
+    "se": 0.258,
+    "games": 986
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.087,
+    "se": 0.253,
+    "games": 970
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.947,
+    "se": 0.259,
+    "games": 1000
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.189,
+    "se": 0.265,
+    "games": 1046
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.943,
+    "se": 0.271,
+    "games": 974
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.172,
+    "se": 0.266,
+    "games": 972
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.109,
+    "se": 0.261,
+    "games": 956
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 2.244,
+    "se": 0.247,
+    "games": 1024
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.391,
+    "se": 0.254,
+    "games": 1000
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.457,
+    "se": 0.269,
+    "games": 960
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.236,
+    "se": 0.237,
+    "games": 994
+   }
+  },
+  "base+wonderpack/6p": {
+   "Manneken Pis A": {
+    "value": -1.921,
+    "se": 0.234,
+    "games": 1174
+   },
+   "Manneken Pis B": {
+    "value": 5.178,
+    "se": 0.226,
+    "games": 1166
+   },
+   "Stonehenge A": {
+    "value": -1.325,
+    "se": 0.233,
+    "games": 1194
+   },
+   "Stonehenge B": {
+    "value": -3.125,
+    "se": 0.235,
+    "games": 1226
+   },
+   "The Colossus of Rhodes A": {
+    "value": 0.387,
+    "se": 0.24,
+    "games": 1228
+   },
+   "The Colossus of Rhodes B": {
+    "value": 3.633,
+    "se": 0.235,
+    "games": 1180
+   },
+   "The Great Wall A": {
+    "value": 0.237,
+    "se": 0.238,
+    "games": 1114
+   },
+   "The Great Wall B": {
+    "value": -4.013,
+    "se": 0.236,
+    "games": 1178
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.135,
+    "se": 0.234,
+    "games": 1264
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 0.355,
+    "se": 0.233,
+    "games": 1138
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 0.096,
+    "se": 0.231,
+    "games": 1248
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.371,
+    "se": 0.239,
+    "games": 1158
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.177,
+    "se": 0.243,
+    "games": 1186
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.473,
+    "se": 0.235,
+    "games": 1218
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.983,
+    "se": 0.25,
+    "games": 1188
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.344,
+    "se": 0.226,
+    "games": 1242
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 2.231,
+    "se": 0.232,
+    "games": 1236
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.889,
+    "se": 0.23,
+    "games": 1256
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.72,
+    "se": 0.22,
+    "games": 1198
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.706,
+    "se": 0.218,
+    "games": 1208
+   }
+  },
+  "base+wonderpack/7p": {
+   "Manneken Pis A": {
+    "value": -1.983,
+    "se": 0.22,
+    "games": 1426
+   },
+   "Manneken Pis B": {
+    "value": 5.082,
+    "se": 0.219,
+    "games": 1336
+   },
+   "Stonehenge A": {
+    "value": -1.852,
+    "se": 0.218,
+    "games": 1454
+   },
+   "Stonehenge B": {
+    "value": -2.952,
+    "se": 0.225,
+    "games": 1358
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.164,
+    "se": 0.238,
+    "games": 1428
+   },
+   "The Colossus of Rhodes B": {
+    "value": 3.03,
+    "se": 0.223,
+    "games": 1390
+   },
+   "The Great Wall A": {
+    "value": 1.409,
+    "se": 0.221,
+    "games": 1404
+   },
+   "The Great Wall B": {
+    "value": -3.479,
+    "se": 0.229,
+    "games": 1344
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.934,
+    "se": 0.226,
+    "games": 1364
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 0.538,
+    "se": 0.216,
+    "games": 1380
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": -0.498,
+    "se": 0.211,
+    "games": 1436
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": -0.7,
+    "se": 0.211,
+    "games": 1396
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.164,
+    "se": 0.222,
+    "games": 1398
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": 0.247,
+    "se": 0.217,
+    "games": 1450
+   },
+   "The Pyramids of Giza A": {
+    "value": 1.075,
+    "se": 0.236,
+    "games": 1416
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.864,
+    "se": 0.227,
+    "games": 1388
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 2.241,
+    "se": 0.21,
+    "games": 1416
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": -0.819,
+    "se": 0.224,
+    "games": 1354
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.601,
+    "se": 0.209,
+    "games": 1444
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 2.66,
+    "se": 0.206,
+    "games": 1418
+   }
+  },
+  "base+leaders+cities+wonderpack/3p": {
+   "Abu Simbel A": {
+    "value": -0.068,
+    "se": 0.474,
+    "games": 424
+   },
+   "Abu Simbel B": {
+    "value": 0.892,
+    "se": 0.43,
+    "games": 434
+   },
+   "Manneken Pis A": {
+    "value": -1.511,
+    "se": 0.522,
+    "games": 418
+   },
+   "Manneken Pis B": {
+    "value": 3.307,
+    "se": 0.45,
+    "games": 422
+   },
+   "Stonehenge A": {
+    "value": -1.925,
+    "se": 0.476,
+    "games": 418
+   },
+   "Stonehenge B": {
+    "value": -2.89,
+    "se": 0.491,
+    "games": 442
+   },
+   "The Al-Khazneh of Petra A": {
+    "value": -0.15,
+    "se": 0.47,
+    "games": 422
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -7.714,
+    "se": 0.506,
+    "games": 396
+   },
+   "The Colosseum of Rome A": {
+    "value": -1.786,
+    "se": 0.449,
+    "games": 418
+   },
+   "The Colosseum of Rome B": {
+    "value": -3.547,
+    "se": 0.578,
+    "games": 390
+   },
+   "The Colossus of Rhodes A": {
+    "value": 1.263,
+    "se": 0.497,
+    "games": 396
+   },
+   "The Colossus of Rhodes B": {
+    "value": 3.607,
+    "se": 0.49,
+    "games": 378
+   },
+   "The Great Wall A": {
+    "value": 6.008,
+    "se": 0.497,
+    "games": 434
+   },
+   "The Great Wall B": {
+    "value": -3.019,
+    "se": 0.43,
+    "games": 454
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": -0.986,
+    "se": 0.399,
+    "games": 412
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -4.184,
+    "se": 0.397,
+    "games": 438
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": 0.696,
+    "se": 0.525,
+    "games": 452
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.388,
+    "se": 0.507,
+    "games": 432
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 3.063,
+    "se": 0.409,
+    "games": 510
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 4.303,
+    "se": 0.455,
+    "games": 442
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.437,
+    "se": 0.491,
+    "games": 434
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -1.511,
+    "se": 0.483,
+    "games": 434
+   },
+   "The Pyramids of Giza A": {
+    "value": 0.254,
+    "se": 0.515,
+    "games": 416
+   },
+   "The Pyramids of Giza B": {
+    "value": 2.679,
+    "se": 0.475,
+    "games": 440
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 1.647,
+    "se": 0.43,
+    "games": 416
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 2.411,
+    "se": 0.459,
+    "games": 454
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.538,
+    "se": 0.425,
+    "games": 476
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 0.748,
+    "se": 0.514,
+    "games": 398
+   }
+  },
+  "base+leaders+cities+wonderpack/4p": {
+   "Abu Simbel A": {
+    "value": 2.253,
+    "se": 0.385,
+    "games": 570
+   },
+   "Abu Simbel B": {
+    "value": 0.727,
+    "se": 0.41,
+    "games": 582
+   },
+   "Manneken Pis A": {
+    "value": -2.144,
+    "se": 0.388,
+    "games": 554
+   },
+   "Manneken Pis B": {
+    "value": 6.259,
+    "se": 0.385,
+    "games": 532
+   },
+   "Stonehenge A": {
+    "value": -2.406,
+    "se": 0.403,
+    "games": 546
+   },
+   "Stonehenge B": {
+    "value": -3.487,
+    "se": 0.385,
+    "games": 620
+   },
+   "The Al-Khazneh of Petra A": {
+    "value": -0.435,
+    "se": 0.379,
+    "games": 590
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -5.624,
+    "se": 0.404,
+    "games": 550
+   },
+   "The Colosseum of Rome A": {
+    "value": -1.151,
+    "se": 0.414,
+    "games": 560
+   },
+   "The Colosseum of Rome B": {
+    "value": 0.099,
+    "se": 0.403,
+    "games": 558
+   },
+   "The Colossus of Rhodes A": {
+    "value": -1.808,
+    "se": 0.399,
+    "games": 592
+   },
+   "The Colossus of Rhodes B": {
+    "value": 1.94,
+    "se": 0.373,
+    "games": 602
+   },
+   "The Great Wall A": {
+    "value": 6.385,
+    "se": 0.417,
+    "games": 568
+   },
+   "The Great Wall B": {
+    "value": -2.155,
+    "se": 0.374,
+    "games": 582
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 0.856,
+    "se": 0.347,
+    "games": 518
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -4.194,
+    "se": 0.38,
+    "games": 538
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.742,
+    "se": 0.405,
+    "games": 576
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 3.235,
+    "se": 0.405,
+    "games": 556
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.692,
+    "se": 0.386,
+    "games": 590
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 2.695,
+    "se": 0.401,
+    "games": 568
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.786,
+    "se": 0.42,
+    "games": 590
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.957,
+    "se": 0.393,
+    "games": 660
+   },
+   "The Pyramids of Giza A": {
+    "value": -2.48,
+    "se": 0.42,
+    "games": 626
+   },
+   "The Pyramids of Giza B": {
+    "value": 0.913,
+    "se": 0.394,
+    "games": 574
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": -0.123,
+    "se": 0.374,
+    "games": 554
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 0.541,
+    "se": 0.372,
+    "games": 536
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.856,
+    "se": 0.403,
+    "games": 528
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 3.751,
+    "se": 0.385,
+    "games": 580
+   }
+  },
+  "base+leaders+cities+wonderpack/5p": {
+   "Abu Simbel A": {
+    "value": 0.733,
+    "se": 0.33,
+    "games": 690
+   },
+   "Abu Simbel B": {
+    "value": 0.171,
+    "se": 0.332,
+    "games": 730
+   },
+   "Manneken Pis A": {
+    "value": -1.808,
+    "se": 0.373,
+    "games": 668
+   },
+   "Manneken Pis B": {
+    "value": 5.539,
+    "se": 0.359,
+    "games": 728
+   },
+   "Stonehenge A": {
+    "value": -1.619,
+    "se": 0.364,
+    "games": 696
+   },
+   "Stonehenge B": {
+    "value": -5.312,
+    "se": 0.332,
+    "games": 720
+   },
+   "The Al-Khazneh of Petra A": {
+    "value": -0.536,
+    "se": 0.381,
+    "games": 662
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -4.987,
+    "se": 0.355,
+    "games": 750
+   },
+   "The Colosseum of Rome A": {
+    "value": -1.169,
+    "se": 0.336,
+    "games": 706
+   },
+   "The Colosseum of Rome B": {
+    "value": -0.182,
+    "se": 0.35,
+    "games": 746
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.941,
+    "se": 0.385,
+    "games": 680
+   },
+   "The Colossus of Rhodes B": {
+    "value": 1.611,
+    "se": 0.361,
+    "games": 710
+   },
+   "The Great Wall A": {
+    "value": 5.778,
+    "se": 0.372,
+    "games": 714
+   },
+   "The Great Wall B": {
+    "value": -1.8,
+    "se": 0.373,
+    "games": 640
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 0.302,
+    "se": 0.332,
+    "games": 746
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -4.96,
+    "se": 0.326,
+    "games": 658
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.641,
+    "se": 0.353,
+    "games": 696
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.96,
+    "se": 0.359,
+    "games": 716
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.83,
+    "se": 0.315,
+    "games": 712
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 2.896,
+    "se": 0.336,
+    "games": 786
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -2.191,
+    "se": 0.332,
+    "games": 684
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.79,
+    "se": 0.353,
+    "games": 782
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.087,
+    "se": 0.333,
+    "games": 724
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.133,
+    "se": 0.324,
+    "games": 758
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.348,
+    "se": 0.336,
+    "games": 736
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 1.634,
+    "se": 0.335,
+    "games": 740
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": -0.312,
+    "se": 0.308,
+    "games": 734
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 4.4,
+    "se": 0.332,
+    "games": 688
+   }
+  },
+  "base+leaders+cities+wonderpack/6p": {
+   "Abu Simbel A": {
+    "value": 0.029,
+    "se": 0.302,
+    "games": 880
+   },
+   "Abu Simbel B": {
+    "value": -0.63,
+    "se": 0.33,
+    "games": 840
+   },
+   "Manneken Pis A": {
+    "value": -1.201,
+    "se": 0.325,
+    "games": 862
+   },
+   "Manneken Pis B": {
+    "value": 5.64,
+    "se": 0.32,
+    "games": 808
+   },
+   "Stonehenge A": {
+    "value": -2.669,
+    "se": 0.325,
+    "games": 852
+   },
+   "Stonehenge B": {
+    "value": -4.491,
+    "se": 0.302,
+    "games": 830
+   },
+   "The Al-Khazneh of Petra A": {
+    "value": -0.363,
+    "se": 0.308,
+    "games": 838
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -3.634,
+    "se": 0.331,
+    "games": 878
+   },
+   "The Colosseum of Rome A": {
+    "value": -0.8,
+    "se": 0.295,
+    "games": 912
+   },
+   "The Colosseum of Rome B": {
+    "value": -0.019,
+    "se": 0.319,
+    "games": 836
+   },
+   "The Colossus of Rhodes A": {
+    "value": -0.696,
+    "se": 0.33,
+    "games": 858
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.28,
+    "se": 0.313,
+    "games": 892
+   },
+   "The Great Wall A": {
+    "value": 4.79,
+    "se": 0.338,
+    "games": 844
+   },
+   "The Great Wall B": {
+    "value": -1.888,
+    "se": 0.316,
+    "games": 878
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 0.724,
+    "se": 0.299,
+    "games": 838
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -4.363,
+    "se": 0.312,
+    "games": 844
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -1.324,
+    "se": 0.321,
+    "games": 878
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.278,
+    "se": 0.34,
+    "games": 836
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.151,
+    "se": 0.297,
+    "games": 862
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 1.495,
+    "se": 0.305,
+    "games": 842
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.019,
+    "se": 0.331,
+    "games": 850
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -1.159,
+    "se": 0.335,
+    "games": 900
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.222,
+    "se": 0.308,
+    "games": 894
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.855,
+    "se": 0.325,
+    "games": 826
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.251,
+    "se": 0.301,
+    "games": 846
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 1.075,
+    "se": 0.312,
+    "games": 830
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": 0.049,
+    "se": 0.3,
+    "games": 904
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 3.86,
+    "se": 0.322,
+    "games": 842
+   }
+  },
+  "base+leaders+cities+wonderpack/7p": {
+   "Abu Simbel A": {
+    "value": 0.002,
+    "se": 0.293,
+    "games": 1026
+   },
+   "Abu Simbel B": {
+    "value": -0.856,
+    "se": 0.298,
+    "games": 988
+   },
+   "Manneken Pis A": {
+    "value": -1.425,
+    "se": 0.316,
+    "games": 968
+   },
+   "Manneken Pis B": {
+    "value": 4.812,
+    "se": 0.293,
+    "games": 1010
+   },
+   "Stonehenge A": {
+    "value": -2.654,
+    "se": 0.285,
+    "games": 1032
+   },
+   "Stonehenge B": {
+    "value": -4.286,
+    "se": 0.28,
+    "games": 994
+   },
+   "The Al-Khazneh of Petra A": {
+    "value": 0.014,
+    "se": 0.301,
+    "games": 1036
+   },
+   "The Al-Khazneh of Petra B": {
+    "value": -4.024,
+    "se": 0.299,
+    "games": 998
+   },
+   "The Colosseum of Rome A": {
+    "value": -1.134,
+    "se": 0.284,
+    "games": 978
+   },
+   "The Colosseum of Rome B": {
+    "value": -0.252,
+    "se": 0.329,
+    "games": 1000
+   },
+   "The Colossus of Rhodes A": {
+    "value": -1.141,
+    "se": 0.324,
+    "games": 976
+   },
+   "The Colossus of Rhodes B": {
+    "value": 2.101,
+    "se": 0.287,
+    "games": 1040
+   },
+   "The Great Wall A": {
+    "value": 5.469,
+    "se": 0.324,
+    "games": 994
+   },
+   "The Great Wall B": {
+    "value": -0.991,
+    "se": 0.297,
+    "games": 1012
+   },
+   "The Hagia Sophia of Byzantium A": {
+    "value": 0.782,
+    "se": 0.297,
+    "games": 982
+   },
+   "The Hagia Sophia of Byzantium B": {
+    "value": -4.339,
+    "se": 0.285,
+    "games": 976
+   },
+   "The Hanging Gardens of Babylon A": {
+    "value": -2.229,
+    "se": 0.303,
+    "games": 970
+   },
+   "The Hanging Gardens of Babylon B": {
+    "value": 1.114,
+    "se": 0.319,
+    "games": 998
+   },
+   "The Lighthouse of Alexandria A": {
+    "value": 1.322,
+    "se": 0.273,
+    "games": 1042
+   },
+   "The Lighthouse of Alexandria B": {
+    "value": 2.051,
+    "se": 0.292,
+    "games": 1000
+   },
+   "The Mausoleum of Halicarnassus A": {
+    "value": -1.879,
+    "se": 0.287,
+    "games": 1048
+   },
+   "The Mausoleum of Halicarnassus B": {
+    "value": -0.09,
+    "se": 0.317,
+    "games": 1018
+   },
+   "The Pyramids of Giza A": {
+    "value": -0.817,
+    "se": 0.289,
+    "games": 948
+   },
+   "The Pyramids of Giza B": {
+    "value": 1.396,
+    "se": 0.301,
+    "games": 968
+   },
+   "The Statue of Zeus in Olympia A": {
+    "value": 0.995,
+    "se": 0.277,
+    "games": 992
+   },
+   "The Statue of Zeus in Olympia B": {
+    "value": 1.208,
+    "se": 0.324,
+    "games": 942
+   },
+   "The Temple of Artemis in Ephesus A": {
+    "value": 0.363,
+    "se": 0.293,
+    "games": 1044
+   },
+   "The Temple of Artemis in Ephesus B": {
+    "value": 4.489,
+    "se": 0.304,
+    "games": 1020
+   }
+  }
+ }
+}

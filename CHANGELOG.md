@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+* Deck checks (`wonders.cards.decks`): every Age deck must split evenly into the hands at 3 to 7 players,
+  alone and with Leaders and Cities, with the expansion's `extra_guilds` rule applied as the game applies
+  it. Leftover cards are now an error in the expansion builder (the expansion is not loaded) and in
+  `wonders ext check`; a changed hand size or too small a guild pool is a warning. The builder shows the
+  Age III deck sizes next to the extra guilds rule. Fixed: `wonders ext check` ignored an extension's meta
+  rules when sizing decks. `wonders ext new` scaffolds a card with one copy per player.
+* Card and board strength in the expansion builder (`wonders.agents.strength`, `wonders.play.strength`,
+  `docs/card-strength.md`): a rate card values a card or wonder side in VP while it is edited (effects,
+  costs, chains and powers measured in reference positions, compared with the official cards of the same
+  Age and colour); after saving, changed cards and boards are simulated in the background (paired runs
+  from the same position); "Simulate the whole expansion" plays them together and recalibrates the rate
+  card. The overview lists every card and side with the best estimate. Calibrated on simulated values of
+  the official cards (`python -m wonders.agents.strength`).
+* Strength of the wonder board sides (`wonders.agents.wonder_values`, `python -m wonders.agents.wonder_values`):
+  random deals played with the board assignment rotated over the same decks, regressed on the sides
+  at the table (own side and opponents'), with a value per side and a partially pooled deviation per
+  expansion set and player count, cluster-robust standard errors; results in `docs/wonder-strength.md`.
 * The Wonder Pack (expansion `wonderpack`): the Great Wall (stages in any order), Abu Simbel (entomb a
   leader for twice its cost; needs Leaders), Stonehenge (stone symbols; side B scores the buried card's
   colour at the end) and the Manneken Pis (copies its neighbours' stages; +4 coins), every power
