@@ -49,14 +49,11 @@
      "symbol": "gear"
     },
     {
-     "type": "plunder",
+     "type": "debt",
      "amount": 1,
-     "scope": "neighbours",
-     "description": "neighbours lose 1 coin"
+     "scope": "self",
+     "description": "you take 1 debt"
     }
-   ],
-   "chain_enables": [
-    "Laboratory"
    ],
    "at_players": [
     3
@@ -120,10 +117,8 @@
     {
      "type": "production",
      "resources": [
-      "wood",
       "stone",
-      "ore",
-      "bricks"
+      "ore"
      ]
     }
    ],
@@ -194,7 +189,7 @@
    "effects": [
     {
      "type": "victory_points",
-     "points": 2
+     "points": 3
     },
     {
      "type": "build_income",
@@ -326,8 +321,8 @@
      "colors": [
       "arts"
      ],
-     "vp_each": 1,
-     "description": "1 VP per Arts card: yours and your neighbours'"
+     "vp_each": 2,
+     "description": "2 VP per Arts card: yours and your neighbours'"
     }
    ],
    "at_players": [
@@ -376,6 +371,12 @@
     {
      "type": "science_wild",
      "count": 1
+    },
+    {
+     "type": "debt",
+     "amount": 2,
+     "scope": "self",
+     "description": "you take 2 debt"
     }
    ],
    "at_players": [
@@ -416,7 +417,7 @@
    "effects": [
     {
      "type": "victory_points",
-     "points": 3
+     "points": 5
     },
     {
      "type": "science_set_bonus",
@@ -446,7 +447,7 @@
       "green",
       "blue"
      ],
-     "vp_each": 3
+     "vp_each": 5
     }
    ],
    "at_players": [
@@ -522,7 +523,7 @@
     {
      "type": "tally",
      "what": "colors",
-     "scope": "neighbours",
+     "scope": "both",
      "colors": [
       "arts"
      ],
@@ -554,7 +555,7 @@
      "colors": [
       "arts"
      ],
-     "vp_each": 1
+     "vp_each": 2
     }
    ],
    "guild": true
@@ -573,13 +574,14 @@
    },
    "effects": [
     {
-     "type": "color_sets",
+     "type": "tally",
+     "what": "colors",
+     "scope": "neighbours",
      "colors": [
       "green",
-      "arts",
-      "blue"
+      "arts"
      ],
-     "vp_each": 2
+     "vp_each": 1
     }
    ],
    "guild": true
@@ -655,13 +657,13 @@
      "effects": [
       {
        "type": "victory_points",
-       "points": 2
+       "points": 3
       },
       {
        "type": "grant",
-       "amount": 2,
+       "amount": 1,
        "scope": "neighbours",
-       "description": "neighbours gain 2 coins"
+       "description": "neighbours gain 1 coin"
       }
      ]
     },
@@ -672,6 +674,10 @@
       }
      },
      "effects": [
+      {
+       "type": "victory_points",
+       "points": 3
+      },
       {
        "type": "build_income",
        "coins": 2,
@@ -691,7 +697,7 @@
       {
        "type": "tally",
        "what": "colors",
-       "scope": "self",
+       "scope": "both",
        "colors": [
         "arts"
        ],
@@ -728,6 +734,10 @@
      },
      "effects": [
       {
+       "type": "victory_points",
+       "points": 2
+      },
+      {
        "type": "science_set_bonus",
        "points": 3
       }
@@ -762,8 +772,8 @@
      },
      "effects": [
       {
-       "type": "science_copy",
-       "count": 1
+       "type": "victory_points",
+       "points": 2
       }
      ]
     },
@@ -777,8 +787,26 @@
      },
      "effects": [
       {
-       "type": "science_wild",
+       "type": "science_copy",
        "count": 1
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "ore": 3,
+       "glass": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "victory_points",
+       "points": 3
+      },
+      {
+       "type": "science_set_bonus",
+       "points": 2
       }
      ]
     }
@@ -802,7 +830,7 @@
       },
       {
        "type": "victory_points",
-       "points": 1
+       "points": 3
       }
      ]
     },
@@ -819,7 +847,7 @@
       },
       {
        "type": "victory_points",
-       "points": 3
+       "points": 5
       }
      ]
     },
