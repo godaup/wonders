@@ -12,6 +12,7 @@ import wonders.contrib as contrib
 import wonders.extensions as extensions
 from wonders import cli
 from wonders.agents.bench import AGENTS
+from wonders.cards.base import Color
 from wonders.cards.content import EFFECT_BUILDERS
 from wonders.ruleset import EXPANSIONS
 
@@ -23,6 +24,7 @@ def isolated(monkeypatch, tmp_path):
     """A fresh registry; every global the extensions touch is restored afterwards."""
     snapshot = (dict(EXPANSIONS), dict(EFFECT_BUILDERS), dict(AGENTS))
     registry = extensions.Registry()
+    monkeypatch.setattr(Color, '_members', dict(Color._members))  # colours the extensions define
     monkeypatch.setattr(extensions, 'REGISTRY', registry)
     monkeypatch.setattr(contrib, 'REGISTRY', registry)
     monkeypatch.setattr(extensions, '_LOADED', False)
@@ -190,3 +192,17 @@ def test_summary_of_reports_without_scorecards_needs_no_pytorch(tmp_path):
     (tmp_path / 'locale.md').write_text('#### ✅ locale `wonders/i18n/de.json`\n', encoding='utf-8')
     text = contrib.summary(tmp_path)  # a translation-only pull request: no model, no scorecard
     assert '✅ all checks passed' in text and contrib.merge_scorecards([]) == []
+
+
+def test_an_extension_locale_may_translate_its_colour_labels(isolated):
+    folder = _extension(isolated)
+    data = json.loads((folder / 'cards.json').read_text())
+    data['colors'] = [{'id': 'arts', 'label': 'Arts', 'fill': '#c2477a'}, {'id': 'relic', 'fill': '#888888'}]
+    (folder / 'cards.json').write_text(json.dumps(data))
+    (folder / 'de.json').write_text(json.dumps({'Arts': 'Künste', 'Relic': 'Reliquie', 'Mini Workshop': 'Werkstatt'}))
+    manifest = json.loads((folder / 'manifest.json').read_text())
+    manifest['locales'] = [{'lang': 'de', 'file': 'de.json'}]
+    (folder / 'manifest.json').write_text(json.dumps(manifest))
+    report = contrib.check(folder, games=1)
+    assert report.passed, report.markdown()
+    assert not any('does not show' in text for _, text in report.findings)  # labels are shown on the cards

@@ -1,0 +1,22 @@
+{
+ "id": "rinascita",
+ "name": "Rinascita",
+ "version": "0.1.0",
+ "author": "godaup",
+ "license": "CC-BY-4.0",
+ "description": "From plague to enlightenment: a harsh Age I (the Black Death), Patronage and the new Arts colour in Age II, Enlightenment science in Age III; two guilds and three wonder boards.",
+ "rules_version": 2,
+ "expansions": [
+  {
+   "id": "rinascita",
+   "name": "Rinascita",
+   "file": "cards.json"
+  }
+ ],
+ "locales": [
+  {
+   "lang": "de",
+   "file": "de.json"
+  }
+ ]
+}

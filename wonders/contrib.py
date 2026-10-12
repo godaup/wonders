@@ -322,10 +322,12 @@ def _check_siblings(report: Report, folder: Path, manifest: Manifest) -> None:
 
 
 def _content_names(expansion_ids: Sequence[str]) -> Set[str]:
-    """Card and wonder names plus effect descriptions an extension's locale may translate."""
+    """Card and wonder names, effect descriptions and colour labels an extension's locale may translate."""
     names: Set[str] = set()
     for exp in expansion_ids:
         raw = REGISTRY.expansion_raw(exp) or {}
+        for color in raw.get('colors', []):  # shown on the cards and in the menu (the default: the id, capitalised)
+            names.add(str(color.get('label') or str(color.get('id', '')).capitalize()))
         for item in raw.get('cards', []) + raw.get('wonders', []):
             names.add(str(item.get('name', '')))
             for spec in item.get('effects', []) + [e for s in item.get('stages', []) for e in s.get('effects', [])]:
