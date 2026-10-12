@@ -184,3 +184,9 @@ def test_scorecards_merge_render_and_feed_the_leaderboard(isolated):
     entries = json.loads(data.read_text())['entries']
     assert len(entries) == 1 and entries[0]['date'] == '2026-10-10' and entries[0]['games'] == 4
     assert '| 1 | `ppo_universal_v2` |' in markdown.read_text()
+
+
+def test_summary_of_reports_without_scorecards_needs_no_pytorch(tmp_path):
+    (tmp_path / 'locale.md').write_text('#### ✅ locale `wonders/i18n/de.json`\n', encoding='utf-8')
+    text = contrib.summary(tmp_path)  # a translation-only pull request: no model, no scorecard
+    assert '✅ all checks passed' in text and contrib.merge_scorecards([]) == []

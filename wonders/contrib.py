@@ -642,6 +642,8 @@ def scorecard(
 
 def merge_scorecards(cards: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Merge scorecards of the same model run in shards (e.g. one CI job per expansion combination)."""
+    if not cards:  # e.g. only a translation or an expansion was checked: no PyTorch needed
+        return []
     from wonders.ml.evaluate import merge_head_to_head
 
     groups: Dict[Tuple[str, str, str], List[Dict[str, Any]]] = {}
