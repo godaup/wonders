@@ -110,9 +110,13 @@ def test_post_game_analysis_messages_have_a_german_translation() -> None:
             for option in options:
                 if isinstance(option, ast.Constant) and isinstance(option.value, str) and context is None:
                     keys.add(option.value)
-    from wonders.ml.analysis import CATEGORY_NAMES  # no torch needed at import
-
-    keys |= {f'{name}|category' for name in CATEGORY_NAMES.values()} | {
+    # The category names are a literal dict: read it from the source, as importing wonders.ml needs PyTorch.
+    names = next(
+        ast.literal_eval(node.value)
+        for node in tree.body
+        if isinstance(node, ast.Assign) and getattr(node.targets[0], 'id', None) == 'CATEGORY_NAMES'
+    )
+    keys |= {f'{name}|category' for name in names.values()} | {
         f'{s}|science' for s in ('tablet', 'gear', 'compass')
     }
     assert len(keys) > 25
