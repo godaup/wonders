@@ -37,6 +37,7 @@ from wonders.extensions import (
     ensure_loaded,
     load_folder,
     plugin_manifest,
+    unload,
     validate,
 )
 
@@ -342,6 +343,9 @@ def _load_folder(report: Report, folder: Path, manifest: Manifest) -> bool:
     if loaded is not None:
         if Path(loaded.location).resolve() == folder.resolve():
             return True
+        if loaded.source == 'catalog':  # the shipped copy, switched on: check the folder under review instead
+            unload(manifest.id)
+            return _load_folder(report, folder, manifest)
         report.error(f'another extension with id {manifest.id!r} is installed ({loaded.location})')
         return False
     try:

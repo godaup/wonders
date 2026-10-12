@@ -160,9 +160,9 @@ def rules_of(expansions: Sequence[str]) -> Rules:
     replaces what came before), clamped to each rule's range.
     """
     if any(i not in EXPANSIONS for i in expansions):
-        from wonders.extensions import ensure_loaded
+        from wonders.extensions import provide
 
-        ensure_loaded()  # an extension expansion: discover extensions (once)
+        provide(expansions)  # an extension expansion: discover extensions (once), or load it from the catalog
     values: Dict[str, int] = {}
     for i in rule_order(expansions):
         exp = EXPANSIONS.get(i)
@@ -202,10 +202,10 @@ class Ruleset:
     def of(cls, *ids: str) -> 'Ruleset':
         combined = tuple(dict.fromkeys(('base', *ids)))  # dedupe, base first, keep order
         unknown = [i for i in combined if i not in EXPANSIONS]
-        if unknown:  # maybe an extension expansion: discover extensions (once) and look again
-            from wonders.extensions import ensure_loaded
+        if unknown:  # maybe an extension expansion: discover extensions (once) or use the catalog, look again
+            from wonders.extensions import provide
 
-            ensure_loaded()
+            provide(unknown)
             unknown = [i for i in combined if i not in EXPANSIONS]
         if unknown:
             raise ValueError(f'unknown expansion(s): {unknown}')

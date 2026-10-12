@@ -263,9 +263,10 @@ def define_colors(raw: dict) -> List[Color]:
 
 def load_content(*expansions: str) -> Content:
     """Load and merge one or more expansions (default: ``'base'``), bundled or from extensions."""
-    from wonders.extensions import REGISTRY, ensure_loaded
+    from wonders.extensions import REGISTRY, ensure_loaded, provide
 
     ensure_loaded()
+    provide(expansions)  # a catalog expansion that is switched off (e.g. a saved game's)
     content = Content()
     for expansion in expansions or ('base',):
         raw = REGISTRY.expansion_raw(expansion) or read_expansion(expansion)

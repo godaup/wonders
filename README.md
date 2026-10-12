@@ -102,6 +102,11 @@ the [leaderboard](LEADERBOARD.md).
 Expansions combine freely (any subset with the base game). Every power is mechanized and was
 checked against the official rulebooks. Plans: [ROADMAP.md](ROADMAP.md).
 
+**Community expansions** ship with the game too and are switched on when you want them: in the GUI
+under "Community expansions" (search by name, author, card or board), or with
+`wonders ext catalog` / `wonders ext enable <id>`. The first is [Rinascita](extensions/rinascita/README.md),
+from plague to enlightenment, with a new Arts colour and three boards.
+
 ### Agents
 
 | family | agents | how they play |
@@ -192,6 +197,8 @@ wonders analyse game.json --seat 0 -p 4                       # rate one player'
 wonders bench -a adaptive,board,heuristic -n 500 -p 4         # win rates with 95% CIs
 wonders agents                                                # the built-in agents
 wonders gui                                                   # play against agents in your browser
+wonders ext catalog plague                                    # search the community expansions
+wonders ext enable rinascita                                  # switch one on (menu and -e)
 wonders gallery -o cards.html                                 # every card and wonder board as HTML
 wonders table -o table.html                                   # render the final table of a demo game
 ```

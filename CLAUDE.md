@@ -35,7 +35,7 @@ pytest tests/test_wonders.py::test_command_line_interface
 
 Multi-version testing (py311–py314) is done via `tox`, which mirrors CI.
 
-The console entry point `wonders` maps to `wonders.cli:main`, a Click group: `wonders play` (one game, transcript + scores, `--record` saves JSON), `wonders replay <record.json>`, `wonders bench` (win rates with CIs, `-p` processes), `wonders agents`, `wonders gallery`, `wonders table`, `wonders gui` (local browser play), `wonders ext` (extensions and contribution checks). `wonders-gallery` / `wonders-table` remain as aliases.
+The console entry point `wonders` maps to `wonders.cli:main`, a Click group: `wonders play` (one game, transcript + scores, `--record` saves JSON), `wonders replay <record.json>`, `wonders bench` (win rates with CIs, `-p` processes), `wonders agents`, `wonders gallery`, `wonders table`, `wonders gui` (local browser play), `wonders ext` (extensions, the community catalog and contribution checks). `wonders-gallery` / `wonders-table` remain as aliases.
 
 ## CI / Release
 
@@ -254,6 +254,13 @@ unknown ids, the CLI lineup and the GUI menu): data folders under `$WONDERS_EXTE
 in `GameRecord.extensions`; replays warn on a mismatch. Tests disable discovery
 (`tests/conftest.py`, `WONDERS_NO_EXTENSIONS=1`). `$WONDERS_EXTENSIONS` may list several folders
 (`os.pathsep`); a plugin's `MANIFEST` is read from its `register` function's module (`plugin_manifest`).
+The **catalog** is `extensions/` shipped with the package (`setup.py`'s `build_py` copies it to
+`wonders/catalog/`; a checkout reads `extensions/`; `$WONDERS_CATALOG` overrides, tests point it at a temp dir):
+`catalog(query)` searches it, `activate(id, on)` switches one on or off (`$WONDERS_HOME/extensions.json`,
+loaded by `ensure_loaded` after the extensions homes, which take precedence; `Extension.source == 'catalog'`),
+and `provide(ids)` (called by `Ruleset.of` / `rules_of` / `load_content` for unknown ids) loads a switched-off
+one on demand so saved games replay. GUI page `#extensions` (`/api/catalog`, `/api/catalog/activate`, local JSON
+writes only); CLI `wonders ext catalog / enable / disable`.
 
 **Contributions** (`wonders/contrib.py`, `CONTRIBUTING.md`): data extensions live in top-level
 `extensions/<id>/` (folder = manifest id), pip-installable plugins in `plugins/<name>/` (`plugins/example`

@@ -15,6 +15,7 @@ from wonders.cards.content import EFFECT_BUILDERS, load_content
 from wonders.effects.library import VictoryPoints
 from wonders.engine.record import GameRecord, PlayerSetup
 from wonders.ruleset import EXPANSIONS, Ruleset
+from wonders.storage import HOME_VARIABLE as HOME
 
 
 @pytest.fixture
@@ -25,6 +26,8 @@ def isolated(monkeypatch, tmp_path):
     monkeypatch.setattr(extensions, 'REGISTRY', extensions.Registry())
     monkeypatch.setattr(extensions, '_LOADED', False)
     monkeypatch.setenv(extensions.HOME_VARIABLE, str(tmp_path / 'home'))
+    monkeypatch.setenv(extensions.CATALOG_VARIABLE, str(tmp_path / 'catalog'))  # not the repository's
+    monkeypatch.setenv(HOME, str(tmp_path / 'storage'))  # which catalog extensions are switched on
     monkeypatch.delenv(extensions.DISABLE_VARIABLE, raising=False)
     yield tmp_path
     for live, saved in zip((EXPANSIONS, EFFECT_BUILDERS, AGENTS), snapshot):

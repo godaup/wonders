@@ -13,6 +13,10 @@ Extensions come from two sources, discovered once and lazily (:func:`ensure_load
 * **Folders** (data only) — every sub-folder of the extensions homes (``$WONDERS_EXTENSIONS``, several
   separated by ``os.pathsep``; default ``~/.wonders/extensions``) holding a ``manifest.json``. They may
   bring expansions, models and locales, never code, so they are safe to load automatically.
+* **The catalog** (data only) — the reviewed community extensions of the repository's ``extensions/``
+  folder, shipped with the package (:func:`catalog_homes`). Each one loads only once it is switched on
+  (:func:`activate`; the switches live in ``$WONDERS_HOME/extensions.json``), or when a game record
+  needs one of its expansions (:func:`provide`).
 * **Plugins** (code) — installed Python packages that declare an entry point in the
   ``wonders.extensions`` group pointing to ``register(registry)``. They may also add effects and
   agents. Code only arrives through an explicit ``pip install``; nothing is ever downloaded.
@@ -37,6 +41,8 @@ from typing import Any, Callable, Dict, List, Optional, Set, Union
 ENTRY_POINT_GROUP = 'wonders.extensions'
 MANIFEST = 'manifest.json'
 HOME_VARIABLE = 'WONDERS_EXTENSIONS'
+CATALOG_VARIABLE = 'WONDERS_CATALOG'
+SETTINGS = 'extensions.json'  # under the storage home: which catalog extensions are switched on
 DISABLE_VARIABLE = 'WONDERS_NO_EXTENSIONS'
 
 
@@ -69,7 +75,7 @@ class Extension:
     """A loaded extension: its manifest, where it came from and a hash of its content."""
 
     manifest: Manifest
-    source: str  # 'builtin' | 'folder' | 'plugin'
+    source: str  # 'builtin' | 'folder' | 'catalog' | 'plugin'
     location: str = ''
     digest: str = ''
     provides: List[str] = field(default_factory=list)  # e.g. ['expansion:myexp', 'model:mynet', 'effect:x']
@@ -222,14 +228,19 @@ def _digest(folder: Path, manifest: Manifest) -> str:
     return h.hexdigest()[:12]
 
 
-def load_folder(folder: Union[str, Path], registry: Optional[Registry] = None) -> Extension:
+def read_manifest(folder: Union[str, Path]) -> Manifest:
+    """The manifest of an extension folder."""
+    return Manifest.from_dict(json.loads((Path(folder) / MANIFEST).read_text(encoding='utf-8')))
+
+
+def load_folder(folder: Union[str, Path], registry: Optional[Registry] = None, source: str = 'folder') -> Extension:
     """Load one data-only extension folder (``manifest.json`` + its files) into the registry."""
     registry = registry or REGISTRY
     folder = Path(folder)
-    manifest = Manifest.from_dict(json.loads((folder / MANIFEST).read_text(encoding='utf-8')))
+    manifest = read_manifest(folder)
     if manifest.id in registry.extensions:
         raise ValueError(f'extension {manifest.id!r} is already loaded')
-    ext = Extension(manifest, 'folder', str(folder), _digest(folder, manifest))
+    ext = Extension(manifest, source, str(folder), _digest(folder, manifest))
     registry._current = ext
     registry.extensions[manifest.id] = ext
     try:
@@ -352,7 +363,176 @@ def ensure_loaded() -> Registry:
                 load_folder(folder)
             except Exception as exc:  # a broken folder must not break the game
                 warnings.warn(f'extension folder {folder} failed to load: {exc}', stacklevel=2)
+    active = set(active_ids())
+    for entry in catalog():
+        if entry.manifest.id in active and entry.manifest.id not in REGISTRY.extensions:  # your own folder wins
+            try:
+                load_folder(entry.folder, REGISTRY, 'catalog')
+            except Exception as exc:
+                warnings.warn(f'catalog extension {entry.manifest.id!r} failed to load: {exc}', stacklevel=2)
     return REGISTRY
+
+
+# -- the catalog: community extensions shipped with the package, switched on and off -------------------------
+
+
+def catalog_homes() -> List[Path]:
+    """Where the catalog lives: ``$WONDERS_CATALOG`` (``os.pathsep``-separated), else the package's own copy.
+
+    A built package carries the repository's ``extensions/`` as ``wonders/catalog``; an editable install
+    (a checkout) reads ``extensions/`` next to the package directly.
+    """
+    if os.environ.get(CATALOG_VARIABLE) is not None:
+        return [Path(p) for p in os.environ[CATALOG_VARIABLE].split(os.pathsep) if p]
+    package = Path(__file__).resolve().parent
+    for folder in (package / 'catalog', package.parent / 'extensions'):
+        if folder.is_dir():
+            return [folder]
+    return []
+
+
+@dataclass
+class CatalogEntry:
+    """One extension of the catalog: what it brings and whether it is switched on and loaded."""
+
+    manifest: Manifest
+    folder: Path
+    active: bool = False  # switched on (``$WONDERS_HOME/extensions.json``)
+    loaded: str = ''  # where the loaded extension of this id comes from ('catalog', 'folder', 'plugin') or ''
+    cards: int = 0
+    wonders: List[str] = field(default_factory=list)  # board names (each with sides A and B)
+    colors: List[str] = field(default_factory=list)  # labels of the card colours it adds
+    names: List[str] = field(default_factory=list)  # card names: found by the search too
+
+    def matches(self, query: str) -> bool:
+        """Whether every word of ``query`` occurs in the id, name, author, description, cards or boards."""
+        m = self.manifest
+        expansions = [str(e.get('name', '')) for e in m.expansions]
+        text = ' '.join([m.id, m.name, m.author, m.description, *expansions, *self.wonders, *self.colors, *self.names])
+        text = text.casefold()
+        return all(word in text for word in query.casefold().split())
+
+    def to_dict(self) -> Dict[str, Any]:
+        m = self.manifest
+        return {
+            'id': m.id,
+            'name': m.name,
+            'version': m.version,
+            'author': m.author,
+            'license': m.license,
+            'description': m.description,
+            'expansions': [{'id': e['id'], 'name': e.get('name', e['id'])} for e in m.expansions],
+            'cards': self.cards,
+            'wonders': self.wonders,
+            'colors': self.colors,
+            'models': [str(x.get('name', '')) for x in m.models],
+            'locales': [str(x.get('lang', '')) for x in m.locales],
+            'active': self.active,
+            'loaded': self.loaded,
+        }
+
+
+def _catalog_entry(folder: Path, registry: Registry, active: Set[str]) -> CatalogEntry:
+    manifest = read_manifest(folder)
+    loaded = registry.extensions.get(manifest.id)
+    entry = CatalogEntry(manifest, folder, manifest.id in active, loaded.source if loaded else '')
+    for e in manifest.expansions:
+        try:
+            raw = json.loads((folder / e['file']).read_text(encoding='utf-8'))
+        except (OSError, ValueError, KeyError):
+            continue
+        entry.cards += len(raw.get('cards', []))
+        entry.names += [str(c.get('name', '')) for c in raw.get('cards', [])]
+        entry.wonders += [w for w in dict.fromkeys(str(w.get('name', '')) for w in raw.get('wonders', []))]
+        entry.colors += [str(c.get('label') or str(c.get('id', '')).capitalize()) for c in raw.get('colors', [])]
+    return entry
+
+
+def catalog(query: str = '', registry: Optional[Registry] = None) -> List[CatalogEntry]:
+    """The catalog's extensions (by name) matching ``query`` (every word, case-insensitive; empty: all)."""
+    registry = registry or REGISTRY
+    active = set(active_ids())
+    entries: Dict[str, CatalogEntry] = {}
+    for home in catalog_homes():
+        if not home.is_dir():
+            continue
+        for folder in sorted(p for p in home.iterdir() if (p / MANIFEST).is_file()):
+            try:
+                entry = _catalog_entry(folder, registry, active)
+            except (OSError, ValueError) as exc:
+                warnings.warn(f'catalog folder {folder} is unreadable: {exc}', stacklevel=2)
+                continue
+            entries.setdefault(entry.manifest.id, entry)  # the first catalog home wins
+    found = [e for e in entries.values() if e.matches(query)]
+    return sorted(found, key=lambda e: (e.manifest.name.casefold(), e.manifest.id))
+
+
+def _settings_path() -> Path:
+    from wonders.storage import home
+
+    return home() / SETTINGS
+
+
+def active_ids() -> List[str]:
+    """The catalog extensions switched on (unreadable settings count as none)."""
+    try:
+        data = json.loads(_settings_path().read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return []
+    active = data.get('active') if isinstance(data, dict) else None
+    return [str(i) for i in active] if isinstance(active, list) else []
+
+
+def activate(extension_id: str, on: bool = True, registry: Optional[Registry] = None) -> CatalogEntry:
+    """Switch a catalog extension on (it loads now and at every start) or off (it is unloaded).
+
+    Raises:
+        ValueError: the catalog has no such extension, or it fails to load (it then stays off).
+    """
+    from wonders.storage import write_json
+
+    registry = registry or REGISTRY
+    entry = next((e for e in catalog(registry=registry) if e.manifest.id == extension_id), None)
+    if entry is None:
+        raise ValueError(f'the catalog has no extension {extension_id!r}')
+    discover = registry is REGISTRY and not os.environ.get(DISABLE_VARIABLE)
+    if discover:
+        ensure_loaded()  # first: an extension of the same id in your own folder keeps precedence
+    loaded = registry.extensions.get(extension_id)
+    if on and loaded is None and (discover or registry is not REGISTRY):
+        try:
+            load_folder(entry.folder, registry, 'catalog')
+        except Exception as exc:
+            raise ValueError(f'{extension_id!r} failed to load: {exc}') from exc
+    elif not on and loaded is not None and loaded.source == 'catalog':
+        unload(extension_id, registry)
+    ids = [i for i in active_ids() if i != extension_id] + ([extension_id] if on else [])
+    write_json(_settings_path(), {'active': sorted(ids)})
+    return _catalog_entry(entry.folder, registry, set(ids))
+
+
+def provide(expansion_ids: Any) -> None:
+    """Make expansions known: discover extensions, then load catalog extensions that bring missing ones.
+
+    A game record or saved game that used a catalog expansion replays even after it was switched off;
+    loading it this way does not switch it on.
+    """
+    from wonders.ruleset import EXPANSIONS
+
+    missing = {i for i in expansion_ids if i not in EXPANSIONS}
+    if not missing:
+        return
+    ensure_loaded()
+    missing = {i for i in missing if i not in EXPANSIONS}
+    if not missing or os.environ.get(DISABLE_VARIABLE):
+        return
+    for entry in catalog():
+        brings = {str(e.get('id')) for e in entry.manifest.expansions}
+        if brings & missing and entry.manifest.id not in REGISTRY.extensions:
+            try:
+                load_folder(entry.folder, REGISTRY, 'catalog')
+            except Exception as exc:
+                warnings.warn(f'catalog extension {entry.manifest.id!r} failed to load: {exc}', stacklevel=2)
 
 
 def _rule_and_colour_problems(filename: str, raw: Dict[str, Any], entry: Dict[str, Any]) -> List[str]:

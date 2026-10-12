@@ -68,7 +68,10 @@ without the expansion despite an extra play (plunder drains everyone) and 0.24 d
 
 ## Play it
 
+Rinascita ships with the game. Switch it on in the GUI under "Community expansions" (it then appears
+among the expansions of the menu), or on the command line:
+
 ```
-WONDERS_EXTENSIONS=extensions wonders play -e base -e rinascita -a heuristic,board,greedy
-WONDERS_EXTENSIONS=extensions wonders gui     # then pick Rinascita in the menu
+wonders ext enable rinascita
+wonders play -e base -e rinascita -a heuristic,board,greedy
 ```
