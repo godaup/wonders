@@ -346,9 +346,9 @@
     },
     {
      "type": "debt",
-     "amount": 1,
+     "amount": 2,
      "scope": "self",
-     "description": "you take 1 debt"
+     "description": "you take 2 debt"
     }
    ],
    "at_players": [
@@ -417,7 +417,7 @@
    "effects": [
     {
      "type": "victory_points",
-     "points": 5
+     "points": 6
     },
     {
      "type": "science_set_bonus",
@@ -528,7 +528,7 @@
       "arts"
      ],
      "coins_each": 1,
-     "vp_each": 1
+     "vp_each": 2
     }
    ],
    "at_players": [
@@ -555,7 +555,7 @@
      "colors": [
       "arts"
      ],
-     "vp_each": 2
+     "vp_each": 3
     }
    ],
    "guild": true
@@ -694,6 +694,10 @@
       }
      },
      "effects": [
+      {
+       "type": "victory_points",
+       "points": 3
+      },
       {
        "type": "tally",
        "what": "colors",
