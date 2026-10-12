@@ -78,13 +78,45 @@ colours and the meta rules).
 
 ## 4. Calibration on the official cards
 
-`python -m wonders.agents.strength -g 600 -p 4` simulates the official Age cards (base game and
+`python -m wonders.agents.strength -g 600 -p 4` (`--refit` reuses the stored simulations) simulates the official Age cards (base game and
 Cities decks) with natural pairs, then fits the rate card's weights by weighted ridge regression
 shrunk towards the priors (`fit_weights`), and the board scale to the measured side strengths. It
 writes `wonders/agents/data/strength.json` with the weights, every official card's simulated value
 (the comparison ranges the builder shows) and the leave-one-out error of the rate card.
 
-CALIBRATION_RESULTS
+**Current calibration** (October 2026, 600 watched games each with the base game and with Cities, 117
+cards, median 955 paired samples and ±0.25 VP per card):
+
+| feature | prior | fitted |
+|---|---:|---:|
+| points | +1.00 | +0.74 |
+| coins | +1.00 | +1.07 |
+| on_build | +1.00 | +1.01 |
+| military | +1.00 | +0.72 |
+| science | +1.00 | +0.64 |
+| production | +0.60 | +1.11 |
+| trade | +0.25 | +0.39 |
+| chain_out | +1.00 | +0.40 |
+| chain_in | +0.50 | +0.21 |
+| resource_cost | -0.40 | -0.05 |
+| coin_cost | -1.00 | -0.81 |
+| powers | +1.00 | +0.64 |
+| turn | -1.00 | -1.00 |
+| intercept | 0 | +0.28 |
+
+* **Cards:** the simulated values spread with an SD of 1.42 VP; the rate card predicts each
+  official card, fitted without it, to 0.94 VP (leave-one-out RMSE), so it explains a
+  little over half of the differences between cards (R² ≈ 0.56). Expect ±1 VP on a new card
+  before simulation.
+* **Boards:** the raw board rate correlates with the measured side strengths at r = 0.52
+  (RMSE 1.9 VP after scaling): a rough first guess. Board powers and stage timing are
+  where the simulation matters most.
+* Strongest official cards relative to a discard: Timber Yard (+5.8), Builders Guild (+5.5), Mercenaries (+5.1), Palace (+4.8), Tree Farm (+4.7); weakest:
+  Embassy (-2.9), Guardhouse (-1.2), Consulate (-0.5), Architect Firm (-0.2), Residence (-0.2).
+* Notable fitted weights: resource costs barely matter once a card can be built (the simulation values
+  a card *when it is affordable*), coin costs a little less than 3 coins per VP, and production almost
+  twice the prior, as early resources save trading for the rest of the game. The turn weight stays at
+  its prior: every card has the same turn feature, so the intercept takes up any difference.
 
 ## Caveats
 

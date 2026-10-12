@@ -2126,7 +2126,7 @@ function strengthRater(kind, spec, box) {
     const parts = Object.entries(r.rating.parts).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
     const nodes = [el('h4', {}, kind === 'card' ? t('Strength') : t('Strength of side {side}', { side: spec.side || 'A' })),
       el('div', { class: 'b-value' }, el('b', { class: trend(value) }, signedVP(value) + ' ' + t('VP')),
-        r.error === null || r.error === undefined ? null : el('span', { class: 'muted' }, '± ' + fmtNum(r.error, 1))),
+        r.uncertainty === null || r.uncertainty === undefined ? null : el('span', { class: 'muted', 'data-tip': t('Typical error of the rate card on the official items') }, '± ' + fmtNum(r.uncertainty, 1))),
       el('div', { class: 'muted' }, kind === 'card' ? t('Score margin compared with discarding the card, by the rate card (updates while you edit).')
         : t('Score margin compared with an average official side, by the rate card (updates while you edit).'))];
     if (r.rating.corrected !== undefined) nodes.push(el('div', { class: 'muted' }, t('Recalibrated to the simulation of the whole expansion.')));

@@ -1,0 +1,1129 @@
+{
+ "board_mean": 9.1851,
+ "board_slope": 0.4633,
+ "boards": {
+  "Abu Simbel A": {
+   "raw": 7.842,
+   "se": 0.173,
+   "value": 0.59
+  },
+  "Abu Simbel B": {
+   "raw": 5.303,
+   "se": 0.173,
+   "value": 0.061
+  },
+  "Manneken Pis A": {
+   "raw": 7.854,
+   "se": 0.117,
+   "value": -1.483
+  },
+  "Manneken Pis B": {
+   "raw": 11.365,
+   "se": 0.11,
+   "value": 5.369
+  },
+  "Stonehenge A": {
+   "raw": 7.791,
+   "se": 0.112,
+   "value": -1.807
+  },
+  "Stonehenge B": {
+   "raw": 2.843,
+   "se": 0.11,
+   "value": -3.305
+  },
+  "The Al-Khazneh of Petra A": {
+   "raw": 9.841,
+   "se": 0.092,
+   "value": -0.384
+  },
+  "The Al-Khazneh of Petra B": {
+   "raw": 10.183,
+   "se": 0.093,
+   "value": -5.044
+  },
+  "The Colosseum of Rome A": {
+   "raw": 7.124,
+   "se": 0.088,
+   "value": -1.076
+  },
+  "The Colosseum of Rome B": {
+   "raw": 13.92,
+   "se": 0.096,
+   "value": -0.568
+  },
+  "The Colossus of Rhodes A": {
+   "raw": 10.922,
+   "se": 0.062,
+   "value": -0.014
+  },
+  "The Colossus of Rhodes B": {
+   "raw": 14.229,
+   "se": 0.059,
+   "value": 3.247
+  },
+  "The Great Wall A": {
+   "raw": 10.32,
+   "se": 0.116,
+   "value": 3.723
+  },
+  "The Great Wall B": {
+   "raw": 5.381,
+   "se": 0.108,
+   "value": -2.614
+  },
+  "The Hagia Sophia of Byzantium A": {
+   "raw": 8.191,
+   "se": 0.084,
+   "value": 1.026
+  },
+  "The Hagia Sophia of Byzantium B": {
+   "raw": 6.436,
+   "se": 0.085,
+   "value": -3.748
+  },
+  "The Hanging Gardens of Babylon A": {
+   "raw": 9.4,
+   "se": 0.061,
+   "value": -1.095
+  },
+  "The Hanging Gardens of Babylon B": {
+   "raw": 6.979,
+   "se": 0.061,
+   "value": 1.373
+  },
+  "The Lighthouse of Alexandria A": {
+   "raw": 10.367,
+   "se": 0.057,
+   "value": 0.892
+  },
+  "The Lighthouse of Alexandria B": {
+   "raw": 13.488,
+   "se": 0.059,
+   "value": 1.63
+  },
+  "The Mausoleum of Halicarnassus A": {
+   "raw": 8.636,
+   "se": 0.06,
+   "value": -2.003
+  },
+  "The Mausoleum of Halicarnassus B": {
+   "raw": 8.127,
+   "se": 0.063,
+   "value": -0.757
+  },
+  "The Pyramids of Giza A": {
+   "raw": 10.07,
+   "se": 0.061,
+   "value": -0.079
+  },
+  "The Pyramids of Giza B": {
+   "raw": 11.372,
+   "se": 0.061,
+   "value": 0.984
+  },
+  "The Statue of Zeus in Olympia A": {
+   "raw": 9.764,
+   "se": 0.057,
+   "value": 1.667
+  },
+  "The Statue of Zeus in Olympia B": {
+   "raw": 8.872,
+   "se": 0.058,
+   "value": 0.907
+  },
+  "The Temple of Artemis in Ephesus A": {
+   "raw": 9.787,
+   "se": 0.057,
+   "value": -0.504
+  },
+  "The Temple of Artemis in Ephesus B": {
+   "raw": 10.772,
+   "se": 0.058,
+   "value": 3.011
+  }
+ },
+ "built": [
+  [
+   1.0,
+   0.9
+  ],
+  [
+   1.0,
+   0.85,
+   0.7
+  ],
+  [
+   1.0,
+   0.85,
+   0.7,
+   0.55
+  ]
+ ],
+ "cards": {
+  "Academy": {
+   "age": 3,
+   "color": "green",
+   "rate": 1.275,
+   "samples": 1191,
+   "se": 0.109,
+   "value": 0.894
+  },
+  "Altar": {
+   "age": 1,
+   "color": "blue",
+   "rate": 1.15,
+   "samples": 1200,
+   "se": 0.265,
+   "value": 0.968
+  },
+  "Apothecary": {
+   "age": 1,
+   "color": "green",
+   "rate": 2.014,
+   "samples": 1036,
+   "se": 0.312,
+   "value": 2.219
+  },
+  "Aqueduct": {
+   "age": 2,
+   "color": "blue",
+   "rate": 3.017,
+   "samples": 1170,
+   "se": 0.206,
+   "value": 2.752
+  },
+  "Archery Range": {
+   "age": 2,
+   "color": "red",
+   "rate": 4.019,
+   "samples": 1186,
+   "se": 0.266,
+   "value": 3.422
+  },
+  "Architect Firm": {
+   "age": 2,
+   "color": "black",
+   "rate": 2.341,
+   "samples": 212,
+   "se": 0.455,
+   "value": -0.213
+  },
+  "Arena": {
+   "age": 3,
+   "color": "yellow",
+   "rate": 4.033,
+   "samples": 1199,
+   "se": 0.092,
+   "value": 4.081
+  },
+  "Arsenal": {
+   "age": 3,
+   "color": "red",
+   "rate": 2.39,
+   "samples": 1194,
+   "se": 0.166,
+   "value": 2.636
+  },
+  "Band of Spies": {
+   "age": 2,
+   "color": "black",
+   "rate": 0.543,
+   "samples": 235,
+   "se": 0.361,
+   "value": 0.911
+  },
+  "Barracks": {
+   "age": 1,
+   "color": "red",
+   "rate": 2.688,
+   "samples": 1194,
+   "se": 0.289,
+   "value": 2.344
+  },
+  "Baths": {
+   "age": 1,
+   "color": "blue",
+   "rate": 1.834,
+   "samples": 1197,
+   "se": 0.276,
+   "value": 1.236
+  },
+  "Bazar": {
+   "age": 2,
+   "color": "yellow",
+   "rate": 1.508,
+   "samples": 955,
+   "se": 0.142,
+   "value": 1.123
+  },
+  "Black Market": {
+   "age": 2,
+   "color": "black",
+   "rate": 0.288,
+   "samples": 226,
+   "se": 0.438,
+   "value": 2.847
+  },
+  "Brickyard": {
+   "age": 2,
+   "color": "brown",
+   "rate": 3.459,
+   "samples": 1200,
+   "se": 0.213,
+   "value": 1.563
+  },
+  "Brotherhood": {
+   "age": 3,
+   "color": "black",
+   "rate": 2.683,
+   "samples": 207,
+   "se": 0.217,
+   "value": 3.488
+  },
+  "Builders Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 4.766,
+   "samples": 828,
+   "se": 0.12,
+   "value": 5.528
+  },
+  "Capitol": {
+   "age": 3,
+   "color": "black",
+   "rate": 4.318,
+   "samples": 225,
+   "se": 0.214,
+   "value": 4.198
+  },
+  "Caravansery": {
+   "age": 2,
+   "color": "yellow",
+   "rate": 3.676,
+   "samples": 1200,
+   "se": 0.232,
+   "value": 3.991
+  },
+  "Cells": {
+   "age": 1,
+   "color": "black",
+   "rate": -0.028,
+   "samples": 221,
+   "se": 0.593,
+   "value": 0.271
+  },
+  "Cenotaph": {
+   "age": 3,
+   "color": "black",
+   "rate": 3.221,
+   "samples": 217,
+   "se": 0.188,
+   "value": 3.249
+  },
+  "Chamber of Builders": {
+   "age": 3,
+   "color": "black",
+   "rate": 2.537,
+   "samples": 197,
+   "se": 0.288,
+   "value": 3.385
+  },
+  "Chamber of Commerce": {
+   "age": 3,
+   "color": "yellow",
+   "rate": 1.398,
+   "samples": 953,
+   "se": 0.12,
+   "value": 1.707
+  },
+  "Circus": {
+   "age": 3,
+   "color": "red",
+   "rate": 2.6,
+   "samples": 953,
+   "se": 0.174,
+   "value": 2.805
+  },
+  "City Gates": {
+   "age": 1,
+   "color": "black",
+   "rate": 1.903,
+   "samples": 188,
+   "se": 0.73,
+   "value": 1.115
+  },
+  "Clay Pit": {
+   "age": 1,
+   "color": "brown",
+   "rate": 3.181,
+   "samples": 1200,
+   "se": 0.305,
+   "value": 4.016
+  },
+  "Clay Pool": {
+   "age": 1,
+   "color": "brown",
+   "rate": 2.618,
+   "samples": 1200,
+   "se": 0.292,
+   "value": 2.368
+  },
+  "Consulate": {
+   "age": 2,
+   "color": "black",
+   "rate": 0.649,
+   "samples": 186,
+   "se": 0.549,
+   "value": -0.496
+  },
+  "Contingent": {
+   "age": 3,
+   "color": "black",
+   "rate": 2.798,
+   "samples": 203,
+   "se": 0.453,
+   "value": 3.589
+  },
+  "Courthouse": {
+   "age": 2,
+   "color": "blue",
+   "rate": 2.28,
+   "samples": 1182,
+   "se": 0.194,
+   "value": 1.642
+  },
+  "Craftsmens Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 2.136,
+   "samples": 871,
+   "se": 0.124,
+   "value": 2.683
+  },
+  "Customs": {
+   "age": 1,
+   "color": "black",
+   "rate": 2.002,
+   "samples": 212,
+   "se": 0.771,
+   "value": 0.376
+  },
+  "Dispensary": {
+   "age": 2,
+   "color": "green",
+   "rate": 2.12,
+   "samples": 1179,
+   "se": 0.209,
+   "value": 1.423
+  },
+  "Dive": {
+   "age": 1,
+   "color": "black",
+   "rate": 1.197,
+   "samples": 240,
+   "se": 0.646,
+   "value": 0.59
+  },
+  "East Clandestine Wharf": {
+   "age": 1,
+   "color": "black",
+   "rate": 1.321,
+   "samples": 232,
+   "se": 0.566,
+   "value": 1.581
+  },
+  "East Trading Post": {
+   "age": 1,
+   "color": "yellow",
+   "rate": 0.832,
+   "samples": 1200,
+   "se": 0.254,
+   "value": 2.0
+  },
+  "Embassy": {
+   "age": 3,
+   "color": "black",
+   "rate": 0.597,
+   "samples": 218,
+   "se": 0.422,
+   "value": -2.856
+  },
+  "Excavation": {
+   "age": 1,
+   "color": "brown",
+   "rate": 3.181,
+   "samples": 955,
+   "se": 0.335,
+   "value": 4.295
+  },
+  "Forest Cave": {
+   "age": 1,
+   "color": "brown",
+   "rate": 3.181,
+   "samples": 724,
+   "se": 0.379,
+   "value": 4.224
+  },
+  "Forging Agency": {
+   "age": 2,
+   "color": "black",
+   "rate": 0.648,
+   "samples": 200,
+   "se": 0.517,
+   "value": 1.266
+  },
+  "Fortifications": {
+   "age": 3,
+   "color": "red",
+   "rate": 2.6,
+   "samples": 1185,
+   "se": 0.17,
+   "value": 3.016
+  },
+  "Forum": {
+   "age": 2,
+   "color": "yellow",
+   "rate": 2.91,
+   "samples": 1200,
+   "se": 0.221,
+   "value": 2.289
+  },
+  "Foundry": {
+   "age": 2,
+   "color": "brown",
+   "rate": 3.459,
+   "samples": 1200,
+   "se": 0.218,
+   "value": 2.304
+  },
+  "Gambling Den": {
+   "age": 2,
+   "color": "black",
+   "rate": 1.771,
+   "samples": 226,
+   "se": 0.537,
+   "value": 1.635
+  },
+  "Gardens": {
+   "age": 3,
+   "color": "blue",
+   "rate": 3.017,
+   "samples": 1200,
+   "se": 0.081,
+   "value": 3.066
+  },
+  "Glassworks": {
+   "age": 1,
+   "color": "grey",
+   "rate": 2.618,
+   "samples": 1200,
+   "se": 0.236,
+   "value": 2.19
+  },
+  "Guard Tower": {
+   "age": 1,
+   "color": "red",
+   "rate": 2.688,
+   "samples": 1198,
+   "se": 0.292,
+   "value": 2.584
+  },
+  "Guardhouse": {
+   "age": 2,
+   "color": "black",
+   "rate": 0.423,
+   "samples": 233,
+   "se": 0.43,
+   "value": -1.17
+  },
+  "Haven": {
+   "age": 3,
+   "color": "yellow",
+   "rate": 2.888,
+   "samples": 1199,
+   "se": 0.076,
+   "value": 2.85
+  },
+  "Hideout": {
+   "age": 1,
+   "color": "black",
+   "rate": 0.956,
+   "samples": 230,
+   "se": 0.72,
+   "value": 0.874
+  },
+  "Laboratory": {
+   "age": 2,
+   "color": "green",
+   "rate": 1.869,
+   "samples": 1177,
+   "se": 0.2,
+   "value": 1.382
+  },
+  "Lair": {
+   "age": 2,
+   "color": "black",
+   "rate": 1.791,
+   "samples": 232,
+   "se": 0.488,
+   "value": 1.698
+  },
+  "Library": {
+   "age": 2,
+   "color": "green",
+   "rate": 2.075,
+   "samples": 1167,
+   "se": 0.217,
+   "value": 1.613
+  },
+  "Lighthouse": {
+   "age": 3,
+   "color": "yellow",
+   "rate": 2.273,
+   "samples": 1200,
+   "se": 0.069,
+   "value": 3.037
+  },
+  "Lodge": {
+   "age": 3,
+   "color": "green",
+   "rate": 1.275,
+   "samples": 1192,
+   "se": 0.113,
+   "value": 1.419
+  },
+  "Loom": {
+   "age": 1,
+   "color": "grey",
+   "rate": 2.618,
+   "samples": 1200,
+   "se": 0.228,
+   "value": 1.893
+  },
+  "Lumber Yard": {
+   "age": 1,
+   "color": "brown",
+   "rate": 2.618,
+   "samples": 1200,
+   "se": 0.305,
+   "value": 3.171
+  },
+  "Magistrates Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 3.543,
+   "samples": 809,
+   "se": 0.124,
+   "value": 4.118
+  },
+  "Marketplace": {
+   "age": 1,
+   "color": "yellow",
+   "rate": 1.988,
+   "samples": 1200,
+   "se": 0.253,
+   "value": 1.135
+  },
+  "Memorial": {
+   "age": 3,
+   "color": "black",
+   "rate": 1.996,
+   "samples": 243,
+   "se": 0.176,
+   "value": 0.621
+  },
+  "Mercenaries": {
+   "age": 2,
+   "color": "black",
+   "rate": 4.869,
+   "samples": 164,
+   "se": 0.762,
+   "value": 5.104
+  },
+  "Militia": {
+   "age": 1,
+   "color": "black",
+   "rate": 4.904,
+   "samples": 215,
+   "se": 0.702,
+   "value": 4.011
+  },
+  "Mine": {
+   "age": 1,
+   "color": "brown",
+   "rate": 3.181,
+   "samples": 487,
+   "se": 0.435,
+   "value": 3.577
+  },
+  "Mint": {
+   "age": 3,
+   "color": "black",
+   "rate": 4.237,
+   "samples": 230,
+   "se": 0.316,
+   "value": 4.399
+  },
+  "Observatory": {
+   "age": 3,
+   "color": "green",
+   "rate": 1.024,
+   "samples": 1183,
+   "se": 0.115,
+   "value": 1.186
+  },
+  "Opium Den": {
+   "age": 2,
+   "color": "black",
+   "rate": 1.208,
+   "samples": 220,
+   "se": 0.483,
+   "value": 1.653
+  },
+  "Opium Distillery": {
+   "age": 3,
+   "color": "black",
+   "rate": 2.031,
+   "samples": 190,
+   "se": 0.244,
+   "value": 3.156
+  },
+  "Opium Stash": {
+   "age": 1,
+   "color": "black",
+   "rate": 0.554,
+   "samples": 222,
+   "se": 0.656,
+   "value": 1.089
+  },
+  "Ore Vein": {
+   "age": 1,
+   "color": "brown",
+   "rate": 2.618,
+   "samples": 1200,
+   "se": 0.29,
+   "value": 2.798
+  },
+  "Palace": {
+   "age": 3,
+   "color": "blue",
+   "rate": 4.809,
+   "samples": 1138,
+   "se": 0.098,
+   "value": 4.841
+  },
+  "Pantheon": {
+   "age": 3,
+   "color": "blue",
+   "rate": 4.334,
+   "samples": 1185,
+   "se": 0.093,
+   "value": 4.534
+  },
+  "Pawnshop": {
+   "age": 1,
+   "color": "blue",
+   "rate": 1.49,
+   "samples": 955,
+   "se": 0.28,
+   "value": 1.978
+  },
+  "Philosophers Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 1.878,
+   "samples": 811,
+   "se": 0.133,
+   "value": 1.611
+  },
+  "Pigeonhole": {
+   "age": 1,
+   "color": "black",
+   "rate": 0.867,
+   "samples": 201,
+   "se": 0.629,
+   "value": 1.354
+  },
+  "Press": {
+   "age": 1,
+   "color": "grey",
+   "rate": 2.618,
+   "samples": 1200,
+   "se": 0.231,
+   "value": 1.664
+  },
+  "Prison": {
+   "age": 3,
+   "color": "black",
+   "rate": 1.298,
+   "samples": 244,
+   "se": 0.259,
+   "value": 0.271
+  },
+  "Quarry": {
+   "age": 2,
+   "color": "brown",
+   "rate": 3.459,
+   "samples": 1200,
+   "se": 0.207,
+   "value": 2.355
+  },
+  "Raider Camp": {
+   "age": 1,
+   "color": "black",
+   "rate": 0.542,
+   "samples": 231,
+   "se": 0.542,
+   "value": 0.684
+  },
+  "Raider Fort": {
+   "age": 2,
+   "color": "black",
+   "rate": 1.517,
+   "samples": 198,
+   "se": 0.372,
+   "value": 0.935
+  },
+  "Raider Garrison": {
+   "age": 3,
+   "color": "black",
+   "rate": 2.546,
+   "samples": 209,
+   "se": 0.178,
+   "value": 3.123
+  },
+  "Residence": {
+   "age": 1,
+   "color": "black",
+   "rate": -0.036,
+   "samples": 215,
+   "se": 0.702,
+   "value": -0.201
+  },
+  "Sawmill": {
+   "age": 2,
+   "color": "brown",
+   "rate": 3.459,
+   "samples": 1200,
+   "se": 0.2,
+   "value": 2.246
+  },
+  "School": {
+   "age": 2,
+   "color": "green",
+   "rate": 1.917,
+   "samples": 1161,
+   "se": 0.211,
+   "value": 2.093
+  },
+  "Scientists Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 1.914,
+   "samples": 832,
+   "se": 0.126,
+   "value": 2.313
+  },
+  "Scriptorium": {
+   "age": 1,
+   "color": "green",
+   "rate": 1.969,
+   "samples": 1068,
+   "se": 0.302,
+   "value": 2.114
+  },
+  "Secret Network": {
+   "age": 3,
+   "color": "black",
+   "rate": -0.825,
+   "samples": 204,
+   "se": 0.134,
+   "value": 1.716
+  },
+  "Secret Warehouse": {
+   "age": 1,
+   "color": "black",
+   "rate": 0.406,
+   "samples": 219,
+   "se": 0.736,
+   "value": 2.064
+  },
+  "Senate": {
+   "age": 3,
+   "color": "blue",
+   "rate": 3.702,
+   "samples": 1199,
+   "se": 0.083,
+   "value": 3.841
+  },
+  "Sepulcher": {
+   "age": 2,
+   "color": "black",
+   "rate": 2.363,
+   "samples": 197,
+   "se": 0.478,
+   "value": 1.904
+  },
+  "Shipowners Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 2.931,
+   "samples": 850,
+   "se": 0.103,
+   "value": 3.567
+  },
+  "Siege Workshop": {
+   "age": 3,
+   "color": "red",
+   "rate": 2.6,
+   "samples": 1197,
+   "se": 0.163,
+   "value": 2.703
+  },
+  "Slave Market": {
+   "age": 3,
+   "color": "black",
+   "rate": 1.499,
+   "samples": 215,
+   "se": 0.202,
+   "value": 0.728
+  },
+  "Smugglers Cache": {
+   "age": 1,
+   "color": "black",
+   "rate": 0.436,
+   "samples": 201,
+   "se": 0.649,
+   "value": 0.055
+  },
+  "Spies Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 2.446,
+   "samples": 817,
+   "se": 0.1,
+   "value": 2.477
+  },
+  "Stables": {
+   "age": 2,
+   "color": "red",
+   "rate": 4.019,
+   "samples": 1197,
+   "se": 0.265,
+   "value": 4.043
+  },
+  "Statue": {
+   "age": 2,
+   "color": "blue",
+   "rate": 2.676,
+   "samples": 1187,
+   "se": 0.203,
+   "value": 2.504
+  },
+  "Stockade": {
+   "age": 1,
+   "color": "red",
+   "rate": 2.688,
+   "samples": 1198,
+   "se": 0.305,
+   "value": 2.527
+  },
+  "Stone Pit": {
+   "age": 1,
+   "color": "brown",
+   "rate": 2.618,
+   "samples": 1200,
+   "se": 0.292,
+   "value": 2.911
+  },
+  "Strategists Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 2.343,
+   "samples": 856,
+   "se": 0.112,
+   "value": 2.404
+  },
+  "Study": {
+   "age": 3,
+   "color": "green",
+   "rate": 1.077,
+   "samples": 1187,
+   "se": 0.108,
+   "value": 1.097
+  },
+  "Tabularium": {
+   "age": 2,
+   "color": "black",
+   "rate": 3.001,
+   "samples": 227,
+   "se": 0.482,
+   "value": 3.022
+  },
+  "Tavern": {
+   "age": 1,
+   "color": "yellow",
+   "rate": 1.065,
+   "samples": 955,
+   "se": 0.23,
+   "value": 1.325
+  },
+  "Temple": {
+   "age": 2,
+   "color": "blue",
+   "rate": 1.94,
+   "samples": 1195,
+   "se": 0.2,
+   "value": 1.963
+  },
+  "Theater": {
+   "age": 1,
+   "color": "blue",
+   "rate": 1.15,
+   "samples": 1200,
+   "se": 0.252,
+   "value": 0.937
+  },
+  "Timber Yard": {
+   "age": 1,
+   "color": "brown",
+   "rate": 3.181,
+   "samples": 1200,
+   "se": 0.317,
+   "value": 5.753
+  },
+  "Torture Chamber": {
+   "age": 3,
+   "color": "black",
+   "rate": 0.22,
+   "samples": 223,
+   "se": 0.209,
+   "value": 0.71
+  },
+  "Town Hall": {
+   "age": 3,
+   "color": "blue",
+   "rate": 3.492,
+   "samples": 1192,
+   "se": 0.084,
+   "value": 3.665
+  },
+  "Trade Center": {
+   "age": 2,
+   "color": "black",
+   "rate": 3.094,
+   "samples": 224,
+   "se": 0.543,
+   "value": 1.944
+  },
+  "Traders Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 3.014,
+   "samples": 845,
+   "se": 0.108,
+   "value": 3.588
+  },
+  "Training Ground": {
+   "age": 2,
+   "color": "red",
+   "rate": 4.205,
+   "samples": 945,
+   "se": 0.287,
+   "value": 3.973
+  },
+  "Tree Farm": {
+   "age": 1,
+   "color": "brown",
+   "rate": 3.181,
+   "samples": 487,
+   "se": 0.451,
+   "value": 4.712
+  },
+  "University": {
+   "age": 3,
+   "color": "green",
+   "rate": 1.23,
+   "samples": 1190,
+   "se": 0.107,
+   "value": 1.089
+  },
+  "Vineyard": {
+   "age": 2,
+   "color": "yellow",
+   "rate": 2.761,
+   "samples": 1200,
+   "se": 0.153,
+   "value": 2.379
+  },
+  "Walls": {
+   "age": 2,
+   "color": "red",
+   "rate": 4.205,
+   "samples": 1143,
+   "se": 0.27,
+   "value": 3.905
+  },
+  "West Clandestine Wharf": {
+   "age": 1,
+   "color": "black",
+   "rate": 1.321,
+   "samples": 217,
+   "se": 0.565,
+   "value": 1.148
+  },
+  "West Trading Post": {
+   "age": 1,
+   "color": "yellow",
+   "rate": 0.832,
+   "samples": 1200,
+   "se": 0.251,
+   "value": 1.727
+  },
+  "Workers Guild": {
+   "age": 3,
+   "color": "purple",
+   "rate": 3.808,
+   "samples": 816,
+   "se": 0.115,
+   "value": 4.238
+  },
+  "Workshop": {
+   "age": 1,
+   "color": "green",
+   "rate": 1.763,
+   "samples": 990,
+   "se": 0.303,
+   "value": 2.026
+  }
+ },
+ "error": {
+  "boards_r": 0.52,
+  "boards_rmse": 1.937,
+  "cards_loo_rmse": 0.941,
+  "cards_sd": 1.423
+ },
+ "intercept": 0.2798217543785493,
+ "stages": [
+  2.265,
+  2.413,
+  3.15,
+  1.648
+ ],
+ "weights": {
+  "chain_in": 0.2097995110129611,
+  "chain_out": 0.39611974689823765,
+  "coin_cost": -0.8145831103704404,
+  "coins": 1.071004566411899,
+  "military": 0.722069157089091,
+  "on_build": 1.0138943390689183,
+  "points": 0.7368341514870465,
+  "powers": 0.6370096167173895,
+  "production": 1.1126809421629162,
+  "resource_cost": -0.05221316447718889,
+  "science": 0.6433694514618671,
+  "trade": 0.3854150889224874,
+  "turn": -1.0000000000000016
+ }
+}

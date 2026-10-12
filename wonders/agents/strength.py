@@ -107,6 +107,7 @@ POWER_VALUES: Dict[str, Tuple[float, bool]] = {
 TRADEABLE = sorted(RAW_MATERIALS | MANUFACTURED_GOODS, key=lambda r: r.value)
 DISCOUNT_TARGETS: Tuple[str, ...] = tuple(c.value for c in OFFICIAL_COLORS) + ('wonder',)
 DISCOUNT_VALUE = 0.5
+MAX_WAIVED = 3  # resource units a build typically costs: "no resources" (a large amount) waives this many
 OTHER_POWERS: Tuple[str, ...] = (
     'build_income',
     'builds_free',
@@ -312,7 +313,7 @@ def _by_ages(effects: Sequence[Effect], age: int, ref: Reference) -> Dict[str, f
             ]
             out['trade'] += remaining * sum(saved) / max(1, len(saved)) * 2 * len(TRADEABLE) / 2
         if _effect_overrides(e, 'resource_discount'):  # resource units waived per build of a target
-            waived = sum(e.resource_discount(t) for t in DISCOUNT_TARGETS)
+            waived = sum(min(e.resource_discount(t), MAX_WAIVED) for t in DISCOUNT_TARGETS)
             out['powers'] += remaining * DISCOUNT_VALUE * waived
         for hook in OTHER_POWERS:  # powers without a measure here: a flat prior per Age
             if _effect_overrides(e, hook):
@@ -513,8 +514,10 @@ def fit_weights(
             for c in range(p):
                 A[r][c] += w * x[r] * x[c]
     for r, k in enumerate(names):  # pull towards the prior, scaled by the feature's spread
+        # Scaled by the feature's spread, but never below one unit: a feature that (almost) no item has
+        # must stay near its prior instead of fitting the one item that has it.
         scale = statistics.pvariance([f[k] for f in rows]) if len(rows) > 1 else 0.0
-        lam = strength / (tau * tau) * max(scale, 1e-3)
+        lam = strength / (tau * tau) * max(scale, 1.0)
         A[r][r] += lam
         b[r] += lam * prior[k]
     beta = _solve(A, b)
@@ -716,9 +719,8 @@ def wonder_pair(
     cal = calibration or default_calibration()
     rng = random.Random(seed)
     # Official sides with a measured strength; without a calibration every other side, counted as average.
-    official = [k for k in cal.boards if k.rsplit(' ', 1)[0] != wonder.name] or [
-        f'{w.name} {w.side}' for w in content.wonders if w.name != wonder.name
-    ]
+    in_play = [f'{w.name} {w.side}' for w in content.wonders if w.name != wonder.name]
+    official = [k for k in in_play if k in cal.boards] or in_play
     other = rng.choice(official)
     other_name, other_side = other.rsplit(' ', 1)
     others = [w for w in dict.fromkeys(w.name for w in content.wonders) if w not in (wonder.name, other_name)]
@@ -889,6 +891,31 @@ def simulate_expansion(
 CALIBRATION_EXPANSIONS: Tuple[Tuple[str, ...], ...] = (('base',), ('base', 'cities'))
 
 
+def refit(cal: Calibration) -> Calibration:  # pragma: no cover - script
+    """Fit the weights again to the official cards' stored simulated values (no new games)."""
+    ref = reference()
+    content = _content(('base', 'cities'))
+    items = [content.card(name) for name in sorted(cal.cards)]
+    _fit(cal, ref, items, [cal.cards[c.name]['value'] for c in items], [cal.cards[c.name]['se'] for c in items])
+    _calibrate_boards(cal, ref)
+    return cal
+
+
+def _fit(cal: Calibration, ref: Reference, items: List[Card], targets: List[float], errors: List[float]) -> None:
+    """Fit the rate card's weights and record each card's rate and the leave-one-out error."""
+    rows = [features(c.effects, c.age or 1, ref, c.cost, len(c.chain_enables), bool(c.chain_requires)) for c in items]
+    cal.weights, cal.intercept = fit_weights(rows, targets, errors)
+    sq = 0.0
+    for k in range(len(rows)):
+        w, b = fit_weights(rows[:k] + rows[k + 1 :], targets[:k] + targets[k + 1 :], errors[:k] + errors[k + 1 :])
+        pred = sum(w[f] * rows[k][f] for f in FEATURES) + b
+        sq += (pred - targets[k]) ** 2
+    cal.error['cards_loo_rmse'] = round(math.sqrt(sq / max(1, len(rows))), 3)
+    cal.error['cards_sd'] = round(statistics.pstdev(targets), 3)
+    for card, feats in zip(items, rows):
+        cal.cards[card.name]['rate'] = round(_weigh(feats, cal.weights, cal.intercept).value, 3)
+
+
 def calibrate(games: int = 3000, seed: int = 0, processes: int = 1) -> Calibration:  # pragma: no cover - script
     """Simulate the official cards (natural pairs) and fit the rate card's weights to them.
 
@@ -914,16 +941,12 @@ def calibrate(games: int = 3000, seed: int = 0, processes: int = 1) -> Calibrati
             diffs.setdefault(name, []).append(d)
     content = _content(('base', 'cities'))
     cal = Calibration()
-    rows, targets, errors, items = [], [], [], []
+    targets, errors, items = [], [], []
     for name, samples in sorted(diffs.items()):
         est = _estimate(samples)
         if est.samples < 10:
             continue
         card = content.card(name)
-        feats = features(
-            card.effects, card.age or 1, ref, card.cost, len(card.chain_enables), bool(card.chain_requires)
-        )
-        rows.append(feats)
         targets.append(est.value)
         errors.append(est.se)
         items.append(card)
@@ -934,16 +957,7 @@ def calibrate(games: int = 3000, seed: int = 0, processes: int = 1) -> Calibrati
             'age': card.age,
             'color': card.color.value,
         }
-    cal.weights, cal.intercept = fit_weights(rows, targets, errors)
-    # Leave-one-out error of the rate card.
-    sq = 0.0
-    for k in range(len(rows)):
-        w, b = fit_weights(rows[:k] + rows[k + 1 :], targets[:k] + targets[k + 1 :], errors[:k] + errors[k + 1 :])
-        pred = sum(w[f] * rows[k][f] for f in FEATURES) + b
-        sq += (pred - targets[k]) ** 2
-    cal.error['cards_loo_rmse'] = round(math.sqrt(sq / max(1, len(rows))), 3)
-    for card, feats in zip(items, rows):
-        cal.cards[card.name]['rate'] = round(_weigh(feats, cal.weights, cal.intercept).value, 3)
+    _fit(cal, ref, items, targets, errors)
     _calibrate_boards(cal, ref)
     return cal
 
@@ -1013,9 +1027,13 @@ if __name__ == '__main__':  # pragma: no cover - regeneration script
     parser.add_argument('-g', '--games', type=int, default=3000, help='watched games per expansion set')
     parser.add_argument('-p', '--processes', type=int, default=1)
     parser.add_argument('-s', '--seed', type=int, default=0)
+    parser.add_argument('--refit', action='store_true', help='refit the weights to the stored simulations only')
     args = parser.parse_args()
-    result = calibrate(args.games, args.seed, args.processes)
     out = Path(__file__).with_name('data') / 'strength.json'
+    if args.refit:
+        result = refit(Calibration.from_dict(json.loads(out.read_text(encoding='utf-8'))))
+    else:
+        result = calibrate(args.games, args.seed, args.processes)
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(result.as_dict(), indent=1, sort_keys=True) + '\n', encoding='utf-8')
     print(json.dumps(result.error), f'-> {out}')

@@ -62,7 +62,9 @@ def test_rate_card_measures_military_science_and_production_in_positions(ref):
 def test_rate_card_handles_every_official_card_and_board(ref):
     content = load_content('base', 'leaders', 'cities', 'wonderpack')
     for card in content.cards:
-        assert math.isfinite(st.rate_card(card, ref).value), card.name
+        rating = st.rate_card(card, ref)
+        assert math.isfinite(rating.value), card.name
+        assert all(abs(v) < 15 for v in rating.parts.values()), (card.name, rating.parts)  # no runaway feature
     for wonder in content.wonders:
         rating = st.rate_wonder(wonder, ref)
         assert math.isfinite(rating.value) and len(st.rate_stages(wonder, ref)) == len(wonder.stages)
@@ -175,3 +177,14 @@ def test_server_rates_and_reports_strength(builder_url, monkeypatch):  # noqa: F
     assert view['cards'][0]['name'] == 'Dock' and view['job'] is None
     with pytest.raises(Exception):
         _call(builder_url + '/api/builder/strength', {'id': 'nope', 'mode': 'items'})
+
+
+def test_jobs_find_projects_saved_before_a_restart(isolated, monkeypatch):  # noqa: F811
+    from wonders import extensions
+
+    assert builder.save_project(_project())['check']['loaded']
+    builder.unload('docks')  # as in a fresh process: nothing loaded yet
+    monkeypatch.setattr(extensions, '_LOADED', False)
+    monkeypatch.setattr(bs, 'CARD_SAMPLES', 1)
+    monkeypatch.setattr(bs, 'WONDER_SAMPLES', 1)
+    assert 'error' not in bs.Jobs(processes=1).start('docks', 'items', wait=True)

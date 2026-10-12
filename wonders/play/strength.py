@@ -30,6 +30,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from wonders import storage
 from wonders.agents import strength as st
 from wonders.cards.content import build_card, build_wonder, load_content
+from wonders.extensions import ensure_loaded
 from wonders.ruleset import EXPANSIONS, rules_of
 
 FOLDER = 'builder'
@@ -70,6 +71,7 @@ def spec_hash(spec: Dict[str, Any], colors: Sequence[Dict[str, Any]] = (), rules
 
 def _reference(project_id: str = '') -> st.Reference:
     """The base-game reference positions, with the project's meta rules once it is loaded."""
+    ensure_loaded()
     ref = st.reference()
     if project_id and project_id in EXPANSIONS:
         rules = rules_of(('base', project_id))
@@ -119,7 +121,7 @@ def rate(
             'official': _official_range(cal.official(card.age, card.color.value), best)
             or _official_range(cal.official(card.age, None), best),
             'same_colour': bool(cal.official(card.age, card.color.value)),
-            'error': cal.error.get('cards_loo_rmse'),
+            'uncertainty': cal.error.get('cards_loo_rmse'),
         }
     if kind == 'wonder':
         wonder_spec = clean_wonder(spec)
@@ -133,7 +135,7 @@ def rate(
             'rating': rating.as_dict(),
             'stages': [r.as_dict() for r in st.rate_stages(wonder, ref, cal)],
             'official': _official_range(sorted(v['value'] for v in cal.boards.values()), best),
-            'error': cal.error.get('boards_rmse'),
+            'uncertainty': cal.error.get('boards_rmse'),
         }
     raise ValueError(f'unknown kind {kind!r}')
 
@@ -187,7 +189,7 @@ def _best(row: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     rating = row.get('rating')
     if rating:
         value = rating.get('corrected', rating['value'])
-        return {'value': value, 'se': row.get('error'), 'source': 'rate'}
+        return {'value': value, 'se': row.get('uncertainty'), 'source': 'rate'}
     return None
 
 
@@ -214,6 +216,7 @@ class Jobs:
         """Start simulating ``project_id`` (``'items'``: what changed; ``'expansion'``: everything together)."""
         if mode not in ('items', 'expansion'):
             raise ValueError(f'unknown mode {mode!r}')
+        ensure_loaded()  # after a restart, saved projects are found on first use
         if project_id not in EXPANSIONS:
             raise ValueError(f'save {project_id!r} without errors first')
         with self.lock:
