@@ -125,9 +125,9 @@ table in `docs/extensions.md` from the schemas.
   hooks, so they play custom cards out of the box. The network's encoder indexes cards by name;
   an effect-based card encoding (cost, production, points, science, chains as features) would let
   a model generalise to cards it was never trained on, and is worth having anyway.
-* **An original expansion of this project** — once the workflow exists, a small official set of
-  new cards and a board designed and balanced with the agents: simulate thousands of games to
-  check that no card or strategy dominates before anyone plays it.
+* **An original expansion of this project** — first one done: *Rinascita* (`extensions/rinascita/`),
+  21 cards, two guilds and three boards, balanced with the strength tools. Next: playtests with people,
+  and a check with a second agent family (the values describe how `board` plays them).
 
 ### Out of scope for now
 

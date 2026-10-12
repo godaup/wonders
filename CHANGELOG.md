@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* **Rinascita**, the project's first community expansion (`extensions/rinascita/`, data only): from
+  plague to enlightenment in three Ages (a harsh Age I of debt and plunder, Patronage with the new Arts
+  colour, Enlightenment science), one card per player per Age, two guilds and three wonder boards, with
+  German names; tuned with the strength tools (balance table in its README).
+* Fix: `wonders ext check` warned that an extension locale's colour labels are never shown (they are,
+  on the cards and in the menu).
 * Deck checks (`wonders.cards.decks`): every Age deck must split evenly into the hands at 3 to 7 players,
   alone and with Leaders and Cities, with the expansion's `extra_guilds` rule applied as the game applies
   it. Leftover cards are now an error in the expansion builder (the expansion is not loaded) and in

@@ -27,7 +27,44 @@ up in games with the whole expansion (paired build-vs-discard from the same posi
 board against the official sides in otherwise identical deals. The values below are in VP of final
 score margin, cards relative to discarding them and boards relative to an average official side.
 
-BALANCE_TABLE
+| card | Age | colour | value | official range (same Age and colour) |
+|---|---|---|---:|---|
+| Quarantine Station | I | blue | +0.9 ± 0.4 | +0.9 to +2.0 |
+| Plague Doctor | I | green | +1.8 ± 0.5 | +2.0 to +2.2 |
+| Flagellants | I | red | +3.1 ± 0.4 | +2.3 to +2.6 |
+| Grave Robbers | I | yellow | +2.0 ± 0.4 | +1.1 to +2.0 |
+| Abandoned Farmstead | I | brown | +3.0 ± 0.5 | +2.4 to +5.8 |
+| Plague Pit | I | blue | +2.0 ± 0.6 | +0.9 to +2.0 |
+| Rat Catchers | I | red | +1.5 ± 0.8 | +2.3 to +2.6 |
+| Fresco Workshop | II | arts | +2.5 ± 0.2 | -1.2 to +5.1 |
+| Sculptor's Studio | II | arts | +2.4 ± 0.2 | -1.2 to +5.1 |
+| Patron's Palazzo | II | arts | +2.7 ± 0.3 | -1.2 to +5.1 |
+| Medici Bank | II | yellow | +2.1 ± 0.3 | +1.1 to +4.0 |
+| Public Festival | II | blue | +1.8 ± 0.3 | +1.6 to +2.8 |
+| Theatre of the Republic | II | arts | +2.7 ± 0.3 | -1.2 to +5.1 |
+| Condottieri | II | red | +2.8 ± 0.7 | +3.4 to +4.0 |
+| Orrery | III | green | +0.8 ± 0.1 | +0.9 to +1.4 |
+| Encyclopédie | III | green | +1.5 ± 0.1 | +0.9 to +1.4 |
+| Royal Academy | III | blue | +4.1 ± 0.1 | +3.1 to +4.8 |
+| Salon | III | arts | +3.1 ± 0.1 | -2.9 to +5.5 |
+| Printing Press | III | yellow | +1.7 ± 0.1 | +1.7 to +4.1 |
+| Inquisition | III | red | +2.7 ± 0.3 | +2.6 to +3.0 |
+| Grand Tour | III | yellow | +1.6 ± 0.2 | +1.7 to +4.1 |
+| Patrons' Guild | III | purple | +2.4 ± 0.2 | +1.6 to +5.5 |
+| Academicians' Guild | III | purple | +3.9 ± 0.1 | +1.6 to +5.5 |
+
+| board side | value | official sides |
+|---|---:|---|
+| The Duomo of Florence A | +1.0 ± 0.6 | -5.0 to +5.4 |
+| The Duomo of Florence B | -1.2 ± 0.7 | -5.0 to +5.4 |
+| Uraniborg A | +0.7 ± 0.7 | -5.0 to +5.4 |
+| Uraniborg B | -0.0 ± 0.7 | -5.0 to +5.4 |
+| The Plague Column of Vienna A | -1.4 ± 0.6 | -5.0 to +5.4 |
+| The Plague Column of Vienna B | +3.0 ± 0.7 | -5.0 to +5.4 |
+
+From 900 watched games (cards) and 450 paired deals per side (boards), 3 to 7 players, `board` agents
+in every seat. Age I is deliberately harsh: with the same boards, players end Age I with as many coins as
+without the expansion despite an extra play (plunder drains everyone) and 0.24 debt each.
 
 ## Play it
 
