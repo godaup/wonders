@@ -60,6 +60,7 @@ include = ["wonders*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
+"wonders.agents" = ["data/*.json"]
 "wonders.cards" = ["data/*.json"]
 "wonders.i18n" = ["*.json"]
 "wonders.ml" = ["pretrained/*.pt"]

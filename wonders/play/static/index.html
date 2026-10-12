@@ -370,6 +370,25 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
 .b-rules input { width: 90px; }
 .b-rule { display: flex; gap: 6px; align-items: center; }
 .b-intro { max-width: 640px; display: grid; gap: 10px; justify-items: start; }
+.b-strength { display: grid; gap: 6px; font-size: 12px; }
+.b-strength h4 { font-size: 13px; margin: 0; }
+.b-value { display: flex; align-items: baseline; gap: 6px; }
+.b-value b { font-size: 22px; }
+.b-value b.up, .b-num.up { color: var(--green); }
+.b-value b.down, .b-num.down { color: var(--red); }
+.b-parts { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+.b-parts span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
+.b-range { position: relative; height: 12px; margin: 4px 6px; }
+.b-range i { position: absolute; top: 0; height: 12px; }
+.b-range .band { top: 4px; height: 4px; border-radius: 2px; background: var(--line); }
+.b-range .mid { width: 2px; margin-left: -1px; background: var(--muted); }
+.b-range .dot { width: 10px; height: 10px; top: 1px; margin-left: -5px; border-radius: 50%; background: var(--accent); }
+.b-src { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); }
+.b-src.item, .b-src.expansion { color: var(--accent); border-color: var(--accent); }
+.b-stale { color: var(--gold); }
+.b-progress { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.b-progress i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.b-strength-table td.num, .b-strength-table th.num { white-space: nowrap; }
 /* single-column grids must not grow with their widest control (long effect names, phones) */
 .b-effects, .b-effect, .b-stage, .b-side-box, .b-editor, .b-stack, .b-field { grid-template-columns: minmax(0, 1fr); }
 #builder select, #builder input[type=text], #builder textarea { max-width: 100%; }
@@ -1556,7 +1575,7 @@ function leaveDraft() { return !builder.dirty || confirm(t('Discard the unsaved 
 function newProject() {
   if (!leaveDraft()) return;
   Object.assign(builder, { project: blankProject(), previousId: '', isNew: true, idTouched: false, tab: 'overview', dirty: false,
-    card: null, wonder: null, check: null, balance: null });
+    card: null, wonder: null, check: null, balance: null, strength: null });
   renderBuilder();
 }
 async function loadProject(id) {
@@ -1564,8 +1583,9 @@ async function loadProject(id) {
   try {
     const { project } = await api('/api/builder/project?id=' + encodeURIComponent(id));
     Object.assign(builder, { project, previousId: project.id, isNew: false, idTouched: true, dirty: false,
-      card: project.cards.length ? 0 : null, wonder: project.wonders.length ? project.wonders[0].name : null, check: null, balance: null });
-    renderBuilder(); runCheck();
+      card: project.cards.length ? 0 : null, wonder: project.wonders.length ? project.wonders[0].name : null, check: null, balance: null,
+      strength: null });
+    renderBuilder(); runCheck(); loadStrength();
   } catch (e) { alert(e.message); }
 }
 async function saveProject() {
@@ -1577,6 +1597,7 @@ async function saveProject() {
       check: res.check, projects: res.projects });
     await loadOptions();  // the menu offers the expansion (and its colours) right away
     renderBuilder();
+    if (res.check.loaded) simulate('items'); else loadStrength();  // what changed is simulated in the background
   } catch (e) { alert(e.message); }
   finally { setBusy(false); }
 }
@@ -1745,6 +1766,7 @@ function renderBuilder() {
   $('b-tabs').replaceChildren(...B_TABS.map(([id, label]) => el('button', { class: 'b-tab' + (builder.tab === id ? ' active' : ''),
     'data-tab': id, onclick: () => { builder.tab = id; renderBuilder(); } }, t(label), el('span', { class: 'b-dot' }))));
   const view = { overview: renderOverview, colors: renderColors, cards: renderCards, wonders: renderWonders, test: renderTest }[builder.tab];
+  strengthRaters = [];
   $('b-body').replaceChildren(view());
   renderStatus(); renderMarks();
 }
@@ -1756,6 +1778,8 @@ function renderStatus() {
   const parts = [builder.dirty ? el('span', { class: 'b-unsaved' }, t('unsaved changes')) : null];
   if (c) parts.push(el('span', { class: c.errors ? 'error' : 'muted' }, c.errors || c.warnings
     ? t('{errors} errors, {warnings} warnings', { errors: c.errors, warnings: c.warnings }) : t('no problems found')));
+  const job = builder.strength && builder.strength.job;
+  if (job && job.running) parts.push(el('span', { class: 'muted' }, t('simulating… {pct}', { pct: Math.round(100 * (job.progress || 0)) + '%' })));
   $('b-state').replaceChildren(...parts.filter(Boolean).flatMap((x, k) => (k ? [' · ', x] : [x])));
 }
 function problemsFor(section, index) {
@@ -1828,7 +1852,7 @@ function renderOverview() {
     el('p', { class: 'muted b-help' }, t('Set a rule to a value, or change it by an amount: changes from several expansions add up (Leaders starts with 6 coins, so "change by 2" gives 8 with it). Rules apply in a fixed order, whatever order the expansions are chosen in: the base game, the bundled expansions, then the others by id; a set value replaces what came before it.')),
     el('table', { class: 'games b-rules' }, el('thead', {}, el('tr', {}, el('th', {}, t('Rule')), el('th', { class: 'num' }, t('Base game')),
       el('th', {}, t('This expansion')))), el('tbody', {}, builder.info.rules.map(ruleRow))), problemBox('rules'));
-  return el('div', { class: 'b-stack' }, meta, rules);
+  return el('div', { class: 'b-stack' }, meta, el('div', { class: 'panel', id: 'b-strength' }, ...strengthPanel()), rules);
 }
 
 function renderColors() {
@@ -1874,7 +1898,10 @@ function renderCards() {
   if (builder.card === null) return el('div', { class: 'b-split' }, list);
   const c = p.cards[builder.card];
   const img = el('img', { class: 'b-preview-card', alt: '' }), note = el('p', { class: 'error b-note' });
-  const refresh = cardPreview(c, img, note);
+  const preview = cardPreview(c, img, note);
+  const strengthBox = el('div', { class: 'panel b-strength' });
+  const rateNow = strengthRater('card', c, strengthBox);
+  const refresh = () => { preview(); rateNow(); };
   const wrap = (node) => { node.addEventListener('input', refresh); node.addEventListener('change', refresh); node.addEventListener('click', refresh); return node; };
   if (!Array.isArray(c.at_players)) c.at_players = [];
   if (!Array.isArray(c.effects)) c.effects = [];
@@ -1900,7 +1927,7 @@ function renderCards() {
       el('button', { onclick: () => { if (confirm(t('Delete this card?'))) { p.cards.splice(builder.card, 1); changed(); renderBuilder(); } } }, t('Delete card'))),
     problemBox('cards', builder.card)));
   refresh();
-  return el('div', { class: 'b-split' }, list, editor, el('div', { class: 'b-preview' }, img, note));
+  return el('div', { class: 'b-split' }, list, editor, el('div', { class: 'b-preview' }, img, note, strengthBox));
 }
 
 function wonderNames() { return [...new Set(builder.project.wonders.map((w) => w.name))]; }
@@ -1932,17 +1959,20 @@ function renderWonders() {
       el('button', { onclick: () => { p.wonders.push({ name, side, starting_resource: 'wood', stages: [] }); changed(); renderBuilder(); } }, t('Add side {side}', { side })));
     w.stages = w.stages || []; w.effects = w.effects || [];
     const img = el('img', { class: 'b-preview-board', alt: '' }), note = el('p', { class: 'error b-note' });
-    const refresh = debounce(async () => {
+    const strengthBox = el('div', { class: 'b-strength' });
+    const rateNow = strengthRater('wonder', w, strengthBox);
+    const preview = debounce(async () => {
       try { const res = await api('/api/builder/preview', { kind: 'wonder', spec: w, colors: p.colors });
         if (res.svg) { img.src = svgSrc(res.svg); note.textContent = ''; } else note.textContent = res.error; } catch (e) { note.textContent = e.message; }
     }, 250);
+    const refresh = () => { preview(); rateNow(); };
     const box = el('div', { class: 'panel b-side-box' },
       el('div', { class: 'b-list-head' }, el('h3', {}, t('Side {side}', { side })),
         k === 1 && sides[0] ? el('button', { class: 'tiny', onclick: () => {
           if (!confirm(t('Replace side B with a copy of side A?'))) return;
           Object.assign(w, JSON.parse(JSON.stringify({ ...sides[0], side: 'B' }))); changed(); renderBuilder();
         } }, t('Copy side A')) : null),
-      img, note,
+      img, note, strengthBox,
       bField(t('Starting resource'), bSelect(w, 'starting_resource', builder.info.resources.map((r) => [r, resName(r)]), { blank: t('none') })),
       el('div', { class: 'b-grid' },
         bField(t('Extra starting coins'), bNum(w, 'extra_coins', { min: 0, max: 20, placeholder: 0 })),
@@ -2047,6 +2077,132 @@ function balanceReport(r) {
     el('p', { class: 'muted b-help' }, t('{games} games with {players} players ({lineup}); an even share of wins is {share}. With few games the numbers are rough.',
       { games: r.games, players: r.players, lineup: r.lineup.map(agentLabel).join(', '), share: pct(r.expected_win_rate) })),
     scores, cards, wonders);
+}
+/* ---------- strength: the rate card while editing, simulations after saving and of the whole expansion ---------- */
+const STRENGTH_PARTS = {
+  points: N('Points at the end'), coins: N('Coins when built'), on_build: N('Effects on the other players'), military: N('Military'),
+  science: N('Science'), production: N('Production'), trade: N('Cheaper trade'), chain_out: N('Chains it opens'),
+  chain_in: N('Free through a chain'), resource_cost: N('Resource cost'), coin_cost: N('Coin cost'), powers: N('Special powers'),
+  turn: N('Instead of discarding it'), stages: N('Stages'), resource: N('Starting resource'), average: N('Compared with an average side'),
+  copy: N('Copied stage (official average)'),
+};
+const SOURCES = { rate: N('rate card'), item: N('simulated'), expansion: N('simulated with the expansion') };
+const signedVP = (x) => (x > 0 ? '+' : x < 0 ? '−' : '±') + fmtNum(Math.abs(x), 1);
+const trend = (x) => (x >= 0.5 ? 'up' : x <= -0.5 ? 'down' : '');
+const estimateText = (e) => signedVP(e.value) + (e.se === null || e.se === undefined ? '' : ' ± ' + fmtNum(e.se, 1));
+
+function rangeBar(range, value) {
+  const lo = Math.min(range.min, value), hi = Math.max(range.max, value), span = hi - lo || 1;
+  const at = (x) => (100 * (x - lo) / span).toFixed(1) + '%';
+  return el('div', { class: 'b-range', 'data-tip': t('Grey: official items from the weakest to the strongest, with the median. Blue: this one.') },
+    el('i', { class: 'band', style: `left:${at(range.min)};width:${(100 * (range.max - range.min) / span).toFixed(1)}%` }),
+    el('i', { class: 'mid', style: `left:${at(range.median)}` }), el('i', { class: 'dot', style: `left:${at(value)}` }));
+}
+function strengthRow(kind, name) {
+  const s = builder.strength;
+  return s ? (s[kind === 'card' ? 'cards' : 'wonders'] || []).find((r) => r.name === name) : null;
+}
+function simulatedLines(row) {
+  const lines = [];
+  if (!row) return lines;
+  for (const [key, label] of [['simulated', N('Simulated after saving: {value} VP ({n} games).')], ['expansion', N('With the whole expansion: {value} VP ({n} games).')]]) {
+    const sim = row[key];
+    if (!sim || !sim.samples) continue;
+    lines.push(el('div', { class: sim.stale ? 'b-stale' : '' }, t(label, { value: estimateText(sim), n: sim.samples }),
+      sim.stale ? ' ' + t('(changed since: save to simulate again)') : ''));
+  }
+  return lines;
+}
+// Rates ``spec`` (a card, or a wonder side) whenever it changes and renders the result into ``box``.
+let strengthRaters = [];  // the strength boxes on the page, re-rated when new simulation results arrive
+function strengthRater(kind, spec, box) {
+  const rater = debounce(async () => {
+    let r;
+    try { r = await api('/api/builder/rate', { kind, spec, colors: builder.project.colors, id: builder.isNew ? '' : builder.previousId }); }
+    catch (e) { r = { error: e.message }; }
+    if (r.error) { box.replaceChildren(el('h4', {}, t('Strength')), el('p', { class: 'muted' }, t('Not rated yet: {reason}', { reason: r.error }))); return; }
+    const value = r.rating.corrected !== undefined ? r.rating.corrected : r.rating.value;
+    const name = kind === 'card' ? spec.name : (spec.name || '?') + ' ' + (spec.side || 'A');
+    const parts = Object.entries(r.rating.parts).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+    const nodes = [el('h4', {}, kind === 'card' ? t('Strength') : t('Strength of side {side}', { side: spec.side || 'A' })),
+      el('div', { class: 'b-value' }, el('b', { class: trend(value) }, signedVP(value) + ' ' + t('VP')),
+        r.error === null || r.error === undefined ? null : el('span', { class: 'muted' }, '± ' + fmtNum(r.error, 1))),
+      el('div', { class: 'muted' }, kind === 'card' ? t('Score margin compared with discarding the card, by the rate card (updates while you edit).')
+        : t('Score margin compared with an average official side, by the rate card (updates while you edit).'))];
+    if (r.rating.corrected !== undefined) nodes.push(el('div', { class: 'muted' }, t('Recalibrated to the simulation of the whole expansion.')));
+    nodes.push(el('div', { class: 'b-parts' }, parts.flatMap(([k, v]) => [el('span', {}, t(STRENGTH_PARTS[k] || k)),
+      el('span', { class: 'b-num ' + trend(v) }, signedVP(v))])));
+    if (r.stages && r.stages.length) nodes.push(el('div', {}, t('Stages: {values}', { values: r.stages.map((x) => signedVP(x.value)).join(' · ') })));
+    if (r.official) {
+      const o = r.official;
+      nodes.push(el('div', {}, kind === 'wonder' ? t('Official sides: {min} to {max} VP, median {median}.', { min: signedVP(o.min), max: signedVP(o.max), median: signedVP(o.median) })
+        : r.same_colour ? t('Official cards of this Age and colour: {min} to {max} VP, median {median}.', { min: signedVP(o.min), max: signedVP(o.max), median: signedVP(o.median) })
+          : t('Official cards of this Age: {min} to {max} VP, median {median}.', { min: signedVP(o.min), max: signedVP(o.max), median: signedVP(o.median) })),
+      rangeBar(o, value), el('div', { class: 'muted' }, t('Stronger than {share} of them.', { share: Math.round(100 * o.share_below) + '%' })));
+    }
+    nodes.push(...simulatedLines(strengthRow(kind, name)));
+    box.replaceChildren(...nodes);
+  }, 200);
+  strengthRaters.push(rater);
+  return rater;
+}
+
+function strengthTable(rows, kind) {
+  const head = [kind === 'card' ? t('Card') : t('Wonder side'), kind === 'card' ? t('Age') : null, t('Rate card'), t('Simulated'),
+    t('With the expansion'), t('Estimate')].filter((x) => x !== null);
+  const sim = (x) => (x && x.samples ? el('span', { class: x.stale ? 'b-stale' : '', 'data-tip': x.stale ? t('Changed since this simulation') : t('{n} games', { n: x.samples }) },
+    estimateText(x)) : '–');
+  return el('table', { class: 'games b-strength-table' }, el('thead', {}, el('tr', {}, head.map((h, k) => el('th', { class: k ? 'num' : '' }, h)))),
+    el('tbody', {}, rows.map((r) => {
+      const rate = r.rating ? (r.rating.corrected !== undefined ? r.rating.corrected : r.rating.value) : null;
+      const best = r.estimate;
+      return el('tr', {}, el('td', {}, r.name), kind === 'card' ? el('td', { class: 'num' }, AGES[r.age] || '–') : null,
+        el('td', { class: 'num' }, rate === null ? (r.problem ? t('cannot be rated') : '–') : signedVP(rate)),
+        el('td', { class: 'num' }, sim(r.simulated)), el('td', { class: 'num' }, sim(r.expansion)),
+        el('td', { class: 'num' }, best ? [el('b', { class: 'b-num ' + trend(best.value) }, signedVP(best.value)), ' ',
+          el('span', { class: 'b-src ' + best.source }, t(SOURCES[best.source]))] : '–'));
+    })));
+}
+function strengthPanel() {
+  const nodes = [el('h3', {}, t('Strength')), el('p', { class: 'muted b-help' }, t('Victory points of score margin: a card compared with discarding it, a board side compared with an average official side. The rate card is instant; after saving, every changed card and board is simulated in the background; simulating the whole expansion plays them together and recalibrates the rate card.'))];
+  if (!builder.project || builder.isNew) return [...nodes, el('p', { class: 'muted' }, t('Save the expansion to see the strength of its cards and boards.'))];
+  const s = builder.strength;
+  if (!s) return [...nodes, el('p', { class: 'muted' }, t('Loading…'))];
+  const job = s.job;
+  if (job && job.running) {
+    nodes.push(el('div', {}, job.mode === 'expansion' ? t('Simulating the whole expansion…') : t('Simulating {name}…', { name: job.label || '…' })),
+      el('div', { class: 'b-progress' }, el('i', { style: `width:${Math.round(100 * (job.progress || 0))}%` })));
+  } else if (job && job.error) nodes.push(el('p', { class: 'error' }, job.error));
+  if (s.cards.length) nodes.push(strengthTable(s.cards, 'card'));
+  if (s.wonders.length) nodes.push(strengthTable(s.wonders, 'wonder'));
+  if (!s.cards.length && !s.wonders.length) nodes.push(el('p', { class: 'muted' }, t('No cards or wonders yet.')));
+  const corr = s.expansion && s.expansion.correction;
+  if (corr && corr.cards) nodes.push(el('p', { class: 'muted b-help' }, t('Rate card recalibrated to this expansion: value ≈ {offset} + {slope} × rate card ({games} games).',
+    { offset: fmtNum(corr.cards[0], 2), slope: fmtNum(corr.cards[1], 2), games: s.expansion.games })));
+  const games = { n: (s.expansion && s.expansion.games) || 200 };
+  const loaded = builder.projects.some((x) => x.id === builder.previousId && x.loaded) && !builder.dirty;
+  nodes.push(el('div', { class: 'b-actions' }, bField(t('Games'), bNum(games, 'n', { min: 10, max: 2000 })),
+    el('button', { disabled: !loaded || (job && job.running), onclick: () => simulate('expansion', games.n || 200) }, t('Simulate the whole expansion')),
+    loaded ? null : el('span', { class: 'muted' }, t('Save the expansion without errors to simulate it.'))));
+  return nodes;
+}
+let strengthTimer = null;
+async function loadStrength() {
+  if (!builder || !builder.project || builder.isNew) { if (builder) builder.strength = null; return; }
+  const id = builder.previousId;
+  try { const s = await api('/api/builder/strength?id=' + encodeURIComponent(id)); if (builder.previousId === id) builder.strength = s; }
+  catch (e) { builder.strength = null; }
+  const panel = $('b-strength');
+  if (panel) panel.replaceChildren(...strengthPanel());
+  strengthRaters.forEach((rate) => rate());
+  renderStatus();
+  const job = builder.strength && builder.strength.job;
+  if (job && job.running && !strengthTimer) strengthTimer = setTimeout(() => { strengthTimer = null; loadStrength(); }, 1500);
+}
+async function simulate(mode, games) {
+  try { await api('/api/builder/strength', { id: builder.previousId, mode, games: games || 200 }); }
+  catch (e) { alert(e.message); }
+  loadStrength();
 }
 $('b-new').addEventListener('click', newProject);
 $('b-save').addEventListener('click', saveProject);

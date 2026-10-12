@@ -25,6 +25,8 @@ and what is left. Finished work moves to `CHANGELOG.md`; training reports live i
   the GUI.
 * **Wonder side strength** — the first balance-lab report: every side's value in VP of margin per
   expansion set and player count (`wonders.agents.wonder_values`, `docs/wonder-strength.md`).
+* **Card and board strength in the builder** — a rate card while editing, paired simulations after
+  saving and of the whole expansion, with recalibration (`docs/card-strength.md`).
 
 ## 1. A better search teacher
 
@@ -57,13 +59,13 @@ tables, cluster-robust errors).
 
 **Next.**
 
-* **Card values** by Age and player count with the same design (random availability, margin
-  regression), and how strong each colour strategy is; how much seat position matters.
+* **Card values** by player count and expansion set (the calibration measures them pooled), and how
+  strong each colour strategy is; how much seat position matters.
 * **What-if variants:** change a rule or a card (trade price, a card's cost, a stage's effect) and
   compare against the baseline with confidence intervals.
-* **Designer workflow:** a new card or wonder from an extension is simulated automatically, with a
-  warning when it is clearly over- or under-powered; the builder shows a new board's strength next to
-  the official ones.
+* **Designer workflow:** done in the builder (rate card, simulations, recalibration); next, a warning
+  in the check when an item falls clearly outside the official range, and a second agent family for the
+  simulations.
 * **Using the numbers:** board-adjusted Elo (the expected result given the boards dealt), balanced
   deals for benchmarks, and agent fixes where a side looks weak only because the agent misplays it
   (Petra B's 14-coin stage, see `docs/wonder-strength.md`).

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+* Card and board strength in the expansion builder (`wonders.agents.strength`, `wonders.play.strength`,
+  `docs/card-strength.md`): a rate card values a card or wonder side in VP while it is edited (effects,
+  costs, chains and powers measured in reference positions, compared with the official cards of the same
+  Age and colour); after saving, changed cards and boards are simulated in the background (paired runs
+  from the same position); "Simulate the whole expansion" plays them together and recalibrates the rate
+  card. The overview lists every card and side with the best estimate. Calibrated on simulated values of
+  the official cards (`python -m wonders.agents.strength`).
 * Strength of the wonder board sides (`wonders.agents.wonder_values`, `python -m wonders.agents.wonder_values`):
   random deals played with the board assignment rotated over the same decks, regressed on the sides
   at the table (own side and opponents'), with a value per side and a partially pooled deviation per

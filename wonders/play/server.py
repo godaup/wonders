@@ -20,6 +20,9 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``GET /api/builder/project?id=…`` / ``GET /api/builder/export?id=…`` — one project / its folder as a zip
 - ``POST /api/builder/check`` / ``save`` / ``delete`` / ``preview`` / ``balance`` — see
   :mod:`wonders.play.builder`; these need a JSON body and a local ``Host`` (no cross-site writes)
+- ``POST /api/builder/rate`` — the rate card of an unsaved card or board side (:mod:`wonders.play.strength`)
+- ``GET /api/builder/strength?id=…`` / ``POST /api/builder/strength`` — every item's strength and the
+  simulation job; ``{"id", "mode": "items" | "expansion", "games"}`` starts one
 
 Games are saved after every move to a :class:`~wonders.storage.Store` (``~/.wonders/games``), unless
 the server runs without one (``wonders gui --no-save``).
@@ -45,7 +48,7 @@ from urllib.parse import parse_qs, urlparse, urlsplit
 
 from wonders.cards.content import Content, load_content
 from wonders.i18n import DEFAULT, ENGLISH, Translator, catalog
-from wonders.play import builder
+from wonders.play import builder, strength
 from wonders.play.achievements import achievements, earned
 from wonders.play.rating import AGENT_ELO, DEFAULT_AGENT_ELO, START, agent_elo, player_history, rated_game
 from wonders.play.session import ConfigError, GameConfig, HumanSession, menu_options
@@ -104,6 +107,7 @@ class PlayServer:
         self.session: Optional[HumanSession] = None
         self.lock = threading.Lock()
         self.builder_lock = threading.Lock()  # builder writes change the expansion registry
+        self.strength_jobs = strength.Jobs()  # card / board simulations, one at a time
         self._options: Dict[str, Dict[str, Any]] = {}  # per language
         self.analysis: Dict[str, Any] = {'status': 'idle'}  # post-game analysis of the current game
 
@@ -253,6 +257,7 @@ class PlayServer:
     def builder_delete(self, project_id: str) -> Dict[str, Any]:
         with self.builder_lock:
             builder.delete_project(project_id)
+            strength.forget(project_id)
             self._content_changed()
             return {'deleted': project_id, 'projects': builder.projects()}
 
@@ -264,6 +269,24 @@ class PlayServer:
                 }
             except Exception as exc:  # an unfinished card is normal while editing
                 return {'error': builder._reason(exc)}
+
+    def builder_rate(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        with self.builder_lock:
+            try:
+                return strength.rate(
+                    str(body.get('kind')), body.get('spec') or {}, body.get('colors') or [], str(body.get('id') or '')
+                )
+            except Exception as exc:  # an unfinished card is normal while editing
+                return {'error': builder._reason(exc)}
+
+    def builder_strength(self, project_id: str) -> Dict[str, Any]:
+        with self.builder_lock:
+            return strength.overview(project_id, self.strength_jobs)
+
+    def builder_simulate(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        project_id = str(body.get('id') or '')
+        job = self.strength_jobs.start(project_id, str(body.get('mode') or 'items'), int(body.get('games') or 200))
+        return {'job': job}
 
     def _content_changed(self) -> None:
         """An expansion changed on disk: menus, renderings and image versions are rebuilt."""
@@ -391,6 +414,7 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/builder': lambda play, q: _json(play.builder_state(_t(q))),
     '/api/builder/project': lambda play, q: _guarded(lambda: {'project': builder.load_project(q.get('id', ''))}),
     '/api/builder/export': lambda play, q: _export(q.get('id', '')),
+    '/api/builder/strength': lambda play, q: _guarded(lambda: play.builder_strength(q.get('id', ''))),
 }
 # POST routes get the JSON body and the query string (for ``lang``).
 POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Response]] = {
@@ -405,6 +429,8 @@ POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Re
     '/api/builder/save': lambda play, body, q: _json(play.builder_save(body)),
     '/api/builder/delete': lambda play, body, q: _json(play.builder_delete(str(body.get('id', '')))),
     '/api/builder/preview': lambda play, body, q: _json(play.builder_preview(body, _t(q))),
+    '/api/builder/rate': lambda play, body, q: _json(play.builder_rate(body)),
+    '/api/builder/strength': lambda play, body, q: _guarded(lambda: play.builder_simulate(body)),
     '/api/builder/balance': lambda play, body, q: _json(
         builder.balance(str(body.get('id', '')), int(body.get('games', 100)), int(body.get('players', 4)))
     ),

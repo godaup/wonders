@@ -65,7 +65,8 @@ move was and why, replayed from the real position ([screenshot](docs/images/anal
 with fixed ratings, and 42 achievements from bronze to legendary.
 
 🧱 **Design your own expansion** in the GUI's builder: cards, new card colours, wonder boards and
-meta rules with live previews, a balance check and zip export, no JSON by hand.
+meta rules with live previews, each card's and board's strength in VP while you edit (checked by
+simulation after saving), a balance check and zip export, no JSON by hand.
 
 🧩 **Extend the game in Python**: new card effects and agents as pip-installable plugins, models and
 expansions as data folders, every contribution checked automatically on pull requests.

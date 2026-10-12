@@ -34,6 +34,13 @@ new card is built and how its builders place, how the new wonders do) and downlo
 zip. The builder writes exactly the format below, so a builder-made expansion can be edited by hand
 and vice versa, and contributed like any other.
 
+**Strength.** While you edit a card or a wonder side, the builder shows its value in victory points
+next to the preview: the *rate card*, with the contribution of each effect and cost and where it falls
+among the official cards of the same Age and colour (or the official sides). After saving, every
+changed card and board is simulated in the background, and the overview lists all of them with the
+best estimate so far; "Simulate the whole expansion" plays them together and recalibrates the rate
+card to the results. The method is described in [card-strength.md](card-strength.md).
+
 ## Quick start: a folder extension
 
 ```
