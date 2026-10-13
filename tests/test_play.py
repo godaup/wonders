@@ -20,6 +20,7 @@ from wonders.play.session import (
     agent_options,
     legal_action,
     menu_options,
+    token_kinds,
 )
 from wonders.storage import Store
 
@@ -372,3 +373,9 @@ def test_favicon_is_the_project_logo():
     root = Path(__file__).resolve().parents[1]
     favicon = root / 'wonders' / 'play' / 'static' / 'logo.svg'
     assert favicon.read_bytes() == (root / 'docs' / 'images' / 'logo.svg').read_bytes()
+
+
+def test_token_counters_follow_the_cards_in_play():
+    assert token_kinds(['base', 'leaders']) == {'debt': False, 'diplomacy': False}
+    assert token_kinds(['base', 'cities']) == {'debt': True, 'diplomacy': True}
+    assert token_kinds(['base', 'wonderpack']) == {'debt': False, 'diplomacy': True}  # a Wonder Pack stage

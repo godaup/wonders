@@ -29,6 +29,8 @@ from wonders.effects.library import (
     Plunder,
     Production,
     Science,
+    ScienceCopy,
+    ScienceSetBonus,
     ScienceWild,
     Special,
     Tally,
@@ -290,7 +292,16 @@ def _describe(effect, t: Translator = ENGLISH) -> List[Row]:  # noqa: C901 - one
     description = getattr(effect, 'label', None)  # data-driven description (Leaders / Cities powers)
     if description:
         return [([('special', GUILD)], t(description))]
-    return [([('coin', MUTED)], type(effect).__name__)]
+    science = [('tablet', SCIENCE), ('gear', SCIENCE), ('compass', SCIENCE)]
+    if isinstance(effect, ScienceSetBonus):  # without a description (e.g. made in the expansion builder)
+        return [(science, t('+{n} VP per science set', n=effect.points))]
+    if isinstance(effect, ScienceCopy):
+        label = (
+            'Copy a science symbol of a neighbour' if effect.count == 1 else 'Copy {n} science symbols of neighbours'
+        )
+        return [(science[:1], t(label, n=effect.count))]
+    words = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', type(effect).__name__).capitalize()  # BankPurchase: Bank purchase
+    return [([('special', MUTED)], t(words))]
 
 
 def _row_svg(

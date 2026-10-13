@@ -1082,5 +1082,8 @@
   "by {author}": "von {author}",
   "installed in your extensions folder": "in deinem Erweiterungsordner installiert",
   "Switch on": "Einschalten",
-  "Switch off": "Ausschalten"
+  "Switch off": "Ausschalten",
+  "+{n} VP per science set": "+{n} SP je Wissenschaftssatz",
+  "Copy a science symbol of a neighbour": "Ein Wissenschaftssymbol eines Nachbarn kopieren",
+  "Copy {n} science symbols of neighbours": "{n} Wissenschaftssymbole von Nachbarn kopieren"
 }

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* GUI fixes: the menu's "Your wonder" list offered only "Random" (the boards were never added to it);
+  the debt and diplomacy counters now show whenever the game's cards or boards can hand out those tokens
+  (`session.token_kinds`: Cities, Rinascita, the Wonder Pack's diplomacy stage), not only with Cities.
+* Card texts: effects without a description no longer print their class name (science set bonus and
+  science copy get their own text, others a readable fallback); Rinascita 0.1.1 describes its bank,
+  science, set and defeat effects like the official cards.
+* Tests pin down military resolution: every pair of neighbours around the ring fights once, a diplomat
+  leaves the ring so its neighbours fight each other, and three players with a diplomat fight once.
 * **Community expansions catalog**: the data extensions in `extensions/` ship with the package
   (`wonders/catalog/`, copied by the new `setup.py` build hook; a checkout reads `extensions/`). The GUI
   has a "Community expansions" page (header and menu) to search them by name, author, card or board and

@@ -175,6 +175,27 @@ def _asset_version() -> str:
     return digest.hexdigest()[:10]
 
 
+def token_kinds(expansions: Sequence[str]) -> Dict[str, bool]:
+    """Whether debt and diplomacy tokens can appear in a game of ``expansions`` (the GUI shows their counters).
+
+    Cities brings both (plunder overflows into debt only with it); any other expansion counts when one of
+    its cards, wonder stages or board powers has a ``debt`` or ``diplomacy`` effect (e.g. a Wonder Pack stage).
+    """
+    from wonders.extensions import REGISTRY, provide
+
+    provide(expansions)
+    found = {'debt': 'cities' in expansions, 'diplomacy': 'cities' in expansions}
+    for exp in expansions:
+        raw = REGISTRY.expansion_raw(exp) or read_expansion(exp)
+        items = raw.get('cards', []) + raw.get('wonders', [])
+        specs = [e for item in items for e in item.get('effects', [])]
+        specs += [e for w in raw.get('wonders', []) for stage in w.get('stages', []) for e in stage.get('effects', [])]
+        for spec in specs:
+            if isinstance(spec, dict) and spec.get('type') in found:
+                found[spec['type']] = True
+    return found
+
+
 def menu_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> Dict[str, Any]:
     """What the game menu can offer: expansions, agents, wonders per expansion, seat limits, languages."""
     from wonders.extensions import REGISTRY, ensure_loaded
@@ -525,6 +546,7 @@ class HumanSession:
             'seed': self.seed,
             'human': self.human,
             'expansions': list(self.ruleset.expansions),
+            'tokens': token_kinds(self.ruleset.expansions),  # which token counters the cities show
             'players': [
                 {
                     'seat': i,

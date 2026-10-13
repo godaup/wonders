@@ -40,6 +40,47 @@ def test_military_resolution_values_and_defeats():
     assert sum(g.players[2].tokens) == -1
 
 
+def _ring(shields):
+    g = make_game(*[wonder_gizah_a() for _ in shields])
+    for p, n in zip(g.players, shields):
+        if n:
+            p.add_card(Card(f'Fort {n}', Color.RED, effects=(Military(n),)))
+    return g
+
+
+def test_military_compares_every_pair_of_neighbours_once():
+    # Five cities in a ring: P0-P1, P1-P2, P2-P3, P3-P4 and the wrap-around P4-P0 fight; nobody else does.
+    g = _ring([5, 1, 3, 0, 4])
+    g.resolve_conflict(age=2)  # win +3, defeat -1
+    assert [sorted(p.tokens) for p in g.players] == [
+        [3, 3],  # beats P1 (1) and P4 (4)
+        [-1, -1],  # loses to P0 and P2
+        [3, 3],  # beats P1 and P3
+        [-1, -1],  # loses to P2 and P4
+        [-1, 3],  # beats P3, loses to P0
+    ]
+    # Every conflict hands out exactly one victory and one defeat: as many of each as there are cities.
+    tokens = [t for p in g.players for t in p.tokens]
+    assert tokens.count(3) == tokens.count(-1) == 5
+
+
+def test_a_diplomat_leaves_the_ring_and_its_neighbours_fight_each_other():
+    g = _ring([5, 1, 3, 0, 4])
+    g.players[1].diplomacy = 1
+    g.resolve_conflict(age=1)
+    # P1 sits out: P0 and P2 become neighbours (5 vs 3), the other pairs are unchanged.
+    assert [sorted(p.tokens) for p in g.players] == [[1, 1], [], [-1, 1], [-1, -1], [-1, 1]]
+    g.resolve_conflict(age=1)  # the token was spent: P1 fights again
+    assert sorted(g.players[1].tokens) == [-1, -1]
+
+
+def test_three_cities_with_a_diplomat_fight_once():
+    g = _ring([2, 0, 1])
+    g.players[1].diplomacy = 1
+    g.resolve_conflict(age=3)
+    assert g.players[0].tokens == [5] and g.players[2].tokens == [-1]  # one conflict, not two
+
+
 def test_treasury_is_coins_over_three():
     g = make_game(wonder_gizah_a(), wonder_gizah_a())
     g.players[0].coins = 7
