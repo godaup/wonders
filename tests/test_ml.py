@@ -208,3 +208,29 @@ def test_checkpoints_record_their_rules_version(trained, tmp_path):
         agent = NeuralAgent(old)
     assert agent.rules_version == LEGACY_RULES_VERSION
     assert NeuralAgent(path).rules_version == RULES_VERSION
+
+
+def test_analysis_names_the_cards_the_network_never_saw(tmp_path, monkeypatch):
+    import wonders.extensions as extensions
+    from wonders.i18n import Translator, english
+    from wonders.ml.analysis import UnknownContent, analyse, unknown_content
+    from wonders.ruleset import EXPANSIONS
+
+    boards = ['The Pyramids of Giza', 'The Colossus of Rhodes', 'The Temple of Artemis in Ephesus']
+    setups = [PlayerSetup(n, w, 'A') for n, w in zip('ABC', boards)]
+    _, official = play_match(load_content('base'), setups, [GreedyAgent() for _ in setups], random.Random(1))
+    assert unknown_content(official) is None
+    monkeypatch.setattr(extensions, 'REGISTRY', extensions.Registry())
+    saved = dict(EXPANSIONS)
+    try:
+        extensions.load_folder(extensions.scaffold(tmp_path / 'mini', 'mini', 'Mini'))
+        exps = ('base', 'mini')
+        _, record = play_match(load_content(*exps), setups, [GreedyAgent() for _ in setups], random.Random(1), exps)
+        reason = unknown_content(record)
+        assert reason is not None and 'trained with Mini' in english(reason) and 'Mini Workshop' in english(reason)
+        assert 'nicht mit Mini trainiert' in Translator('de').render(reason)
+        with pytest.raises(UnknownContent, match='Mini Workshop'):  # before any search runs
+            analyse(record, 0)
+    finally:
+        EXPANSIONS.clear()
+        EXPANSIONS.update(saved)

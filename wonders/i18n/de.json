@@ -1085,5 +1085,7 @@
   "Switch off": "Ausschalten",
   "+{n} VP per science set": "+{n} SP je Wissenschaftssatz",
   "Copy a science symbol of a neighbour": "Ein Wissenschaftssymbol eines Nachbarn kopieren",
-  "Copy {n} science symbols of neighbours": "{n} Wissenschaftssymbole von Nachbarn kopieren"
+  "Copy {n} science symbols of neighbours": "{n} Wissenschaftssymbole von Nachbarn kopieren",
+  "The analysis network was not trained with {expansions}: it does not know {names}. It can analyse games with the official expansions.": "Das Analyse-Netz wurde nicht mit {expansions} trainiert: Es kennt {names} nicht. Es kann Partien mit den offiziellen Erweiterungen analysieren.",
+  "The analysis network was not trained with {expansions}: it does not know {names} and {more} more. It can analyse games with the official expansions.": "Das Analyse-Netz wurde nicht mit {expansions} trainiert: Es kennt {names} und {more} weitere nicht. Es kann Partien mit den offiziellen Erweiterungen analysieren."
 }

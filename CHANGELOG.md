@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Post-game analysis of a game with an extension's cards (e.g. Rinascita) stopped with a bare card name
+  (a `KeyError`: the bundled network was trained on the official cards only). `analysis.unknown_content`
+  now checks the game's decks, leaders and boards against the network first, and the GUI and
+  `wonders analyse` say which expansion and cards it does not know (translated). The `ml` extra also
+  installs NumPy, which PyTorch warns about when it is missing.
 * GUI fixes: the menu's "Your wonder" list offered only "Random" (the boards were never added to it);
   the debt and diplomacy counters now show whenever the game's cards or boards can hand out those tokens
   (`session.token_kinds`: Cities, Rinascita, the Wonder Pack's diplomacy stage), not only with Cities.

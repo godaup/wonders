@@ -555,6 +555,53 @@ def patterns(
     return found[:limit]
 
 
+class UnknownContent(ValueError):
+    """The network cannot rate a game whose cards or boards it was never trained on."""
+
+    def __init__(self, message: Message):
+        super().__init__(english(message))
+        self.message = message
+
+
+def unknown_content(record: GameRecord, checkpoint: Optional[str] = None) -> Optional[Message]:
+    """Why ``checkpoint``'s network cannot analyse ``record`` (cards or boards it never saw), or ``None``.
+
+    Checks what the game actually used: the dealt Age decks, the leaders and the players' boards.
+    """
+    from wonders.cards.content import read_expansion
+    from wonders.extensions import REGISTRY
+    from wonders.ml import pretrained_path
+    from wonders.ml.model import load_checkpoint
+    from wonders.ruleset import EXPANSIONS
+
+    _model, card_names, meta = load_checkpoint(os.path.abspath(checkpoint or pretrained_path()))
+    used = {name for deck in record.age_decks.values() for name in deck}
+    used |= {name for hand in record.leader_hands.values() for name in hand} | set(record.leader_box)
+    missing = sorted(used - set(card_names))
+    known_boards = set(meta.get('wonders', ()))
+    if known_boards:  # older checkpoints do not list boards
+        missing += sorted({p.wonder for p in record.players} - known_boards)
+    if not missing:
+        return None
+    owners = []
+    for exp in Ruleset.of(*record.expansions).expansions:
+        raw = REGISTRY.expansion_raw(exp) or read_expansion(exp)
+        names = {str(item.get('name')) for item in raw.get('cards', []) + raw.get('wonders', [])}
+        if names & set(missing):
+            owners.append(msg(EXPANSIONS[exp].name if exp in EXPANSIONS else exp, 'expansion'))
+    text = (
+        'The analysis network was not trained with {expansions}: it does not know {names}. '
+        if len(missing) <= 3
+        else 'The analysis network was not trained with {expansions}: it does not know {names} and {more} more. '
+    )
+    return msg(
+        text + 'It can analyse games with the official expansions.',
+        expansions={'join': ' + ', 'items': owners or ['?']},
+        names=[msg(name) for name in missing[:3]],  # names in the reader's language
+        more=len(missing) - 3,
+    )
+
+
 def analyse(
     record: GameRecord,
     seat: int,
@@ -577,6 +624,9 @@ def analyse(
     from wonders.ml import pretrained_path
 
     checkpoint = os.path.abspath(checkpoint or pretrained_path())
+    reason = unknown_content(record, checkpoint)
+    if reason is not None:
+        raise UnknownContent(reason)
     content = _content(Ruleset.of(*record.expansions).content_expansions)
     decisions = list(record.replay_observations(content, seat))
     settings = {'depth': depth, 'worlds': worlds, 'candidates': candidates, 'seed': seed}
