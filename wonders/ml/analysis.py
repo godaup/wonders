@@ -596,7 +596,7 @@ def unknown_content(record: GameRecord, checkpoint: Optional[str] = None) -> Opt
     )
     return msg(
         text + 'It can analyse games with the official expansions.',
-        expansions={'join': ' + ', 'items': owners or [msg('?')]},
+        expansions={'join': ' + ', 'items': owners},  # every unknown name comes from one of them
         names=[msg(name) for name in missing[:3]],  # names in the reader's language
         more=len(missing) - 3,
     )
