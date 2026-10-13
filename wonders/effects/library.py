@@ -132,9 +132,13 @@ class FreeBuildPerAge(Effect):
     """Olympia A: once per Age, build a structure from hand without paying its cost."""
 
     count: int = 1
+    colors: Tuple[str, ...] = ()  # only cards of these colour values (Caligula: black); empty: any card
 
     def free_builds_per_age(self) -> int:
         return self.count
+
+    def free_build_colors(self) -> Tuple[str, ...]:
+        return tuple(self.colors)
 
 
 @dataclass
@@ -354,13 +358,15 @@ class Plunder(Effect):
 
     amount: int
     scope: str = 'others'
+    per_age: bool = False  # lose as many coins as the current Age instead (Arsinoe)
 
     def on_build(self, ctx: Context) -> None:
+        amount = ctx.age if self.per_age else self.amount
         for player in _targets(ctx, self.scope):
-            lost = min(self.amount, player.coins)
+            lost = min(amount, player.coins)
             player.coins -= lost
             if ctx.debt_tokens:  # without Cities a player short of coins just pays what they have
-                player.debt += self.amount - lost
+                player.debt += amount - lost
 
 
 @dataclass
@@ -372,19 +378,24 @@ class Grant(Effect):
 
     def on_build(self, ctx: Context) -> None:
         for player in _targets(ctx, self.scope):
-            player.coins += self.amount
+            player.gain(self.amount)
 
 
 @dataclass
 class GainToken(Effect):
-    """Cities Raider cards: immediately gain a military victory token of ``value`` (1/3/5)."""
+    """Immediately gain a military victory token of ``value`` (Cities Raider cards: 1/3/5).
 
-    value: int
+    ``current_age``: the token of the Age it is gained in (Nitocris).
+    """
+
+    value: int = 0
+    current_age: bool = False
 
     def on_build(self, ctx: Context) -> None:
-        ctx.player.tokens.append(self.value)
-        if self.value > 0:  # a victory token: Nero pays for every one gained
-            ctx.player.coins += ctx.player.coins_per_victory()
+        value = ctx.victory_value if self.current_age else self.value
+        ctx.player.tokens.append(value)
+        if value > 0:  # a victory token: Nero pays for every one gained
+            ctx.player.gain(ctx.player.coins_per_victory())
 
 
 # --- Leaders / Cities powers ------------------------------------------------
@@ -446,9 +457,12 @@ class BuildIncome(Effect):
     color: Optional[str] = None
     via_chain: bool = False
     after_trade: bool = False
+    wonder: bool = False  # only for wonder stages (Octavia)
 
     def build_income(self, event: BuildEvent) -> int:
         if self.color is not None and event.color != self.color:
+            return 0
+        if self.wonder and event.color is not None:
             return 0
         if self.via_chain and not event.via_chain:
             return 0
@@ -572,7 +586,7 @@ class CashDefeats(Effect):
 
     def on_build(self, ctx: Context) -> None:
         defeats = sum(1 for t in ctx.player.tokens if t < 0)
-        ctx.player.coins += self.coins_each * defeats
+        ctx.player.gain(self.coins_each * defeats)
         ctx.player.tokens = [t for t in ctx.player.tokens if t >= 0]
 
 
@@ -649,3 +663,119 @@ class CopyLeader(Effect):
 
     def leader_copies(self) -> int:
         return self.count
+
+
+# --- second-edition Leaders -----------------------------------------------------
+
+
+@dataclass
+class ScienceMost(Effect):
+    """At the end, ``count`` extra science symbols of the kind you have most of (Enheduanna)."""
+
+    count: int = 1
+
+    def science_most(self) -> int:
+        return self.count
+
+
+@dataclass
+class ScienceReplace(Effect):
+    """At the end, change ``count`` of your science symbols into any other (Aganice)."""
+
+    count: int = 1
+
+    def science_replaces(self) -> int:
+        return self.count
+
+
+@dataclass
+class Majority(Effect):
+    """End VP if you have more of something than each neighbour, counted separately.
+
+    ``what='colors'``: cards of ``colors`` (Phryne: blue, Cornelia: yellow, ...); ``'coins'``: coins (Makeda).
+    """
+
+    what: str
+    points: int = 5
+    colors: Iterable[Color] = field(default_factory=frozenset)
+
+    def __post_init__(self) -> None:
+        self.colors = frozenset(self.colors)
+        if self.what not in ('colors', 'coins'):
+            raise ValueError(f"a majority counts 'colors' or 'coins', not {self.what!r}")
+
+    def _metric(self, player) -> int:
+        if self.what == 'coins':
+            return player.coins
+        return sum(1 for c in player.cards if c.color in self.colors)
+
+    def victory_points(self, ctx: Context) -> int:
+        mine = self._metric(ctx.player)
+        return self.points if all(mine > self._metric(p) for p in ctx.neighbours) else 0
+
+
+@dataclass
+class NoDefeats(Effect):
+    """End VP if you hold no military defeat token (Cynisca)."""
+
+    points: int = 6
+
+    def victory_points(self, ctx: Context) -> int:
+        return 0 if any(t < 0 for t in ctx.player.tokens) else self.points
+
+
+@dataclass
+class TokenPairs(Effect):
+    """End VP: each pair of identical military victory tokens scores their value once more (Gorgo)."""
+
+    def victory_points(self, ctx: Context) -> int:
+        counts: Dict[int, int] = {}
+        for t in ctx.player.tokens:
+            if t > 0:
+                counts[t] = counts.get(t, 0) + 1
+        return sum(value * (n // 2) for value, n in counts.items())
+
+
+@dataclass
+class OnlyLeader(Effect):
+    """End VP if this is the only leader face up in your city (Agrippina)."""
+
+    points: int = 7
+
+    def victory_points(self, ctx: Context) -> int:
+        return self.points if sum(1 for c in ctx.player.cards if c.color is Color.WHITE) == 1 else 0
+
+
+@dataclass
+class TokenPurge(Effect):
+    """Discard all your military defeat tokens; every other player discards one victory token (Telesilla).
+
+    The others choose which: each gives up its lowest-valued one.
+    """
+
+    def on_build(self, ctx: Context) -> None:
+        ctx.player.tokens = [t for t in ctx.player.tokens if t >= 0]
+        for player in ctx.others:
+            victories = [t for t in player.tokens if t > 0]
+            if victories:
+                player.tokens.remove(min(victories))
+
+
+@dataclass
+class ReserveBonus(Effect):
+    """Once per turn, gaining coins from the reserve earns ``coins`` more (Berenice)."""
+
+    coins: int = 1
+
+    def reserve_bonus(self) -> int:
+        return self.coins
+
+
+@dataclass
+class StagePlunder(Effect):
+    """Each time you build a wonder stage, every other player loses ``amount`` coins (Octavia)."""
+
+    amount: int = 1
+
+    def stage_plunder(self) -> int:
+        return self.amount

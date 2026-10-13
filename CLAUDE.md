@@ -296,7 +296,10 @@ editions, `Ruleset.edition`; check expansions with `Ruleset.uses` / `has_family(
 `'cities' in ids`. `with_edition(ids, edition)` maps ids (GUI `GameConfig.edition`, CLI `--edition`). The
 editions share card names with other values, so the GUI image routes take `&edition=`. Second-edition powers:
 `free_first_of_color`, `free_turn_build` (`Game._free_turn`, a FREE action on the Age's first / last turn) and
-`wonder_complete`.
+`wonder_complete`. `leaders2` / `cities2` (families `leaders` / `cities`): cards may say `"requires"` (by family:
+the bonus leaders need Cities); `Card.age_cost` leaders cost the Age (`coin_cost(age)`); meta rules
+`leader_draft_left` / `return_last_leaders`; coins from the reserve must go through `Player.gain` (Berenice's
+`reserve_bonus` is paid once per turn in `_flush_pending`); `science_score(most=, replace=)`.
 
 **Expansions are optional and combinable** (`wonders/ruleset.py`). A `Ruleset.of('leaders',
 'cities')` composes any set of expansion ids (`base` always implied); combining is a

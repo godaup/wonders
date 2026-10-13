@@ -95,6 +95,8 @@ the [leaderboard](LEADERBOARD.md).
 |---|---|---|
 | Base game | ✅ playable | 3–7 players, 68 cards incl. 10 guilds, 7 wonders with A and B sides and every board power |
 | Base game, 2nd edition | ✅ playable | the 2020 edition: 70 cards incl. 10 guilds, 7 boards with day and night sides ([editions](docs/editions.md)) |
+| Leaders, 2nd edition | ✅ playable | 55 leaders (standard, expert, bonus with Cities), leaders that cost the Age, Roma and Abu Simbel |
+| Cities, 2nd edition | ✅ playable | 42 black cards, the second-edition Byzantium and Petra |
 | Leaders | ✅ playable | 36 leaders with the draft and recruitment phases, 4 extra guilds, the Rome board |
 | Cities | ✅ playable | 42 black cards (debt, diplomacy, plunder, …), the Petra and Byzantium boards |
 | Armada | 🛠 planned | naval boards, ships and naval conflicts, islands |

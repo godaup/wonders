@@ -45,8 +45,11 @@ from wonders.effects.library import (
     GainToken,
     Grant,
     LeaderDraw,
+    Majority,
     Military,
     MultiProduction,
+    NoDefeats,
+    OnlyLeader,
     PlayLastCard,
     Plunder,
     PlunderPer,
@@ -54,14 +57,20 @@ from wonders.effects.library import (
     ProduceUnowned,
     Production,
     RedirectDefeats,
+    ReserveBonus,
     ResourceDiscount,
     Science,
     ScienceCopy,
+    ScienceMost,
+    ScienceReplace,
     ScienceSetBonus,
     ScienceWild,
     Special,
+    StagePlunder,
     StartingResourceDiscount,
     Tally,
+    TokenPairs,
+    TokenPurge,
     Trade,
     VictoryIncome,
     VictoryPoints,
@@ -116,11 +125,11 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'special': lambda s: Special(s['power'], s.get('description', '')),
     'debt': lambda s: Debt(s['amount'], s.get('scope', 'self')),
     'diplomacy': lambda s: Diplomacy(s.get('count', 1)),
-    'plunder': lambda s: Plunder(s['amount'], s.get('scope', 'others')),
+    'plunder': lambda s: Plunder(s.get('amount', 0), s.get('scope', 'others'), bool(s.get('per_age', False))),
     'grant': lambda s: Grant(s['amount'], s.get('scope', 'others')),
-    'gain_token': lambda s: GainToken(s['value']),
+    'gain_token': lambda s: GainToken(s.get('value', 0), bool(s.get('current_age', False))),
     'play_last_card': lambda s: PlayLastCard(),
-    'free_build': lambda s: FreeBuildPerAge(s.get('count', 1)),
+    'free_build': lambda s: FreeBuildPerAge(s.get('count', 1), tuple(s.get('colors', ()))),
     'build_from_discard': lambda s: BuildFromDiscard(s.get('count', 1), s.get('priority', 0)),
     'copy_guild': lambda s: CopyGuild(s.get('count', 1)),
     # Leaders / Cities powers
@@ -128,7 +137,11 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'science_set_bonus': lambda s: ScienceSetBonus(s.get('points', 3)),
     'science_copy': lambda s: ScienceCopy(s.get('count', 1)),
     'build_income': lambda s: BuildIncome(
-        s['coins'], color=s.get('color'), via_chain=s.get('via_chain', False), after_trade=s.get('after_trade', False)
+        s['coins'],
+        color=s.get('color'),
+        via_chain=s.get('via_chain', False),
+        after_trade=s.get('after_trade', False),
+        wonder=s.get('wonder', False),
     ),
     'victory_income': lambda s: VictoryIncome(s.get('coins', 2)),
     'redirect_defeats': lambda s: RedirectDefeats(),
@@ -152,6 +165,15 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'free_first_of_color': lambda s: FreeFirstOfColor(),
     'free_turn_build': lambda s: FreeTurnBuild(s.get('turn', 'first')),
     'wonder_complete': lambda s: WonderComplete(s.get('points', 7)),
+    'science_most': lambda s: ScienceMost(s.get('count', 1)),
+    'science_replace': lambda s: ScienceReplace(s.get('count', 1)),
+    'majority': lambda s: Majority(s['what'], s.get('points', 5), [Color(c) for c in s.get('colors', [])]),
+    'no_defeats': lambda s: NoDefeats(s.get('points', 6)),
+    'token_pairs': lambda s: TokenPairs(),
+    'only_leader': lambda s: OnlyLeader(s.get('points', 7)),
+    'token_purge': lambda s: TokenPurge(),
+    'reserve_bonus': lambda s: ReserveBonus(s.get('coins', 1)),
+    'stage_plunder': lambda s: StagePlunder(s.get('amount', 1)),
 }
 
 
@@ -189,6 +211,7 @@ def build_card(spec: dict, expansion: str) -> Card:
         expansion=spec.get('expansion', expansion),
         at_players=tuple(spec.get('at_players', [])),
         guild=spec.get('guild', False),
+        age_cost=bool(spec.get('age_cost', False)),
     )
 
 
@@ -273,14 +296,19 @@ def load_content(*expansions: str) -> Content:
 
     ensure_loaded()
     provide(expansions)  # a catalog expansion that is switched off (e.g. a saved game's)
+    from wonders.ruleset import family_of
+
     content = Content()
+    # What a card or board may require: an expansion in any edition (Abu Simbel needs Leaders, the
+    # second edition's bonus leaders need Cities).
+    loaded = {family_of(e) for e in expansions or ('base',)}
     for expansion in expansions or ('base',):
         raw = REGISTRY.expansion_raw(expansion) or read_expansion(expansion)
         define_colors(raw)
         content.wonders.extend(build_wonder(w) for w in raw.get('wonders', []))
-        content.cards.extend(build_card(c, expansion) for c in raw.get('cards', []))
-    loaded = set(expansions or ('base',))
-    content.wonders = [w for w in content.wonders if set(w.requires) <= loaded]  # Abu Simbel needs Leaders
+        cards = [c for c in raw.get('cards', []) if {family_of(r) for r in c.get('requires', ())} <= loaded]
+        content.cards.extend(build_card(c, expansion) for c in cards)
+    content.wonders = [w for w in content.wonders if {family_of(r) for r in w.requires} <= loaded]
     return content
 
 

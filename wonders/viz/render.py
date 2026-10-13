@@ -334,6 +334,14 @@ def effect_lines(effects, t: Translator = ENGLISH) -> List[str]:
     return [label for effect in effects for _icons, label in _describe(effect, t)]
 
 
+AGE_COST = '1/2/3 coins (the Age)'  # a cost that is the current Age (second-edition leaders)
+
+
+def card_cost_text(card, t: Translator = ENGLISH) -> str:
+    """A card's cost as plain text (a leader that costs the Age says so)."""
+    return t(AGE_COST) if card.age_cost else cost_text(card.cost.coins, card.cost.resources, t)
+
+
 def cost_text(coins: int, resources, t: Translator = ENGLISH) -> str:
     """A plain-text cost such as ``'2 coins, 2 Stone, 1 Glass'`` (``'free'`` when nothing)."""
     parts = [t('{n} coin' if coins == 1 else '{n} coins', n=coins)] if coins else []
@@ -456,7 +464,11 @@ def card_svg(card: Card, t: Translator = ENGLISH) -> str:
     parts.append(f'<text x="18" y="86" font-size="11" letter-spacing="1.2" fill="{MUTED}">{escape(t("COST"))}</text>')
     kinds = len(card.cost.resources) + (1 if card.cost.coins else 0)
     tile = round(min(42.0, (_W - 32 - 5 * max(0, kinds - 1)) / max(1, kinds)), 1)  # many cost types: smaller tiles
-    parts.append(_cost_row(card.cost.coins, card.cost.resources, 16, 92 + (42 - tile) / 2, tile=tile, gap=5, t=t))
+    if card.age_cost:  # second-edition leaders: as many coins as the Age
+        parts.append(_cost_chip(16, 92, 'coin', RES_COLOR[Resource.GOLD], 1, t('Coins'), 42))
+        parts.append(f'<text x="66" y="118" font-size="13" fill="{INK}">{escape(t(AGE_COST))}</text>')
+    else:
+        parts.append(_cost_row(card.cost.coins, card.cost.resources, 16, 92 + (42 - tile) / 2, tile=tile, gap=5, t=t))
 
     rows: List[Row] = []
     for effect in card.effects:

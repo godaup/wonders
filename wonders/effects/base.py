@@ -68,6 +68,8 @@ class Context:
     table: Tuple['Player', ...] = ()  # every player, seat order (for "all other players" effects)
     debt_tokens: bool = True  # debt tokens are in play (Cities): unpaid plunder becomes debt
     final: bool = False  # the game is over (hidden things are revealed: Stonehenge B's buried card)
+    age: int = 0  # the current Age (Arsinoe's plunder, Nitocris' token)
+    victory_value: int = 0  # the military victory token of the current Age
 
     @property
     def neighbours(self) -> Tuple['Player', 'Player']:
@@ -148,6 +150,26 @@ class Effect:
         return False
 
     def free_builds_per_age(self) -> int:
+        return 0
+
+    def free_build_colors(self) -> Tuple[str, ...]:
+        """Colour values ``free_builds_per_age`` is limited to (empty: any card; Caligula: black)."""
+        return ()
+
+    def science_most(self) -> int:
+        """Extra science symbols of the kind the owner has most of, at the end (Enheduanna)."""
+        return 0
+
+    def science_replaces(self) -> int:
+        """Science symbols the owner may change into any other at the end (Aganice)."""
+        return 0
+
+    def reserve_bonus(self) -> int:
+        """Extra coins, once per turn, when the owner gains coins from the reserve (Berenice)."""
+        return 0
+
+    def stage_plunder(self) -> int:
+        """Coins every other player loses each time the owner builds a wonder stage (Octavia)."""
         return 0
 
     def free_first_of_color(self) -> bool:

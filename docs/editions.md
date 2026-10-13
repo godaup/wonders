@@ -71,9 +71,48 @@ New effects: `free_first_of_color` (read by `Player.builds_free`), `free_turn_bu
 `Game._free_turn` offers a `FREE` action on that turn of each Age without spending the per-Age allowance) and
 `wonder_complete`.
 
+## Second-edition Leaders (`leaders2.json`)
+
+Sources: the official rulebook and effect sheet (`7le-en02-rules`, `7le-en02-effects-description`), the wiki's
+`Leader Cards` table (55 leaders, matching the rulebook's count) and the board images.
+
+* **Leaders**: 55, in three decks that the effect sheet lists power by power. 34 are *standard*, 15 *expert*, and
+  6 are *bonus* leaders that join only together with Cities (`"requires": ["cities"]`, which `load_content` checks
+  by family). The 36 leaders the first-edition file has keep their costs and powers; their specs are reused.
+* **New mechanics**:
+  * Nine leaders cost the Age: 1, 2 or 3 coins (`"age_cost": true`, `Card.coin_cost(age)`). Abu Simbel scores
+    6 for such a leader.
+  * New effects:
+    * `science_replace` (Aganice), `science_most` (Enheduanna): handled by `science_score`.
+    * `majority` (Phryne, Cornelia, Euryptyle, Theano, Makeda), `no_defeats` (Cynisca), `token_pairs` (Gorgo),
+      `only_leader` (Agrippina).
+    * `token_purge` (Telesilla): the others drop their lowest victory token.
+    * `reserve_bonus` (Berenice): coins from the reserve go through `Player.gain`, and the bonus is paid once
+      at the end of each turn.
+    * `stage_plunder` (Octavia, together with `build_income`'s new `wonder` flag).
+  * New flags on existing effects: `gain_token`'s `current_age` (Nitocris), `plunder`'s `per_age` (Arsinoe) and
+    `free_build`'s `colors` (Caligula: one black card per Age).
+* **Setup rules** (meta rules): the draft passes right (`leader_draft_left` 0). At Age III recruitment the
+  unchosen leader goes back to the box (`return_last_leaders` 1), except for a player on Roma's night side.
+* **No guilds**: the first edition's four Leaders guilds are gone.
+* **Boards**: Roma and Abu Simbel. Roma's night stage 2 costs glass (linen in the first edition). Abu Simbel's
+  night stages give no points; the wiki template carries hidden stale values, but the board image shows none.
+
+## Second-edition Cities (`cities2.json`)
+
+Sources: the official rulebook and effect sheet (`7ci-en02-rules`, `7ci-en02-effects-description`), the wiki's card
+list and the board images.
+
+* **Cards**: the 42 black cards (14 per Age). Their names, Ages, costs and effects are identical to `cities.json`
+  (checked card by card), which was evidently compiled from second-edition sources.
+* **Boards**: new Byzantium and Petra. Petra's coin stages cost 5 and 10 (7 and 14 in the first edition), and
+  Byzantium's stages are new.
+* **Rules**: unchanged (8-card hands, N random black cards per Age, debt for coins not paid, diplomacy).
+* **Known approximations**:
+  * Taking debt by choice although you could pay is not offered (it is never better).
+  * Telesilla's victims always give up their lowest victory token.
+
 ## Next
 
-Leaders, Cities and Armada exist as second-edition reprints with changes of their own (`leaders2`, `cities2`,
-`armada2`). The official second-edition rulebooks are on the Asmodee CDN (`7le-en02-rules`, `7ci-en02-rules`,
-`7ar-en02-rules`). After that come agents and value tables tuned on the second edition, a model trained on it,
-and switching the default edition.
+Armada's second edition (`armada2`; see `docs/armada.md`). Then agents and value tables tuned on the second
+edition, a model trained on it, and switching the default edition.

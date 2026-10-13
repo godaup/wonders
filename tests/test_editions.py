@@ -54,8 +54,10 @@ def test_with_edition_maps_every_family_to_its_edition():
     assert with_edition(['leaders', 'cities'], 1) == ('base', 'leaders', 'cities')
     assert with_edition([], 2) == ('base2',)
     assert with_edition(['base'], 2) == ('base2',)
-    with pytest.raises(ValueError, match='Leaders is not available in the second edition'):
-        with_edition(['leaders'], 2)
+    assert with_edition(['leaders', 'cities'], 2) == ('base2', 'leaders2', 'cities2')
+    assert with_edition(['leaders2'], 1) == ('base', 'leaders')
+    with pytest.raises(ValueError, match='Wonder Pack is not available in the second edition'):
+        with_edition(['wonderpack'], 2)
     with pytest.raises(ValueError, match='unknown edition'):
         with_edition([], 3)
     assert set(EDITIONS) == {1, 2}

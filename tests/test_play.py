@@ -101,7 +101,7 @@ def test_wonder_choice_and_sides():
         (_config(expansions=('atlantis',)), 'unknown expansion'),
         (_config(wonder='Rome'), 'unknown wonder'),
         (_config(side='C'), 'unknown wonder side'),
-        (_config(expansions=('leaders',), edition=2), 'not available in the second edition'),
+        (_config(expansions=('wonderpack',), edition=2), 'not available in the second edition'),
         (_config(edition=3), 'unknown edition'),
     ],
 )

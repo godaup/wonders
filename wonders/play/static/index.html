@@ -733,6 +733,13 @@ const menuEdition = () => menu.edition || 1;
 // An expansion is offered in an edition when it has content for it (extension expansions: every edition).
 const inEdition = (e, ed) => e.edition === null || e.edition === undefined || e.edition === ed;
 const baseOf = (ed) => options.expansions.find((e) => e.family === 'base' && e.edition === ed) || { id: 'base' };
+// The id of an expansion's family in an edition ('leaders' -> 'leaders2'), or null without content for it.
+function idInEdition(id, ed) {
+  const e = options.expansions.find((x) => x.id === id);
+  if (!e) return null;
+  const twin = options.expansions.find((x) => x.family === e.family && inEdition(x, ed));
+  return twin ? twin.id : null;
+}
 function sideLabel(s) {
   if (s === 'random') return t('Random');
   if (menuEdition() === 2) return s === 'A' ? t('Day side') : t('Night side');  // the second edition's boards
@@ -751,7 +758,9 @@ function renderMenu() {
     el('option', { value: x.id, selected: x.id === ed }, x.name)));
   const exps = $('m-expansions'); exps.replaceChildren();
   for (const e of options.expansions) {
-    if (e.family === 'base' && e.edition !== ed) continue;  // the other edition's base game
+    // One chip per expansion: the chosen edition's (Leaders: 'leaders' or 'leaders2'), else the other one, disabled.
+    const twin = options.expansions.find((x) => x.family === e.family && inEdition(x, ed));
+    if ((twin && twin.id !== e.id) || (!twin && options.expansions.find((x) => x.family === e.family) !== e)) continue;
     const fixed = e.family === 'base', offered = inEdition(e, ed), usable = e.implemented && offered;
     const box = el('input', { type: 'checkbox', checked: fixed || (offered && menu.expansions.includes(e.id)), disabled: fixed || !usable,
       onchange: (ev) => {
@@ -792,8 +801,8 @@ function renderMenu() {
 }
 $('m-edition').addEventListener('change', (e) => {
   menu.edition = Number(e.target.value);
-  const offered = options.expansions.filter((x) => inEdition(x, menu.edition)).map((x) => x.id);
-  menu.expansions = menu.expansions.filter((id) => offered.includes(id));  // e.g. Leaders: first edition only
+  // Keep the chosen expansions in the new edition (Leaders stays Leaders); drop those it has none of.
+  menu.expansions = [...new Set(menu.expansions.map((id) => idInEdition(id, menu.edition)).filter(Boolean))];
   renderMenu();
 });
 $('m-wonder').addEventListener('change', (e) => { menu.wonder = e.target.value; });

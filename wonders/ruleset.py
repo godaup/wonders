@@ -59,6 +59,15 @@ RULES: Tuple[RuleSpec, ...] = (
     RuleSpec('victory_age_3', 5, 0, 20, 'Victory in Age III', 'Victory points of a military victory token in Age III.'),
     RuleSpec('defeat_points', -1, -10, 0, 'Defeat', 'Victory points of a military defeat token (zero or less).'),
     RuleSpec('extra_guilds', 2, 0, 10, 'Extra guilds', 'Age III deals as many guilds as players plus this number.'),
+    RuleSpec('leader_draft_left', 1, 0, 1, 'Leader draft passes left', '1: the leader draft passes left; 0: right.'),
+    RuleSpec(
+        'return_last_leaders',
+        0,
+        0,
+        1,
+        'Unchosen leaders leave',
+        '1: the leaders not recruited in Age III go back to the box.',
+    ),
 )
 RULE_SPECS: Dict[str, RuleSpec] = {r.name: r for r in RULES}
 
@@ -76,6 +85,8 @@ class Rules:
     victory_age_3: int = 5
     defeat_points: int = -1
     extra_guilds: int = 2
+    leader_draft_left: int = 1  # the second edition's leader draft passes right
+    return_last_leaders: int = 0  # second edition: unchosen leaders go back to the box after Age III recruitment
 
     def victory(self, age: int) -> int:
         """Victory points of a military victory token in ``age``."""
@@ -189,7 +200,16 @@ EXPANSIONS: Dict[str, Expansion] = {
     'base': Expansion('base', 'Base game', edition=1),
     'base2': Expansion('base2', 'Base game', edition=2, family='base'),
     'leaders': Expansion('leaders', 'Leaders', starting_coins=6, edition=1),
+    'leaders2': Expansion(
+        'leaders2',
+        'Leaders',
+        starting_coins=6,
+        edition=2,
+        family='leaders',
+        rules={'leader_draft_left': 0, 'return_last_leaders': 1},
+    ),
     'cities': Expansion('cities', 'Cities', edition=1),
+    'cities2': Expansion('cities2', 'Cities', edition=2, family='cities'),
     'wonderpack': Expansion('wonderpack', 'Wonder Pack', edition=1),  # four boards; Abu Simbel needs Leaders
     'armada': Expansion(
         'armada',

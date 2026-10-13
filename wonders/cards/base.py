@@ -280,11 +280,16 @@ class Card:
     # Guild cards leave this empty — the builder draws (players + 2) of them at random.
     at_players: Tuple[int, ...] = ()
     guild: bool = False
+    age_cost: bool = False  # costs as many coins as the current Age (second-edition leaders)
 
     def __post_init__(self) -> None:
         self.effects = tuple(self.effects)
         self.chain_enables = tuple(self.chain_enables)
         self.at_players = tuple(self.at_players)
+
+    def coin_cost(self, age: int) -> int:
+        """The coins this card costs in ``age`` (1-3; its printed cost unless it costs the Age)."""
+        return age if self.age_cost else self.cost.coins
 
     def copies_for(self, n_players: int) -> int:
         """How many copies of this card a game with ``n_players`` uses."""

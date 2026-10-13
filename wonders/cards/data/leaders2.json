@@ -1,0 +1,1127 @@
+{
+  "meta": {
+    "expansion": "leaders2",
+    "edition": 2,
+    "description": "Leaders, second edition (2020): 55 leaders (34 standard, 15 expert, 6 bonus leaders used only with Cities), the Roma and Abu Simbel boards. No guilds."
+  },
+  "wonders": [
+    {
+      "name": "Roma",
+      "side": "A",
+      "starting_resource": null,
+      "effects": [
+        {
+          "type": "build_free",
+          "colors": [
+            "white"
+          ],
+          "description": "recruit leaders for free"
+        }
+      ],
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 1,
+              "ore": 1,
+              "bricks": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 4
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "bricks": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 6
+            }
+          ]
+        }
+      ],
+      "expansion": "leaders2"
+    },
+    {
+      "name": "Roma",
+      "side": "B",
+      "starting_resource": null,
+      "effects": [
+        {
+          "type": "coin_discount",
+          "colors": [
+            "white"
+          ],
+          "amount": 2,
+          "neighbours_amount": 1,
+          "description": "leaders cost 2 less here, 1 less for neighbours"
+        }
+      ],
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "wood": 1,
+              "bricks": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "coins",
+              "amount": 5
+            },
+            {
+              "type": "leader_draw",
+              "count": 4,
+              "description": "draw 4 leaders from the box"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 1,
+              "bricks": 1,
+              "glass": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "extra_recruit",
+              "count": 1,
+              "description": "recruit an extra leader now"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "paper": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            },
+            {
+              "type": "extra_recruit",
+              "count": 1,
+              "description": "recruit an extra leader now"
+            }
+          ]
+        }
+      ],
+      "expansion": "leaders2"
+    },
+    {
+      "name": "Abu Simbel",
+      "side": "A",
+      "starting_resource": "paper",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "stone": 1,
+              "bricks": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 3
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 1,
+              "ore": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "victory_points",
+              "points": 5
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "stone": 2,
+              "glass": 1,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "entomb_leader",
+              "description": "entomb a recruited leader: twice its cost in VP"
+            }
+          ]
+        }
+      ],
+      "expansion": "leaders2"
+    },
+    {
+      "name": "Abu Simbel",
+      "side": "B",
+      "starting_resource": "paper",
+      "stages": [
+        {
+          "cost": {
+            "resources": {
+              "bricks": 2,
+              "linen": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "entomb_leader",
+              "description": "entomb a recruited leader: twice its cost in VP"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "resources": {
+              "wood": 2,
+              "glass": 1
+            }
+          },
+          "effects": [
+            {
+              "type": "entomb_leader",
+              "description": "entomb a recruited leader: twice its cost in VP"
+            }
+          ]
+        }
+      ],
+      "expansion": "leaders2"
+    }
+  ],
+  "cards": [
+    {
+      "name": "Maecenas",
+      "color": "white",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "build_free",
+          "colors": [
+            "white"
+          ],
+          "description": "recruit all your future leaders for free"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Imhotep",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "resource_discount",
+          "target": "wonder",
+          "amount": 1,
+          "description": "wonder stages cost 1 fewer resource"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Hammurabi",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "resource_discount",
+          "target": "blue",
+          "amount": 1,
+          "description": "blue cards cost 1 fewer resource"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Leonidas",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "resource_discount",
+          "target": "red",
+          "amount": 1,
+          "description": "red cards cost 1 fewer resource"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Archimedes",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "resource_discount",
+          "target": "green",
+          "amount": 1,
+          "description": "green cards cost 1 fewer resource"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Ramses",
+      "color": "white",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "build_free",
+          "colors": [
+            "purple"
+          ],
+          "description": "build all your guild (purple) cards for free"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Croesus",
+      "color": "white",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 6
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Xenophon",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "build_income",
+          "coins": 2,
+          "color": "yellow",
+          "description": "+2 coins each time you build a yellow card"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Vitruvius",
+      "color": "white",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "build_income",
+          "coins": 2,
+          "via_chain": true,
+          "description": "+2 coins each time you build a card free via a chain"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Nero",
+      "color": "white",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "victory_income",
+          "coins": 2,
+          "description": "+2 coins each time you gain a military victory token"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Bilkis",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "bank_purchase",
+          "count": 1,
+          "description": "once per turn buy any 1 resource from the bank for 1 coin"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Hannibal",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 1
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Caesar",
+      "color": "white",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "military",
+          "shields": 2
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Solomon",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "build_from_discard"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Euclid",
+      "color": "white",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "compass"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Ptolemy",
+      "color": "white",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "tablet"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Pythagoras",
+      "color": "white",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "science",
+          "symbol": "gear"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Sappho",
+      "color": "white",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Zenobia",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 3
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Nefertiti",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 4
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Cleopatra",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 5
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Phidias",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "brown"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Praxiteles",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "grey"
+          ],
+          "vp_each": 2
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Nebuchadnezzar",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "blue"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Varro",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "yellow"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Pericles",
+      "color": "white",
+      "cost": {
+        "coins": 6
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "red"
+          ],
+          "vp_each": 2
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Hypatia",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "green"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Hiram",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "purple"
+          ],
+          "vp_each": 2
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Midas",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "coins",
+          "scope": "self",
+          "vp_each": 1
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Amytis",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "wonder_stages",
+          "scope": "self",
+          "vp_each": 2
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Alexander",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "victory_tokens",
+          "scope": "self",
+          "vp_each": 1
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Justinian",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "color_sets",
+          "colors": [
+            "blue",
+            "red",
+            "green"
+          ],
+          "vp_each": 3,
+          "description": "3 VP per set of one blue + one red + one green card"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Plato",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "color_sets",
+          "colors": [
+            "brown",
+            "grey",
+            "blue",
+            "yellow",
+            "red",
+            "green",
+            "purple"
+          ],
+          "vp_each": 7,
+          "description": "7 VP per set of all seven card colours"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Aristotle",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "science_set_bonus",
+          "points": 3,
+          "description": "+3 VP per completed set of 3 science symbols"
+        }
+      ],
+      "deck": "standard"
+    },
+    {
+      "name": "Berenice",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "reserve_bonus",
+          "coins": 1,
+          "description": "once per turn, 1 more coin when you gain coins from the reserve"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Hatshepsut",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "build_income",
+          "coins": 1,
+          "after_trade": true,
+          "description": "+1 coin after buying resources from a neighbour"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Nitocris",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "gain_token",
+          "current_age": true,
+          "description": "take the current Age's military victory token"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Telesilla",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "token_purge",
+          "description": "discard your defeat tokens; every other player discards a victory token"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Tomyris",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "redirect_defeats",
+          "description": "your defeat tokens are given to the winning neighbour"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Aganice",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "science_replace",
+          "count": 1,
+          "description": "at the end, change one science symbol into any"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Enheduanna",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "science_most",
+          "count": 1,
+          "description": "at the end, one more of the science symbol you have most of"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Phryne",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "majority",
+          "what": "colors",
+          "colors": [
+            "blue"
+          ],
+          "points": 5,
+          "description": "5 VP if you have more blue cards than each neighbour"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Cornelia",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "majority",
+          "what": "colors",
+          "colors": [
+            "yellow"
+          ],
+          "points": 5,
+          "description": "5 VP if you have more yellow cards than each neighbour"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Euryptyle",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "majority",
+          "what": "colors",
+          "colors": [
+            "red"
+          ],
+          "points": 5,
+          "description": "5 VP if you have more red cards than each neighbour"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Theano",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "majority",
+          "what": "colors",
+          "colors": [
+            "green"
+          ],
+          "points": 5,
+          "description": "5 VP if you have more green cards than each neighbour"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Makeda",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "majority",
+          "what": "coins",
+          "points": 5,
+          "description": "5 VP if you have more coins than each neighbour"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Cynisca",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "no_defeats",
+          "points": 6,
+          "description": "6 VP if you have no defeat token"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Gorgo",
+      "color": "white",
+      "cost": {
+        "coins": 5
+      },
+      "effects": [
+        {
+          "type": "token_pairs",
+          "description": "each pair of identical victory tokens scores its value again"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Agrippina",
+      "color": "white",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "only_leader",
+          "points": 7,
+          "description": "7 VP if she is your only leader face up"
+        }
+      ],
+      "deck": "expert"
+    },
+    {
+      "name": "Caligula",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "free_build",
+          "count": 1,
+          "colors": [
+            "black"
+          ],
+          "description": "once per Age, build a black card for free"
+        }
+      ],
+      "deck": "bonus",
+      "requires": [
+        "cities"
+      ]
+    },
+    {
+      "name": "Diocletian",
+      "color": "white",
+      "cost": {
+        "coins": 2
+      },
+      "effects": [
+        {
+          "type": "build_income",
+          "coins": 2,
+          "color": "black",
+          "description": "+2 coins each time you build a black card"
+        }
+      ],
+      "deck": "bonus",
+      "requires": [
+        "cities"
+      ]
+    },
+    {
+      "name": "Octavia",
+      "color": "white",
+      "cost": {
+        "coins": 1
+      },
+      "effects": [
+        {
+          "type": "build_income",
+          "coins": 2,
+          "wonder": true,
+          "description": "+2 coins per wonder stage you build"
+        },
+        {
+          "type": "stage_plunder",
+          "amount": 1,
+          "description": "all other players lose 1 coin when you build a wonder stage"
+        }
+      ],
+      "deck": "bonus",
+      "requires": [
+        "cities"
+      ]
+    },
+    {
+      "name": "Arsinoe",
+      "color": "white",
+      "age_cost": true,
+      "effects": [
+        {
+          "type": "coins",
+          "amount": 4
+        },
+        {
+          "type": "plunder",
+          "per_age": true,
+          "scope": "others",
+          "description": "all other players lose as many coins as the Age"
+        }
+      ],
+      "deck": "bonus",
+      "requires": [
+        "cities"
+      ]
+    },
+    {
+      "name": "Aspasia",
+      "color": "white",
+      "cost": {
+        "coins": 3
+      },
+      "effects": [
+        {
+          "type": "victory_points",
+          "points": 2
+        },
+        {
+          "type": "diplomacy",
+          "count": 1
+        }
+      ],
+      "deck": "bonus",
+      "requires": [
+        "cities"
+      ]
+    },
+    {
+      "name": "Darius",
+      "color": "white",
+      "cost": {
+        "coins": 4
+      },
+      "effects": [
+        {
+          "type": "tally",
+          "what": "colors",
+          "scope": "self",
+          "colors": [
+            "black"
+          ],
+          "vp_each": 1
+        }
+      ],
+      "deck": "bonus",
+      "requires": [
+        "cities"
+      ]
+    }
+  ]
+}

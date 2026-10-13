@@ -33,7 +33,7 @@ from wonders.i18n import ENGLISH, Translator, languages
 from wonders.play.rating import places
 from wonders.ruleset import DEFAULT_EDITION, EDITIONS, EXPANSIONS, Ruleset, has_family, with_edition
 from wonders.storage import new_id, now
-from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, cost_text, effect_lines, res_name
+from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, card_cost_text, cost_text, effect_lines, res_name
 
 HUMAN = 'human'
 SIDES = ('A', 'B', 'random')
@@ -462,7 +462,7 @@ class HumanSession:
         card = self.cards.get(name)
         if card is None:
             return {'name': name, 'title': t.name(name), 'color': 'unknown'}
-        text = [t('Cost: {cost}', cost=cost_text(card.cost.coins, card.cost.resources, t))]
+        text = [t('Cost: {cost}', cost=card_cost_text(card, t))]
         text += effect_lines(card.effects, t)
         if card.chain_requires:
             text.append(t('Free if you own {card}', card=t.name(card.chain_requires)))
