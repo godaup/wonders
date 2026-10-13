@@ -34,7 +34,7 @@ as was done for Leaders and Cities.
   |---|---|---|---|---|---|---|
   | Red: naval strength (value at the current space) | 1 | 2 | 3 | 4 | 5 | 8 |
   | Yellow: commercial level (current) | 1 | 1 | 2 | 2 | 3 | 4 |
-  | Yellow: on reaching the space | – | 2 coins, tax 1 | 3 coins | 4 coins, tax 2 | 5 coins | 2 naval strength, tax ? |
+  | Yellow: on reaching the space | – | 2 coins, tax 1 | 3 coins | 4 coins, tax 2 | 5 coins | 2 naval strength, tax 4 |
   | Blue: VP (current) | 1 | 2 | 4 | 6 | 8 | 10 (+1 naval strength) |
   | Green: on reaching the space | – | explore L1 | – | explore L2 | – | explore L3 |
 
@@ -131,7 +131,7 @@ games.
 | `explores() -> Tuple[int, ...]` | green track, the island-draw cards (top-card draw with no choice: separate `island_draws()`) |
 | `fleet_moves() -> Tuple[track \| 'any', ...]` | cards that advance a ship for free, Siracusa A (one ship of choice), Siracusa B 2 (two *different* ships) |
 | `boards() -> Tuple[int, ...]` | boarding red cards (seat offsets, e.g. +2 / −2) |
-| `coin_losses(ctx)` through `on_build` | pirates: others lose coins (the exact formula is an [open question](#open-questions)) |
+| `coin_losses(ctx)` through `on_build` | pirates: others lose coins equal to their commercial level (the existing `plunder_per` with `what='commercial_level'`) |
 | `vp_cap` | not a hook: the purple cap is a meta rule, `rules.guild_vp_cap` (default `None`, Armada 10) |
 
 `Tally` gets the metrics `commercial_level` (Customs Office: 2 VP per level), `naval_tokens`
@@ -271,18 +271,15 @@ Milestone 1 is blocked on the component data (see below).
 
 Check these against the official FAQ before implementing. Each is a test case.
 
-1. **Component data**: the per-board naval construction costs and wonder tracks, the 24 card
-   texts (including which 5 are 4+), the 27 islands and Siracusa are not in the rulebook text.
-   The tax value on yellow space 6 cannot be read in the figure. Fan sources disagree (one
-   lists 8 "Dockyard" boards and 2 "Incursion" tokens, from an earlier translation).
-2. **Pirates**: is the loss "1 coin per commercial level of the *victim*" or a fixed loss
-   reduced by commercial level? Does commercial level protect against all coin losses (Cities
-   plunder) or only taxes? The rulebook says "prevent the loss of Coins" in general but only
-   describes taxes.
+1. **Component data**: compiled in [`armada-data.md`](armada-data.md). Still missing: the concrete costs and
+   Wonder tracks of 6 of the 7 shipyards. The pattern is known, and one board is complete. A few card
+   details are flagged there (Emporium targets, Pier's boarding target).
+2. **Pirates** (resolved by the effects sheet): the victim loses coins *equal to* their commercial level. Taxes
+   lose `tax − level`. Foggy Island makes its owner immune to both. Open: does commercial level also protect
+   against Cities plunder? The sheet ties it only to Taxes and Pirates, so presumably not.
 3. **Wonder stage + Naval Construction for stages with their own fleet moves** (Siracusa): can
    both happen in one turn on the same track?
-4. **Siracusa**: does it build its stages in any order (one fan source says so; the Wonder Pack
-   `any_order` would cover it)? Can its "move a ship" stages pass a tax or exploration space
+4. **Siracusa**: its stages are built in any order (wiki; reuse the Wonder Pack's `any_order`). Can its "move a ship" stages pass a tax or exploration space
    (yes, presumably: every advance triggers the space)?
 5. **Simultaneous exploration with different levels** and a level deck that runs low (fewer
    than 4 cards for a solo explorer).

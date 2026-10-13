@@ -1,0 +1,1491 @@
+{
+ "meta": {
+  "status": "draft compiled from web sources; not loaded by the package (see docs/armada-data.md)",
+  "naval_tokens": {
+   "last": [
+    -1,
+    -2,
+    -3
+   ],
+   "first": [
+    3,
+    5,
+    7
+   ],
+   "second": [
+    1,
+    3,
+    5
+   ]
+  },
+  "cost_pattern": {
+   "red|yellow|blue": [
+    "1 brown",
+    "1 grey",
+    "2 brown",
+    "1 brown + 1 grey",
+    "2 brown",
+    "2 grey"
+   ],
+   "green": [
+    "1 brown",
+    "2 coins",
+    "2 brown",
+    "3 coins",
+    "2 brown",
+    "4 coins"
+   ]
+  }
+ },
+ "colors": [
+  {
+   "id": "island",
+   "label": "Island",
+   "score": "islands",
+   "tradeable": false
+  }
+ ],
+ "tracks": {
+  "red": [
+   [
+    {
+     "type": "naval_shields",
+     "strength": 1
+    }
+   ],
+   [
+    {
+     "type": "naval_shields",
+     "strength": 2
+    }
+   ],
+   [
+    {
+     "type": "naval_shields",
+     "strength": 3
+    }
+   ],
+   [
+    {
+     "type": "naval_shields",
+     "strength": 4
+    }
+   ],
+   [
+    {
+     "type": "naval_shields",
+     "strength": 5
+    }
+   ],
+   [
+    {
+     "type": "naval_shields",
+     "strength": 8
+    }
+   ]
+  ],
+  "yellow": [
+   [
+    {
+     "type": "commercial_level",
+     "level": 1
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 1
+    },
+    {
+     "type": "coins",
+     "amount": 2
+    },
+    {
+     "type": "tax",
+     "amount": 1
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 2
+    },
+    {
+     "type": "coins",
+     "amount": 3
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 2
+    },
+    {
+     "type": "coins",
+     "amount": 4
+    },
+    {
+     "type": "tax",
+     "amount": 2
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 3
+    },
+    {
+     "type": "coins",
+     "amount": 5
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 4
+    },
+    {
+     "type": "naval_shields",
+     "strength": 2
+    },
+    {
+     "type": "tax",
+     "amount": 4
+    }
+   ]
+  ],
+  "blue": [
+   [
+    {
+     "type": "victory_points",
+     "points": 1
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 2
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 4
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 6
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 8
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 10
+    },
+    {
+     "type": "naval_shields",
+     "strength": 1
+    }
+   ]
+  ],
+  "green": [
+   [],
+   [
+    {
+     "type": "explore",
+     "level": 1
+    }
+   ],
+   [],
+   [
+    {
+     "type": "explore",
+     "level": 2
+    }
+   ],
+   [],
+   [
+    {
+     "type": "explore",
+     "level": 3
+    }
+   ]
+  ]
+ },
+ "shipyards": [
+  {
+   "name": "Rulebook shipyard",
+   "source": "official rulebook (7ar-en02) p. 2 figure",
+   "wonder_track": "red",
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "ore": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  }
+ ],
+ "cards": [
+  {
+   "name": "Dry Hold",
+   "color": "blue",
+   "age": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "description": "advance a fleet of your choice one space for free"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Shipyard"
+  },
+  {
+   "name": "Construction Zone",
+   "color": "blue",
+   "age": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "description": "advance a fleet of your choice one space for free"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Construction Yard"
+  },
+  {
+   "name": "Pirate Hideout",
+   "color": "yellow",
+   "age": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "coins",
+     "amount": 3
+    },
+    {
+     "type": "plunder_per",
+     "what": "commercial_level",
+     "amount": 1,
+     "scope": "others",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Pirate Cache"
+  },
+  {
+   "name": "Eastern Emporium",
+   "color": "yellow",
+   "age": 1,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "far_trade",
+     "target": "right2",
+     "count": 1,
+     "price": 1
+    }
+   ],
+   "at_players": [
+    4
+   ],
+   "deck": "draw",
+   "note": "wiki: \"from your right neighbor\"; the effects sheet says \"the designated player\" (far-seat symbol?)"
+  },
+  {
+   "name": "Coastal Defenses",
+   "color": "red",
+   "age": 1,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "glass": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "naval_shields",
+     "strength": 1
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw"
+  },
+  {
+   "name": "Pontoon",
+   "color": "red",
+   "age": 1,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "military",
+     "shields": 1
+    },
+    {
+     "type": "boarding",
+     "target": "right2",
+     "description": "give a Boarding token to the player right of your right neighbour"
+    }
+   ],
+   "at_players": [
+    4
+   ],
+   "deck": "draw",
+   "name_en01": "Dock"
+  },
+  {
+   "name": "Helmsman's Rest",
+   "color": "green",
+   "age": 1,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "stone": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "island_draw",
+     "level": 1,
+     "description": "draw the top level 1 Island"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Steersmen's Academy"
+  },
+  {
+   "name": "Cabinet of Explorers",
+   "color": "green",
+   "age": 1,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "bricks": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "science_copy_most",
+     "description": "at the end, an extra science symbol: the one you have most of"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Explorer's Office"
+  },
+  {
+   "name": "Ship Repair",
+   "color": "blue",
+   "age": 2,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "ore": 1,
+     "glass": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 2
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Drydock Hangar"
+  },
+  {
+   "name": "Boathouse",
+   "color": "blue",
+   "age": 2,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "wood": 2,
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 3
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Captaincy"
+  },
+  {
+   "name": "Pirate's Den",
+   "color": "yellow",
+   "age": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "coins",
+     "amount": 6
+    },
+    {
+     "type": "plunder_per",
+     "what": "commercial_level",
+     "amount": 1,
+     "scope": "others",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Pirate Lair"
+  },
+  {
+   "name": "Western Emporium",
+   "color": "yellow",
+   "age": 2,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "ore": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "far_trade",
+     "target": "left2",
+     "count": 2,
+     "price": 1
+    }
+   ],
+   "at_players": [
+    4
+   ],
+   "deck": "draw",
+   "note": "wiki says right neighbour (copy-paste?); \"Western\" implies left"
+  },
+  {
+   "name": "Fortified Port",
+   "color": "red",
+   "age": 2,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "bricks": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "naval_shields",
+     "strength": 2
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw"
+  },
+  {
+   "name": "Ballista",
+   "color": "red",
+   "age": 2,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "bricks": 1,
+     "glass": 1,
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "military",
+     "shields": 2
+    },
+    {
+     "type": "boarding",
+     "target": "left2",
+     "description": "give a Boarding token to the player left of your left neighbour"
+    }
+   ],
+   "at_players": [
+    4
+   ],
+   "deck": "draw",
+   "name_en01": "Quay"
+  },
+  {
+   "name": "Cartographer's Office",
+   "color": "green",
+   "age": 2,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "bricks": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "island_draw",
+     "level": 2,
+     "description": "draw the top level 2 Island"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Maproom"
+  },
+  {
+   "name": "Navigation Firm",
+   "color": "green",
+   "age": 2,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "stone": 1,
+     "ore": 1,
+     "glass": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "science_copy_most",
+     "description": "at the end, an extra science symbol: the one you have most of"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Society of Navigators"
+  },
+  {
+   "name": "Harbor Master's Office",
+   "color": "blue",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "stone": 1,
+     "ore": 1,
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 4
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Naval Ministry",
+   "note": "wiki card list says Age II; its shipyard page and the 8-per-Age count say Age III"
+  },
+  {
+   "name": "Naval Headquarters",
+   "color": "blue",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "stone": 2,
+     "wood": 1,
+     "bricks": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 5
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Admiralty",
+   "note": "wiki card list says Age II; its shipyard page and the 8-per-Age count say Age III"
+  },
+  {
+   "name": "Pirate Crew",
+   "color": "yellow",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "glass": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 4
+    },
+    {
+     "type": "plunder_per",
+     "what": "commercial_level",
+     "amount": 1,
+     "scope": "others",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Pirate Brotherhood"
+  },
+  {
+   "name": "Port Customs",
+   "color": "yellow",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "ore": 2,
+     "stone": 1,
+     "bricks": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "tally",
+     "what": "commercial_level",
+     "vp_each": 2,
+     "scope": "self"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Customs Office"
+  },
+  {
+   "name": "Coastal Fortifications",
+   "color": "red",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "stone": 2,
+     "bricks": 1,
+     "glass": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "naval_shields",
+     "strength": 3
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw"
+  },
+  {
+   "name": "Pier",
+   "color": "red",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "wood": 3,
+     "paper": 1,
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "military",
+     "shields": 3
+    },
+    {
+     "type": "boarding",
+     "target": "left2",
+     "description": "give a Boarding token to the player left of your left neighbour"
+    }
+   ],
+   "at_players": [
+    4
+   ],
+   "deck": "draw",
+   "name_en01": "Jetty",
+   "note": "wiki gives left2 like Ballista; with 2 Boarding tokens in the box, right2 is possible"
+  },
+  {
+   "name": "Nautical Archives",
+   "color": "green",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "ore": 2,
+     "wood": 1,
+     "paper": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "island_draw",
+     "level": 3,
+     "description": "draw the top level 3 Island"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Naval Archives"
+  },
+  {
+   "name": "Circle of Captains",
+   "color": "green",
+   "age": 3,
+   "expansion": "armada",
+   "cost": {
+    "resources": {
+     "bricks": 2,
+     "stone": 1,
+     "ore": 1,
+     "linen": 1
+    }
+   },
+   "effects": [
+    {
+     "type": "science_copy_most",
+     "description": "at the end, an extra science symbol: the one you have most of"
+    }
+   ],
+   "at_players": [
+    3
+   ],
+   "deck": "draw",
+   "name_en01": "Captain's Circle"
+  }
+ ],
+ "islands": [
+  {
+   "name": "Overgrown Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "production",
+     "choice": [
+      "wood",
+      "ore"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Virgin Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "production",
+     "choice": [
+      "stone",
+      "bricks"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bronze Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "military",
+     "shields": 1
+    }
+   ]
+  },
+  {
+   "name": "Whistling Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "naval_shields",
+     "strength": 1
+    }
+   ]
+  },
+  {
+   "name": "Foggy Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "coin_loss_immunity",
+     "description": "immune to Taxes and Pirates"
+    }
+   ]
+  },
+  {
+   "name": "Topaz Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "blue",
+     "count": 1,
+     "distinct": false
+    }
+   ]
+  },
+  {
+   "name": "Amber Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "yellow",
+     "count": 1,
+     "distinct": false
+    }
+   ]
+  },
+  {
+   "name": "Lost Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "wonder_fleet_any",
+     "description": "each wonder stage advances a fleet of your choice for free"
+    }
+   ]
+  },
+  {
+   "name": "Inhabited Island",
+   "color": "island",
+   "level": 1,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 3
+    }
+   ]
+  },
+  {
+   "name": "Abandoned Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "production",
+     "choice": [
+      "glass",
+      "paper",
+      "linen"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Iron Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "military",
+     "shields": 2
+    }
+   ]
+  },
+  {
+   "name": "Windy Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "naval_shields",
+     "strength": 2
+    }
+   ]
+  },
+  {
+   "name": "Forgotten Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "naval_opt_out",
+     "description": "may sit out each naval conflict"
+    }
+   ]
+  },
+  {
+   "name": "Ancient Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "naval_resource_discount",
+     "amount": 1
+    }
+   ]
+  },
+  {
+   "name": "Stormy Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 2,
+     "distinct": true
+    }
+   ]
+  },
+  {
+   "name": "Wonderous Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "fleet_income",
+     "coins": 1
+    }
+   ]
+  },
+  {
+   "name": "Oasis of Statues",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 5
+    }
+   ]
+  },
+  {
+   "name": "Pirate Oasis",
+   "color": "island",
+   "level": 2,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 3
+    },
+    {
+     "type": "plunder_per",
+     "what": "commercial_level",
+     "amount": 1,
+     "scope": "others",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ]
+  },
+  {
+   "name": "Scarlet Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "military",
+     "shields": 3
+    }
+   ]
+  },
+  {
+   "name": "Breezy Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "naval_shields",
+     "strength": 3
+    }
+   ]
+  },
+  {
+   "name": "Torrential Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 3,
+     "distinct": true
+    }
+   ]
+  },
+  {
+   "name": "Golden Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "science_wild",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "name": "Emerald Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "science_copy_most",
+     "description": "at the end, an extra science symbol: the one you have most of"
+    }
+   ]
+  },
+  {
+   "name": "Royal Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 7
+    }
+   ]
+  },
+  {
+   "name": "Lush Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "tally",
+     "what": "commercial_level",
+     "vp_each": 2,
+     "scope": "self"
+    }
+   ]
+  },
+  {
+   "name": "Rainbow Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "color_choice_vp",
+     "vp_each": 1
+    }
+   ]
+  },
+  {
+   "name": "Sheltered Archipelago",
+   "color": "island",
+   "level": 3,
+   "expansion": "armada",
+   "cost": null,
+   "effects": [
+    {
+     "type": "tally",
+     "what": "islands",
+     "vp_each": 2,
+     "scope": "self"
+    }
+   ]
+  }
+ ],
+ "wonders": [
+  {
+   "name": "Siracusa",
+   "side": "A",
+   "starting_resource": "glass",
+   "any_order": true,
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "stone": 2,
+       "ore": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 1,
+       "distinct": false
+      },
+      {
+       "type": "naval_shields",
+       "strength": 1
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "ore": 2,
+       "linen": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 1,
+       "distinct": false
+      },
+      {
+       "type": "victory_points",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "wood": 2,
+       "paper": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 1,
+       "distinct": false
+      },
+      {
+       "type": "military",
+       "shields": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Siracusa",
+   "side": "B",
+   "starting_resource": "glass",
+   "any_order": true,
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "ore": 1,
+       "bricks": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "coins",
+       "amount": 6
+      },
+      {
+       "type": "plunder_per",
+       "what": "commercial_level",
+       "amount": 1,
+       "scope": "others",
+       "description": "all other players lose as many coins as their commercial level"
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "ore": 2,
+       "wood": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 2,
+       "distinct": true
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "wood": 2,
+       "paper": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "military",
+       "shields": 1
+      },
+      {
+       "type": "naval_shields",
+       "strength": 1
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
