@@ -6,117 +6,153 @@ web sources. A machine-readable draft in the repo's card-JSON format is
 `naval_shields` and `advance_fleet` do not exist yet. Moving it to `wonders/cards/data/armada.json` is part of
 milestone 2. Resources use the repo's names: cloth = `linen`, papyrus = `paper`, clay = `bricks`.
 
+## Edition
+
+The repo implements the **first edition** of 7 Wonders: `base.json` has Pawnshop and none of the second edition's
+new cards, and Leaders and Cities were checked against first-edition rulebooks. Armada was published for both
+editions, so the data below is **first edition (2018)**. Every second-edition (2020) difference is listed next to
+it (`name_en02` and `note` in the draft).
+
+| | 1st edition (2018, "EN01") | 2nd edition (2020, "EN02") |
+|---|---|---|
+| Terms | Dockyard, Incursion, Ground Conflict | Shipyard, Boarding, Military Conflict |
+| Boards / players | 8 Dockyards, 32 ships; 3–7 players + an 8-player variant (7 cards dealt, mainly for teams) | 7 Shipyards, 28 figures; 3–7 players |
+| Naval tokens | 48: victory 11×1, 12×3, 7×5, 1×7; defeat 7×−1, 5×−2, 5×−3 | 40: 22 victory, 18 defeat |
+| Naval conflict | last −1/−2/−3, first 3/5/7, second 1/3/5, **third +3 in Age III only**; a player with a defeat token cannot also win one; ties shift down a rank (see below) | last / first / second only; tied for first take the second-place token |
+| Yellow coins, spaces 2–5 | **3 / 4 / 5 / 6** in the board figure (the rule text's examples say 2 and 4) | 2 / 3 / 4 / 5 |
+| Lost Island | Naval Constructions via the Wonder are **free and of any colour** | no wonder fleet; each wonder stage advances a fleet of your choice for free |
+| Wondrous Harbor | +1 coin per Naval Construction (free or paid) | +1 coin after each fleet advance |
+| Turn order | … 3. effects except coin losses, **4. island exploration**, 5. discard builds, 6. coin losses | … 3. card effects, 4. shipyard effects, 5. discard builds, 6. coin losses |
+| Incursion / Boarding FAQ | one extra conflict at most per pair of players per Age (Dock + Jetty against the same player = 1) | – |
+| Card names, costs, effects | identical, except names (table below) and Jetty's target | |
+
+**Naval ties (1st edition)**: everyone tied for weakest takes the defeat token. Players tied for strongest take the
+next rank's reward: the second-place token, and in Age III the second-strongest then gets the third-place +3. Players
+tied for second get nothing in Ages I–II. In Age III, they get +3 only if exactly one player is strongest. Ties for
+third get nothing. If every player is tied, nobody gets a token.
+
 ## Sources
 
-| Id | Source | Used for |
-|---|---|---|
-| **R** | Official rulebook, `7ar-en02-rules` (Repos Production / Asmodee CDN) | rules, token values, one complete shipyard board (p. 2 figure) |
-| **E** | Official "Description of New Effects" sheet, `7ar-en02-effects-description` (Asmodee CDN) | every new symbol's exact meaning |
-| **F** | 7 Wonders Fandom wiki: *List of Age Cards/Overview*, *Island Cards*, *Shipyard Board*, *Siracusa* (read via the MediaWiki API) | card and island names, costs and effects, the shipyard cost pattern, Siracusa |
-| **S** | Siracusa Day / Night board images (wiki file pages) | confirms Siracusa's costs and effects |
-| **U** | UltraBoardGames "How to play 7 Wonders Armada" (first English printing, EN01 terms: *Dockyard*, *Incursion*) | an independent naming of all 24 cards: confirms the set, the groups and the VP values |
+| Id | Source | Edition | Used for |
+|---|---|---|---|
+| **R1** | Armada rulebook, 2018 (`51-7-wonders-armada-rulebook.pdf`, 1jour-1jeu) | 1st | rules, token counts, every card image (costs), island effects, one complete board (p. 3) |
+| **S1** | Siracusa rulesheet, 2018 (`06-7-wonders-armada-siracusa-rulebook.pdf`, 1jour-1jeu) | 1st | Siracusa effects, any-order rule (no costs printed) |
+| **R2** | Armada rulebook `7ar-en02-rules` (Asmodee CDN) | 2nd | rules; the same board as **R1** |
+| **E2** | "Description of New Effects" `7ar-en02-effects-description` (Asmodee CDN) | 2nd | symbol meanings |
+| **F** | 7 Wonders Fandom wiki (cards, islands, Shipyard Board, Siracusa; via the MediaWiki API) | 2nd | island list, cost pattern, Siracusa stage costs |
+| **S2** | Siracusa Day / Night board images (wiki) | 2nd | Siracusa stage costs |
+| **U** | UltraBoardGames rules summary | 1st | cross-check of names and rules |
 
-Names follow the current printing (EN02, matching **R** / **E**). The EN01 names from **U** are kept as `name_en01`
-in the draft. The repo's convention is to paraphrase card names (see CLAUDE.md), so pick final names when the data
-moves into the package.
-
-The GitHub project `karlaugustnybo/7-wonders-ai` (Rust, MIT) also has Armada data. It was **not used**: its Siracusa A
-(3 VP / advance / 7 VP) contradicts **F** and **S**, and its card costs disagree with **F**.
+`karlaugustnybo/7-wonders-ai` (Rust, MIT) was **not used**, and its Armada data is not an edition variant. Its costs
+match neither edition's card images. Its blue card "Admiralty" does not exist: UBG prints "Dry Dock Hangar" on one
+line, which hides that **R1** lists six blue cards (Shipyard, Construction Yard, Dry Dock, Hangar, Captaincy, Naval
+Ministry). Its Siracusa A (3 VP / advance / 7 VP) contradicts **S1**.
 
 ## Age cards (24: 8 per Age, N random per Age added to the deck)
 
-`4+` = removed at 3 players (5 cards, matching **R**). None of the sources shows chains.
+`4+` = removed at 3 players (the five named in **R1** setup). Costs were read from the card images in **R1**
+pp. 12–13 and match **F** card for card. None of the cards shows a chain.
 
-| Age | Colour | Name (EN01) | Cost | Effect | 4+ |
+| Age | Colour | Name (2nd ed.) | Cost | Effect | 4+ |
 |---|---|---|---|---|---|
-| I | blue | Dry Hold (Shipyard) | free | advance a fleet of your choice 1 space, free | |
-| I | blue | Construction Zone (Construction Yard) | free | advance a fleet of your choice 1 space, free | |
-| I | yellow | Pirate Hideout (Pirate Cache) | free | +3 coins; all others lose coins = their commercial level | |
-| I | yellow | Eastern Emporium | linen | once per turn buy 1 resource for 1 coin from the designated player ⚠ | ✓ |
-| I | red | Coastal Defenses | glass | 1 naval strength | |
-| I | red | Pontoon (Dock) | paper | 1 shield; Boarding → the player right of your right neighbour | ✓ |
-| I | green | Helmsman's Rest (Steersmen's Academy) | stone | draw the top level-1 Island | |
-| I | green | Cabinet of Explorers (Explorer's Office) | bricks | end: +1 science symbol, the one you have most of | |
-| II | blue | Ship Repair (Drydock Hangar) | ore, glass | advance a fleet of your choice; 2 VP | |
-| II | blue | Boathouse (Captaincy) | 2 wood, linen | advance a fleet of your choice; 3 VP | |
-| II | yellow | Pirate's Den (Pirate Lair) | free | +6 coins; pirates | |
-| II | yellow | Western Emporium | ore, paper | **twice** per turn buy 1 resource for 1 coin from the designated player ⚠ | ✓ |
-| II | red | Fortified Port | bricks, paper | 2 naval strength | |
-| II | red | Ballista (Quay) | bricks, glass, linen | 2 shields; Boarding → the player left of your left neighbour | ✓ |
-| II | green | Cartographer's Office (Maproom) | wood, bricks | draw the top level-2 Island | |
-| II | green | Navigation Firm (Society of Navigators) | stone, ore, glass | end: +1 science symbol (most) | |
-| III | blue | Harbor Master's Office (Naval Ministry) | wood, stone, ore, linen | advance a fleet of your choice; 4 VP ⚠ | |
-| III | blue | Naval Headquarters (Admiralty) | 2 stone, wood, bricks, paper | advance a fleet of your choice; 5 VP ⚠ | |
-| III | yellow | Pirate Crew (Pirate Brotherhood) | wood, glass | 4 VP; pirates | |
-| III | yellow | Port Customs (Customs Office) | 2 ore, stone, bricks | end: 2 VP per commercial level | |
-| III | red | Coastal Fortifications | 2 stone, bricks, glass | 3 naval strength | |
-| III | red | Pier (Jetty) | 3 wood, paper, linen | 3 shields; Boarding → left of your left neighbour ⚠ | ✓ |
-| III | green | Nautical Archives (Naval Archives) | 2 ore, wood, paper | draw the top level-3 Island | |
-| III | green | Circle of Captains (Captain's Circle) | 2 bricks, stone, ore, linen | end: +1 science symbol (most) | |
+| I | blue | Shipyard (Dry Hold) | free | advance a fleet of your choice 1 space, free | |
+| I | blue | Construction Yard (Construction Zone) | free | advance a fleet of your choice, free | |
+| I | yellow | Pirate Cache (Pirate Hideout) | free | +3 coins; all others lose 1 coin per commercial level | |
+| I | yellow | Eastern Emporium | linen | once per turn buy 1 resource for 1 coin from the player right of your right neighbour | ✓ |
+| I | red | Coastal Defenses | glass | 1 naval shield | |
+| I | red | Dock (Pontoon) | paper | 1 shield; Incursion ▷▷ (the player right of your right neighbour) | ✓ |
+| I | green | Steersmen's Academy (Helmsman's Rest) | stone | put the top level-1 Island in play | |
+| I | green | Explorer's Office (Cabinet of Explorers) | bricks | +1 science symbol: the one you have most of | |
+| II | blue | Dry Dock (Ship Repair) | ore, glass | advance a fleet of your choice; 2 VP | |
+| II | blue | Hangar (Boathouse) | 2 wood, linen | advance a fleet of your choice; 3 VP | |
+| II | yellow | Pirate Lair (Pirate's Den) | free | +6 coins; pirates | |
+| II | yellow | Western Emporium | ore, paper | **twice** per turn buy 1 resource for 1 coin from the player left of your left neighbour | ✓ |
+| II | red | Fortified Port | bricks, paper | 2 naval shields | |
+| II | red | Quay (Ballista) | bricks, glass, linen | 2 shields; Incursion ◁◁ (left of your left neighbour) | ✓ |
+| II | green | Map Room (Cartographer's Office) | wood, bricks | put the top level-2 Island in play | |
+| II | green | Society of Navigators (Navigation Firm) | stone, ore, glass | +1 science symbol (most) | |
+| III | blue | Captaincy (Harbor Master's Office) | wood, stone, ore, linen | advance a fleet of your choice; 4 VP | |
+| III | blue | Naval Ministry (Naval Headquarters) | 2 stone, wood, bricks, paper | advance a fleet of your choice; 5 VP | |
+| III | yellow | Pirate Brotherhood (Pirate Crew) | wood, glass | 4 VP; pirates | |
+| III | yellow | Customs Office (Port Customs) | 2 ore, stone, bricks | end: 2 VP per commercial level | |
+| III | red | Coastal Fortifications | 2 stone, bricks, glass | 3 naval shields | |
+| III | red | Jetty (Pier) | 3 wood, paper, linen | 3 shields; Incursion ▷▷ (right of your right neighbour) | ✓ |
+| III | green | Naval Archives (Nautical Archives) | 2 ore, wood, paper | put the top level-3 Island in play | |
+| III | green | Captain's Circle (Circle of Captains) | 2 bricks, stone, ore, linen | +1 science symbol (most) | |
 
-Exact effect wording from **E**:
+Settled by **R1**:
 
-* **Pirates**: "all players except you lose as many Coins as their respective commercial level". So a higher
-  commercial level *raises* the pirate loss. This answers open question 2 of the plan.
-* **Taxes**: the loss is `tax − commercial level`.
-* **Boarding**: when the card enters play, "take a Boarding token (from the reserve) and give it to the designated
-  player".
-* **Emporiums**: "once per turn / twice per turn, you can buy 1 resource from the designated player for 1 Coin".
+* **Emporium targets**: the player two seats away. The wiki's "right neighbour" for both is wrong.
+* **Jetty's target**: ▷▷, per its card image. The wiki's left target for Pier may be a 2nd-edition change or a wiki error.
+* **Blue cards**: they move a fleet *of your choice*. With a Blue Naval Construction on the same build, two moves in
+  one turn are allowed.
+
+**Ages**: **R1** gives eight cards per Age as 2 per colour but does not name the Ages. Together with **F** (whose
+card list puts Captaincy and Naval Ministry in Age II but whose board page puts them in Age III) and the VP
+progression 0/0/2/3/4/5, Age III is the consistent reading.
 
 ## Islands (27: 9 per level)
 
-| Lvl | Name | Effect |
+The names show the level: Island = 1, Harbor = 2, Archipelago = 3.
+
+| Lvl | Name (2nd ed.) | Effect |
 |---|---|---|
-| 1 | Overgrown Island | produces wood **or** ore (neighbours cannot buy it) |
+| 1 | Wild Island (Overgrown Island) | produces wood **or** ore (neighbours cannot buy it) |
 | 1 | Virgin Island | produces stone or bricks |
 | 1 | Bronze Island | 1 shield |
-| 1 | Whistling Island | 1 naval strength |
-| 1 | Foggy Island | immune to coin losses from Taxes and Pirates |
-| 1 | Topaz Island | advance the **blue** fleet 1 space, free |
-| 1 | Amber Island | advance the **yellow** fleet 1 space, free |
-| 1 | Lost Island | no wonder-associated fleet any more; each wonder stage advances a fleet of your choice, free |
+| 1 | Windblown Island (Whistling Island) | 1 naval shield |
+| 1 | Foggy Island | no coin losses from Taxes or Pirates |
+| 1 | Topaz Island | advance the **blue** fleet, free |
+| 1 | Amber Island | advance the **yellow** fleet, free |
+| 1 | Lost Island | Naval Constructions via the Wonder are free and of any colour *(2nd ed. differs, above)* |
 | 1 | Inhabited Island | 3 VP |
-| 2 | Abandoned Oasis | produces glass, paper or linen |
-| 2 | Iron Oasis | 2 shields |
-| 2 | Windy Oasis | 2 naval strength |
-| 2 | Forgotten Oasis | may choose to sit out each naval conflict |
-| 2 | Ancient Oasis | each Naval Construction costs 1 resource less (coins still paid in full) |
-| 2 | Stormy Oasis | advance two different fleets 1 space each, free |
-| 2 | Wonderous Oasis | +1 coin after each time you advance your fleets |
-| 2 | Oasis of Statues | 5 VP |
-| 2 | Pirate Oasis | 3 VP; pirates |
+| 2 | Abandoned Harbor (Abandoned Oasis) | produces glass, paper or linen |
+| 2 | Iron Harbor (Iron Oasis) | 2 shields |
+| 2 | Windy Harbor (Windy Oasis) | 2 naval shields |
+| 2 | Forgotten Harbor (Forgotten Oasis) | may sit out each naval conflict (its strength is ignored) |
+| 2 | Ancient Harbor (Ancient Oasis) | each Naval Construction costs 1 resource less (coins in full) |
+| 2 | Frothy Harbor (Stormy Oasis) | advance two different fleets, free |
+| 2 | Wondrous Harbor (Wonderous Oasis) | +1 coin per Naval Construction *(2nd ed. differs)* |
+| 2 | Statues Harbor (Oasis of Statues) | 5 VP |
+| 2 | Pirate Harbor (Pirate Oasis) | pirates; 3 VP |
 | 3 | Scarlet Archipelago | 3 shields |
-| 3 | Breezy Archipelago | 3 naval strength |
-| 3 | Torrential Archipelago | advance three different fleets 1 space each, free |
-| 3 | Golden Archipelago | end: one science symbol of your choice |
+| 3 | Trade Winds Archipelago (Breezy Archipelago) | 3 naval shields |
+| 3 | Stormy Archipelago (Torrential Archipelago) | advance three different fleets, free |
+| 3 | Golden Archipelago | end: a science symbol of your choice |
 | 3 | Emerald Archipelago | end: +1 science symbol (most) |
-| 3 | Royal Archipelago | 7 VP |
-| 3 | Lush Archipelago | end: 2 VP per commercial level |
-| 3 | Rainbow Archipelago | end: choose an Age-card colour, 1 VP per card of it in your city |
+| 3 | Sovereign Archipelago (Royal Archipelago) | 7 VP |
+| 3 | Luxurious Archipelago (Lush Archipelago) | end: 2 VP per commercial level |
+| 3 | Rainbow Archipelago | end: choose a colour, 1 VP per card of it in your city |
 | 3 | Sheltered Archipelago | end: 2 VP per Island you own (including this one) |
 
-## Shipyards
+## Dockyards
 
-**Track effects** (the same on all 7 boards; **R** figure, **F**). Values marked "current" count only while the fleet
-is on that space. The others fire once, when the fleet arrives.
+**Track effects** (the same on every board). Values marked "current" count while the ship is on that space; the
+others fire once, on arrival.
 
 | Space | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
-| Red: naval strength (current) | 1 | 2 | 3 | 4 | 5 | 8 |
+| Red: naval shields (current) | 1 | 2 | 3 | 4 | 5 | 8 |
 | Yellow: commercial level (current) | 1 | 1 | 2 | 2 | 3 | 4 |
-| Yellow: on arrival | – | +2 coins, tax 1 | +3 coins | +4 coins, tax 2 | +5 coins | tax 4; 2 naval strength (current) |
-| Blue: VP (current) | 1 | 2 | 4 | 6 | 8 | 10 + 1 naval strength |
+| Yellow: on arrival, 1st-edition figure | – | +3 coins, tax 1 | +4 coins | +5 coins, tax 2 | +6 coins | tax 4; 2 naval shields (current) |
+| Yellow: on arrival, 2nd edition | – | +2, tax 1 | +3 | +4, tax 2 | +5 | tax 4; 2 naval shields |
+| Blue: VP (current) | 1 | 2 | 4 | 6 | 8 | 10 + 1 naval shield |
 | Green: on arrival | – | explore L1 | – | explore L2 | – | explore L3 |
 
-**Naval Construction cost pattern**: the cost of moving *to* each space. It holds on every board; **F** gives it,
-and the board in **R** matches it exactly.
+⚠ **The yellow coins disagree inside R1**: its board figure prints 3/4/5/6, but its rule examples say "reaches the
+second upgrade space … immediately gains 2 Coins" and "upgraded four times … gains 4 Coins", which is 2/3/4/5, the
+second-edition values. The physical first-edition board decides this. Until then the draft follows the figure, with
+the alternative in `meta.yellow_coins_en02`.
+
+**Cost pattern** (cost of moving *to* each space; it holds on every board):
 
 | To space | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
 | red / yellow / blue | 1 brown | 1 grey | 2 brown | 1 brown + 1 grey | 2 brown | 2 grey |
 | green | 1 brown | 2 coins | 2 brown | 3 coins | 2 brown | 4 coins |
 
-**The one board known in full** (**R** p. 2 figure; its Wonder symbol is on **red**):
+**The one board known in full**: it appears in both rulebooks with identical costs (**R1** p. 3, **R2** p. 2), and
+its Wonder symbol is on **red**:
 
 | To space | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
@@ -125,43 +161,29 @@ and the board in **R** matches it exactly.
 | blue | bricks | glass | stone, ore | ore, linen | wood, bricks | paper, linen |
 | green | ore | 2 coins | wood, bricks | 3 coins | stone, ore | 4 coins |
 
-This matches both cost examples in **R**: the blue cost is 1 clay, and the red cost (the wonder fleet) is 1 wood.
+**Missing**: the other 7 first-edition boards' concrete resources and Wonder tracks. No source has them. Two
+stand-ins are possible until they are transcribed: use the known board for every seat, or generate
+pattern-conforming variants labelled unofficial.
 
-**Missing**: the other 6 boards' concrete resources and their Wonder-symbol tracks. No source found has them, either
-as text or as a readable image: the wiki's `Shipyard.png` has no icons, and the EN01 rulebook link serves an HTML page.
-Until they are transcribed from the physical boards, two stand-ins are possible: use the known board for every seat,
-or generate pattern-conforming variants with the Wonder symbol spread over the four tracks, clearly labelled as
-unofficial.
+## Siracusa (Armada only; starts with glass; stages in any order)
 
-## Siracusa (Armada only; starts with glass; stages in any order: **F**, the board art shows a stage marker on every stage)
+Effects are from **S1** (1st edition) and are identical to the 2nd edition. A Naval Construction of the
+wonder-linked colour can be combined with a stage's free advance. **S1** prints no costs, so the costs below come
+from the 2nd-edition board (**S2**, **F**) and are unverified for the first edition.
 
-| Side | Stage | Cost | Effect |
+| Side | Stage | Cost (2nd ed.) | Effect |
 |---|---|---|---|
-| A (Day) | 1 | 2 stone, ore | advance a fleet of your choice, free; 1 naval strength |
+| A | 1 | 2 stone, ore | advance a fleet of your choice, free; 1 naval shield |
 | A | 2 | 2 ore, linen | advance a fleet of your choice, free; 3 VP |
 | A | 3 | 2 wood, paper | advance a fleet of your choice, free; 1 shield |
-| B (Night) | 1 | ore, bricks | +6 coins; pirates (others lose coins = their commercial level) |
-| B | 2 | 2 ore, wood | advance two different fleets 1 space each, free |
-| B | 3 | 2 wood, paper | 1 shield; 1 naval strength |
+| B | 1 | ore, bricks | +6 coins; all others lose 1 coin per commercial level |
+| B | 2 | 2 ore, wood | advance two different fleets, free |
+| B | 3 | 2 wood, paper | 1 shield; 1 naval shield |
 
-The images in **S** use the current edition's Day/Night art. If the repo's base boards follow the first edition's A/B
-layout, check that Siracusa's costs are the same in both printings.
+## Still open
 
-## Discrepancies and confidence
-
-* ⚠ **Harbor Master's Office / Naval Headquarters**: the wiki card list says Age II. The wiki's own shipyard page,
-  the 8-cards-per-Age count and the VP progression (0/0/2/3/4/5) all say **Age III**, which the draft uses.
-* ⚠ **Emporiums**: the wiki gives both as "from your right neighbour". The effects sheet describes them with "the
-  designated player" next to the two-seats-away symbols, and "Western" suggests left. The draft uses
-  `far_trade` with `right2` / `left2`. Check this against a card image.
-* ⚠ **Pier's boarding target**: the wiki says left-of-left, the same as Ballista. The box has 2 Boarding tokens, so
-  the official split may differ.
-* **Wonderous Oasis**: level 2 in the island list and level 3 in a side table. The draft uses **2**, which keeps
-  9 islands per level.
-* **Blue cards' fleet move**: "a fleet of your choice" (**F**). **E** also defines a "fleet of this colour" symbol,
-  which only Topaz and Amber Island use according to **F**.
-* **Track values**: the yellow space-6 tax (4) comes from **F**, because the figure is too small to read it. The
-  other values agree between **R** and **F**.
-* **Resource icons** in the rulebook figure were told apart by colour (wood olive, ore dark, stone grey, clay orange,
-  glass light blue, paper tan, linen pink). The wood / ore pairs are the least certain.
-* **Hand sizes, token values, tie rules, purple cap, Cities debt**: from **R** (high confidence).
+1. The yellow coin values on the first-edition board (3/4/5/6 in the figure, 2/3/4/5 in the text).
+2. 7 of the 8 first-edition Dockyards (concrete costs and Wonder tracks).
+3. Siracusa's first-edition stage costs.
+4. The Age of each Armada card: printed on the card backs, not in **R1**. The draft follows the 2nd-edition wiki and
+   the VP progression.

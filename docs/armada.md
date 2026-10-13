@@ -1,10 +1,11 @@
 # Armada: implementation plan
 
 Status: **plan** (the expansion is registered in `wonders/ruleset.py` with `implemented=False`).
-The rules below come from the official English rulebook (Repos Production, 2018,
-`7ar-en02-rules`). Values marked *(fig.)* were read off the rulebook's board illustration and
-must be checked against the physical board or the "Description of New Effects" sheets before
-they become data. Rule questions the rulebook leaves open are collected in
+The repo implements the **first edition** of 7 Wonders, so the rules below follow the
+first-edition Armada rulebook (Repos Production, 2018). Where the second edition (2020) differs,
+it is noted as *2nd ed.*. The full comparison and the compiled data are in
+[`armada-data.md`](armada-data.md). Values marked *(fig.)* were read off a rulebook board
+illustration and must be checked against a physical board. Rule questions the rulebook leaves open are collected in
 [Open questions](#open-questions); check them against the official FAQ (www.7wonders.net/faq),
 as was done for Leaders and Cities.
 
@@ -12,11 +13,11 @@ as was done for Leaders and Cities.
 
 | Component | Contents | Where it lands |
 |---|---|---|
-| 7 Shipyard boards | 4 naval tracks (red, yellow, blue, green) × 7 spaces (start + 6). Space effects are the same on every board; only the construction costs and the track with the **Wonder symbol** differ. | `armada.json` `"shipyards"` + shared `"tracks"` |
+| 8 Dockyard boards (2nd ed.: 7 Shipyards) | 4 naval tracks (red, yellow, blue, green) × 7 spaces (start + 6). Space effects are the same on every board; only the construction costs and the track with the **Wonder symbol** differ. | `armada.json` `"shipyards"` + shared `"tracks"` |
 | 24 Armada Age cards | 8 per Age; 5 are marked 4+ (removed at 3 players). Each Age, **N random cards** are added to the base deck. | `armada.json` `"cards"` |
 | 27 Island cards | 3 levels × 9, separate decks, different back. Island resources cannot be bought by neighbours. | `armada.json` `"islands"` |
 | Siracusa | A new wonder board (A/B), only used with Armada. | `armada.json` `"wonders"` |
-| Tokens | Naval victory tokens (1/3/5/7), naval defeat tokens (−1/−2/−3), 2 boarding tokens, extra military tokens. | `Player` state, `ScoreBreakdown` |
+| Tokens | Naval victory tokens (1/3/5/7), naval defeat tokens (−1/−2/−3), 2 Incursion (2nd ed.: Boarding) tokens, extra ground-conflict tokens. | `Player` state, `ScoreBreakdown` |
 
 ### Rule changes (rulebook § Gameplay A–E, scoring)
 
@@ -34,10 +35,12 @@ as was done for Leaders and Cities.
   |---|---|---|---|---|---|---|
   | Red: naval strength (value at the current space) | 1 | 2 | 3 | 4 | 5 | 8 |
   | Yellow: commercial level (current) | 1 | 1 | 2 | 2 | 3 | 4 |
-  | Yellow: on reaching the space | – | 2 coins, tax 1 | 3 coins | 4 coins, tax 2 | 5 coins | 2 naval strength, tax 4 |
+  | Yellow: on reaching the space | – | 3 coins, tax 1 | 4 coins | 5 coins, tax 2 | 6 coins | 2 naval strength, tax 4 |
   | Blue: VP (current) | 1 | 2 | 4 | 6 | 8 | 10 (+1 naval strength) |
   | Green: on reaching the space | – | explore L1 | – | explore L2 | – | explore L3 |
 
+  The yellow coins come from the first-edition board figure. Its rule text and the second
+  edition give 2/3/4/5, so this needs the physical board (see `armada-data.md`).
   "Current" values are **positional**: they are not summed over the spaces passed. "On
   reaching" values fire once, when the fleet arrives.
 * **Taxes**: are applied **at the end of the turn**. Every *other* player loses
@@ -49,31 +52,42 @@ as was done for Leaders and Cities.
   independent of the Age.
 * **C. Naval conflict**: at the end of each Age, after the military conflicts, the engine
   compares naval strength across **all** players. Naval strength comes from cards, the
-  shipyard, islands and the wonder. Tokens are given in this order: last, first, second.
+  shipyard, islands and the wonder. Tokens are given in this order: weakest first, then the
+  strongest ranks. A player who took a defeat token cannot also take a victory token.
 
   | | Age I | Age II | Age III |
   |---|---|---|---|
-  | Last | −1 | −2 | −3 |
-  | First | 3 | 5 | 7 |
+  | Weakest | −1 | −2 | −3 |
+  | Strongest | 3 | 5 | 7 |
   | Second | 1 | 3 | 5 |
+  | Third | – | – | 3 (*2nd ed.*: none) |
 
-  Ties: everyone tied for last takes the defeat token. Players tied for first each take the
-  **second-place** token, and nobody takes second. Players tied for second take nothing. If
-  every player has the same strength, nobody takes a token.
-* **D. Boarding**: some red cards give a boarding token to a designated player (the symbols
-  point two seats away). At the end of the Age, that pair also fights an extra, normal military
-  conflict. Diplomacy tokens do not stop it, and a player can be boarded twice.
+  Ties: everyone tied for weakest takes the defeat token. Players tied at a rank take the
+  **next rank's** reward, and the rank below then moves down one. So players tied for strongest
+  take the second-place token, and the second-strongest takes the third-place +3 in Age III
+  (nothing in Ages I–II). Players tied for second get nothing, except +3 in Age III when exactly
+  one player is strongest. Ties for third get nothing. If every player has the same strength,
+  nobody takes a token. The rank rules are a meta rule per edition
+  (`rules.naval_ranks`), so the second edition stays a data change.
+* **D. Incursion** (*2nd ed.*: Boarding): Dock, Quay and Jetty give an Incursion token to the
+  player two seats away (Dock and Jetty ▷▷ to the right, Quay ◁◁ to the left). At the end of the
+  Age, that pair also fights an extra, normal ground conflict. Diplomacy tokens do not stop it,
+  and a player can be targeted twice. Any pair of players resolves **at most one** ground
+  conflict per Age (FAQ), so Dock + Jetty against the same player, or an Incursion against a
+  player who became a neighbour through Diplomacy, still means one conflict.
 * **E. Selling** (discarding): gain 3 coins **or** advance the yellow fleet one space for
   free.
-* **Turn resolution order**: (1) pay all costs, (2) advance fleets, (3) card effects except
-  coin losses, (4) shipyard effects except coin losses, (5) builds from the discard pile (no
-  Naval Construction), (6) coin losses.
+* **Turn resolution order**: (1) pay all costs, (2) advance fleets, (3) all effects except coin
+  losses, (4) island exploration, (5) builds from the discard pile (no Naval Construction),
+  (6) coin losses (Taxes, Pirates). A Naval Construction on Babylon B's extra last-card play is
+  allowed (FAQ).
 * **Scoring**: each **purple card is capped at 10 VP**. Naval tokens and islands get their own
   score rows. Blue fleet VP goes on the card row. Science already scores `n²` for more than 3
   identical symbols (`science_score`), so nothing changes there.
 * **With Cities**: hands are 9 cards. A tax or coin loss a player cannot (or does not want to)
   pay becomes **debt**, one token per coin.
-* **Team variant** (4/6 players): out of scope (see [Later](#later)).
+* **Team variant** (4/6/8 players) and the **8-player** variant (7 cards dealt): out of scope
+  (see [Later](#later)).
 
 ## 2. Design
 
@@ -172,11 +186,12 @@ the highest is applied.
   * `ADVANCE_FLEET`: a choice of track (Siracusa, and any card that says "a ship of your
     choice"). The four tracks are four **virtual cards** (`Red Fleet` … `Green Fleet`) in the
     card vocabulary, so the pick is `Action.build(card)` and the action space keeps its shape.
-* **Conflicts**: `resolve_conflict(age)` adds (a) a military conflict for every boarding pair
-  (Tomyris and Nero still apply; diplomacy is ignored), then clears the boarding tokens, and
-  (b) `_resolve_naval(age)` with the rank and tie rules above, using
-  `rules.naval_victory(age)` / `naval_second(age)` / `naval_defeat(age)` as new meta rules
-  (base values `None`, set by Armada).
+* **Conflicts**: `resolve_conflict(age)` builds the **set** of fighting pairs: the
+  (diplomacy-adjusted) neighbour ring plus every Incursion pair, which diplomacy does not
+  remove. Each pair fights once (FAQ), and Tomyris and Nero still apply. It then clears the
+  Incursion tokens and calls (b) `_resolve_naval(age)` with the rank and tie rules above. The
+  per-rank token values are a new meta rule (`rules.naval_ranks`: weakest / strongest / second /
+  third per Age; base `None`, set by Armada; the second edition drops the third rank).
 * **Scoring**: new `ScoreBreakdown` columns `naval` and `islands` (zero without Armada, so
   English output and existing digests do not change). Blue fleet VP goes to `civilian`, as the
   scorecard says. Apply the purple cap per card where guild VP are summed, including the
@@ -271,27 +286,30 @@ Milestone 1 is blocked on the component data (see below).
 
 Check these against the official FAQ before implementing. Each is a test case.
 
-1. **Component data**: compiled in [`armada-data.md`](armada-data.md). Still missing: the concrete costs and
-   Wonder tracks of 6 of the 7 shipyards. The pattern is known, and one board is complete. A few card
-   details are flagged there (Emporium targets, Pier's boarding target).
-2. **Pirates** (resolved by the effects sheet): the victim loses coins *equal to* their commercial level. Taxes
-   lose `tax − level`. Foggy Island makes its owner immune to both. Open: does commercial level also protect
-   against Cities plunder? The sheet ties it only to Taxes and Pirates, so presumably not.
-3. **Wonder stage + Naval Construction for stages with their own fleet moves** (Siracusa): can
-   both happen in one turn on the same track?
-4. **Siracusa**: its stages are built in any order (wiki; reuse the Wonder Pack's `any_order`). Can its "move a ship" stages pass a tax or exploration space
-   (yes, presumably: every advance triggers the space)?
+1. **Component data**: compiled in [`armada-data.md`](armada-data.md) for the first edition, with
+   the second edition's differences noted. Still missing: the concrete costs and Wonder tracks of
+   7 of the 8 Dockyards (the pattern is known and one board is complete), Siracusa's first-edition
+   stage costs, and the yellow coin values (3/4/5/6 in the first-edition board figure, 2/3/4/5 in
+   its rule text and the second edition).
+2. **Pirates** (settled): the victim loses 1 coin per commercial level. Taxes lose
+   `tax − level`. Foggy Island makes its owner immune to both. Open: does commercial level also
+   protect against Cities plunder? The rulebook ties it only to Taxes and Pirates, so presumably not.
+3. **Wonder stage + Naval Construction with Siracusa's free moves** (settled, Siracusa sheet): both
+   happen; several Naval Constructions in one turn are allowed.
+4. **Siracusa**: stages are built in any order (settled; reuse the Wonder Pack's `any_order`). Can
+   its free moves pass a tax or exploration space? Presumably yes: every advance triggers the
+   space it reaches.
 5. **Simultaneous exploration with different levels** and a level deck that runs low (fewer
    than 4 cards for a solo explorer).
-6. **Babylon B's 7th/8th card** and **Olympia's free build** with a naval upgrade: both are
-   builds, so presumably allowed (the rulebook names Olympia explicitly).
+6. **Babylon B's last card** and **Olympia's free build** with a naval upgrade: both allowed (the
+   rulebook names Olympia, and its FAQ names Babylon B).
 7. **Leaders interactions**: does a recruited leader count as a "card" for Naval Construction?
-   No: white is not one of the four colours. Do the Leaders' coin powers (e.g. Nero on boarding
+   No: white is not one of the four colours. Do the Leaders' coin powers (e.g. Nero on Incursion
    victories) apply?
 
 ## Later
 
-* The 4/6-player **team variant** (shared information, double military tokens, 1-token
-  boardings, team scores) needs team-aware observations and rewards. It is out of scope for the
+* The 4/6/8-player **team variant** and the 8-player rules (shared information, double ground
+  tokens, 1-token Incursions, team scores) needs team-aware observations and rewards. It is out of scope for the
   first pass.
 * Armada-aware search (`SearchAgent`) and analysis labels for naval moves.
