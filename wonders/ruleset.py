@@ -59,6 +59,15 @@ RULES: Tuple[RuleSpec, ...] = (
     RuleSpec('victory_age_3', 5, 0, 20, 'Victory in Age III', 'Victory points of a military victory token in Age III.'),
     RuleSpec('defeat_points', -1, -10, 0, 'Defeat', 'Victory points of a military defeat token (zero or less).'),
     RuleSpec('extra_guilds', 2, 0, 10, 'Extra guilds', 'Age III deals as many guilds as players plus this number.'),
+    RuleSpec('leader_draft_left', 1, 0, 1, 'Leader draft passes left', '1: the leader draft passes left; 0: right.'),
+    RuleSpec(
+        'return_last_leaders',
+        0,
+        0,
+        1,
+        'Unchosen leaders leave',
+        '1: the leaders not recruited in Age III go back to the box.',
+    ),
 )
 RULE_SPECS: Dict[str, RuleSpec] = {r.name: r for r in RULES}
 
@@ -76,6 +85,8 @@ class Rules:
     victory_age_3: int = 5
     defeat_points: int = -1
     extra_guilds: int = 2
+    leader_draft_left: int = 1  # the second edition's leader draft passes right
+    return_last_leaders: int = 0  # second edition: unchosen leaders go back to the box after Age III recruitment
 
     def victory(self, age: int) -> int:
         """Victory points of a military victory token in ``age``."""
@@ -134,6 +145,14 @@ class Expansion:
     implemented: bool = True
     note: str = ''
     rules: Mapping[str, RuleValue] = field(default_factory=dict)  # meta-rule changes (see RULES)
+    # The game edition this content belongs to (1: 2010, 2: 2020); None: any edition (extension expansions).
+    edition: Optional[int] = None
+    # The expansion this id is an edition of ('base2' is the base game): what ``Ruleset.uses`` asks about.
+    family: str = ''
+
+    def __post_init__(self) -> None:
+        if not self.family:
+            object.__setattr__(self, 'family', self.id)
 
     @property
     def overrides(self) -> Dict[str, RuleValue]:
@@ -178,29 +197,83 @@ _DEFAULT_RULES = Rules()
 
 
 EXPANSIONS: Dict[str, Expansion] = {
-    'base': Expansion('base', 'Base game'),
-    'leaders': Expansion('leaders', 'Leaders', starting_coins=6),
-    'cities': Expansion('cities', 'Cities'),
-    'wonderpack': Expansion('wonderpack', 'Wonder Pack'),  # four boards; Abu Simbel needs Leaders
+    'base': Expansion('base', 'Base game', edition=1),
+    'base2': Expansion('base2', 'Base game', edition=2, family='base'),
+    'leaders': Expansion('leaders', 'Leaders', starting_coins=6, edition=1),
+    'leaders2': Expansion(
+        'leaders2',
+        'Leaders',
+        starting_coins=6,
+        edition=2,
+        family='leaders',
+        rules={'leader_draft_left': 0, 'return_last_leaders': 1},
+    ),
+    'cities': Expansion('cities', 'Cities', edition=1),
+    'cities2': Expansion('cities2', 'Cities', edition=2, family='cities'),
+    'wonderpack': Expansion('wonderpack', 'Wonder Pack', edition=1),  # four boards; Abu Simbel needs Leaders
     'armada': Expansion(
         'armada',
         'Armada',
         implemented=False,
         note='naval boards, fleets and naval combat are not yet mechanized',
+        edition=1,
     ),
 }
 BUNDLED: Tuple[str, ...] = tuple(EXPANSIONS)  # the expansions this package ships (registered above)
 
+# The game editions: the first (2010) and the second (2020). Content is an expansion id per edition
+# ('base' / 'base2'); the edition of a game is its base game's, and every expansion in it must match.
+EDITIONS: Dict[int, str] = {1: 'First edition (2010)', 2: 'Second edition (2020)'}
+DEFAULT_EDITION = 1
+
+
+def family_of(expansion_id: str) -> str:
+    """The expansion an id is an edition of (``'base2'`` → ``'base'``; unknown ids are their own family)."""
+    exp = EXPANSIONS.get(expansion_id)
+    return exp.family if exp is not None else expansion_id
+
+
+def has_family(expansions: Sequence[str], family: str) -> bool:
+    """Whether a tuple of expansion ids holds ``family`` in any edition (``'cities'``, ``'leaders'``, ...)."""
+    return any(family_of(i) == family for i in expansions)
+
+
+def edition_id(family: str, edition: int) -> Optional[str]:
+    """The id of ``family``'s content for ``edition`` (``None`` if that edition has none)."""
+    for exp in EXPANSIONS.values():
+        if exp.family == family and exp.edition in (edition, None):
+            return exp.id
+    return None
+
+
+def with_edition(expansions: Sequence[str], edition: int) -> Tuple[str, ...]:
+    """``expansions`` (any edition's ids, ``base`` implied) as the ids of ``edition``.
+
+    Raises ``ValueError`` for an expansion that has no content for that edition yet.
+    """
+    if edition not in EDITIONS:
+        raise ValueError(f'unknown edition {edition!r} (known: {", ".join(map(str, EDITIONS))})')
+    out = []
+    for i in ('base', *expansions):
+        if i not in EXPANSIONS:
+            out.append(i)  # an extension expansion still to be loaded: Ruleset.of checks it
+            continue
+        target = edition_id(EXPANSIONS[i].family, edition)
+        if target is None:
+            raise ValueError(f'{EXPANSIONS[i].name} is not available in the {EDITIONS[edition].lower()}')
+        out.append(target)
+    return tuple(dict.fromkeys(out))
+
 
 @dataclass(frozen=True)
 class Ruleset:
-    """A combination of active expansions (``base`` always included)."""
+    """A combination of active expansions (one edition of the base game always included, first)."""
 
     expansions: Tuple[str, ...]
 
     @classmethod
     def of(cls, *ids: str) -> 'Ruleset':
-        combined = tuple(dict.fromkeys(('base', *ids)))  # dedupe, base first, keep order
+        combined = tuple(dict.fromkeys(ids))  # dedupe, keep order
         unknown = [i for i in combined if i not in EXPANSIONS]
         if unknown:  # maybe an extension expansion: discover extensions (once) or use the catalog, look again
             from wonders.extensions import provide
@@ -209,10 +282,24 @@ class Ruleset:
             unknown = [i for i in combined if i not in EXPANSIONS]
         if unknown:
             raise ValueError(f'unknown expansion(s): {unknown}')
-        return cls(combined)
+        bases = [i for i in combined if EXPANSIONS[i].family == 'base'] or ['base']  # the first edition is implied
+        if len(bases) > 1:
+            raise ValueError(f'choose one edition of the base game, not {" and ".join(bases)}')
+        edition = EXPANSIONS[bases[0]].edition
+        wrong = [i for i in combined if EXPANSIONS[i].edition not in (None, edition)]
+        if wrong:
+            names = ', '.join(EXPANSIONS[i].name for i in wrong)
+            raise ValueError(f'not available in the {EDITIONS[edition or DEFAULT_EDITION].lower()}: {names}')
+        return cls((bases[0], *(i for i in combined if i != bases[0])))
 
     def uses(self, expansion_id: str) -> bool:
-        return expansion_id in self.expansions
+        """Whether the ruleset includes ``expansion_id``'s family in any edition (``'leaders'``, ``'base'``)."""
+        return has_family(self.expansions, family_of(expansion_id))
+
+    @property
+    def edition(self) -> int:
+        """The game edition: its base game's."""
+        return EXPANSIONS[self.expansions[0]].edition or DEFAULT_EDITION
 
     @property
     def content_expansions(self) -> Tuple[str, ...]:

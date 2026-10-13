@@ -11,6 +11,7 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``GET /api/record`` — the replayable GameRecord JSON
 - ``POST /api/analyse`` / ``GET /api/analysis`` — start / poll the post-game analysis of the human's moves
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
+  (``&edition=2``: the second edition's card of that name)
 - ``GET /favicon.svg`` — the project logo (``static/logo.svg``, a copy of ``docs/images/logo.svg``)
 - ``GET /api/locale?lang=de`` — the translation catalog the page uses for its own texts
 - ``GET /api/games`` — saved games (newest first) with the rating after each, and the rating history
@@ -55,17 +56,26 @@ from wonders.play import builder, strength
 from wonders.play.achievements import achievements, earned
 from wonders.play.rating import AGENT_ELO, DEFAULT_AGENT_ELO, START, agent_elo, player_history, rated_game
 from wonders.play.session import ConfigError, GameConfig, HumanSession, menu_options
-from wonders.ruleset import EXPANSIONS
+from wonders.ruleset import DEFAULT_EDITION, EDITIONS, EXPANSIONS
 from wonders.storage import StorageError, Store
 from wonders.viz.render import card_svg, wonder_svg
 
 
-@lru_cache(maxsize=1)
-def _all_content() -> Content:
+@lru_cache(maxsize=4)
+def _all_content(edition: int = DEFAULT_EDITION) -> Content:
+    """Every card and board of one edition (the editions share card names, e.g. Altar, with other values)."""
     from wonders.extensions import ensure_loaded
 
     ensure_loaded()  # cards of extension expansions render too
-    return load_content(*(e.id for e in EXPANSIONS.values() if e.implemented))
+    return load_content(*(e.id for e in EXPANSIONS.values() if e.implemented and e.edition in (None, edition)))
+
+
+def _edition(query: Dict[str, Any]) -> int:
+    try:
+        edition = int(query.get('edition') or DEFAULT_EDITION)
+    except ValueError:
+        return DEFAULT_EDITION
+    return edition if edition in EDITIONS else DEFAULT_EDITION
 
 
 @lru_cache(maxsize=1)
@@ -88,16 +98,18 @@ def _t(query: Dict[str, Any]) -> Translator:
 
 
 @lru_cache(maxsize=1024)
-def _card_svg(name: str, lang: str = DEFAULT) -> Optional[str]:
-    card = next((c for c in _all_content().cards if c.name == name), None)
+def _card_svg(name: str, lang: str = DEFAULT, edition: int = DEFAULT_EDITION) -> Optional[str]:
+    card = next((c for c in _all_content(edition).cards if c.name == name), None)
     return None if card is None else card_svg(card, _translator(lang))
 
 
 @lru_cache(maxsize=128)
-def _wonder_svg(name: str, side: str, built: str = '0', lang: str = DEFAULT) -> Optional[str]:
+def _wonder_svg(
+    name: str, side: str, built: str = '0', lang: str = DEFAULT, edition: int = DEFAULT_EDITION
+) -> Optional[str]:
     """``built`` is a count (the first stages) or ``s1,s3``: 1-based stages built in any order (Great Wall)."""
     try:
-        wonder = _all_content().wonder(name, side)
+        wonder = _all_content(edition).wonder(name, side)
         if built.startswith('s'):
             stages = [int(x.strip('s')) - 1 for x in built.split(',') if x.strip('s')]
             return wonder_svg(wonder, built=stages, t=_translator(lang))
@@ -435,9 +447,9 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/games': lambda play, q: _json(play.games(_t(q))),
     '/api/games/record': lambda play, q: _saved_record(play, q.get('id', '')),
     '/api/achievements': lambda play, q: _json(play.achievements(_t(q))),
-    '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''), _t(q).lang)),
+    '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''), _t(q).lang, _edition(q))),
     '/api/wonder.svg': lambda play, q: _svg(
-        _wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'), _t(q).lang)
+        _wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'), _t(q).lang, _edition(q))
     ),
     '/api/catalog': lambda play, q: _json(play.catalog(q.get('q', ''))),
     '/api/builder': lambda play, q: _json(play.builder_state(_t(q))),

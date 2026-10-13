@@ -50,11 +50,18 @@ class Player:
         self.pending_entombs = 0  # Abu Simbel: recruited leaders still to entomb
         self.discard_build_priorities: List[int] = []  # one per owed discard build (FAQ order)
         self.copied_leaders: List[Card] = []  # Courtesans' Guild: copied (not owned) leaders
+        self.reserve_gained = False  # coins came from the reserve this turn (Berenice's bonus)
 
     @classmethod
     def starting(cls, name: str, wonder: Wonder, coins: int = STARTING_COINS) -> 'Player':
         """A player at the start of a game: the treasury plus the board's extra coins (the Manneken Pis)."""
         return cls(name, wonder, coins + wonder.extra_coins)
+
+    def gain(self, coins: int) -> None:
+        """Take ``coins`` from the reserve (not from a neighbour): Berenice's bonus counts these."""
+        if coins > 0:
+            self.coins += coins
+            self.reserve_gained = True
 
     # -- construction ------------------------------------------------------
     def has(self, name: str) -> bool:
@@ -180,6 +187,36 @@ class Player:
             self._cache['free_builds'] = allowance
         return allowance - self.free_builds_used  # type: ignore[operator]
 
+    def free_builds_for(self, card: Card) -> int:
+        """Free builds from hand left this Age that ``card`` may use (Caligula's only take black cards)."""
+        key = ('free_builds_for', card.color.value)
+        if key not in self._cache:
+            self._cache[key] = sum(
+                e.free_builds_per_age()
+                for e in self.iter_effects()
+                if not e.free_build_colors() or card.color.value in e.free_build_colors()
+            )
+        return self._cache[key] - self.free_builds_used  # type: ignore[operator]
+
+    def _summed(self, hook: str) -> int:
+        """The sum of one integer hook over every effect (cached until a card or stage is added)."""
+        key = ('sum', hook)
+        if key not in self._cache:
+            self._cache[key] = sum(getattr(effect, hook)() for effect in self.iter_effects())
+        return self._cache[key]  # type: ignore[return-value]
+
+    def science_most(self) -> int:
+        return self._summed('science_most')
+
+    def science_replaces(self) -> int:
+        return self._summed('science_replaces')
+
+    def reserve_bonus(self) -> int:
+        return self._summed('reserve_bonus')
+
+    def stage_plunder(self) -> int:
+        return self._summed('stage_plunder')
+
     def guild_copies(self) -> int:
         return sum(effect.guild_copies() for effect in self.iter_effects())
 
@@ -206,8 +243,17 @@ class Player:
     def builds_free(self, card: Card) -> bool:
         key = ('builds_free', card.name)  # a card's identity is its name
         if key not in self._cache:
-            self._cache[key] = any(effect.builds_free(card) for effect in self.iter_effects())
+            free = any(effect.builds_free(card) for effect in self.iter_effects())
+            if not free and card.color is not Color.WHITE and any(e.free_first_of_color() for e in self.iter_effects()):
+                free = not any(c.color is card.color for c in self.cards)  # Olympia day: first of its colour
+            self._cache[key] = free
         return self._cache[key]  # type: ignore[return-value]
+
+    def free_build_turns(self) -> Tuple[str, ...]:
+        """Turns of each Age whose card this city may build for free (``'first'`` / ``'last'``)."""
+        if 'free_turns' not in self._cache:
+            self._cache['free_turns'] = tuple(t for e in self.iter_effects() for t in e.free_build_turns())
+        return self._cache['free_turns']  # type: ignore[return-value]
 
     def bank_purchases(self) -> int:
         if 'bank' not in self._cache:

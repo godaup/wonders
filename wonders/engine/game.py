@@ -16,11 +16,12 @@ from typing import Callable, Dict, Generator, List, Optional, Sequence, Tuple
 from wonders.cards.base import Card, Color, Cost, ScienceSymbol
 from wonders.cards.wonder import WonderStage
 from wonders.effects.base import BuildEvent, Context
+from wonders.effects.library import Plunder
 from wonders.engine.actions import Action, ActionKind, DecisionKind, DecisionPoint
 from wonders.engine.phase import Phase
 from wonders.engine.player import SCIENCE_SET_VALUE, Player
 from wonders.engine.trade import Payment, cheapest_payment, payment_options
-from wonders.ruleset import Rules, rules_of
+from wonders.ruleset import Rules, has_family, rules_of
 
 # Where owed discard builds come from, in the order they resolve (Wonder Pack FAQ); a board's own
 # stages use their effect's priority (Halicarnassus 0, the Great Wall 1).
@@ -48,24 +49,49 @@ def science_score(
     wilds: int = 0,
     set_value: int = SCIENCE_SET_VALUE,
     copies: Sequence[Sequence[ScienceSymbol]] = (),
+    most: int = 0,
+    replace: int = 0,
 ) -> int:
     """Σ (per-symbol count)² + ``set_value`` × (complete sets), maximised over wilds.
 
     ``wilds`` may each become any symbol. ``copies`` lists alternative extra symbol
     multisets (e.g. which neighbour green cards the Cities masks copy); the best one is
     used. Each wild/copy choice is maximised independently of the others' order.
+    ``replace`` symbols may each be changed into any other (Aganice), and ``most`` extra
+    symbols go to the kind held most, the best of tied kinds (Enheduanna), after the rest.
     """
     best = 0
     for extra in copies or ((),):
         counted = [counts.get(symbol, 0) for symbol in _SYMBOL_ORDER]
         for symbol in extra:
             counted[_SYMBOL_ORDER.index(symbol)] += 1
-        for t in range(wilds + 1):
-            for g in range(wilds - t + 1):
-                c = wilds - t - g
-                vals = (counted[0] + t, counted[1] + g, counted[2] + c)
-                best = max(best, sum(v * v for v in vals) + set_value * min(vals))
+        for base in _replacements(counted, replace):
+            spare = wilds + (sum(counted) - sum(base))  # a replaced symbol becomes a wild
+            for t in range(spare + 1):
+                for g in range(spare - t + 1):
+                    vals = [base[0] + t, base[1] + g, base[2] + spare - t - g]
+                    if most:
+                        top = max(vals)
+                        best = max(
+                            best, max(_science_value(vals, k, most, set_value) for k in range(3) if vals[k] == top)
+                        )
+                    else:
+                        best = max(best, sum(v * v for v in vals) + set_value * min(vals))
     return best
+
+
+def _science_value(vals: List[int], k: int, extra: int, set_value: int) -> int:
+    vals = list(vals)
+    vals[k] += extra
+    return sum(v * v for v in vals) + set_value * min(vals)
+
+
+def _replacements(counted: List[int], replace: int) -> List[List[int]]:
+    """Every way to take up to ``replace`` symbols out of ``counted`` (each then becomes a wild)."""
+    options = [list(counted)]
+    for _ in range(replace):
+        options += [[*o[:k], o[k] - 1, *o[k + 1 :]] for o in options for k in range(3) if o[k] > 0]
+    return [list(o) for o in dict.fromkeys(tuple(o) for o in options)]
 
 
 @dataclass
@@ -105,6 +131,7 @@ class Game:
         self.phase = Phase.SETUP
         self.age = 0
         self.turn = 0
+        self.last_turn = -1  # the current Age's last regular turn (set by age_steps)
         self.decision = DecisionKind.PLAY  # what the current decision point asks for
         self.discard_pile: List[Card] = []
         self._pending: List = []  # cross-player build effects queued until end of turn
@@ -132,8 +159,10 @@ class Game:
             self.left_of(i),
             self.right_of(i),
             tuple(self.players),
-            debt_tokens='cities' in self.expansions,
+            debt_tokens=has_family(self.expansions, 'cities'),
             final=self.phase is Phase.FINISHED,
+            age=self.age,
+            victory_value=self.rules.victory(self.age) if 1 <= self.age <= 3 else 0,
         )
 
     # -- payment -----------------------------------------------------------
@@ -185,7 +214,7 @@ class Game:
 
         Handles duplicates (illegal) and free chain builds.
         """
-        key = (id(card),) + self._state_key(i)
+        key = (id(card), self.age if card.age_cost else 0) + self._state_key(i)
         hit = self._payments.get(key)
         if hit is not None and hit[0] is card:  # holding the card keeps its id from being reused
             return hit[1]
@@ -214,7 +243,7 @@ class Game:
         """The card's coin cost after discounts from the seat and its neighbours (Rome B)."""
         discount = self.players[i].coin_discount(card)
         discount += self.left_of(i).neighbour_coin_discount(card) + self.right_of(i).neighbour_coin_discount(card)
-        return max(0, card.cost.coins - discount)
+        return max(0, card.coin_cost(self.age) - discount)
 
     def _chained(self, i: int, card: Card) -> bool:
         """Whether an owned structure unlocks ``card`` for free (chaining)."""
@@ -325,7 +354,15 @@ class Game:
         pending, self._pending = self._pending, []
         for ctx, effect in pending:
             effect.on_build(ctx)
+        self._reserve_bonuses()
         self.tick += 1
+
+    def _reserve_bonuses(self) -> None:
+        """Berenice: once per turn, a seat that gained coins from the reserve takes its bonus."""
+        for player in self.players:
+            if player.reserve_gained:
+                player.coins += player.reserve_bonus()
+                player.reserve_gained = False
 
     def _settle(self, i: int, coins_to_bank: int, pay: Payment) -> None:
         player = self.players[i]
@@ -348,7 +385,7 @@ class Game:
 
     def _income(self, i: int, event: BuildEvent) -> None:
         """Coins the owner's effects pay out for a build (Xenophon, Vitruvius, Hatshepsut)."""
-        self.players[i].coins += self.players[i].build_income(event)
+        self.players[i].gain(self.players[i].build_income(event))
 
     def _activate(self, i: int, effects, source: int = OWN_STAGE) -> None:
         """Trigger the build-time effects of a newly built card or wonder stage.
@@ -360,7 +397,7 @@ class Game:
         player = self.players[i]
         ctx = self.context(i)
         for effect in effects:
-            player.coins += effect.coins_on_build(ctx)  # own coins: immediate
+            player.gain(effect.coins_on_build(ctx))  # own coins: immediate
             owed = effect.discard_builds()  # resolved at end of turn
             if owed:
                 priority = effect.discard_build_priority() if source == OWN_STAGE else source
@@ -397,9 +434,11 @@ class Game:
         copied = player.wonder.stages[slot].copy is not None
         self._activate(i, stage.effects, COPIED_STAGE if copied else OWN_STAGE)
         self._income(i, BuildEvent(None, traded=pay.traded, neighbours_traded=_sides(pay)))
+        if player.stage_plunder():  # Octavia: every other player loses coins, at the end of the turn
+            self._pending.append((self.context(i), Plunder(player.stage_plunder())))
 
     def _do_discard(self, i: int, card: Card) -> None:
-        self.players[i].coins += self.rules.discard_coins
+        self.players[i].gain(self.rules.discard_coins)
         if card.color is not Color.WHITE:  # discarded leaders return to the box (Leaders rulebook), not the pile
             self.discard_pile.append(card)
 
@@ -416,7 +455,8 @@ class Game:
         else:
             if not self._can_build_free(i, card):
                 raise IllegalAction(f'{player.name} has no free build for {card.name}')
-            player.free_builds_used += 1
+            if not self._free_turn(i):  # Olympia night's first / last card costs no per-Age allowance
+                player.free_builds_used += 1
         player.add_card(card)
         self._activate(i, card.effects, CARD)
         self._income(i, BuildEvent(card.color.value))
@@ -424,10 +464,19 @@ class Game:
     def _can_build_free(self, i: int, card: Card) -> bool:
         """Olympia's once-per-Age free build: offered only where it saves something."""
         player = self.players[i]
-        if player.free_builds_left <= 0 or player.has(card.name) or card.color is Color.WHITE:
+        if player.has(card.name) or card.color is Color.WHITE:
             return False  # leaders are recruited, not built
+        if player.free_builds_for(card) <= 0 and not self._free_turn(i):
+            return False
         payment = self._card_payment(i, card)
         return payment is None or payment[0] + payment[1].total > 0
+
+    def _free_turn(self, i: int) -> bool:
+        """Olympia night (2nd edition): the card of the Age's first / last regular turn is free for seat ``i``."""
+        turns = self.players[i].free_build_turns()
+        if not turns or self.decision is not DecisionKind.PLAY:
+            return False
+        return ('first' in turns and self.turn == 0) or ('last' in turns and self.turn == self.last_turn)
 
     # -- legal actions & observation (DL-facing) ---------------------------
     def legal_actions(self, i: int, hand: List[Card]) -> List[Action]:
@@ -499,11 +548,12 @@ class Game:
             for j in sorted({active[(idx + 1) % m], active[(idx - 1) % m]} - {i}):
                 if shields[i] > shields[j]:
                     self.players[i].tokens.append(value)
-                    self.players[i].coins += self.players[i].coins_per_victory()  # Nero
+                    self.players[i].gain(self.players[i].coins_per_victory())  # Nero
                 elif shields[i] < shields[j]:
                     # Tomyris: the loser's defeat token goes to the neighbour who won.
                     loser = self.players[j] if self.players[i].redirects_defeats() else self.players[i]
                     loser.tokens.append(self.rules.defeat_points)
+        self._reserve_bonuses()  # Nero's coins come from the reserve too (Berenice)
 
     # -- scoring -----------------------------------------------------------
     def score(self, i: int) -> ScoreBreakdown:
@@ -532,7 +582,8 @@ class Game:
                 setattr(b, column, getattr(b, column) + vp)
         for card in p.copied_leaders:  # Courtesans' Guild copies score as leaders
             b.leaders += sum(effect.victory_points(ctx) for effect in card.effects)
-        b.wonders += sum(2 * card.cost.coins for card in p.entombed)  # Abu Simbel: twice the leader's cost
+        # Abu Simbel: twice the leader's cost (6 for a leader whose cost is the Age)
+        b.wonders += sum(2 * card.coin_cost(3) for card in p.entombed)
         return b
 
     def _copy_guilds(self, i: int, symbols: Counter, wilds: int) -> Tuple[int, Counter, int]:
@@ -586,7 +637,7 @@ class Game:
             # De-duplicate (keeping order) the possible multisets of copied symbols.
             options = list(dict.fromkeys(itertools.combinations(pool, min(len(pool), p.science_copies()))))
         set_value = self.rules.science_set_points + p.science_set_bonus()
-        return science_score(symbols, wilds, set_value, options)
+        return science_score(symbols, wilds, set_value, options, most=p.science_most(), replace=p.science_replaces())
 
     def cached_totals(self) -> List[int]:
         """Every seat's score total, cached per engine state (``tick``).
@@ -640,6 +691,7 @@ class Game:
                 player.free_builds_used = 0
         pass_left = self.phase.pass_left
         last_turn = first_turn + len(hands[0]) - 2
+        self.last_turn = last_turn
         for turn in range(first_turn, last_turn + 1):
             self.turn = turn
             actions = yield self._ask(DecisionKind.PLAY, {i: hands[i] for i in range(self.n)})
@@ -657,10 +709,11 @@ class Game:
         self.resolve_conflict(age)
 
     def draft_steps(self, hands: List[List[Card]]) -> AgeSteps:
-        """Leaders draft as a coroutine: keep one leader per round, pass hands left.
+        """Leaders draft as a coroutine: keep one leader per round, pass the hands on.
 
         ``hands`` are the dealt leader hands (one per seat, equal size). Each round every
-        seat keeps one card (``Action.build`` of it) and passes the rest to the left;
+        seat keeps one card (``Action.build`` of it) and passes the rest to the left
+        (``rules.leader_draft_left``; the second edition passes right);
         the kept cards become each player's ``leaders_hand``.
         """
         kept: List[List[Card]] = [[] for _ in range(self.n)]
@@ -671,7 +724,10 @@ class Game:
             for i in range(self.n):
                 hands[i].remove(actions[i].card)
                 kept[i].append(actions[i].card)
-            hands = [hands[(i - 1) % self.n] for i in range(self.n)]  # seat i receives from i-1
+            if self.rules.leader_draft_left:  # first edition: pass left, seat i receives from i-1
+                hands = [hands[(i - 1) % self.n] for i in range(self.n)]
+            else:  # second edition: pass right
+                hands = [hands[(i + 1) % self.n] for i in range(self.n)]
         for player, cards in zip(self.players, kept):
             player.leaders_hand = cards
         self.decision = DecisionKind.PLAY
@@ -686,6 +742,13 @@ class Game:
                 self.players[i].leaders_hand.remove(actions[i].card)
             self._resolve(actions)
             yield from self._power_steps()  # e.g. Solomon / a Rome B stage built with a leader
+        if age == 3 and self.rules.return_last_leaders:
+            for player in self.players:  # the unchosen leaders go back to the box, except on Roma's night side
+                keeps = any(e.extra_recruits() for stage in player.wonder.stages for e in stage.effects)
+                if not keeps and player.leaders_hand:
+                    self.leader_box.extend(player.leaders_hand)
+                    player.leaders_hand = []
+                    self.tick += 1
         self.decision = DecisionKind.PLAY
 
     def _ask(self, kind: DecisionKind, options: Dict[int, List[Card]]) -> DecisionPoint:

@@ -70,9 +70,10 @@ def test_every_card_board_session_and_menu_text_has_a_german_translation() -> No
     missing: Set[str] = set()
     t = Translator('de', missing=missing)
     content = load_content('base', 'leaders', 'cities', 'wonderpack')
-    for card in content.cards:
+    second = load_content('base2', 'leaders2', 'cities2')
+    for card in content.cards + second.cards:
         card_svg(card, t)
-    for wonder in content.wonders:
+    for wonder in content.wonders + second.wonders:
         wonder_svg(wonder, 1, t)
     gallery_html(content.cards[:1], content.wonders[:1], t=t)
     menu_options((), t)
@@ -80,9 +81,15 @@ def test_every_card_board_session_and_menu_text_has_a_german_translation() -> No
     for achievement in ACHIEVEMENTS:
         t(achievement.name)
         t(achievement.description)
-    for expansions in (['base'], ['base', 'leaders', 'cities'], ['base', 'leaders', 'wonderpack']):
+    for expansions, edition in (
+        (['base'], 1),
+        (['base', 'leaders', 'cities'], 1),
+        (['base', 'leaders', 'wonderpack'], 1),
+        (['base'], 2),
+        (['leaders', 'cities'], 2),
+    ):
         seats = [SeatConfig(), SeatConfig('greedy'), SeatConfig('heuristic')]
-        session = HumanSession(GameConfig(expansions=expansions, seats=seats, seed=3), t=t)
+        session = HumanSession(GameConfig(expansions=expansions, seats=seats, seed=3, edition=edition), t=t)
         session.state(t)
         for name in session.cards:
             session.card_info(name, t)

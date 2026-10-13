@@ -31,9 +31,9 @@ from wonders.engine.record import PlayerSetup
 from wonders.env.environment import WondersEnv
 from wonders.i18n import ENGLISH, Translator, languages
 from wonders.play.rating import places
-from wonders.ruleset import EXPANSIONS, Ruleset
+from wonders.ruleset import DEFAULT_EDITION, EDITIONS, EXPANSIONS, Ruleset, has_family, with_edition
 from wonders.storage import new_id, now
-from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, cost_text, effect_lines, res_name
+from wonders.viz.render import ICONS, RES_COLOR, RES_ICON, card_cost_text, cost_text, effect_lines, res_name
 
 HUMAN = 'human'
 SIDES = ('A', 'B', 'random')
@@ -117,7 +117,8 @@ class GameConfig:
     """Everything the game menu chooses.
 
     Attributes:
-        expansions: Expansion ids (``base`` is implied).
+        expansions: Expansion ids (``base`` is implied), of any edition: ``edition`` picks the content.
+        edition: The game edition (1: 2010, 2: 2020; :data:`wonders.ruleset.EDITIONS`).
         seats: One entry per seat, exactly one of them ``human``.
         wonder: The human's wonder name, or ``'random'``.
         side: The human's wonder side (``'A'``, ``'B'`` or ``'random'``).
@@ -133,6 +134,7 @@ class GameConfig:
     side: str = 'random'
     opponent_sides: str = 'random'
     seed: Optional[int] = None
+    edition: int = DEFAULT_EDITION
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'GameConfig':
@@ -145,6 +147,7 @@ class GameConfig:
             side=str(data.get('side', 'random')),
             opponent_sides=str(data.get('opponent_sides', 'random')),
             seed=None if seed is None or seed == '' else int(seed),
+            edition=int(data.get('edition') or DEFAULT_EDITION),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -155,6 +158,7 @@ class GameConfig:
             'side': self.side,
             'opponent_sides': self.opponent_sides,
             'seed': self.seed,
+            'edition': self.edition,
         }
 
 
@@ -184,7 +188,8 @@ def token_kinds(expansions: Sequence[str]) -> Dict[str, bool]:
     from wonders.extensions import REGISTRY, provide
 
     provide(expansions)
-    found = {'debt': 'cities' in expansions, 'diplomacy': 'cities' in expansions}
+    cities = has_family(expansions, 'cities')
+    found = {'debt': cities, 'diplomacy': cities}
     for exp in expansions:
         raw = REGISTRY.expansion_raw(exp) or read_expansion(exp)
         items = raw.get('cards', []) + raw.get('wonders', [])
@@ -218,10 +223,13 @@ def menu_options(checkpoints: Sequence[str] = (), t: Translator = ENGLISH) -> Di
                 'note': t(exp.note) if exp.note else '',
                 'wonders': wonders,
                 'requires': requires,  # boards offered only with other expansions (Abu Simbel: leaders)
+                'edition': exp.edition,  # None: any edition (extension expansions)
+                'family': exp.family,  # 'base2' is the base game of the second edition
             }
         )
     return {
         'expansions': expansions,
+        'editions': [{'id': k, 'name': t(name)} for k, name in EDITIONS.items()],
         'agents': [{'id': a.id, 'label': a.label, 'blurb': a.blurb} for a in agent_options(checkpoints, t)],
         'min_players': MIN_PLAYERS,
         'max_players': MAX_PLAYERS,
@@ -296,7 +304,7 @@ class HumanSession:
             if value not in SIDES:
                 raise ConfigError(f'unknown wonder side {value!r}')
         try:
-            self.ruleset = Ruleset.of(*config.expansions)
+            self.ruleset = Ruleset.of(*with_edition(config.expansions, config.edition))
         except ValueError as exc:
             raise ConfigError(str(exc)) from exc
         if self.ruleset.unimplemented:
@@ -454,7 +462,7 @@ class HumanSession:
         card = self.cards.get(name)
         if card is None:
             return {'name': name, 'title': t.name(name), 'color': 'unknown'}
-        text = [t('Cost: {cost}', cost=cost_text(card.cost.coins, card.cost.resources, t))]
+        text = [t('Cost: {cost}', cost=card_cost_text(card, t))]
         text += effect_lines(card.effects, t)
         if card.chain_requires:
             text.append(t('Free if you own {card}', card=t.name(card.chain_requires)))
@@ -546,6 +554,7 @@ class HumanSession:
             'seed': self.seed,
             'human': self.human,
             'expansions': list(self.ruleset.expansions),
+            'edition': self.ruleset.edition,
             'tokens': token_kinds(self.ruleset.expansions),  # which token counters the cities show
             'players': [
                 {

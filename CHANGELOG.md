@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+* **Second edition**: the 2020 base game (`base2`, `wonders/cards/data/base2.json`: 70 cards and 10 guilds,
+  7 boards with day and night sides) with its new powers (Olympia's first card of each colour, first and last
+  card of each Age; the Decorators Guild). An edition selector picks it: `Ruleset` takes one base game per
+  edition and refuses to mix editions, `with_edition` maps ids, the GUI menu has an edition select (the Wonder
+  Pack is first edition only), and `wonders play|bench --edition 2`. The first edition stays the default;
+  records and saved games are unchanged. Design, sources and four unverified card costs: `docs/editions.md`.
+* **Second-edition Leaders and Cities** (`leaders2`, `cities2`):
+  * Leaders: 55 leaders (34 standard, 15 expert, and 6 bonus leaders only with Cities), leaders that cost the
+    Age, the draft passing right, unchosen leaders returning to the box after Age III, and the new powers
+    (Aganice, Enheduanna, Berenice, Cynisca, Gorgo, Agrippina, Telesilla, Nitocris, the majority leaders,
+    Arsinoe, Octavia, Caligula, ...). No guilds; the Roma and Abu Simbel boards.
+  * Cities: the 42 black cards and the second-edition Byzantium and Petra boards.
+  * New meta rules `leader_draft_left` and `return_last_leaders`. Coins from the reserve go through
+    `Player.gain`.
 * Post-game analysis of a game with an extension's cards (e.g. Rinascita) stopped with a bare card name
   (a `KeyError`: the bundled network was trained on the official cards only). `analysis.unknown_content`
   now checks the game's decks, leaders and boards against the network first, and the GUI and

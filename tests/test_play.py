@@ -101,6 +101,8 @@ def test_wonder_choice_and_sides():
         (_config(expansions=('atlantis',)), 'unknown expansion'),
         (_config(wonder='Rome'), 'unknown wonder'),
         (_config(side='C'), 'unknown wonder side'),
+        (_config(expansions=('wonderpack',), edition=2), 'not available in the second edition'),
+        (_config(edition=3), 'unknown edition'),
     ],
 )
 def test_invalid_configs(config, message):
@@ -118,6 +120,18 @@ def test_config_round_trip():
     config = _config(expansions=('leaders',), wonder='The Colosseum of Rome', side='A', seed=7)
     assert GameConfig.from_dict(json.loads(json.dumps(config.to_dict()))) == config
     assert GameConfig.from_dict({'seed': ''}).seed is None
+    second = _config(edition=2, wonder='Olympia', seed=3)
+    assert GameConfig.from_dict(json.loads(json.dumps(second.to_dict()))) == second
+    assert GameConfig.from_dict({}).edition == 1  # games saved before the editions
+
+
+def test_second_edition_session_plays_out():
+    session = HumanSession(_config(edition=2, wonder='Olympia', seed=5))
+    state = session.state()
+    assert (state['edition'], state['expansions']) == (2, ['base2'])
+    assert state['players'][0]['wonder'] == 'Olympia'
+    _play_out(session)
+    assert session.done
 
 
 def test_menu_options():
@@ -126,6 +140,9 @@ def test_menu_options():
     assert {'base', 'leaders', 'cities', 'armada'} <= set(ids)
     assert ids['armada']['implemented'] is False and ids['armada']['wonders'] == []
     assert 'The Colosseum of Rome' in ids['leaders']['wonders']
+    assert [e['id'] for e in menu['editions']] == [1, 2]
+    assert (ids['base2']['family'], ids['base2']['edition'], ids['leaders']['edition']) == ('base', 2, 1)
+    assert 'Olympia' in ids['base2']['wonders']
     agents = {a['id'] for a in menu['agents']}
     assert {'heuristic', 'board', 'random'} <= agents
     assert (menu['min_players'], menu['max_players']) == (3, 7)
@@ -264,6 +281,9 @@ def test_server_speaks_german(base_url):
     me = state['players'][0]
     assert me['wonder_title'] != me['wonder'] and state['boards'][0]['title'] == me['wonder_title']
     assert 'Bibliothek' in _request(base_url + '/api/card.svg?name=Library&lang=de')
+    altar = base_url + '/api/card.svg?name=Altar'
+    assert _request(altar) != _request(altar + '&edition=2')  # 2 or 3 victory points: each edition's own card
+    assert _request(base_url + '/api/wonder.svg?name=Olympia&side=B&edition=2').startswith('<svg')
     pyramids = f'{base_url}/api/wonder.svg?name=The%20Pyramids%20of%20Giza&side=A&lang=de'
     assert 'STUFE 1' in _request(pyramids)
     assert _request(base_url + '/api/state')['state']['cards'][card]['text'][0].startswith('Cost: ')

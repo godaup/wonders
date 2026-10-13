@@ -13,6 +13,7 @@ from typing import Dict, List, Sequence, Tuple
 
 from wonders.agents.encoders import Encoder
 from wonders.engine.observation import CityView, Observation
+from wonders.ruleset import has_family
 
 MAX_SEATS = 7
 RESOURCES = ('bricks', 'glass', 'linen', 'ore', 'paper', 'stone', 'wood')
@@ -257,7 +258,8 @@ class TableEncoder(Encoder):
         for k, count in enumerate(PLAYER_COUNTS):
             vec[o + k] = float(obs.n_players == count)
         o += len(PLAYER_COUNTS)
-        vec[o : o + 3] = [float('leaders' in obs.expansions), float('cities' in obs.expansions), float(obs.pass_left)]
+        leaders, cities = has_family(obs.expansions, 'leaders'), has_family(obs.expansions, 'cities')
+        vec[o : o + 3] = [float(leaders), float(cities), float(obs.pass_left)]
         o += 3
         for k, decision in enumerate(self.decisions):
             vec[o + k] = float(obs.decision == decision)
