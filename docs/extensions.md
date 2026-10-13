@@ -21,6 +21,22 @@ to [`plugins/`](../plugins/README.md) and translations of the game to
 [`wonders/i18n/`](../wonders/i18n/README.md) (overview in [CONTRIBUTING](../CONTRIBUTING.md)).
 `wonders ext check` runs the same check locally.
 
+**The catalog.** Data extensions merged into [`extensions/`](../extensions/README.md) ship with the
+game: a built package carries them as `wonders/catalog/` (`setup.py` copies them), a checkout reads
+`extensions/` directly, and `$WONDERS_CATALOG` names other catalog folders. A catalog extension loads
+once it is switched on, from the GUI's "Community expansions" page or the command line:
+
+```
+wonders ext catalog              # every catalog extension, on or off
+wonders ext catalog arts guild   # search: every word must occur in its name, author, description, cards or boards
+wonders ext enable rinascita     # on: loads now and at every start ($WONDERS_HOME/extensions.json)
+wonders ext disable rinascita
+```
+
+A saved game or game record that used a catalog expansion replays even after it was switched off: the
+game loads it on demand without switching it on (the same holds for `-e <id>` on the command line). A
+folder of the same id in your extensions home takes precedence over the catalog's.
+
 ## Quick start: the expansion builder
 
 The easiest way to make an expansion is the **expansion builder** in the browser GUI: run `wonders gui`

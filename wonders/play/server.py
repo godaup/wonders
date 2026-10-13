@@ -17,6 +17,8 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``POST /api/games/open`` / ``POST /api/games/delete`` — ``{"id": …}``: resume or view / delete a saved game
 - ``GET /api/games/record?id=…`` — a saved game's GameRecord JSON
 - ``GET /api/achievements`` — every achievement and the games that earned it
+- ``GET /api/catalog?q=…`` — the community extensions shipped with the game (search: every word matches)
+- ``POST /api/catalog/activate`` — ``{"id": …, "active": true|false}``: switch one on or off
 - ``GET /api/builder`` — the expansion builder's forms (effect schemas, meta rules, …) and the projects
 - ``GET /api/builder/project?id=…`` / ``GET /api/builder/export?id=…`` — one project / its folder as a zip
 - ``POST /api/builder/check`` / ``save`` / ``delete`` / ``preview`` / ``balance`` — see
@@ -250,6 +252,21 @@ class PlayServer:
             'max_points': sum(item['points'] for item in items),
         }
 
+    # -- catalog of community extensions -----------------------------------------------------
+    def catalog(self, query: str = '') -> Dict[str, Any]:
+        from wonders.extensions import catalog
+
+        with self.builder_lock:
+            return {'extensions': [e.to_dict() for e in catalog(query)]}
+
+    def catalog_activate(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        from wonders.extensions import activate
+
+        with self.builder_lock:
+            entry = activate(str(body.get('id', '')), bool(body.get('active', True)))
+            self._content_changed()
+            return {'extension': entry.to_dict()}
+
     # -- expansion builder -------------------------------------------------------------------
     def builder_state(self, t: Translator = ENGLISH) -> Dict[str, Any]:
         return {'info': builder.builder_info(t), 'projects': builder.projects()}
@@ -418,6 +435,7 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/wonder.svg': lambda play, q: _svg(
         _wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'), _t(q).lang)
     ),
+    '/api/catalog': lambda play, q: _json(play.catalog(q.get('q', ''))),
     '/api/builder': lambda play, q: _json(play.builder_state(_t(q))),
     '/api/builder/project': lambda play, q: _guarded(lambda: {'project': builder.load_project(q.get('id', ''))}),
     '/api/builder/export': lambda play, q: _export(q.get('id', '')),
@@ -432,6 +450,7 @@ POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Re
     '/api/act': lambda play, body, q: _json(
         {'state': play.act(int(body.get('index', -1)), body.get('payment'), _t(q), body.get('stage'))}
     ),
+    '/api/catalog/activate': lambda play, body, q: _guarded(lambda: play.catalog_activate(body)),
     '/api/builder/check': lambda play, body, q: _json(builder.check_project(body.get('project') or {})),
     '/api/builder/save': lambda play, body, q: _json(play.builder_save(body)),
     '/api/builder/delete': lambda play, body, q: _json(play.builder_delete(str(body.get('id', '')))),
@@ -443,6 +462,7 @@ POST_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, Any], Dict[str, str]], Re
     ),
 }
 LOCAL_HOSTS = ('127.0.0.1', 'localhost', '::1')
+LOCAL_ONLY = ('/api/builder', '/api/catalog/')  # writes that change the expansions on this machine
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -486,10 +506,10 @@ class Handler(BaseHTTPRequestHandler):
         if route is None:
             self._send(_error(NOT_FOUND, HTTPStatus.NOT_FOUND))
             return
-        if url.path.startswith('/api/builder') and (
+        if url.path.startswith(LOCAL_ONLY) and (
             not self._local() or not (self.headers.get('Content-Type') or '').startswith('application/json')
         ):  # a JSON content type needs a CORS preflight, which this server never grants: no cross-site writes
-            self._send(_error('the builder only answers local JSON requests', HTTPStatus.FORBIDDEN))
+            self._send(_error('only local JSON requests may change the expansions', HTTPStatus.FORBIDDEN))
             return
         try:
             length = int(self.headers.get('Content-Length') or 0)

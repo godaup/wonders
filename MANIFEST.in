@@ -1,0 +1,3 @@
+# The community extensions become the package's catalog (setup.py).
+graft extensions
+global-exclude *.py[cod] __pycache__

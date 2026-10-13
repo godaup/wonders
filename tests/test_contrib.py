@@ -15,6 +15,7 @@ from wonders.agents.bench import AGENTS
 from wonders.cards.base import Color
 from wonders.cards.content import EFFECT_BUILDERS
 from wonders.ruleset import EXPANSIONS
+from wonders.storage import HOME_VARIABLE as HOME
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -29,6 +30,8 @@ def isolated(monkeypatch, tmp_path):
     monkeypatch.setattr(contrib, 'REGISTRY', registry)
     monkeypatch.setattr(extensions, '_LOADED', False)
     monkeypatch.setenv(extensions.HOME_VARIABLE, str(tmp_path / 'home'))
+    monkeypatch.setenv(extensions.CATALOG_VARIABLE, str(tmp_path / 'catalog'))
+    monkeypatch.setenv(HOME, str(tmp_path / 'storage'))
     monkeypatch.delenv(extensions.DISABLE_VARIABLE, raising=False)
     yield tmp_path
     for live, saved in zip((EXPANSIONS, EFFECT_BUILDERS, AGENTS), snapshot):
@@ -103,6 +106,14 @@ def test_an_extension_that_leaves_cards_undealt_fails(isolated):
     (error,) = [t for level, t in report.findings if level == 'error']
     assert 'left over when dealing' in error and 'Age I at 4 players' in error and 'Age III at 3 players' in error
     assert report.markdown().startswith('#### ❌ extension')
+
+
+def test_the_check_replaces_a_switched_on_catalog_copy(isolated):
+    extensions.scaffold(isolated / 'catalog' / 'mini', 'mini', 'Mini', author='tester')
+    extensions.activate('mini')  # the shipped copy is on; the pull request changes the folder
+    report = contrib.check_extension(_extension(isolated), games=1)
+    assert report.passed, report.markdown()
+    assert extensions.REGISTRY.extensions['mini'].location == str(isolated / 'extensions' / 'mini')
 
 
 def test_extension_check_reports_contribution_problems(isolated):

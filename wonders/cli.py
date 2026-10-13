@@ -225,7 +225,7 @@ def ext_list():
     registry = ensure_loaded()
     click.echo(f'extensions home: {os.pathsep.join(map(str, extensions_homes()))}')
     if not registry.extensions:
-        click.echo('no extensions installed (try: wonders ext new my-expansion)')
+        click.echo('no extensions installed (browse the community ones: wonders ext catalog)')
         return
     for ext_id, info in sorted(registry.extensions.items()):
         m = info.manifest
@@ -236,6 +236,62 @@ def ext_list():
             note = '' if m.rules_version == RULES_VERSION else f' (engine implements {RULES_VERSION})'
             click.echo(f'  made for rules version {m.rules_version}{note}')
         click.echo('  provides: ' + (', '.join(info.provides) or 'nothing'))
+
+
+@ext.command(name='catalog')
+@click.argument('query', nargs=-1)
+def ext_catalog(query):
+    """Search the community extensions shipped with the game (every word must match; none: list all)."""
+    from wonders.extensions import catalog, catalog_homes
+
+    entries = catalog(' '.join(query))
+    if not entries:
+        where = os.pathsep.join(map(str, catalog_homes())) or 'no catalog folder'
+        raise click.ClickException(f'no catalog extension matches {" ".join(query)!r} ({where})')
+    for entry in entries:
+        info = entry.to_dict()
+        state = 'on' if entry.active else 'off'
+        if entry.loaded and entry.loaded != 'catalog':
+            state = f'installed as a {entry.loaded}'
+        click.echo(
+            f'{info["id"]} {info["version"]} [{state}] {info["name"]}'
+            + (f' by {info["author"]}' if info['author'] else '')
+        )
+        if info['description']:
+            click.echo(f'  {info["description"]}')
+        parts = [f'{info["cards"]} cards'] if info['cards'] else []
+        parts += [f'boards: {", ".join(info["wonders"])}'] if info['wonders'] else []
+        parts += [f'colours: {", ".join(info["colors"])}'] if info['colors'] else []
+        if parts:
+            click.echo('  ' + '; '.join(parts))
+    click.echo('switch one on with: wonders ext enable <id>')
+
+
+@ext.command(name='enable')
+@click.argument('extension_id')
+def ext_enable(extension_id):
+    """Switch a catalog extension on: its expansions join the menu and the CLI from now on."""
+    from wonders.extensions import activate
+
+    try:
+        entry = activate(extension_id, True)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from None
+    names = ', '.join(e.get('name', e['id']) for e in entry.manifest.expansions) or entry.manifest.name
+    click.echo(f'{entry.manifest.id} is on: {names} can be chosen (e.g. wonders play -e base -e {entry.manifest.id})')
+
+
+@ext.command(name='disable')
+@click.argument('extension_id')
+def ext_disable(extension_id):
+    """Switch a catalog extension off (saved games that used it still replay)."""
+    from wonders.extensions import activate
+
+    try:
+        activate(extension_id, False)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from None
+    click.echo(f'{extension_id} is off')
 
 
 @ext.command(name='validate')

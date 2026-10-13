@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+* **Community expansions catalog**: the data extensions in `extensions/` ship with the package
+  (`wonders/catalog/`, copied by the new `setup.py` build hook; a checkout reads `extensions/`). The GUI
+  has a "Community expansions" page (header and menu) to search them by name, author, card or board and
+  switch them on or off; on the command line `wonders ext catalog [words]`, `wonders ext enable <id>`
+  and `wonders ext disable <id>`. Switched-on ids live in `$WONDERS_HOME/extensions.json` and load at
+  every start; saved games and records that used a catalog expansion load it on demand
+  (`extensions.provide`). Your own extensions folder takes precedence over the catalog.
 * **Rinascita**, the project's first community expansion (`extensions/rinascita/`, data only): from
   plague to enlightenment in three Ages (a harsh Age I of debt and plunder, Patronage with the new Arts
   colour, Enlightenment science), one card per player per Age, two guilds and three wonder boards, with

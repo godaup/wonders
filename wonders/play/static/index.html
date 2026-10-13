@@ -59,6 +59,19 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .chip-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line);
   border-radius: 999px; background: var(--panel-2); }
 .chip-toggle.disabled { opacity: .5; }
+.m-more { margin-top: 10px; font-size: 13px; }
+
+/* community extensions (the catalog) */
+#catalog { max-width: 860px; margin: 24px auto; display: grid; gap: 16px; }
+#c-search { width: 100%; font-size: 15px; padding: 8px 12px; }
+.c-list { display: grid; gap: 12px; }
+.c-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: start; }
+.c-item h3 { margin: 0; }
+.c-item p { margin: 0; }
+.c-item .c-facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.c-fact { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); }
+.c-item.on { border-color: var(--accent, var(--line)); }
+@media (max-width: 600px) { .c-item { grid-template-columns: minmax(0, 1fr); } }
 .seat-row { display: grid; grid-template-columns: 34px 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 6px; }
 .seat-row .num { color: var(--muted); font-variant-numeric: tabular-nums; }
 .blurb { font-size: 12px; color: var(--muted); grid-column: 2 / 4; margin: -2px 0 4px; }
@@ -437,6 +450,7 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
     <button id="btn-record" class="hidden" data-i18n>Download record</button>
     <button id="btn-games" class="hidden" data-i18n>Past games</button>
     <button id="btn-achievements" class="hidden" data-i18n>Achievements</button>
+    <button id="btn-catalog" data-i18n>Community expansions</button>
     <button id="btn-builder" data-i18n>Expansion builder</button>
     <button id="btn-menu" class="hidden" data-i18n>New game</button>
   </div>
@@ -447,6 +461,7 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
     <div class="panel">
       <p class="section-title" data-i18n>Expansions</p>
       <div class="expansions" id="m-expansions"></div>
+      <div class="m-more"><a href="#extensions" id="m-catalog" data-i18n>Find more expansions…</a></div>
     </div>
     <div class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -541,6 +556,14 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
       <div class="elo-head"><h2 data-i18n>Achievements</h2><span class="muted" id="a-summary"></span></div>
       <div id="a-grid"></div>
     </div>
+  </section>
+  <section id="catalog" class="hidden">
+    <div class="panel">
+      <p class="section-title" data-i18n>Community expansions</p>
+      <p class="muted" style="margin:0 0 10px" data-i18n>Expansions made by players and shipped with the game. Switch one on and it joins the expansions of the game menu.</p>
+      <input id="c-search" type="search" data-i18n-attrs="placeholder" placeholder="Search by name, author, card or board">
+    </div>
+    <div class="c-list" id="c-list"></div>
   </section>
   <section id="builder" class="hidden">
     <aside class="panel b-side">
@@ -654,8 +677,8 @@ const builtParam = (built) => (built && typeof built === 'object'
   ? (built.stage_slots && built.stage_slots.length ? built.stage_slots.map((s) => 's' + (s[0] + 1)).join(',') : built.stages_built || 0)
   : built || 0);
 const wonderUrl = (name, side, built) => '/api/wonder.svg?name=' + encodeURIComponent(name) + '&side=' + side + '&built=' + builtParam(built) + assetV();
-const PAGES = ['menu', 'game', 'result', 'history', 'achievements', 'builder'];
-const HASHES = { history: '#games', achievements: '#achievements', builder: '#builder' };  // pages a reload or link can open
+const PAGES = ['menu', 'game', 'result', 'history', 'achievements', 'catalog', 'builder'];
+const HASHES = { history: '#games', achievements: '#achievements', catalog: '#extensions', builder: '#builder' };  // pages a reload or link can open
 const show = (id) => {
   PAGES.forEach((s) => $(s).classList.toggle('hidden', s !== id));
   const hash = HASHES[id] || '';
@@ -1046,11 +1069,13 @@ function setHeader() {
   $('btn-games').classList.toggle('hidden', !options || !options.saving || current === 'history');
   $('btn-achievements').classList.toggle('hidden', !options || !options.saving || current === 'achievements');
   $('btn-builder').classList.toggle('hidden', current === 'builder' || current === 'game');
+  $('btn-catalog').classList.toggle('hidden', current === 'catalog' || current === 'game');
   $('m-resume').classList.toggle('hidden', !state || state.done);
   $('h-discard').classList.toggle('hidden', !state || current !== 'game');
   if (state && state.observation) $('h-discard-n').textContent = t('{n} discarded', { n: state.observation.discard_count });
-  if (current === 'history' || current === 'achievements' || current === 'builder') {
-    const title = { history: N('Past games'), achievements: N('Achievements'), builder: N('Expansion builder') }[current];
+  if (current === 'history' || current === 'achievements' || current === 'catalog' || current === 'builder') {
+    const title = { history: N('Past games'), achievements: N('Achievements'), catalog: N('Community expansions'),
+      builder: N('Expansion builder') }[current];
     $('status').replaceChildren(el('b', {}, t(title))); return;
   }
   if (!state || inMenu) { $('status').textContent = ''; return; }
@@ -1549,16 +1574,74 @@ $('h-lang').addEventListener('change', async (e) => {
   renderLanguages();
   const current = page();
   if (current === 'menu') openMenu(); else if (current === 'history') openHistory();
-  else if (current === 'achievements') openAchievements(); else if (current === 'builder') openBuilder(); else render();
+  else if (current === 'achievements') openAchievements(); else if (current === 'builder') openBuilder();
+  else if (current === 'catalog') openCatalog(); else render();
   if (state && state.done) pollAnalysis();
 });
+
+/* ---------- community expansions: search the catalog, switch extensions on and off ---------- */
+const debounce = (fn, ms) => { let timer = null; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); }; };
+let catalogQuery = '';
+async function openCatalog() {
+  show('catalog'); setHeader();
+  $('c-search').value = catalogQuery;
+  await loadCatalog();
+}
+async function loadCatalog() {
+  try {
+    const { extensions } = await api('/api/catalog?q=' + encodeURIComponent(catalogQuery));
+    renderCatalog(extensions);
+  } catch (e) { $('c-list').replaceChildren(el('p', { class: 'error' }, e.message)); }
+}
+function renderCatalog(extensions) {
+  if (!extensions.length) {
+    $('c-list').replaceChildren(el('p', { class: 'panel muted' }, catalogQuery ? t('No community expansion matches “{query}”.', { query: catalogQuery })
+      : t('No community expansions are shipped with this installation.')));
+    return;
+  }
+  $('c-list').replaceChildren(...extensions.map((x) => {
+    const own = x.loaded && x.loaded !== 'catalog';  // the same id from your own extensions folder (or a plugin) wins
+    const facts = [
+      x.cards ? t('{n} cards', { n: x.cards }) : null,
+      ...x.wonders.map((w) => t('Board: {name}', { name: nm(w) })),
+      ...x.colors.map((c) => t('New colour: {name}', { name: t(c) })),
+      x.version ? t('version {version}', { version: x.version }) : null,
+      x.license || null,
+    ].filter(Boolean);
+    const button = own ? el('span', { class: 'muted' }, t('installed in your extensions folder'))
+      : el('button', { class: x.active ? '' : 'primary', onclick: () => toggleExtension(x.id, !x.active, button) },
+        x.active ? t('Switch off') : t('Switch on'));
+    return el('div', { class: 'panel c-item' + (x.active || own ? ' on' : '') },
+      el('div', {}, el('h3', {}, x.name, ' ', el('span', { class: 'muted', style: 'font-weight:400;font-size:13px' },
+        x.author ? t('by {author}', { author: x.author }) : '')),
+        x.description ? el('p', {}, x.description) : null),
+      button, el('div', { class: 'c-facts' }, facts.map((f) => el('span', { class: 'c-fact' }, f))));
+  }));
+}
+async function toggleExtension(id, active, button) {
+  button.disabled = true;
+  try {
+    await api('/api/catalog/activate', { id, active });
+    await loadOptions();  // the menu's expansions, boards and colours
+    const known = new Set(options.expansions.map((e) => e.id));
+    menu.expansions = menu.expansions.filter((e) => known.has(e));
+    if (active) {
+      const exp = (options.expansions || []).find((e) => e.id === id);
+      if (exp && !menu.expansions.includes(id)) menu.expansions = [...menu.expansions, id];  // ready for the next game
+    }
+    store.set('menu', menu);
+  } catch (e) { alert(e.message); }
+  await loadCatalog();
+}
+$('c-search').addEventListener('input', debounce((e) => { catalogQuery = e.target.value.trim(); loadCatalog(); }, 200));
+$('btn-catalog').addEventListener('click', openCatalog);
+$('m-catalog').addEventListener('click', (e) => { e.preventDefault(); openCatalog(); });
 
 /* ---------- expansion builder: colours, cards, wonder boards and meta rules of a data extension ---------- */
 let builder = null;  // { info, projects, project, previousId, isNew, idTouched, tab, dirty, card, wonder, check, balance }
 const B_TABS = [['overview', N('Overview')], ['colors', N('Colours')], ['cards', N('Cards')], ['wonders', N('Wonders')],
   ['test', N('Test & share')]];
 const B_SECTIONS = { general: 'overview', rules: 'overview', colors: 'colors', cards: 'cards', wonders: 'wonders' };
-const debounce = (fn, ms) => { let timer = null; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); }; };
 const slug = (s) => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 const svgSrc = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 
@@ -2236,6 +2319,7 @@ window.addEventListener('beforeunload', (e) => { if (builder && builder.dirty) {
   if (options.saving && location.hash === HASHES.history) openHistory();
   else if (options.saving && location.hash === HASHES.achievements) openAchievements();
   else if (location.hash === HASHES.builder) openBuilder();
+  else if (location.hash === HASHES.catalog) openCatalog();
   else render();
 })();
 </script>

@@ -59,6 +59,8 @@ The report is posted on the pull request. After the merge,
 
 ## Using them
 
-These folders are ordinary extension folders: point the game at them
-(`WONDERS_EXTENSIONS=extensions`, several folders separated by `:` — `;` on Windows) or copy one to
-`~/.wonders/extensions`. See the [extensions guide](../docs/extensions.md).
+Every folder here ships with the game as its **catalog** of community extensions: switch one on in
+the GUI ("Community expansions") or with `wonders ext enable <id>` (`wonders ext catalog` searches them).
+While you work on one, point the game at the folder itself (`WONDERS_EXTENSIONS=extensions`, several
+folders separated by `:`, `;` on Windows) or copy it to `~/.wonders/extensions`: your own folder takes
+precedence over the catalog's copy. See the [extensions guide](../docs/extensions.md).

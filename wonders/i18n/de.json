@@ -1067,5 +1067,20 @@
   "Typical error of the rate card on the official items": "Typischer Fehler der Bewertungstabelle bei den offiziellen Elementen",
   "{players} players: {cards} cards": "{players} Spieler: {cards} Karten",
   "({n} left over)": "({n} übrig)",
-  "Age III with the base game:": "Zeitalter III mit dem Grundspiel:"
+  "Age III with the base game:": "Zeitalter III mit dem Grundspiel:",
+
+  "Community expansions": "Community-Erweiterungen",
+  "Expansions made by players and shipped with the game. Switch one on and it joins the expansions of the game menu.": "Von Spielern gestaltete Erweiterungen, die mit dem Spiel ausgeliefert werden. Eingeschaltet erscheint eine Erweiterung im Spielmenü.",
+  "Search by name, author, card or board": "Nach Name, Autor, Karte oder Weltwunder suchen",
+  "Find more expansions…": "Weitere Erweiterungen finden …",
+  "No community expansion matches “{query}”.": "Keine Community-Erweiterung passt zu „{query}“.",
+  "No community expansions are shipped with this installation.": "Diese Installation enthält keine Community-Erweiterungen.",
+  "{n} cards": "{n} Karten",
+  "Board: {name}": "Weltwunder: {name}",
+  "New colour: {name}": "Neue Farbe: {name}",
+  "version {version}": "Version {version}",
+  "by {author}": "von {author}",
+  "installed in your extensions folder": "in deinem Erweiterungsordner installiert",
+  "Switch on": "Einschalten",
+  "Switch off": "Ausschalten"
 }
