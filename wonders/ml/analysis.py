@@ -583,7 +583,7 @@ def unknown_content(record: GameRecord, checkpoint: Optional[str] = None) -> Opt
         missing += sorted({p.wonder for p in record.players} - known_boards)
     if not missing:
         return None
-    owners = []
+    owners: List[Message] = []
     for exp in Ruleset.of(*record.expansions).expansions:
         raw = REGISTRY.expansion_raw(exp) or read_expansion(exp)
         names = {str(item.get('name')) for item in raw.get('cards', []) + raw.get('wonders', [])}
@@ -596,7 +596,7 @@ def unknown_content(record: GameRecord, checkpoint: Optional[str] = None) -> Opt
     )
     return msg(
         text + 'It can analyse games with the official expansions.',
-        expansions={'join': ' + ', 'items': owners or ['?']},
+        expansions={'join': ' + ', 'items': owners or [msg('?')]},
         names=[msg(name) for name in missing[:3]],  # names in the reader's language
         more=len(missing) - 3,
     )
