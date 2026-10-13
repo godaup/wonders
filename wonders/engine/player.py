@@ -206,8 +206,17 @@ class Player:
     def builds_free(self, card: Card) -> bool:
         key = ('builds_free', card.name)  # a card's identity is its name
         if key not in self._cache:
-            self._cache[key] = any(effect.builds_free(card) for effect in self.iter_effects())
+            free = any(effect.builds_free(card) for effect in self.iter_effects())
+            if not free and card.color is not Color.WHITE and any(e.free_first_of_color() for e in self.iter_effects()):
+                free = not any(c.color is card.color for c in self.cards)  # Olympia day: first of its colour
+            self._cache[key] = free
         return self._cache[key]  # type: ignore[return-value]
+
+    def free_build_turns(self) -> Tuple[str, ...]:
+        """Turns of each Age whose card this city may build for free (``'first'`` / ``'last'``)."""
+        if 'free_turns' not in self._cache:
+            self._cache['free_turns'] = tuple(t for e in self.iter_effects() for t in e.free_build_turns())
+        return self._cache['free_turns']  # type: ignore[return-value]
 
     def bank_purchases(self) -> int:
         if 'bank' not in self._cache:

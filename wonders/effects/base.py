@@ -150,6 +150,14 @@ class Effect:
     def free_builds_per_age(self) -> int:
         return 0
 
+    def free_first_of_color(self) -> bool:
+        """The first card of each colour in the owner's city costs nothing (Olympia day, 2nd edition)."""
+        return False
+
+    def free_build_turns(self) -> Tuple[str, ...]:
+        """Turns of each Age (``'first'`` / ``'last'``) whose card may be built for free (Olympia night)."""
+        return ()
+
     def discard_builds(self) -> int:
         return 0
 

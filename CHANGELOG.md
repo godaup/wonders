@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+* **Second edition**: the 2020 base game (`base2`, `wonders/cards/data/base2.json`: 70 cards and 10 guilds,
+  7 boards with day and night sides) with its new powers (Olympia's first card of each colour, first and last
+  card of each Age; the Decorators Guild). An edition selector picks it: `Ruleset` takes one base game per
+  edition and refuses to mix editions, `with_edition` maps ids, the GUI menu has an edition select (Leaders,
+  Cities and the Wonder Pack are first edition only for now), and `wonders play|bench --edition 2`. The first
+  edition stays the default; records and saved games are unchanged. Design, sources and four unverified card
+  costs: `docs/editions.md`.
 * Post-game analysis of a game with an extension's cards (e.g. Rinascita) stopped with a bare card name
   (a `KeyError`: the bundled network was trained on the official cards only). `analysis.unknown_content`
   now checks the game's decks, leaders and boards against the network first, and the GUI and

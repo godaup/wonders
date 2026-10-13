@@ -10,6 +10,17 @@ AGENT_HELP = (
     "'neural' for the bundled trained network or 'neural:<checkpoint.pt>' (needs PyTorch)."
 )
 ML_MISSING = "this needs PyTorch: pip install 'wonders[ml]'"
+EDITION_HELP = 'Game edition: 1 = first (2010), 2 = second (2020); the expansions are taken in that edition.'
+
+
+def _expansions(expansion, edition):
+    """The ruleset's expansion ids for the ``-e`` choices in ``--edition`` (a CLI error if one lacks that edition)."""
+    from wonders.ruleset import Ruleset, with_edition
+
+    try:
+        return Ruleset.of(*with_edition(expansion, edition)).expansions
+    except ValueError as exc:
+        raise click.BadParameter(str(exc)) from exc
 
 
 def _ml():
@@ -98,10 +109,11 @@ def agents():
 @click.option('--agents', '-a', default='heuristic,greedy,random', show_default=True, help=AGENT_HELP)
 @click.option('--seed', default=0, type=int, show_default=True, help='RNG seed (decks, wonders, random agents).')
 @click.option('--expansion', '-e', multiple=True, default=('base',), help='Expansions to include.')
+@click.option('--edition', type=click.IntRange(1, 2), default=1, show_default=True, help=EDITION_HELP)
 @click.option('--side', type=click.Choice(['A', 'B', 'random']), default='random', show_default=True)
 @click.option('--record', 'record_path', type=click.Path(dir_okay=False), help='Save the game record as JSON.')
 @click.option('--quiet', '-q', is_flag=True, help='Only print the final scores.')
-def play(agents, seed, expansion, side, record_path, quiet):
+def play(agents, seed, expansion, edition, side, record_path, quiet):
     """Play one game between agents and print the transcript and scores."""
     from wonders.agents.match import play_match
     from wonders.cards.content import load_content
@@ -109,6 +121,7 @@ def play(agents, seed, expansion, side, record_path, quiet):
 
     specs = _lineup(agents)
     rng = random.Random(seed)
+    expansion = _expansions(expansion, edition)
     content = load_content(*expansion)
     wonders = list(dict.fromkeys(w.name for w in content.wonders))
     if len(specs) > len(wonders):
@@ -204,14 +217,16 @@ def replay(record_path, out, quiet):
 @click.option('--games', '-n', default=200, type=int, show_default=True, help='Number of games.')
 @click.option('--seed', default=0, type=int, show_default=True)
 @click.option('--expansion', '-e', multiple=True, default=('base',), help='Expansions to include.')
+@click.option('--edition', type=click.IntRange(1, 2), default=1, show_default=True, help=EDITION_HELP)
 @click.option('--side', type=click.Choice(['A', 'B', 'random']), default='random', show_default=True)
 @click.option('--processes', '-p', default=1, type=int, show_default=True, help='Worker processes.')
-def bench(agents, games, seed, expansion, side, processes):
+def bench(agents, games, seed, expansion, edition, side, processes):
     """Benchmark agents over many games (seats rotate; win rates with 95% CIs)."""
     from wonders.agents.bench import run_bench
 
+    expansions = _expansions(expansion, edition)
     result = run_bench(
-        _lineup(agents), n_games=games, seed=seed, expansions=tuple(expansion), sides=side, processes=processes
+        _lineup(agents), n_games=games, seed=seed, expansions=expansions, sides=side, processes=processes
     )
     click.echo(result.table())
 

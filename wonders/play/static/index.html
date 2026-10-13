@@ -56,6 +56,7 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 #menu { max-width: 760px; margin: 24px auto; display: grid; gap: 16px; }
 #menu .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .expansions { display: flex; flex-wrap: wrap; gap: 8px; }
+.m-edition { display: inline-flex; gap: 8px; align-items: center; margin-bottom: 10px; }
 .chip-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line);
   border-radius: 999px; background: var(--panel-2); }
 .chip-toggle.disabled { opacity: .5; }
@@ -460,6 +461,7 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
   <section id="menu" class="hidden">
     <div class="panel">
       <p class="section-title" data-i18n>Expansions</p>
+      <label class="m-edition"><span data-i18n>Edition</span> <select id="m-edition"></select></label>
       <div class="expansions" id="m-expansions"></div>
       <div class="m-more"><a href="#extensions" id="m-catalog" data-i18n>Find more expansions…</a></div>
     </div>
@@ -670,7 +672,9 @@ async function api(path, body) {
   if (!res.ok) throw new Error(data.error || res.statusText);
   return data;
 }
-const assetV = () => '&v=' + ((options && options.asset_version) || '0') + '&lang=' + encodeURIComponent(lang);
+// The editions share card names (Altar is worth 2 or 3): images come from the shown game's edition.
+const curEdition = () => (state && state.edition) || (menu && menu.edition) || 1;
+const assetV = () => '&v=' + ((options && options.asset_version) || '0') + '&lang=' + encodeURIComponent(lang) + '&edition=' + curEdition();
 const cardUrl = (name) => '/api/card.svg?name=' + encodeURIComponent(name) + assetV();
 // ``built``: a count, or a city (its built stages by index: the Great Wall builds in any order).
 const builtParam = (built) => (built && typeof built === 'object'
@@ -725,22 +729,38 @@ $('btn-theme').addEventListener('click', () => {
 function agentLabel(id) { const a = options.agents.find((x) => x.id === id); return a ? a.label : id === 'human' ? t('human') : id; }
 function agentElo(id) { const a = options.agents.find((x) => x.id === id); return a ? a.elo : null; }
 function agentBlurb(id) { const a = options.agents.find((x) => x.id === id); return (a && a.blurb) || t('A computer opponent.'); }
+const menuEdition = () => menu.edition || 1;
+// An expansion is offered in an edition when it has content for it (extension expansions: every edition).
+const inEdition = (e, ed) => e.edition === null || e.edition === undefined || e.edition === ed;
+const baseOf = (ed) => options.expansions.find((e) => e.family === 'base' && e.edition === ed) || { id: 'base' };
+function sideLabel(s) {
+  if (s === 'random') return t('Random');
+  if (menuEdition() === 2) return s === 'A' ? t('Day side') : t('Night side');  // the second edition's boards
+  return t('Side {side}', { side: s });
+}
 function availableWonders() {
-  const ids = new Set(['base', ...menu.expansions]);
+  const ed = menuEdition();
+  const offered = options.expansions.filter((e) => inEdition(e, ed)).map((e) => e.id);
+  const ids = new Set([baseOf(ed).id, ...menu.expansions.filter((id) => offered.includes(id))]);
   const ok = (e, w) => ((e.requires || {})[w] || []).every((r) => ids.has(r));  // Abu Simbel needs Leaders
   return options.expansions.filter((e) => ids.has(e.id)).flatMap((e) => e.wonders.filter((w) => ok(e, w)));
 }
 function renderMenu() {
+  const ed = menuEdition();
+  $('m-edition').replaceChildren(...(options.editions || [{ id: 1, name: t('First edition (2010)') }]).map((x) =>
+    el('option', { value: x.id, selected: x.id === ed }, x.name)));
   const exps = $('m-expansions'); exps.replaceChildren();
   for (const e of options.expansions) {
-    const fixed = e.id === 'base';
-    const box = el('input', { type: 'checkbox', checked: fixed || menu.expansions.includes(e.id), disabled: fixed || !e.implemented,
+    if (e.family === 'base' && e.edition !== ed) continue;  // the other edition's base game
+    const fixed = e.family === 'base', offered = inEdition(e, ed), usable = e.implemented && offered;
+    const box = el('input', { type: 'checkbox', checked: fixed || (offered && menu.expansions.includes(e.id)), disabled: fixed || !usable,
       onchange: (ev) => {
         menu.expansions = ev.target.checked ? [...menu.expansions, e.id] : menu.expansions.filter((x) => x !== e.id);
         renderMenu();
       } });
-    exps.append(el('label', { class: 'chip-toggle' + (e.implemented ? '' : ' disabled'), title: e.note || '' }, box, e.name,
-      e.implemented ? null : el('span', { class: 'muted' }, ' ' + t('(coming)'))));
+    const note = !e.implemented ? t('(coming)') : !offered ? t('(not in this edition)') : null;
+    exps.append(el('label', { class: 'chip-toggle' + (usable ? '' : ' disabled'), title: e.note || '' }, box, e.name,
+      note ? el('span', { class: 'muted' }, ' ' + note) : null));
   }
   const seats = $('m-seats'); seats.replaceChildren();
   menu.seats.forEach((seat, i) => {
@@ -766,10 +786,16 @@ function renderMenu() {
   $('m-wonder').replaceChildren(el('option', { value: 'random' }, t('Random')),
     ...wonders.map((w) => el('option', { value: w, selected: menu.wonder === w }, nm(w))));
   for (const [id, key] of [['m-side', 'side'], ['m-oside', 'opponent_sides']]) {
-    $(id).replaceChildren(...options.sides.map((s) => el('option', { value: s, selected: menu[key] === s }, s === 'random' ? t('Random') : t('Side {side}', { side: s }))));
+    $(id).replaceChildren(...options.sides.map((s) => el('option', { value: s, selected: menu[key] === s }, sideLabel(s))));
   }
   $('m-seed').value = menu.seed === null || menu.seed === undefined ? '' : menu.seed;
 }
+$('m-edition').addEventListener('change', (e) => {
+  menu.edition = Number(e.target.value);
+  const offered = options.expansions.filter((x) => inEdition(x, menu.edition)).map((x) => x.id);
+  menu.expansions = menu.expansions.filter((id) => offered.includes(id));  // e.g. Leaders: first edition only
+  renderMenu();
+});
 $('m-wonder').addEventListener('change', (e) => { menu.wonder = e.target.value; });
 $('m-side').addEventListener('change', (e) => { menu.side = e.target.value; });
 $('m-oside').addEventListener('change', (e) => { menu.opponent_sides = e.target.value; });

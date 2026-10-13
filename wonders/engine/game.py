@@ -20,7 +20,7 @@ from wonders.engine.actions import Action, ActionKind, DecisionKind, DecisionPoi
 from wonders.engine.phase import Phase
 from wonders.engine.player import SCIENCE_SET_VALUE, Player
 from wonders.engine.trade import Payment, cheapest_payment, payment_options
-from wonders.ruleset import Rules, rules_of
+from wonders.ruleset import Rules, has_family, rules_of
 
 # Where owed discard builds come from, in the order they resolve (Wonder Pack FAQ); a board's own
 # stages use their effect's priority (Halicarnassus 0, the Great Wall 1).
@@ -105,6 +105,7 @@ class Game:
         self.phase = Phase.SETUP
         self.age = 0
         self.turn = 0
+        self.last_turn = -1  # the current Age's last regular turn (set by age_steps)
         self.decision = DecisionKind.PLAY  # what the current decision point asks for
         self.discard_pile: List[Card] = []
         self._pending: List = []  # cross-player build effects queued until end of turn
@@ -132,7 +133,7 @@ class Game:
             self.left_of(i),
             self.right_of(i),
             tuple(self.players),
-            debt_tokens='cities' in self.expansions,
+            debt_tokens=has_family(self.expansions, 'cities'),
             final=self.phase is Phase.FINISHED,
         )
 
@@ -416,7 +417,8 @@ class Game:
         else:
             if not self._can_build_free(i, card):
                 raise IllegalAction(f'{player.name} has no free build for {card.name}')
-            player.free_builds_used += 1
+            if not self._free_turn(i):  # Olympia night's first / last card costs no per-Age allowance
+                player.free_builds_used += 1
         player.add_card(card)
         self._activate(i, card.effects, CARD)
         self._income(i, BuildEvent(card.color.value))
@@ -424,10 +426,19 @@ class Game:
     def _can_build_free(self, i: int, card: Card) -> bool:
         """Olympia's once-per-Age free build: offered only where it saves something."""
         player = self.players[i]
-        if player.free_builds_left <= 0 or player.has(card.name) or card.color is Color.WHITE:
+        if player.has(card.name) or card.color is Color.WHITE:
             return False  # leaders are recruited, not built
+        if player.free_builds_left <= 0 and not self._free_turn(i):
+            return False
         payment = self._card_payment(i, card)
         return payment is None or payment[0] + payment[1].total > 0
+
+    def _free_turn(self, i: int) -> bool:
+        """Olympia night (2nd edition): the card of the Age's first / last regular turn is free for seat ``i``."""
+        turns = self.players[i].free_build_turns()
+        if not turns or self.decision is not DecisionKind.PLAY:
+            return False
+        return ('first' in turns and self.turn == 0) or ('last' in turns and self.turn == self.last_turn)
 
     # -- legal actions & observation (DL-facing) ---------------------------
     def legal_actions(self, i: int, hand: List[Card]) -> List[Action]:
@@ -640,6 +651,7 @@ class Game:
                 player.free_builds_used = 0
         pass_left = self.phase.pass_left
         last_turn = first_turn + len(hands[0]) - 2
+        self.last_turn = last_turn
         for turn in range(first_turn, last_turn + 1):
             self.turn = turn
             actions = yield self._ask(DecisionKind.PLAY, {i: hands[i] for i in range(self.n)})

@@ -138,6 +138,39 @@ class FreeBuildPerAge(Effect):
 
 
 @dataclass
+class FreeFirstOfColor(Effect):
+    """Olympia day side (2nd edition): the first card of each colour in your city costs nothing."""
+
+    def free_first_of_color(self) -> bool:
+        return True
+
+
+@dataclass
+class FreeTurnBuild(Effect):
+    """Olympia night side (2nd edition): build the card of the Age's ``'first'`` / ``'last'`` turn for free."""
+
+    turn: str = 'first'
+
+    def __post_init__(self) -> None:
+        if self.turn not in ('first', 'last'):
+            raise ValueError(f"a free turn build is on the 'first' or 'last' turn, not {self.turn!r}")
+
+    def free_build_turns(self) -> Tuple[str, ...]:
+        return (self.turn,)
+
+
+@dataclass
+class WonderComplete(Effect):
+    """Decorators Guild (2nd edition): victory points only if every stage of your wonder is built."""
+
+    points: int = 7
+
+    def victory_points(self, ctx: Context) -> int:
+        player = ctx.player
+        return self.points if player.wonder_stages_built >= len(player.slots) else 0
+
+
+@dataclass
 class BuildFromDiscard(Effect):
     """Halicarnassus: at the end of the turn, build one discarded card for free.
 

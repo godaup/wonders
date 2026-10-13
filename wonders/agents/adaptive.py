@@ -34,7 +34,7 @@ from wonders.cards.content import load_content
 from wonders.engine.actions import Action, ActionKind
 from wonders.engine.game import CONFLICT_VALUE, DEFEAT_VALUE
 from wonders.engine.observation import CardView, CityView, Observation, _static_summary
-from wonders.ruleset import Ruleset
+from wonders.ruleset import Ruleset, has_family
 
 Spec = Dict[str, object]
 
@@ -80,7 +80,7 @@ def _catalog(expansions: Tuple[str, ...]) -> Dict[str, Tuple[str, Tuple[Dict[str
 
 
 def _turns_per_age(obs: Observation) -> int:
-    return 7 if 'cities' in obs.expansions else 6
+    return 7 if has_family(obs.expansions, 'cities') else 6
 
 
 def _turns_left(obs: Observation) -> int:

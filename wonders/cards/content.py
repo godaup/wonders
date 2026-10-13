@@ -40,6 +40,8 @@ from wonders.effects.library import (
     EntombLeader,
     ExtraRecruit,
     FreeBuildPerAge,
+    FreeFirstOfColor,
+    FreeTurnBuild,
     GainToken,
     Grant,
     LeaderDraw,
@@ -63,6 +65,7 @@ from wonders.effects.library import (
     Trade,
     VictoryIncome,
     VictoryPoints,
+    WonderComplete,
 )
 
 DATA_PACKAGE = 'wonders.cards'
@@ -146,6 +149,9 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     # Wonder Pack powers
     'buried_color': lambda s: BuriedColorTally(s.get('vp_each', 1), s.get('scope', 'neighbours')),
     'entomb_leader': lambda s: EntombLeader(s.get('count', 1)),
+    'free_first_of_color': lambda s: FreeFirstOfColor(),
+    'free_turn_build': lambda s: FreeTurnBuild(s.get('turn', 'first')),
+    'wonder_complete': lambda s: WonderComplete(s.get('points', 7)),
 }
 
 

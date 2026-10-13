@@ -289,6 +289,15 @@ analysis text without a German translation and on placeholder mismatches.
 `wonders/wonders.py` is now a thin public-API re-export (`from wonders.wonders import
 Game, Player, ...`).
 
+**Editions** (`docs/editions.md`): content is an expansion id per edition — `base` (first, 2010) and
+`base2` (second, 2020, `data/base2.json`). `Expansion.edition` (`None` = any, e.g. extensions) and
+`Expansion.family` (`base2` is a `base`); `Ruleset.of` takes one base game (implies `base`), refuses mixed
+editions, `Ruleset.edition`; check expansions with `Ruleset.uses` / `has_family(ids, 'cities')`, never
+`'cities' in ids`. `with_edition(ids, edition)` maps ids (GUI `GameConfig.edition`, CLI `--edition`). The
+editions share card names with other values, so the GUI image routes take `&edition=`. Second-edition powers:
+`free_first_of_color`, `free_turn_build` (`Game._free_turn`, a FREE action on the Age's first / last turn) and
+`wonder_complete`.
+
 **Expansions are optional and combinable** (`wonders/ruleset.py`). A `Ruleset.of('leaders',
 'cities')` composes any set of expansion ids (`base` always implied); combining is a
 union. Content merges via `load_content('base', 'leaders', 'cities')` — each expansion is

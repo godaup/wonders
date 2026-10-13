@@ -350,6 +350,25 @@ EFFECT_SCHEMAS: Dict[str, EffectSchema] = {
         (_count(),),
         {'count': 1},
     ),
+    'free_first_of_color': EffectSchema(
+        'First card of each colour free',
+        'Powers',
+        'The first card of each colour in your city costs nothing (Olympia, second edition).',
+    ),
+    'free_turn_build': EffectSchema(
+        'Free card on the first or last turn',
+        'Powers',
+        'Build the card of the first or the last turn of each Age for free (Olympia, second edition).',
+        (_p('turn', 'choice', 'Turn', default='first', choices=('first', 'last')),),
+        {'turn': 'first'},
+    ),
+    'wonder_complete': EffectSchema(
+        'Points for a complete wonder',
+        'Points',
+        'Victory points only if every stage of your wonder is built (Decorators Guild).',
+        (_p('points', 'int', 'Points', default=7),),
+        {'points': 7},
+    ),
 }
 
 
