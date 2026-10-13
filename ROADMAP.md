@@ -88,6 +88,8 @@ against the official rulebook before implementing it (as was done for Leaders an
 
 ### Armada (registered, `implemented=False`)
 
+Implementation plan: [`docs/armada-plan.md`](docs/armada-plan.md) (slices, open rule questions).
+
 * Naval boards attached to each wonder board with four ship tracks (red, yellow, blue, green):
   building a card of a colour can advance that colour's ship by paying the track cost.
 * Naval conflicts at the end of each Age (a second military comparison over the naval track,
