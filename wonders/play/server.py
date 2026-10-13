@@ -341,7 +341,7 @@ class PlayServer:
                     self.analysis.update(done=done, total=total)
 
         try:
-            from wonders.ml.analysis import analyse
+            from wonders.ml.analysis import UnknownContent, analyse
         except ImportError:
             result: Dict[str, Any] = {'status': 'unavailable', 'error': 'post-game analysis needs PyTorch'}
         else:
@@ -349,6 +349,8 @@ class PlayServer:
                 processes = max(1, min(6, (os.cpu_count() or 2) - 1))
                 report = analyse(record, seat, processes=processes, progress=progress)
                 result = {'status': 'done', 'report': report}
+            except UnknownContent as exc:  # e.g. a game with an extension's cards: say so in the page's language
+                result = {'status': 'unavailable', 'error': str(exc), 'reason': exc.message}
             except Exception as exc:  # pragma: no cover - surfaced to the page
                 result = {'status': 'error', 'error': str(exc)}
         with self.lock:
@@ -358,6 +360,8 @@ class PlayServer:
     def analysis_state(self, t: Translator = ENGLISH) -> Dict[str, Any]:
         with self.lock:
             state = dict(self.analysis)
+        if state.get('reason') is not None:
+            state['error'] = str(t.render(state.pop('reason')))
         if state.get('status') == 'done' and t.lang != DEFAULT:
             from wonders.ml.analysis import localize
 

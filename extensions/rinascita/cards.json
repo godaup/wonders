@@ -259,7 +259,8 @@
    "effects": [
     {
      "type": "bank_purchase",
-     "count": 1
+     "count": 1,
+     "description": "once per turn buy any 1 resource from the bank for 1 coin"
     },
     {
      "type": "coins",
@@ -396,7 +397,8 @@
    "effects": [
     {
      "type": "science_copy",
-     "count": 1
+     "count": 1,
+     "description": "at game end, copy one science symbol from a neighbour"
     }
    ],
    "at_players": [
@@ -421,7 +423,8 @@
     },
     {
      "type": "science_set_bonus",
-     "points": 2
+     "points": 2,
+     "description": "+2 VP per completed set of 3 science symbols"
     }
    ],
    "at_players": [
@@ -447,7 +450,8 @@
       "green",
       "blue"
      ],
-     "vp_each": 5
+     "vp_each": 5,
+     "description": "5 VP per set of one Arts, one green and one blue card"
     }
    ],
    "at_players": [
@@ -743,7 +747,8 @@
       },
       {
        "type": "science_set_bonus",
-       "points": 3
+       "points": 3,
+       "description": "+3 VP per completed set of 3 science symbols"
       }
      ]
     },
@@ -792,7 +797,8 @@
      "effects": [
       {
        "type": "science_copy",
-       "count": 1
+       "count": 1,
+       "description": "at game end, copy one science symbol from a neighbour"
       }
      ]
     },
@@ -810,7 +816,8 @@
       },
       {
        "type": "science_set_bonus",
-       "points": 2
+       "points": 2,
+       "description": "+2 VP per completed set of 3 science symbols"
       }
      ]
     }
@@ -847,7 +854,8 @@
      "effects": [
       {
        "type": "cash_defeats",
-       "coins_each": 2
+       "coins_each": 2,
+       "description": "gain 2 coins per defeat token, then discard all your defeat tokens"
       },
       {
        "type": "victory_points",

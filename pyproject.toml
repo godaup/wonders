@@ -45,6 +45,7 @@ dev = [
 ]
 ml = [
     "torch>=2.2",
+    "numpy>=1.26",  # torch warns without it ("Failed to initialize NumPy"); the vector envs use it
 ]
 
 [project.scripts]

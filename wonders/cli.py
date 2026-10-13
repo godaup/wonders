@@ -146,6 +146,7 @@ def analyse(record_path, seat, checkpoint, depth, worlds, candidates, processes,
     import json
 
     from wonders.engine.record import GameRecord
+    from wonders.ml.analysis import UnknownContent
     from wonders.ml.analysis import analyse as run_analysis
     from wonders.ml.analysis import summary_text
 
@@ -153,16 +154,19 @@ def analyse(record_path, seat, checkpoint, depth, worlds, candidates, processes,
         record = GameRecord.from_json(fh.read())
     if not 0 <= seat < len(record.players):
         raise click.BadParameter(f'the game has seats 0-{len(record.players) - 1}', param_hint='--seat')
-    report = run_analysis(
-        record,
-        seat,
-        checkpoint=checkpoint,
-        depth=depth,
-        worlds=worlds,
-        candidates=candidates,
-        processes=processes,
-        progress=lambda done, total: click.echo(f'\ranalysed {done}/{total} moves', nl=False),
-    )
+    try:
+        report = run_analysis(
+            record,
+            seat,
+            checkpoint=checkpoint,
+            depth=depth,
+            worlds=worlds,
+            candidates=candidates,
+            processes=processes,
+            progress=lambda done, total: click.echo(f'\ranalysed {done}/{total} moves', nl=False),
+        )
+    except UnknownContent as exc:
+        raise click.ClickException(str(exc)) from None
     click.echo()
     click.echo(summary_text(report))
     if out:

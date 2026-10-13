@@ -764,7 +764,7 @@ function renderMenu() {
   const wonders = availableWonders();
   if (menu.wonder !== 'random' && !wonders.includes(menu.wonder)) menu.wonder = 'random';
   $('m-wonder').replaceChildren(el('option', { value: 'random' }, t('Random')),
-    wonders.map((w) => el('option', { value: w, selected: menu.wonder === w }, nm(w))));
+    ...wonders.map((w) => el('option', { value: w, selected: menu.wonder === w }, nm(w))));
   for (const [id, key] of [['m-side', 'side'], ['m-oside', 'opponent_sides']]) {
     $(id).replaceChildren(...options.sides.map((s) => el('option', { value: s, selected: menu[key] === s }, s === 'random' ? t('Random') : t('Side {side}', { side: s }))));
   }
@@ -884,7 +884,11 @@ function statCell(symbol, value, label, tip) {
 function statGrid(city, cols) {
   const war = tokenSum(city.tokens);
   const sci = city.science || {};
-  const cities = state.expansions.includes('cities');
+  // Debt and diplomacy counters: whenever the game's cards or boards can hand out such tokens (or one is held).
+  const kinds = state.tokens || {};
+  const table = (state.observation && state.observation.table) || [];
+  const debt = kinds.debt || table.some((c) => c.debt), diplomacy = kinds.diplomacy || table.some((c) => c.diplomacy);
+  const cities = debt || diplomacy;
   const cells = [
     statCell(icon('coin', 'var(--gold)'), String(city.coins), t('Coins'), t('Coins (3 = 1 VP at the end)')),
     statCell(icon('shield', 'var(--red)'), String(city.shields), t('Shields'), t('Military strength, compared with both neighbours at the end of each Age')),
@@ -897,9 +901,10 @@ function statGrid(city, cols) {
         city.science_wilds ? el('span', { class: 'n' }, t('+{n} any', { n: city.science_wilds })) : null),
       el('div', { class: 'l' }, t('Science'))),
   ];
-  if (cities) {
-    cells.push(statCell(icon('coin', 'var(--red)'), String(city.debt || 0), t('Debt'), t('Debt tokens: −1 VP each')));
-    cells.push(statCell(icon('shield', 'var(--accent)'), String(city.diplomacy || 0), t('Diplomacy'), t('Diplomacy tokens: sit out the next military conflict')));
+  if (cities) {  // two cells keep the grid's rows even
+    cells.push(debt ? statCell(icon('coin', 'var(--red)'), String(city.debt || 0), t('Debt'), t('Debt tokens: −1 VP each')) : el('div'));
+    cells.push(diplomacy ? statCell(icon('shield', 'var(--accent)'), String(city.diplomacy || 0), t('Diplomacy'),
+      t('Diplomacy tokens: sit out the next military conflict')) : el('div'));
   }
   return cells;
 }
