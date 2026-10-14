@@ -27,10 +27,18 @@ class Action:
     # there is a choice (the Great Wall builds its stages in any order; the Manneken Pis picks the
     # Great Wall stage it copies). ``None`` builds the first affordable option. Not part of equality.
     stage: Optional[int] = field(default=None, compare=False)
+    # Armada: also undertake a Naval Construction (advance the fleet of the card's colour, or the wonder's
+    # fleet, paying its cost with the card's); on a DISCARD, sell to advance the yellow fleet instead of
+    # taking coins. Part of equality: it changes what happens (and the action-space index).
+    naval: bool = False
 
     def paying(self, left: int, right: int) -> 'Action':
         """This action with a chosen split of the trade between the neighbours."""
         return replace(self, payment=(left, right))
+
+    def with_naval(self) -> 'Action':
+        """This action with a Naval Construction (Armada)."""
+        return replace(self, naval=True)
 
     def staged(self, option: int) -> 'Action':
         """This WONDER action building the stage option ``option`` (see ``Game.stage_options``)."""
@@ -64,6 +72,8 @@ class DecisionKind(IdentityEnum):
     LEADER_BUILD = 'leader_build'  # Rome B: recruit an extra leader from hand right away (BUILD)
     COPY_LEADER = 'copy_leader'  # Courtesans' Guild: pick a neighbour's leader to copy (BUILD = pick)
     ENTOMB_LEADER = 'entomb_leader'  # Abu Simbel: pick a recruited leader to entomb (BUILD = pick)
+    EXPLORE = 'explore'  # Armada: keep one of the islands offered (BUILD = pick)
+    ADVANCE_FLEET = 'advance_fleet'  # Armada: advance a fleet of your choice for free (BUILD of a fleet = pick)
 
 
 @dataclass

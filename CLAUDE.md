@@ -315,8 +315,21 @@ coins), `GainToken` (immediate military token). `Tally` also gained `coins`
 metrics. Leader (white) cards are drafted separately so `build_age_deck` excludes
 them (`Content.leaders()`); Cities (black) cards carry **no player-count numerals** —
 `build_age_deck` draws `n_players` random black cards per Age (one extra card per
-player, so Cities deals 8 not 7). `armada` is registered but flagged
-`implemented=False` (`Ruleset.unimplemented`). Babel is not planned.
+player, so Cities deals 8 not 7). Babel is not planned.
+
+**Armada** (`armada.json` first edition, `armada2.json` second; `docs/armada.md`): Age cards with `"deck": "draw"`
+(N random per Age, like black cards), islands (`Content.islands`, colour `island`, `Card.level`), the four fleet
+cards (`Content.fleets`, picked in `ADVANCE_FLEET` decisions) and Shipyards (`Content.shipyards`: per-board costs,
+shared `tracks`; `Content.choices()` = every card an action may name). `Player.shipyard` / `fleets` / `islands` /
+`naval_tokens`; the current fleet spaces' effects are part of `iter_effects` (status), and `Game._advance_fleet`
+activates a space reached (coins, `tax`, `explores`). `Action.naval` (part of equality) adds a Naval Construction,
+paid with the card (`_card_payment(naval=True)`); a naval DISCARD sells for the yellow fleet. Taxes are collected in
+`_flush_pending` (highest only), `_naval_steps` resolves fleet choices and explorations (`EXPLORE`) before discard
+builds, `resolve_conflict` adds Boardings and `_resolve_naval`. Island draws are logged (`Game.island_log`,
+`GameRecord.islands`) so replays need no shuffle; moves with a Naval Construction are coded `B+` / `W+` / `D+` /
+`F+`. Meta rules `guild_vp_cap`, `naval_third_points`, `boarding_once`. `ScoreBreakdown.naval` / `islands` show in
+`as_dict` only in Armada games. The env's `ActionSpace(naval=True)` doubles the space; scripted agents sail through
+`Agent.naval` / `explore` / `advance_fleet` (`agents/naval.py`); `sample_world` refuses Armada positions.
 
 **Wonder Pack** (`wonderpack.json`, id `wonderpack`): boards may set `any_order` (Great Wall),
 `extra_coins` (Manneken Pis, via `Player.starting`), `requires` (Abu Simbel: `load_content` drops it

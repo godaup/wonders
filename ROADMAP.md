@@ -86,15 +86,14 @@ encoders and action space, add agent heuristics, and train a network whose vocab
 The summaries below are an outline from general knowledge of these expansions; check every rule
 against the official rulebook before implementing it (as was done for Leaders and Cities).
 
-### Armada (registered, `implemented=False`)
+### Armada
 
-* Naval boards attached to each wonder board with four ship tracks (red, yellow, blue, green):
-  building a card of a colour can advance that colour's ship by paying the track cost.
-* Naval conflicts at the end of each Age (a second military comparison over the naval track,
-  against every player, not just neighbours) with their own victory tokens.
-* Island cards explored via the blue track; new Age cards (shipyards and others) and new guilds.
-* Engine: a per-build optional "advance a ship" payment, the naval conflict resolution, island
-  decks; observation / encoder: ship positions per seat, naval strength, islands owned.
+**Done** (both editions, `docs/armada.md`): Shipyards and fleets, Naval Construction, Taxes and Pirates,
+islands, Boarding, naval conflicts, Siracusa, records, the GUI and scripted agents' naval play.
+
+**Open:** the printed Shipyard boards (only the rulebook's board is known; the others follow the cost
+pattern), search worlds and analysis for Armada positions, an encoder block for fleets and islands and a
+model trained with Armada, and the team / 8-player variants.
 
 ### Custom expansions
 

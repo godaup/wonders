@@ -99,7 +99,7 @@ def _t(query: Dict[str, Any]) -> Translator:
 
 @lru_cache(maxsize=1024)
 def _card_svg(name: str, lang: str = DEFAULT, edition: int = DEFAULT_EDITION) -> Optional[str]:
-    card = next((c for c in _all_content(edition).cards if c.name == name), None)
+    card = next((c for c in _all_content(edition).choices() if c.name == name), None)  # Armada: islands too
     return None if card is None else card_svg(card, _translator(lang))
 
 

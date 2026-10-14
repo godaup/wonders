@@ -174,7 +174,7 @@ def test_server_rates_and_reports_strength(builder_url, monkeypatch):  # noqa: F
     assert 'error' in _call(builder_url + '/api/builder/rate', {'kind': 'card', 'spec': {'color': 'nope'}})
     _call(builder_url + '/api/builder/save', {'project': _project()})
     view = _call(builder_url + '/api/builder/strength?id=docks')
-    assert view['cards'][0]['name'] == 'Dock' and view['job'] is None
+    assert view['cards'][0]['name'] == 'Harbour Dock' and view['job'] is None
     with pytest.raises(Exception):
         _call(builder_url + '/api/builder/strength', {'id': 'nope', 'mode': 'items'})
 

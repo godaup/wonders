@@ -32,7 +32,8 @@ class IdentityEnum(enum.Enum):
     __hash__ = object.__hash__
 
 
-SCORE_COLUMNS = ('civilian', 'commercial', 'guilds', 'leaders', 'cities')  # where a colour's card VP are scored
+# Where a colour's card VP are scored.
+SCORE_COLUMNS = ('civilian', 'commercial', 'guilds', 'leaders', 'cities', 'islands')
 _COLOR_ID = re.compile(r'[a-z][a-z0-9_-]{0,31}')
 _HEX = re.compile(r'#[0-9a-fA-F]{6}')
 
@@ -281,6 +282,10 @@ class Card:
     at_players: Tuple[int, ...] = ()
     guild: bool = False
     age_cost: bool = False  # costs as many coins as the current Age (second-edition leaders)
+    # Which pile the card belongs to: 'age' (dealt by its copy counts), 'draw' (Armada: as many random cards
+    # of the Age as players), 'island' (Armada islands, by ``level``) or 'fleet' (Armada: a fleet to advance).
+    deck: str = 'age'
+    level: Optional[int] = None  # an island's level (1-3)
 
     def __post_init__(self) -> None:
         self.effects = tuple(self.effects)

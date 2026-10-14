@@ -11,7 +11,7 @@ from collections import Counter
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from wonders.cards.base import Card, Color, Resource
-from wonders.cards.wonder import Wonder, WonderStage
+from wonders.cards.wonder import TRACK_SPACES, TRACKS, Shipyard, Wonder, WonderStage
 from wonders.effects.base import BuildEvent, Effect
 
 STARTING_COINS = 3
@@ -51,6 +51,15 @@ class Player:
         self.discard_build_priorities: List[int] = []  # one per owed discard build (FAQ order)
         self.copied_leaders: List[Card] = []  # Courtesans' Guild: copied (not owned) leaders
         self.reserve_gained = False  # coins came from the reserve this turn (Berenice's bonus)
+        # Armada: the Shipyard board, each fleet's space (0 = start), islands in play, naval tokens, the seats
+        # that gave this player a Boarding token this Age, and owed explorations / choices of fleet.
+        self.shipyard: Optional[Shipyard] = None
+        self.fleets: Dict[str, int] = {t: 0 for t in TRACKS}
+        self.islands: List[Card] = []
+        self.naval_tokens: List[int] = []
+        self.boarded_by: List[int] = []
+        self.pending_explores: List[int] = []  # island levels to explore at the end of the turn
+        self.pending_fleet_choices: List[int] = []  # free advances of fleets of choice: k different fleets each
 
     @classmethod
     def starting(cls, name: str, wonder: Wonder, coins: int = STARTING_COINS) -> 'Player':
@@ -123,6 +132,61 @@ class Player:
         options = self.stage_options()
         return options[0][1] if options else None
 
+    # -- Armada ------------------------------------------------------------
+    def advance_fleet(self, track: str) -> None:
+        """Move the ``track`` fleet one space (callers check it is not at the end)."""
+        self.fleets[track] += 1
+        self._cache.clear()
+        self.version += 1
+
+    def add_island(self, card: Card) -> None:
+        self.islands.append(card)
+        self._cache.clear()
+        self.version += 1
+
+    def naval_cost(self, track: str):
+        """The Naval Construction cost of advancing ``track`` (``None``: no shipyard, or the fleet is at the end)."""
+        if self.shipyard is None or self.fleets[track] >= TRACK_SPACES:
+            return None
+        return self.shipyard.costs[track][self.fleets[track]]
+
+    def wonder_track(self) -> Optional[str]:
+        """The fleet a wonder stage may advance (``None`` without one: no shipyard, or the Lost Island)."""
+        if self.shipyard is None or any(e.wonder_fleet_choice() for e in self.iter_effects()):
+            return None
+        return self.shipyard.wonder_track
+
+    def fleet_effects(self) -> Iterator[Effect]:
+        """The effects of the spaces the fleets are on (naval strength, commercial level, VP ...)."""
+        if self.shipyard is not None:
+            for track in TRACKS:
+                yield from self.shipyard.space(track, self.fleets[track])
+
+    def naval_strength(self) -> int:
+        return self._summed('naval_strength')
+
+    def commercial_level(self) -> int:
+        return self._summed('commercial_level')
+
+    def fleet_income(self) -> int:
+        return self._summed('fleet_income')
+
+    def coin_loss_immune(self) -> bool:
+        return any(e.coin_loss_immune() for e in self.iter_effects())
+
+    def naval_opt_out(self) -> bool:
+        return any(e.naval_opt_out() for e in self.iter_effects())
+
+    def far_trade(self) -> Dict[int, int]:
+        """Per seat offset (+2 / -2), how many resources may be bought there per build (Emporiums)."""
+        if 'far' not in self._cache:
+            far: Dict[int, int] = {}
+            for effect in self.iter_effects():
+                for offset, count, _price in effect.far_trade():
+                    far[offset] = far.get(offset, 0) + count
+            self._cache['far'] = far
+        return self._cache['far']  # type: ignore[return-value]
+
     # -- effect aggregation ------------------------------------------------
     def add_copied_leader(self, card: Card) -> None:
         """Courtesans' Guild: gain a neighbour leader's powers without owning the card."""
@@ -138,6 +202,10 @@ class Player:
             yield from stage.effects
         for card in self.copied_leaders:
             yield from card.effects
+        for card in self.islands:  # Armada
+            yield from card.effects
+        if self.shipyard is not None:
+            yield from self.fleet_effects()
 
     def production_slots(self) -> List[frozenset]:
         """Every resource this city can produce, one choice-set per slot (do not mutate)."""

@@ -40,6 +40,19 @@ Leaders / Cities powers:
     * ``leader_draws()``        -> leaders drawn from the box when built (Rome B stage 1)
     * ``extra_recruits()``      -> extra leaders the owner may recruit when built (Rome B)
     * ``leader_copies()``       -> neighbour leaders copied when built (Courtesans' Guild)
+
+Armada powers (fleet spaces of the Shipyard count as effects too, those of the space a fleet is on):
+
+    * ``naval_strength()``      -> naval strength in the naval conflicts
+    * ``commercial_level()``    -> the commercial level (protects from Taxes)
+    * ``tax()``                 -> raise a Tax when it enters play (end of turn, the highest applies)
+    * ``explores()``            -> island levels explored at the end of the turn
+    * ``island_draws()``        -> island levels whose top card comes into play at once
+    * ``fleet_advances()``      -> fleets advanced for free (by track)
+    * ``fleet_choices()``       -> free advances of fleets of the owner's choice (each entry: different fleets)
+    * ``boards()``              -> Boarding: seat offsets of the players given a Boarding token
+    * ``far_trade()``           -> purchases from the players two seats away (Emporiums)
+    * ``coin_loss_immune()``, ``naval_opt_out()``, ``fleet_income()``, ``wonder_fleet_choice()``
 """
 
 from __future__ import annotations
@@ -244,6 +257,57 @@ class Effect:
 
     def leader_copies(self) -> int:
         return 0
+
+    # -- Armada ------------------------------------------------------------
+    def naval_strength(self) -> int:
+        return 0
+
+    def commercial_level(self) -> int:
+        return 0
+
+    def tax(self) -> int:
+        """A Tax raised when this enters play: every other player loses this minus their commercial level."""
+        return 0
+
+    def explores(self) -> Tuple[int, ...]:
+        """Island levels to explore at the end of the turn this enters play (green fleet spaces)."""
+        return ()
+
+    def island_draws(self) -> Tuple[int, ...]:
+        """Island levels whose top card comes into play at once (no choice)."""
+        return ()
+
+    def fleet_advances(self) -> Tuple[str, ...]:
+        """Fleets (tracks) advanced one space for free when this enters play."""
+        return ()
+
+    def fleet_choices(self) -> Tuple[int, ...]:
+        """Free advances of fleets of the owner's choice: one entry per group of ``k`` different fleets."""
+        return ()
+
+    def boards(self) -> Tuple[int, ...]:
+        """Boarding: seat offsets (+2: left of the left neighbour, -2: right of the right one) given a token."""
+        return ()
+
+    def far_trade(self) -> Tuple[Tuple[int, int, int], ...]:
+        """``(seat offset, units per turn, price)``: resources the owner may buy from a non-neighbour."""
+        return ()
+
+    def coin_loss_immune(self) -> bool:
+        """No coin losses from other players' Taxes and Pirates."""
+        return False
+
+    def naval_opt_out(self) -> bool:
+        """May sit out a naval conflict."""
+        return False
+
+    def fleet_income(self) -> int:
+        """Coins each time one of the owner's fleets advances."""
+        return 0
+
+    def wonder_fleet_choice(self) -> bool:
+        """No fleet goes with the wonder: each wonder stage advances a fleet of the owner's choice for free."""
+        return False
 
     def counts(self) -> Optional[Dict[str, object]]:
         """What this effect pays per unit, for agents valuing combos (``None`` if nothing).

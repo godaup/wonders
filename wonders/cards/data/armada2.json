@@ -1,0 +1,2189 @@
+{
+ "meta": {
+  "edition": 2,
+  "sources": "docs/armada-data.md",
+  "shipyards": "board I is the one printed in both rulebooks; the others are generated from the official cost pattern (official: false) until the printed boards are transcribed",
+  "note": "Pier boards the player left of your left neighbour (the wiki; the first-edition Jetty: right)"
+ },
+ "colors": [
+  {
+   "id": "island",
+   "label": "Island",
+   "fill": "#2a8c86",
+   "score": "islands",
+   "tradeable": false
+  }
+ ],
+ "tracks": {
+  "red": [
+   [
+    {
+     "type": "naval_strength",
+     "strength": 1
+    }
+   ],
+   [
+    {
+     "type": "naval_strength",
+     "strength": 2
+    }
+   ],
+   [
+    {
+     "type": "naval_strength",
+     "strength": 3
+    }
+   ],
+   [
+    {
+     "type": "naval_strength",
+     "strength": 4
+    }
+   ],
+   [
+    {
+     "type": "naval_strength",
+     "strength": 5
+    }
+   ],
+   [
+    {
+     "type": "naval_strength",
+     "strength": 8
+    }
+   ]
+  ],
+  "yellow": [
+   [
+    {
+     "type": "commercial_level",
+     "level": 1
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 1
+    },
+    {
+     "type": "coins",
+     "amount": 2
+    },
+    {
+     "type": "tax",
+     "amount": 1
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 2
+    },
+    {
+     "type": "coins",
+     "amount": 3
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 2
+    },
+    {
+     "type": "coins",
+     "amount": 4
+    },
+    {
+     "type": "tax",
+     "amount": 2
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 3
+    },
+    {
+     "type": "coins",
+     "amount": 5
+    }
+   ],
+   [
+    {
+     "type": "commercial_level",
+     "level": 4
+    },
+    {
+     "type": "naval_strength",
+     "strength": 2
+    },
+    {
+     "type": "tax",
+     "amount": 4
+    }
+   ]
+  ],
+  "blue": [
+   [
+    {
+     "type": "victory_points",
+     "points": 1
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 2
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 4
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 6
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 8
+    }
+   ],
+   [
+    {
+     "type": "victory_points",
+     "points": 10
+    },
+    {
+     "type": "naval_strength",
+     "strength": 1
+    }
+   ]
+  ],
+  "green": [
+   [],
+   [
+    {
+     "type": "explore",
+     "level": 1
+    }
+   ],
+   [],
+   [
+    {
+     "type": "explore",
+     "level": 2
+    }
+   ],
+   [],
+   [
+    {
+     "type": "explore",
+     "level": 3
+    }
+   ]
+  ]
+ },
+ "shipyards": [
+  {
+   "name": "Shipyard I",
+   "wonder_track": "red",
+   "official": true,
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "ore": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "Shipyard II",
+   "wonder_track": "yellow",
+   "official": false,
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "glass": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1,
+       "glass": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "wood": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "Shipyard III",
+   "wonder_track": "blue",
+   "official": false,
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1,
+       "glass": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "stone": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "wood": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "Shipyard IV",
+   "wonder_track": "green",
+   "official": false,
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "ore": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "stone": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "Shipyard V",
+   "wonder_track": "red",
+   "official": false,
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "glass": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1,
+       "glass": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "ore": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "Shipyard VI",
+   "wonder_track": "yellow",
+   "official": false,
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1,
+       "glass": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "wood": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "bricks": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  },
+  {
+   "name": "Shipyard VII",
+   "wonder_track": "blue",
+   "official": false,
+   "costs": {
+    "red": [
+     {
+      "resources": {
+       "ore": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "yellow": [
+     {
+      "resources": {
+       "bricks": 1
+      }
+     },
+     {
+      "resources": {
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "stone": 1,
+       "paper": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1,
+       "paper": 1
+      }
+     }
+    ],
+    "blue": [
+     {
+      "resources": {
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "glass": 1
+      }
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "wood": 1
+      }
+     },
+     {
+      "resources": {
+       "wood": 1,
+       "linen": 1
+      }
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "stone": 1
+      }
+     },
+     {
+      "resources": {
+       "paper": 1,
+       "linen": 1
+      }
+     }
+    ],
+    "green": [
+     {
+      "resources": {
+       "wood": 1
+      }
+     },
+     {
+      "coins": 2
+     },
+     {
+      "resources": {
+       "ore": 1,
+       "stone": 1
+      }
+     },
+     {
+      "coins": 3
+     },
+     {
+      "resources": {
+       "bricks": 1,
+       "wood": 1
+      }
+     },
+     {
+      "coins": 4
+     }
+    ]
+   }
+  }
+ ],
+ "cards": [
+  {
+   "name": "Dry Hold",
+   "color": "blue",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 1,
+     "description": "advance a fleet of your choice one space for free"
+    }
+   ]
+  },
+  {
+   "name": "Construction Zone",
+   "color": "blue",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 1,
+     "description": "advance a fleet of your choice one space for free"
+    }
+   ]
+  },
+  {
+   "name": "Pirate Hideout",
+   "color": "yellow",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "coins",
+     "amount": 3
+    },
+    {
+     "type": "pirates",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ]
+  },
+  {
+   "name": "Eastern Emporium",
+   "color": "yellow",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    4
+   ],
+   "effects": [
+    {
+     "type": "far_trade",
+     "target": "right2",
+     "count": 1,
+     "price": 1,
+     "description": "once per turn, buy 1 resource for 1 coin from the player right of your right neighbour"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "linen": 1
+    }
+   }
+  },
+  {
+   "name": "Coastal Defenses",
+   "color": "red",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "naval_strength",
+     "strength": 1
+    }
+   ],
+   "cost": {
+    "resources": {
+     "glass": 1
+    }
+   }
+  },
+  {
+   "name": "Pontoon",
+   "color": "red",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    4
+   ],
+   "effects": [
+    {
+     "type": "military",
+     "shields": 1
+    },
+    {
+     "type": "boarding",
+     "target": "right2",
+     "description": "Boarding: an extra military conflict with the player right of your right neighbour"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "paper": 1
+    }
+   }
+  },
+  {
+   "name": "Helmsman's Rest",
+   "color": "green",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "island_draw",
+     "level": 1,
+     "description": "put the top level 1 island into play"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "stone": 1
+    }
+   }
+  },
+  {
+   "name": "Cabinet of Explorers",
+   "color": "green",
+   "age": 1,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "science_most",
+     "count": 1,
+     "description": "at the end, one more of the science symbol you have most of"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "bricks": 1
+    }
+   }
+  },
+  {
+   "name": "Ship Repair",
+   "color": "blue",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 1,
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 2
+    }
+   ],
+   "cost": {
+    "resources": {
+     "ore": 1,
+     "glass": 1
+    }
+   }
+  },
+  {
+   "name": "Boathouse",
+   "color": "blue",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 1,
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 3
+    }
+   ],
+   "cost": {
+    "resources": {
+     "wood": 2,
+     "linen": 1
+    }
+   }
+  },
+  {
+   "name": "Pirate's Den",
+   "color": "yellow",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "coins",
+     "amount": 6
+    },
+    {
+     "type": "pirates",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ]
+  },
+  {
+   "name": "Western Emporium",
+   "color": "yellow",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    4
+   ],
+   "effects": [
+    {
+     "type": "far_trade",
+     "target": "left2",
+     "count": 2,
+     "price": 1,
+     "description": "twice per turn, buy 1 resource for 1 coin from the player left of your left neighbour"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "ore": 1,
+     "paper": 1
+    }
+   }
+  },
+  {
+   "name": "Fortified Port",
+   "color": "red",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "naval_strength",
+     "strength": 2
+    }
+   ],
+   "cost": {
+    "resources": {
+     "bricks": 1,
+     "paper": 1
+    }
+   }
+  },
+  {
+   "name": "Ballista",
+   "color": "red",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    4
+   ],
+   "effects": [
+    {
+     "type": "military",
+     "shields": 2
+    },
+    {
+     "type": "boarding",
+     "target": "left2",
+     "description": "Boarding: an extra military conflict with the player left of your left neighbour"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "bricks": 1,
+     "glass": 1,
+     "linen": 1
+    }
+   }
+  },
+  {
+   "name": "Cartographer's Office",
+   "color": "green",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "island_draw",
+     "level": 2,
+     "description": "put the top level 2 island into play"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "bricks": 1
+    }
+   }
+  },
+  {
+   "name": "Navigation Firm",
+   "color": "green",
+   "age": 2,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "science_most",
+     "count": 1,
+     "description": "at the end, one more of the science symbol you have most of"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "stone": 1,
+     "ore": 1,
+     "glass": 1
+    }
+   }
+  },
+  {
+   "name": "Harbor Master's Office",
+   "color": "blue",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 1,
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 4
+    }
+   ],
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "stone": 1,
+     "ore": 1,
+     "linen": 1
+    }
+   }
+  },
+  {
+   "name": "Naval Headquarters",
+   "color": "blue",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 1,
+     "description": "advance a fleet of your choice one space for free"
+    },
+    {
+     "type": "victory_points",
+     "points": 5
+    }
+   ],
+   "cost": {
+    "resources": {
+     "stone": 2,
+     "wood": 1,
+     "bricks": 1,
+     "paper": 1
+    }
+   }
+  },
+  {
+   "name": "Pirate Crew",
+   "color": "yellow",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 4
+    },
+    {
+     "type": "pirates",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "wood": 1,
+     "glass": 1
+    }
+   }
+  },
+  {
+   "name": "Port Customs",
+   "color": "yellow",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "tally",
+     "what": "commercial_level",
+     "vp_each": 2,
+     "scope": "self",
+     "description": "at the end, 2 VP per commercial level"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "ore": 2,
+     "stone": 1,
+     "bricks": 1
+    }
+   }
+  },
+  {
+   "name": "Coastal Fortifications",
+   "color": "red",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "naval_strength",
+     "strength": 3
+    }
+   ],
+   "cost": {
+    "resources": {
+     "stone": 2,
+     "bricks": 1,
+     "glass": 1
+    }
+   }
+  },
+  {
+   "name": "Pier",
+   "color": "red",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    4
+   ],
+   "effects": [
+    {
+     "type": "military",
+     "shields": 3
+    },
+    {
+     "type": "boarding",
+     "target": "left2",
+     "description": "Boarding: an extra military conflict with the player left of your left neighbour"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "wood": 3,
+     "paper": 1,
+     "linen": 1
+    }
+   }
+  },
+  {
+   "name": "Nautical Archives",
+   "color": "green",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "island_draw",
+     "level": 3,
+     "description": "put the top level 3 island into play"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "ore": 2,
+     "wood": 1,
+     "paper": 1
+    }
+   }
+  },
+  {
+   "name": "Circle of Captains",
+   "color": "green",
+   "age": 3,
+   "deck": "draw",
+   "at_players": [
+    3
+   ],
+   "effects": [
+    {
+     "type": "science_most",
+     "count": 1,
+     "description": "at the end, one more of the science symbol you have most of"
+    }
+   ],
+   "cost": {
+    "resources": {
+     "bricks": 2,
+     "stone": 1,
+     "ore": 1,
+     "linen": 1
+    }
+   }
+  }
+ ],
+ "islands": [
+  {
+   "name": "Overgrown Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "production",
+     "choice": [
+      "wood",
+      "ore"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Virgin Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "production",
+     "choice": [
+      "stone",
+      "bricks"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bronze Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "military",
+     "shields": 1
+    }
+   ]
+  },
+  {
+   "name": "Whistling Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "naval_strength",
+     "strength": 1
+    }
+   ]
+  },
+  {
+   "name": "Foggy Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "coin_loss_immunity",
+     "description": "no coin losses from other players' Taxes and Pirates"
+    }
+   ]
+  },
+  {
+   "name": "Topaz Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "blue",
+     "count": 1,
+     "description": "advance your blue fleet one space for free"
+    }
+   ]
+  },
+  {
+   "name": "Amber Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "yellow",
+     "count": 1,
+     "description": "advance your yellow fleet one space for free"
+    }
+   ]
+  },
+  {
+   "name": "Lost Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "wonder_fleet_choice",
+     "description": "each wonder stage advances a fleet of your choice for free"
+    }
+   ]
+  },
+  {
+   "name": "Inhabited Island",
+   "level": 1,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 3
+    }
+   ]
+  },
+  {
+   "name": "Abandoned Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "production",
+     "choice": [
+      "glass",
+      "paper",
+      "linen"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Iron Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "military",
+     "shields": 2
+    }
+   ]
+  },
+  {
+   "name": "Windy Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "naval_strength",
+     "strength": 2
+    }
+   ]
+  },
+  {
+   "name": "Forgotten Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "naval_opt_out",
+     "description": "may sit out each naval conflict"
+    }
+   ]
+  },
+  {
+   "name": "Ancient Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "resource_discount",
+     "target": "naval",
+     "amount": 1,
+     "description": "each Naval Construction costs 1 resource less"
+    }
+   ]
+  },
+  {
+   "name": "Stormy Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 2,
+     "description": "advance two different fleets of your choice one space for free"
+    }
+   ]
+  },
+  {
+   "name": "Wonderous Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "fleet_income",
+     "coins": 1,
+     "description": "+1 coin each time one of your fleets advances"
+    }
+   ]
+  },
+  {
+   "name": "Oasis of Statues",
+   "level": 2,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 5
+    }
+   ]
+  },
+  {
+   "name": "Pirate Oasis",
+   "level": 2,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 3
+    },
+    {
+     "type": "pirates",
+     "description": "all other players lose as many coins as their commercial level"
+    }
+   ]
+  },
+  {
+   "name": "Scarlet Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "military",
+     "shields": 3
+    }
+   ]
+  },
+  {
+   "name": "Breezy Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "naval_strength",
+     "strength": 3
+    }
+   ]
+  },
+  {
+   "name": "Torrential Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "advance_fleet",
+     "track": "any",
+     "count": 3,
+     "description": "advance three different fleets of your choice one space for free"
+    }
+   ]
+  },
+  {
+   "name": "Golden Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "science_wild",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "name": "Emerald Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "science_most",
+     "count": 1,
+     "description": "at the end, one more of the science symbol you have most of"
+    }
+   ]
+  },
+  {
+   "name": "Royal Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "victory_points",
+     "points": 7
+    }
+   ]
+  },
+  {
+   "name": "Lush Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "tally",
+     "what": "commercial_level",
+     "vp_each": 2,
+     "scope": "self",
+     "description": "at the end, 2 VP per commercial level"
+    }
+   ]
+  },
+  {
+   "name": "Rainbow Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "best_color",
+     "vp_each": 1,
+     "description": "at the end, 1 VP per card of the colour you have most of"
+    }
+   ]
+  },
+  {
+   "name": "Sheltered Archipelago",
+   "level": 3,
+   "effects": [
+    {
+     "type": "tally",
+     "what": "islands",
+     "vp_each": 2,
+     "scope": "self",
+     "description": "at the end, 2 VP per island you own"
+    }
+   ]
+  }
+ ],
+ "wonders": [
+  {
+   "name": "Siracusa",
+   "side": "A",
+   "starting_resource": "glass",
+   "any_order": true,
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "stone": 2,
+       "ore": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 1,
+       "description": "advance a fleet of your choice one space for free"
+      },
+      {
+       "type": "naval_strength",
+       "strength": 1
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "ore": 2,
+       "linen": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 1,
+       "description": "advance a fleet of your choice one space for free"
+      },
+      {
+       "type": "victory_points",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "wood": 2,
+       "paper": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 1,
+       "description": "advance a fleet of your choice one space for free"
+      },
+      {
+       "type": "military",
+       "shields": 1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Siracusa",
+   "side": "B",
+   "starting_resource": "glass",
+   "any_order": true,
+   "stages": [
+    {
+     "cost": {
+      "resources": {
+       "ore": 1,
+       "bricks": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "coins",
+       "amount": 6
+      },
+      {
+       "type": "pirates",
+       "description": "all other players lose as many coins as their commercial level"
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "ore": 2,
+       "wood": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "advance_fleet",
+       "track": "any",
+       "count": 2,
+       "description": "advance two different fleets of your choice one space for free"
+      }
+     ]
+    },
+    {
+     "cost": {
+      "resources": {
+       "wood": 2,
+       "paper": 1
+      }
+     },
+     "effects": [
+      {
+       "type": "military",
+       "shields": 1
+      },
+      {
+       "type": "naval_strength",
+       "strength": 1
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -13,7 +13,7 @@ neighbours (``Game`` → ``Player.slots``).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 from wonders.cards.base import Cost, Resource
 from wonders.effects.base import Effect
@@ -64,3 +64,28 @@ class Wonder:
         if not 1 <= index <= len(self.stages) or self.stages[index - 1].copy is not None:
             return ()
         return (self.stages[index - 1],)
+
+
+# Armada: the four naval tracks of a Shipyard board, in board order (each is also the card colour that advances it).
+TRACKS: Tuple[str, ...] = ('red', 'yellow', 'blue', 'green')
+TRACK_SPACES = 6  # spaces after the starting space
+
+
+@dataclass
+class Shipyard:
+    """An Armada Shipyard board: four naval tracks of six spaces after the start.
+
+    ``spaces[track][k]`` are the effects of space ``k + 1`` (the same on every board); ``costs[track][k]``
+    is the Naval Construction cost of moving onto it (different per board). ``wonder_track`` is the fleet
+    a wonder stage may advance. ``official`` is false for boards generated from the official cost pattern.
+    """
+
+    name: str
+    wonder_track: str
+    costs: Dict[str, Tuple[Cost, ...]]
+    spaces: Dict[str, Tuple[Tuple[Effect, ...], ...]]
+    official: bool = True
+
+    def space(self, track: str, position: int) -> Tuple[Effect, ...]:
+        """What the fleet gets at ``position`` on ``track`` (1-6); nothing at the start (0)."""
+        return self.spaces[track][position - 1] if position > 0 else ()

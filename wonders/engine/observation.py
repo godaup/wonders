@@ -88,7 +88,10 @@ def _static_summary(effect) -> Dict[str, object]:
 
 
 def _cost_dict(card_or_stage) -> Dict[str, object]:
-    cost = card_or_stage.cost
+    return _cost_value(card_or_stage.cost)
+
+
+def _cost_value(cost) -> Dict[str, object]:
     return {'coins': cost.coins, 'resources': {r.value: n for r, n in cost.resources.items()}}
 
 
@@ -143,6 +146,15 @@ class CityView:
     # Manneken Pis stage copying the Great Wall says which of its stages).
     stage_slots: List[List[int]] = field(default_factory=list)
     entombed: List[str] = field(default_factory=list)  # Abu Simbel: leaders placed face down (public)
+    # Armada (public): the Shipyard, each fleet's space (0-6), islands in play, naval strength, commercial
+    # level, naval tokens and the Boarding tokens received this Age.
+    shipyard: Optional[str] = None
+    fleets: Dict[str, int] = field(default_factory=dict)
+    islands: List[str] = field(default_factory=list)
+    naval_strength: int = 0
+    commercial_level: int = 0
+    naval_tokens: List[int] = field(default_factory=list)
+    boardings: int = 0
 
     def to_dict(self) -> Dict[str, object]:
         return self.__dict__.copy()
@@ -220,6 +232,11 @@ class Observation:
     # What a WONDER action may build, ``Action.staged(index)`` picks one: per option index, the board
     # stage (1-based), cost, effects and affordable. One entry unless the board offers a choice.
     stage_options: List[Dict[str, object]] = field(default_factory=list)
+    # Armada: the cost of each own fleet's next Naval Construction (None at the end), the fleet that goes with
+    # the wonder (None: none) and how many islands are left per level.
+    naval_costs: Dict[str, Optional[Dict[str, object]]] = field(default_factory=dict)
+    wonder_track: Optional[str] = None
+    island_decks: Dict[int, int] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, object]:
         return {
@@ -229,7 +246,10 @@ class Observation:
             'phase': self.phase,
             'n_players': self.n_players,
             'hand': [c.to_dict() for c in self.hand],
-            'legal_actions': [{'kind': a.kind.value, 'card': a.card.name} for a in self.legal_actions],
+            'legal_actions': [
+                {'kind': a.kind.value, 'card': a.card.name, **({'naval': True} if a.naval else {})}
+                for a in self.legal_actions
+            ],
             'wonder_stage_affordable': self.wonder_stage_affordable,
             'me': self.me.to_dict(),
             'left': self.left.to_dict(),
@@ -247,6 +267,9 @@ class Observation:
             'buy_prices': self.buy_prices,
             'expansions': self.expansions,
             'pass_left': self.pass_left,
+            'naval_costs': self.naval_costs,
+            'wonder_track': self.wonder_track,
+            'island_decks': self.island_decks,
         }
 
 
@@ -257,7 +280,7 @@ def _city_view(game: 'Game', seat: int, breakdown: Optional[Dict[str, int]] = No
     if breakdown is None:
         breakdown = game.score(seat).as_dict()
     stage = p.next_stage
-    return CityView(
+    view = CityView(
         seat=seat,
         name=p.name,
         coins=p.coins,
@@ -284,6 +307,15 @@ def _city_view(game: 'Game', seat: int, breakdown: Optional[Dict[str, int]] = No
         stage_slots=[[slot, variant] for slot, variant in zip(p.built_slots, p.built_variants)],
         entombed=[c.name for c in p.entombed],
     )
+    if p.shipyard is not None:  # Armada
+        view.shipyard = p.shipyard.name
+        view.fleets = dict(p.fleets)
+        view.islands = [c.name for c in p.islands]
+        view.naval_strength = p.naval_strength()
+        view.commercial_level = p.commercial_level()
+        view.naval_tokens = list(p.naval_tokens)
+        view.boardings = len(p.boarded_by)
+    return view
 
 
 def _card_view(game: 'Game', seat: int, card: Card) -> CardView:
@@ -410,7 +442,24 @@ def build_observation(
         expansions=list(game.expansions),
         pass_left=game.phase.pass_left if game.age else True,
         stage_options=stage_options if len(stage_options) > 1 else [],
+        **_naval_view(game, seat),
     )
+
+
+def _naval_view(game: 'Game', seat: int) -> Dict[str, Any]:
+    """Armada's private observation fields (nothing without a Shipyard)."""
+    player = game.players[seat]
+    if player.shipyard is None:
+        return {}
+    costs = {}
+    for track in player.fleets:
+        cost = player.naval_cost(track)
+        costs[track] = _cost_value(cost) if cost is not None else None
+    return {
+        'naval_costs': costs,
+        'wonder_track': player.wonder_track(),
+        'island_decks': {level: len(deck) for level, deck in sorted(game.island_decks.items())},
+    }
 
 
 def _board_view(game: 'Game', seat: int) -> WonderBoardView:

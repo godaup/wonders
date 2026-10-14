@@ -8,7 +8,8 @@ Age). Deck sizes here are counted exactly, without dealing:
 
 * Age cards contribute one copy per ``at_players`` entry up to the player count;
 * Age III draws ``players + extra_guilds`` guilds, or every guild when the pool is smaller;
-* Cities draws one black card per player and Age.
+* Cities draws one black card per player and Age, and so does Armada from its cards (``deck: draw``) used at
+  that player count.
 
 :func:`check_decks` reports what an expansion's cards and its ``extra_guilds`` rule do to the deck
 sizes: **errors** where cards are left over, **warnings** where the hand size changes without leftovers
@@ -56,7 +57,7 @@ class DeckSize:
 def deck_size(cards: Sequence[Card], age: int, players: int, extra_guilds: int = 2) -> DeckSize:
     """The size of ``age``'s deck at ``players`` (see the module docstring), counted without dealing."""
     size = 0
-    guilds = black = 0
+    guilds = black = drawn = 0
     for card in cards:
         if card.color is Color.WHITE or card.age != age:
             continue
@@ -64,13 +65,15 @@ def deck_size(cards: Sequence[Card], age: int, players: int, extra_guilds: int =
             guilds += 1
         elif card.color is Color.BLACK:
             black += 1
+        elif card.deck == 'draw':
+            drawn += card.copies_for(players) > 0
         else:
             size += card.copies_for(players)
     wanted = 0
     if age == 3:
         wanted = players + extra_guilds
         size += min(wanted, guilds)
-    size += min(players, black)
+    size += min(players, black) + min(players, drawn)
     return DeckSize(size, players, wanted, guilds)
 
 

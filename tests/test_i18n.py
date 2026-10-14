@@ -16,7 +16,7 @@ from wonders.cards.content import load_content
 from wonders.i18n import Translator, catalog, english, languages, msg
 from wonders.play.achievements import ACHIEVEMENTS
 from wonders.play.builder import builder_info
-from wonders.play.session import GameConfig, HumanSession, SeatConfig, menu_options
+from wonders.play.session import ARMADA_CATEGORIES, GameConfig, HumanSession, SeatConfig, menu_options
 from wonders.viz.render import card_svg, gallery_html, wonder_svg
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -69,9 +69,9 @@ def test_translator_formats_numbers_contexts_and_messages() -> None:
 def test_every_card_board_session_and_menu_text_has_a_german_translation() -> None:
     missing: Set[str] = set()
     t = Translator('de', missing=missing)
-    content = load_content('base', 'leaders', 'cities', 'wonderpack')
-    second = load_content('base2', 'leaders2', 'cities2')
-    for card in content.cards + second.cards:
+    content = load_content('base', 'leaders', 'cities', 'wonderpack', 'armada')
+    second = load_content('base2', 'leaders2', 'cities2', 'armada2')
+    for card in content.choices() + second.choices():
         card_svg(card, t)
     for wonder in content.wonders + second.wonders:
         wonder_svg(wonder, 1, t)
@@ -87,6 +87,8 @@ def test_every_card_board_session_and_menu_text_has_a_german_translation() -> No
         (['base', 'leaders', 'wonderpack'], 1),
         (['base'], 2),
         (['leaders', 'cities'], 2),
+        (['armada', 'cities'], 2),
+        (['armada'], 1),
     ):
         seats = [SeatConfig(), SeatConfig('greedy'), SeatConfig('heuristic')]
         session = HumanSession(GameConfig(expansions=expansions, seats=seats, seed=3, edition=edition), t=t)
@@ -94,7 +96,8 @@ def test_every_card_board_session_and_menu_text_has_a_german_translation() -> No
         for name in session.cards:
             session.card_info(name, t)
         while not session.done:
-            session.act(0)
+            actions = session.state(t)['observation']['actions']
+            session.act(next((a['index'] for a in actions if a.get('naval')), 0))  # Armada: sail when possible
         session.state(t)
     assert not missing, sorted(missing)
     svg = card_svg(content.card('Library'), Translator('de'))
@@ -146,7 +149,7 @@ def _gui_keys() -> Set[str]:
     keys |= {f'{ast.literal_eval(s)}|rating' for s in re.findall(QUOTED, order)}
     keys |= {f'{k}|kind' for k in ('build', 'wonder', 'discard', 'free')}
     keys |= {f'{r}|military' for r in ('win', 'tie', 'loss')}
-    keys |= {f'{c.capitalize()}|score' for c in CATEGORIES} | {'Wonder|action', 'you'}
+    keys |= {f'{c.capitalize()}|score' for c in CATEGORIES + ARMADA_CATEGORIES} | {'Wonder|action', 'you'}
     return keys
 
 

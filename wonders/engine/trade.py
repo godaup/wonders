@@ -15,6 +15,10 @@ Two Leaders/Cities extensions: ``waivers`` units of the cost may be skipped outr
 (cost discounts; the search waives whichever units are dearest), and ``bank`` extra
 slots sell any tradeable resource from the bank at ``bank_price`` (Bilkis). Coins paid
 to the bank are part of ``Payment.total`` but go to neither neighbour.
+
+Armada's Emporiums add ``far`` sources: the production of the player two seats away (``'far_left'`` /
+``'far_right'``), at most so many units per build at ``far_price``; those coins are ``Payment.far_left`` /
+``far_right``.
 """
 
 from __future__ import annotations
@@ -32,9 +36,11 @@ BANK_OPTIONS = frozenset(RAW_MATERIALS | MANUFACTURED_GOODS)
 class Payment:
     """A feasible way to pay a resource cost by trading."""
 
-    total: int  # coins paid for resources (neighbours + bank)
+    total: int  # coins paid for resources (neighbours + bank + far players)
     left: int  # of which, to the left neighbour
     right: int  # of which, to the right neighbour
+    far_left: int = 0  # of which, to the player left of the left neighbour (Armada's Western Emporium)
+    far_right: int = 0  # of which, to the player right of the right neighbour (Eastern Emporium)
 
     @property
     def traded(self) -> int:
@@ -42,14 +48,28 @@ class Payment:
         return self.left + self.right
 
 
-# A production slot is (side, options): side in {'self', 'left', 'right'}.
+# A production slot is (side, options): side in {'self', 'left', 'right', 'bank', 'far_left', 'far_right'}.
 Slot = Tuple[str, frozenset]
 
 PriceFn = Callable[[str, Resource], int]
 
 
+# Far sources: (side 'far_left' / 'far_right', that player's tradeable production, units per build).
+Far = Sequence[Tuple[str, Sequence[frozenset], int]]
+
+
 def _slots(side: str, production: Sequence[frozenset]) -> List[Slot]:
     return [(side, options) for options in production]
+
+
+def _far_slots(far: Far) -> Tuple[List[Slot], Dict[str, int]]:
+    slots: List[Slot] = []
+    limits: Dict[str, int] = {}
+    for side, production, count in far:
+        if count > 0 and production:
+            slots += _slots(side, production)
+            limits[side] = limits.get(side, 0) + count
+    return slots, limits
 
 
 def cheapest_payment(
@@ -61,6 +81,8 @@ def cheapest_payment(
     waivers: int = 0,
     bank: int = 0,
     bank_price: int = 1,
+    far: Far = (),
+    far_price: int = 1,
 ) -> Optional[Payment]:
     """Return the minimum-coin :class:`Payment`, or ``None`` if unaffordable.
 
@@ -75,6 +97,8 @@ def cheapest_payment(
     slots: List[Slot] = (
         _slots('self', own) + _slots('left', left) + _slots('right', right) + _slots('bank', [BANK_OPTIONS] * bank)
     )
+    if far:
+        return _cheapest_far(units, slots, price, waivers, bank_price, far, far_price)
 
     # Most-constrained unit first (fewest slots that can supply it) → strong pruning.
     def supply(resource: Resource) -> int:
@@ -138,6 +162,76 @@ def cheapest_payment(
     return Payment(total, l_paid, r_paid)
 
 
+def _cheapest_far(
+    units: List[Resource],
+    slots: List[Slot],
+    price: PriceFn,
+    waivers: int,
+    bank_price: int,
+    far: Far,
+    far_price: int,
+) -> Optional[Payment]:
+    """:func:`cheapest_payment` with far sources (kept apart so the common path stays as fast as it was)."""
+    options = _enumerate(units, slots, price, waivers, bank_price, far, far_price)
+    if not options:
+        return None
+    return min(options, key=lambda p: (p.total, p.left + p.right, p.left, p.far_left))
+
+
+def _enumerate(
+    units: List[Resource],
+    slots: List[Slot],
+    price: PriceFn,
+    waivers: int,
+    bank_price: int,
+    far: Far,
+    far_price: int,
+) -> List[Payment]:
+    """The cheapest payment per distinct split (left, right, far left, far right)."""
+    extra, limits = _far_slots(far)
+    slots = slots + extra
+    best: Dict[Tuple[int, int, int, int], int] = {}
+    used = [False] * len(slots)
+    taken: Dict[str, int] = {side: 0 for side in limits}
+
+    def rec(i: int, total: int, paid: Tuple[int, int, int, int], waived: int) -> None:
+        if i == len(units):
+            if paid not in best or total < best[paid]:
+                best[paid] = total
+            return
+        resource = units[i]
+        if waived < waivers:
+            rec(i + 1, total, paid, waived + 1)
+        tried = set()
+        for j, (side, opts) in enumerate(slots):
+            if used[j] or resource not in opts or (side, opts) in tried:
+                continue
+            if side in limits and taken[side] >= limits[side]:
+                continue
+            tried.add((side, opts))
+            if side == 'self':
+                add, slot = 0, -1
+            elif side == 'bank':
+                add, slot = bank_price, -1
+            elif side in limits:
+                add, slot = far_price, 2 if side == 'far_left' else 3
+            else:
+                add, slot = price(side, resource), 0 if side == 'left' else 1
+            new = list(paid)
+            if slot >= 0:
+                new[slot] += add
+            used[j] = True
+            if side in limits:
+                taken[side] += 1
+            rec(i + 1, total + add, (new[0], new[1], new[2], new[3]), waived)
+            if side in limits:
+                taken[side] -= 1
+            used[j] = False
+
+    rec(0, 0, (0, 0, 0, 0), 0)
+    return [Payment(total, *paid) for paid, total in best.items()]
+
+
 def payment_options(
     required: Counter,
     own: Sequence[frozenset],
@@ -147,6 +241,8 @@ def payment_options(
     waivers: int = 0,
     bank: int = 0,
     bank_price: int = 1,
+    far: Far = (),
+    far_price: int = 1,
 ) -> List[Payment]:
     """Every distinct way to split a purchase between the neighbours (cheapest first).
 
@@ -159,6 +255,12 @@ def payment_options(
     slots: List[Slot] = (
         _slots('self', own) + _slots('left', left) + _slots('right', right) + _slots('bank', [BANK_OPTIONS] * bank)
     )
+    if far:  # Armada's Emporiums: every split with the far players too, cheapest first
+        found = _enumerate(units, slots, price, waivers, bank_price, far, far_price)
+        return sorted(
+            (p for p in found if not any(q != p and _dominates(q, p) for q in found)),
+            key=lambda p: (p.total, p.left, p.right, p.far_left, p.far_right),
+        )
     best: Dict[Tuple[int, int], int] = {}
     used = [False] * len(slots)
 
@@ -194,3 +296,14 @@ def payment_options(
         return any(q != p and q.left <= p.left and q.right <= p.right and q.total <= p.total for q in options)
 
     return sorted((p for p in options if not dominated(p)), key=lambda p: (p.total, p.left, p.right))
+
+
+def _dominates(q: Payment, p: Payment) -> bool:
+    """``q`` pays nobody more than ``p`` and no more in total."""
+    return (
+        q.left <= p.left
+        and q.right <= p.right
+        and q.far_left <= p.far_left
+        and q.far_right <= p.far_right
+        and q.total <= p.total
+    )

@@ -22,9 +22,20 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 SCOPES = ('self', 'neighbours', 'both', 'others')
-TALLY_TARGETS = ('colors', 'wonder_stages', 'defeat_tokens', 'tokens', 'victory_tokens', 'coins', 'resource_symbols')
+TALLY_TARGETS = (
+    'colors',
+    'wonder_stages',
+    'defeat_tokens',
+    'tokens',
+    'victory_tokens',
+    'coins',
+    'resource_symbols',
+    'commercial_level',
+    'islands',
+)
 KINDS = ('int', 'bool', 'text', 'choice', 'resource', 'resources', 'slots', 'color', 'colors', 'target', 'symbol')
-GROUPS = ('Resources', 'Points', 'Coins', 'Military', 'Science', 'Trade', 'Powers', 'Leaders', 'Cities')
+GROUPS = ('Resources', 'Points', 'Coins', 'Military', 'Science', 'Trade', 'Powers', 'Leaders', 'Cities', 'Armada')
+FAR_TARGETS = ('left2', 'right2')  # the player left of the left neighbour / right of the right neighbour
 
 
 @dataclass(frozen=True)
@@ -443,6 +454,94 @@ EFFECT_SCHEMAS: Dict[str, EffectSchema] = {
         'Each time you build a wonder stage, every other player loses coins (Octavia).',
         (_p('amount', 'int', 'Coins', default=1),),
         {'amount': 1},
+    ),
+    # Armada
+    'naval_strength': EffectSchema(
+        'Naval strength',
+        'Armada',
+        'Strength in the naval conflicts at the end of each Age.',
+        (_p('strength', 'int', 'Strength', required=True),),
+        {'strength': 1},
+    ),
+    'commercial_level': EffectSchema(
+        'Commercial level',
+        'Armada',
+        'Taxes cost this many coins less (the yellow fleet spaces).',
+        (_p('level', 'int', 'Level', required=True),),
+        {'level': 1},
+    ),
+    'tax': EffectSchema(
+        'Tax',
+        'Armada',
+        'At the end of the turn every other player loses this many coins minus their commercial level.',
+        (_p('amount', 'int', 'Coins', required=True),),
+        {'amount': 1},
+    ),
+    'explore': EffectSchema(
+        'Explore an island',
+        'Armada',
+        'At the end of the turn, draw islands of this level and keep one.',
+        (_p('level', 'int', 'Level', required=True, help='1, 2 or 3'),),
+        {'level': 1},
+    ),
+    'island_draw': EffectSchema(
+        'Draw an island',
+        'Armada',
+        'Put the top island of this level into play at once.',
+        (_p('level', 'int', 'Level', required=True, help='1, 2 or 3'),),
+        {'level': 1},
+    ),
+    'advance_fleet': EffectSchema(
+        'Advance fleets',
+        'Armada',
+        'Advance fleets one space for free: one colour, or as many different fleets of your choice.',
+        (
+            _p('track', 'choice', 'Fleet', default='any', choices=('any', 'red', 'yellow', 'blue', 'green')),
+            _count(),
+        ),
+        {'track': 'any', 'count': 1},
+    ),
+    'boarding': EffectSchema(
+        'Boarding',
+        'Armada',
+        'An extra military conflict at the end of the Age with the player two seats away.',
+        (_p('target', 'choice', 'Player', required=True, choices=FAR_TARGETS),),
+        {'target': 'right2'},
+    ),
+    'far_trade': EffectSchema(
+        'Trade two seats away',
+        'Armada',
+        'Buy resources from the player two seats away, so many per turn.',
+        (
+            _p('target', 'choice', 'Player', required=True, choices=FAR_TARGETS),
+            _count(),
+            _p('price', 'int', 'Price', default=1, help='coins per resource'),
+        ),
+        {'target': 'left2', 'count': 1},
+    ),
+    'pirates': EffectSchema('Pirates', 'Armada', 'Every other player loses as many coins as their commercial level.'),
+    'coin_loss_immunity': EffectSchema(
+        'Safe from Taxes and Pirates', 'Armada', "Other players' Taxes and Pirates take no coins from you."
+    ),
+    'naval_opt_out': EffectSchema('Sit out naval conflicts', 'Armada', 'You may sit out each naval conflict.'),
+    'fleet_income': EffectSchema(
+        'Coins per fleet advance',
+        'Armada',
+        'Coins each time one of your fleets advances.',
+        (_p('coins', 'int', 'Coins', default=1),),
+        {'coins': 1},
+    ),
+    'wonder_fleet_choice': EffectSchema(
+        'Wonder fleet of your choice',
+        'Armada',
+        'No fleet goes with your wonder: each stage advances a fleet of your choice for free.',
+    ),
+    'best_color': EffectSchema(
+        'Best colour',
+        'Armada',
+        'At the end, points per card of the colour of Age cards you have most of.',
+        (_p('vp_each', 'int', 'Points each', default=1),),
+        {'vp_each': 1},
     ),
 }
 

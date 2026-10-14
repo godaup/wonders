@@ -129,7 +129,7 @@ def _project(**over: Any) -> Dict[str, Any]:
         'colors': [{'id': 'harbour', 'label': 'Harbour', 'fill': '#1f8a8a', 'score': 'civilian', 'tradeable': True}],
         'cards': [
             {
-                'name': 'Dock',
+                'name': 'Harbour Dock',
                 'color': 'harbour',
                 'age': 1,
                 'at_players': [3, 3, 3, 4, 5, 6, 7],
@@ -150,7 +150,7 @@ def test_save_load_play_and_delete_a_project(isolated):  # noqa: F811
     folder = isolated / 'home' / 'docks'
     data = json.loads((folder / 'cards.json').read_text())
     assert data['cards'][0] == {
-        'name': 'Dock',
+        'name': 'Harbour Dock',
         'color': 'harbour',
         'age': 1,
         'at_players': [3, 3, 3, 4, 5, 6, 7],
@@ -163,11 +163,11 @@ def test_save_load_play_and_delete_a_project(isolated):  # noqa: F811
     assert builder.load_project('docks')['rules'] == {'starting_coins': {'add': 2}, 'discard_coins': 2}
     assert Ruleset.of('docks').rules.changed() == {'starting_coins': 5, 'discard_coins': 2}
     assert Ruleset.of('docks', 'leaders').starting_coins == 8  # the delta adds to Leaders' 6
-    assert load_content('docks').card('Dock').color is Color('harbour')
+    assert load_content('docks').card('Harbour Dock').color is Color('harbour')
     assert [p['id'] for p in builder.projects()] == ['docks']
 
     report = builder.balance('docks', games=4, players=3)
-    assert report['cards'][0]['name'] == 'Dock' and report['wonders'][0]['name'] == 'The Lighthouse'
+    assert report['cards'][0]['name'] == 'Harbour Dock' and report['wonders'][0]['name'] == 'The Lighthouse'
     assert set(report['base']) >= {'total', 'military'} and report['expected_win_rate'] == 0.33
 
     names = zipfile.ZipFile(io.BytesIO(builder.export_project('docks'))).namelist()

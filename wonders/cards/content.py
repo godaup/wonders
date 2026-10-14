@@ -21,35 +21,47 @@ from importlib import resources
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 from wonders.cards.base import Card, Color, Cost, Resource, ScienceSymbol
-from wonders.cards.wonder import Wonder, WonderStage
+from wonders.cards.wonder import TRACK_SPACES, TRACKS, Shipyard, Wonder, WonderStage
 from wonders.effects.base import Effect
 from wonders.effects.library import (
     BankPurchase,
+    BestColor,
+    Boarding,
     BuildFree,
     BuildFromDiscard,
     BuildIncome,
     BuriedColorTally,
     CashDefeats,
     CoinDiscount,
+    CoinLossImmunity,
     Coins,
     ColorSets,
+    CommercialLevel,
     CopyGuild,
     CopyLeader,
     Debt,
     Diplomacy,
     EntombLeader,
+    Explore,
     ExtraRecruit,
+    FarTrade,
+    FleetIncome,
+    FleetMove,
     FreeBuildPerAge,
     FreeFirstOfColor,
     FreeTurnBuild,
     GainToken,
     Grant,
+    IslandDraw,
     LeaderDraw,
     Majority,
     Military,
     MultiProduction,
+    NavalOptOut,
+    NavalStrength,
     NoDefeats,
     OnlyLeader,
+    Pirates,
     PlayLastCard,
     Plunder,
     PlunderPer,
@@ -69,12 +81,14 @@ from wonders.effects.library import (
     StagePlunder,
     StartingResourceDiscount,
     Tally,
+    Tax,
     TokenPairs,
     TokenPurge,
     Trade,
     VictoryIncome,
     VictoryPoints,
     WonderComplete,
+    WonderFleetChoice,
 )
 
 DATA_PACKAGE = 'wonders.cards'
@@ -174,6 +188,21 @@ EFFECT_BUILDERS: Dict[str, Callable[[dict], Effect]] = {
     'token_purge': lambda s: TokenPurge(),
     'reserve_bonus': lambda s: ReserveBonus(s.get('coins', 1)),
     'stage_plunder': lambda s: StagePlunder(s.get('amount', 1)),
+    # Armada powers
+    'naval_strength': lambda s: NavalStrength(s['strength']),
+    'commercial_level': lambda s: CommercialLevel(s['level']),
+    'tax': lambda s: Tax(s['amount']),
+    'explore': lambda s: Explore(s['level']),
+    'island_draw': lambda s: IslandDraw(s['level']),
+    'advance_fleet': lambda s: FleetMove(s.get('track', 'any'), s.get('count', 1)),
+    'boarding': lambda s: Boarding(s['target']),
+    'far_trade': lambda s: FarTrade(s['target'], s.get('count', 1), s.get('price', 1)),
+    'pirates': lambda s: Pirates(),
+    'coin_loss_immunity': lambda s: CoinLossImmunity(),
+    'naval_opt_out': lambda s: NavalOptOut(),
+    'fleet_income': lambda s: FleetIncome(s.get('coins', 1)),
+    'wonder_fleet_choice': lambda s: WonderFleetChoice(),
+    'best_color': lambda s: BestColor(s.get('vp_each', 1)),
 }
 
 
@@ -212,7 +241,40 @@ def build_card(spec: dict, expansion: str) -> Card:
         at_players=tuple(spec.get('at_players', [])),
         guild=spec.get('guild', False),
         age_cost=bool(spec.get('age_cost', False)),
+        deck=spec.get('deck', 'age'),
+        level=spec.get('level'),
     )
+
+
+def build_island(spec: dict, expansion: str) -> Card:
+    """An Armada island: a card of the ``island`` colour with a ``level`` (1-3), kept apart from the Age decks."""
+    return build_card({**spec, 'color': spec.get('color', 'island'), 'deck': 'island'}, expansion)
+
+
+def fleet_cards(expansion: str) -> List[Card]:
+    """The four fleets as cards (``Red Fleet`` ...): a choice of fleet to advance is ``Action.build`` of one."""
+    return [Card(f'{t.title()} Fleet', Color(t), expansion=expansion, deck='fleet') for t in TRACKS]
+
+
+def build_shipyard(spec: dict, tracks: Dict[str, List[Tuple[Effect, ...]]]) -> Shipyard:
+    costs = {t: tuple(build_cost(c) for c in spec['costs'][t]) for t in TRACKS}
+    for track, track_costs in costs.items():
+        if len(track_costs) != TRACK_SPACES:
+            raise ValueError(f'shipyard {spec["name"]!r}: {track} needs {TRACK_SPACES} costs, not {len(track_costs)}')
+    if spec['wonder_track'] not in TRACKS:
+        raise ValueError(f'shipyard {spec["name"]!r}: unknown wonder track {spec["wonder_track"]!r}')
+    return Shipyard(
+        spec['name'], spec['wonder_track'], costs, {t: tuple(tracks[t]) for t in TRACKS}, spec.get('official', True)
+    )
+
+
+def build_tracks(raw: Dict[str, list]) -> Dict[str, List[Tuple[Effect, ...]]]:
+    """The shared fleet spaces of every shipyard: ``{track: [effects of space 1, ..., space 6]}``."""
+    tracks = {t: [tuple(build_effect(e) for e in space) for space in raw[t]] for t in TRACKS}
+    for track, spaces in tracks.items():
+        if len(spaces) != TRACK_SPACES:
+            raise ValueError(f'track {track} needs {TRACK_SPACES} spaces, not {len(spaces)}')
+    return tracks
 
 
 def _stage_copy(spec: Optional[dict]) -> Optional[Tuple[str, Union[int, str]]]:
@@ -258,6 +320,10 @@ class Content:
 
     cards: List[Card] = field(default_factory=list)
     wonders: List[Wonder] = field(default_factory=list)
+    # Armada: islands (dealt by exploration), the four fleets (choices of fleet) and the Shipyard boards.
+    islands: List[Card] = field(default_factory=list)
+    fleets: List[Card] = field(default_factory=list)
+    shipyards: List[Shipyard] = field(default_factory=list)
 
     def wonder(self, name: str, side: Optional[str] = None) -> Wonder:
         for w in self.wonders:
@@ -269,7 +335,20 @@ class Content:
         for c in self.cards:
             if c.name == name:
                 return c
+        for c in self.islands + self.fleets:
+            if c.name == name:
+                return c
         raise KeyError(name)
+
+    def shipyard(self, name: str) -> Shipyard:
+        for s in self.shipyards:
+            if s.name == name:
+                return s
+        raise KeyError(name)
+
+    def choices(self) -> List[Card]:
+        """Every card an action may name: the Age cards and leaders, islands and fleets (the action vocabulary)."""
+        return self.cards + self.islands + self.fleets
 
     def guilds(self) -> List[Card]:
         return [c for c in self.cards if c.guild]
@@ -308,6 +387,11 @@ def load_content(*expansions: str) -> Content:
         content.wonders.extend(build_wonder(w) for w in raw.get('wonders', []))
         cards = [c for c in raw.get('cards', []) if {family_of(r) for r in c.get('requires', ())} <= loaded]
         content.cards.extend(build_card(c, expansion) for c in cards)
+        if raw.get('tracks'):  # Armada
+            tracks = build_tracks(raw['tracks'])
+            content.shipyards.extend(build_shipyard(y, tracks) for y in raw.get('shipyards', []))
+            content.islands.extend(build_island(c, expansion) for c in raw.get('islands', []))
+            content.fleets.extend(fleet_cards(expansion))
     content.wonders = [w for w in content.wonders if {family_of(r) for r in w.requires} <= loaded]
     return content
 
@@ -331,8 +415,8 @@ def build_age_deck(
     rng = rng or random.Random()
     deck: List[Card] = []
     for card in content.cards:
-        if card.guild or card.color in (Color.WHITE, Color.BLACK) or card.age != age:
-            continue  # guilds/black handled below; leaders (white) are drafted separately
+        if card.guild or card.color in (Color.WHITE, Color.BLACK) or card.age != age or card.deck != 'age':
+            continue  # guilds/black/drawn handled below; leaders (white) are drafted separately
         deck.extend([card] * card.copies_for(n_players))
 
     if age == 3:
@@ -345,6 +429,12 @@ def build_age_deck(
     black = [c for c in content.cards if c.color is Color.BLACK and c.age == age]
     if black:
         deck.extend(black if n_players >= len(black) else rng.sample(black, n_players))
+
+    # Armada: as many random cards of this Age as players, from those used at this player count (4+ cards
+    # leave a 3-player game), one more per player again.
+    drawn = [c for c in content.cards if c.deck == 'draw' and c.age == age and c.copies_for(n_players)]
+    if drawn:
+        deck.extend(drawn if n_players >= len(drawn) else rng.sample(drawn, n_players))
 
     rng.shuffle(deck)
     return deck

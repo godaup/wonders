@@ -17,14 +17,17 @@ from wonders.cards.wonder import Wonder, WonderStage
 from wonders.effects.library import (
     BuildFromDiscard,
     Coins,
+    CommercialLevel,
     CopyGuild,
     Debt,
     Diplomacy,
+    Explore,
     FreeBuildPerAge,
     GainToken,
     Grant,
     Military,
     MultiProduction,
+    NavalStrength,
     PlayLastCard,
     Plunder,
     Production,
@@ -34,6 +37,7 @@ from wonders.effects.library import (
     ScienceWild,
     Special,
     Tally,
+    Tax,
     Trade,
     VictoryPoints,
 )
@@ -76,6 +80,7 @@ RES_NAME = {
 }
 SCI_NAME = {'tablet': 'Tablet', 'gear': 'Gear', 'compass': 'Compass'}
 SCIENCE, MILITARY, CIVIC, GOLD, GUILD = '#2f7d46', '#b23b3b', '#2f6fb0', '#c8951a', '#6b46a8'
+NAVAL = '#1f5f8b'
 INK, MUTED, SLATE = '#233043', '#6b7684', '#334155'
 TILE_BG, TILE_LINE = '#f1f3f5', '#e4e7eb'
 SCOPE = {'self': 'you', 'neighbours': 'neighbours', 'both': 'you + neighbours', 'others': 'all others'}
@@ -115,6 +120,10 @@ ICONS = {
     'trade': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     '<path d="M4 9h14M15 6l3 3-3 3"/><path d="M20 15H6M9 12l-3 3 3 3"/></g>',
     'special': '<path fill="currentColor" d="M12 2 13.7 9.3 21 11 13.7 12.7 12 20 10.3 12.7 3 11 10.3 9.3Z"/>',
+    'anchor': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    '<circle cx="12" cy="5" r="2"/><path d="M12 7v13M8 10h8"/><path d="M4 13c0 4 4 7 8 7s8-3 8-7"/></g>',
+    'island': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M3 18c3-2 6-2 9 0s6 2 9 0"/><path d="M6 15c1-4 4-6 6-6s5 2 6 6"/><path d="M12 9V4l4 2-4 2"/></g>',
 }
 
 Row = Tuple[List[Tuple[str, str]], str]  # (icons, label)
@@ -279,6 +288,19 @@ def _describe(effect, t: Translator = ENGLISH) -> List[Row]:  # noqa: C901 - one
         return [([('coin', GOLD)], t('others +{n}c ({scope})', n=effect.amount, scope=t(effect.scope, 'scope')))]
     if isinstance(effect, GainToken):
         return [([('shield', MILITARY)], t('+war token ({n})', n=effect.value))]
+    if isinstance(effect, NavalStrength):  # Armada
+        return [([('anchor', NAVAL)], t('{n} naval strength', n=effect.strength))]
+    if isinstance(effect, CommercialLevel):
+        return [([('coin', GOLD)], t('Commercial level {n}', n=effect.level))]
+    if isinstance(effect, Tax):
+        return [
+            (
+                [('coin', MILITARY)],
+                t('Tax {n}: the others lose that many coins minus their commercial level', n=effect.amount),
+            )
+        ]
+    if isinstance(effect, Explore):
+        return [([('island', SCIENCE)], t('Explore a level {n} island', n=effect.level))]
     if type(effect) in _POWER_LABELS:
         return [([('special', GUILD)], t(_POWER_LABELS[type(effect)]))]
     if isinstance(effect, Special):

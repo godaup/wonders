@@ -68,6 +68,23 @@ RULES: Tuple[RuleSpec, ...] = (
         'Unchosen leaders leave',
         '1: the leaders not recruited in Age III go back to the box.',
     ),
+    RuleSpec('guild_vp_cap', 0, 0, 50, 'Guild points cap', 'Each guild scores at most this many points (0: no cap).'),
+    RuleSpec(
+        'naval_third_points',
+        0,
+        0,
+        20,
+        'Third naval rank',
+        'Victory points of the naval token for third place in Age III (0: none).',
+    ),
+    RuleSpec(
+        'boarding_once',
+        0,
+        0,
+        1,
+        'One conflict per pair',
+        '1: a Boarding adds no conflict between players who already fight this Age.',
+    ),
 )
 RULE_SPECS: Dict[str, RuleSpec] = {r.name: r for r in RULES}
 
@@ -87,6 +104,9 @@ class Rules:
     extra_guilds: int = 2
     leader_draft_left: int = 1  # the second edition's leader draft passes right
     return_last_leaders: int = 0  # second edition: unchosen leaders go back to the box after Age III recruitment
+    guild_vp_cap: int = 0  # Armada: each purple card scores at most 10
+    naval_third_points: int = 0  # first-edition Armada: a third naval rank (+3) in Age III
+    boarding_once: int = 0  # first-edition Armada FAQ: at most one military conflict per pair of players per Age
 
     def victory(self, age: int) -> int:
         """Victory points of a military victory token in ``age``."""
@@ -214,10 +234,10 @@ EXPANSIONS: Dict[str, Expansion] = {
     'armada': Expansion(
         'armada',
         'Armada',
-        implemented=False,
-        note='naval boards, fleets and naval combat are not yet mechanized',
         edition=1,
+        rules={'guild_vp_cap': 10, 'naval_third_points': 3, 'boarding_once': 1},
     ),
+    'armada2': Expansion('armada2', 'Armada', edition=2, family='armada', rules={'guild_vp_cap': 10}),
 }
 BUNDLED: Tuple[str, ...] = tuple(EXPANSIONS)  # the expansions this package ships (registered above)
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
+from wonders.agents import naval
 from wonders.cards.base import Card
 from wonders.engine.actions import Action, ActionKind
 from wonders.engine.observation import Observation
@@ -35,11 +36,28 @@ class Agent(ABC):
             return Action.build(self.draft_leader(options))
         if obs.decision == 'entomb_leader':
             return Action.build(self.entomb_leader(options, obs))
+        if obs.decision == 'explore':
+            return Action.build(self.explore(options, obs))
+        if obs.decision == 'advance_fleet':
+            return Action.build(self.advance_fleet(options, obs))
         if obs.decision == 'recruit':
             action = self.recruit(options, obs)
             if action is not None:
-                return action
-        return self.decide(obs)
+                return self.naval(obs, action)
+        return self.naval(obs, self.decide(obs))
+
+    # -- Armada hooks (sane defaults; see wonders.agents.naval) --
+    def naval(self, obs: Observation, action: Action) -> Action:
+        """Add a Naval Construction to ``action`` (or sell for the yellow fleet) when it is worth it."""
+        return naval.with_naval(obs, action)
+
+    def explore(self, options: List[Card], obs: Observation) -> Card:
+        """Keep one of the islands offered. Default: the one worth most by a rough value."""
+        return naval.best_island(options, obs)
+
+    def advance_fleet(self, options: List[Card], obs: Observation) -> Card:
+        """Pick the fleet to advance for free (``options`` are fleet cards). Default: the most valuable step."""
+        return naval.best_fleet(options, obs)
 
     # -- Leaders expansion hooks (sane defaults; override for smarter play) --
     def entomb_leader(self, options: List[Card], obs: Observation) -> Card:

@@ -122,6 +122,8 @@ def sample_world(obs: Observation, rng: random.Random) -> World:
     """Rebuild the game at a regular-turn (``'play'``) observation, sampling what ``obs.seat`` cannot see."""
     if obs.decision != DecisionKind.PLAY.value:
         raise ValueError(f'worlds are rebuilt at regular turns, not at {obs.decision!r} decisions')
+    if obs.naval_costs:  # fleets, islands and the island decks are not rebuilt yet
+        raise ValueError('Armada positions cannot be rebuilt for search yet')
     index = content_index(tuple(obs.expansions))
     n, me, age = obs.n_players, obs.seat, obs.age
     game = _public_game(obs, index)
