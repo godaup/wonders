@@ -97,7 +97,6 @@ def test_wonder_choice_and_sides():
         (GameConfig(seats=[SeatConfig(), SeatConfig(), SeatConfig('board')]), 'exactly one human'),
         (GameConfig(seats=[SeatConfig(), SeatConfig('board')]), '3-7 players'),
         (_config(agents=('heuristic', 'nobody')), 'unknown agent'),
-        (_config(expansions=('armada',)), 'not playable yet'),
         (_config(expansions=('atlantis',)), 'unknown expansion'),
         (_config(wonder='Rome'), 'unknown wonder'),
         (_config(side='C'), 'unknown wonder side'),
@@ -138,7 +137,8 @@ def test_menu_options():
     menu = menu_options()
     ids = {e['id']: e for e in menu['expansions']}
     assert {'base', 'leaders', 'cities', 'armada'} <= set(ids)
-    assert ids['armada']['implemented'] is False and ids['armada']['wonders'] == []
+    assert ids['armada']['implemented'] and ids['armada']['wonders'] == ['Siracusa']
+    assert (ids['armada2']['family'], ids['armada2']['edition']) == ('armada', 2)
     assert 'The Colosseum of Rome' in ids['leaders']['wonders']
     assert [e['id'] for e in menu['editions']] == [1, 2]
     assert (ids['base2']['family'], ids['base2']['edition'], ids['leaders']['edition']) == ('base', 2, 1)

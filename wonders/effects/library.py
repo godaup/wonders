@@ -258,6 +258,10 @@ class Tally(Effect):
             return sum(1 for t in player.tokens if t > 0)
         if self.what == 'coins':  # 1 unit per 3 coins (Midas, Gamers' Guild)
             return player.coins // 3
+        if self.what == 'commercial_level':  # Armada: the yellow fleet's level (Port Customs)
+            return player.commercial_level()
+        if self.what == 'islands':  # Armada: islands owned (Sheltered Archipelago)
+            return len(player.islands)
         if self.what == 'resource_symbols':
             return sum(
                 1
@@ -779,3 +783,171 @@ class StagePlunder(Effect):
 
     def stage_plunder(self) -> int:
         return self.amount
+
+
+# --- Armada -------------------------------------------------------------------
+
+
+def lose_coins(player, amount: int, debt_tokens: bool) -> None:
+    """``player`` loses ``amount`` coins to the reserve; with Cities, what it cannot pay becomes debt."""
+    if amount <= 0:
+        return
+    paid = min(amount, player.coins)
+    player.coins -= paid
+    if debt_tokens:
+        player.debt += amount - paid
+
+
+@dataclass
+class NavalStrength(Effect):
+    """Naval strength for the naval conflicts (red fleet spaces, red Armada cards, islands)."""
+
+    strength: int
+
+    def naval_strength(self) -> int:
+        return self.strength
+
+
+@dataclass
+class CommercialLevel(Effect):
+    """The commercial level of a yellow fleet space: Taxes cost this many coins less."""
+
+    level: int
+
+    def commercial_level(self) -> int:
+        return self.level
+
+
+@dataclass
+class Tax(Effect):
+    """Raise a Tax: at the end of the turn every other player loses ``amount`` minus their commercial level."""
+
+    amount: int
+
+    def tax(self) -> int:
+        return self.amount
+
+
+@dataclass
+class Explore(Effect):
+    """Explore an island of ``level`` at the end of the turn (green fleet spaces)."""
+
+    level: int
+
+    def explores(self) -> Tuple[int, ...]:
+        return (self.level,)
+
+
+@dataclass
+class IslandDraw(Effect):
+    """Put the top island of ``level`` into play at once (Helmsman's Rest and the like)."""
+
+    level: int
+
+    def island_draws(self) -> Tuple[int, ...]:
+        return (self.level,)
+
+
+@dataclass
+class FleetMove(Effect):
+    """Advance fleets one space for free: ``track`` (a colour) or ``'any'`` (``count`` different ones, chosen)."""
+
+    track: str = 'any'
+    count: int = 1
+
+    def fleet_advances(self) -> Tuple[str, ...]:
+        return () if self.track == 'any' else (self.track,) * self.count
+
+    def fleet_choices(self) -> Tuple[int, ...]:
+        return (self.count,) if self.track == 'any' else ()
+
+
+@dataclass
+class Boarding(Effect):
+    """Give a Boarding token: an extra military conflict with that player at the end of the Age.
+
+    ``target``: ``'left2'`` (the player left of the left neighbour) or ``'right2'``.
+    """
+
+    target: str
+
+    def __post_init__(self) -> None:
+        if self.target not in ('left2', 'right2'):
+            raise ValueError(f"a Boarding targets 'left2' or 'right2', not {self.target!r}")
+
+    def boards(self) -> Tuple[int, ...]:
+        return (2,) if self.target == 'left2' else (-2,)
+
+
+@dataclass
+class FarTrade(Effect):
+    """Buy ``count`` resources per turn for ``price`` each from the player two seats away (Emporiums)."""
+
+    target: str
+    count: int = 1
+    price: int = 1
+
+    def __post_init__(self) -> None:
+        if self.target not in ('left2', 'right2'):
+            raise ValueError(f"far trade targets 'left2' or 'right2', not {self.target!r}")
+
+    def far_trade(self) -> Tuple[Tuple[int, int, int], ...]:
+        return ((2 if self.target == 'left2' else -2, self.count, self.price),)
+
+
+@dataclass
+class Pirates(Effect):
+    """Every other player loses as many coins as their commercial level (end of turn)."""
+
+    def on_build(self, ctx: Context) -> None:
+        for player in ctx.others:
+            if not player.coin_loss_immune():
+                lose_coins(player, player.commercial_level(), ctx.debt_tokens)
+
+
+@dataclass
+class CoinLossImmunity(Effect):
+    """Other players' Taxes and Pirates take no coins from the owner (Foggy Island)."""
+
+    def coin_loss_immune(self) -> bool:
+        return True
+
+
+@dataclass
+class NavalOptOut(Effect):
+    """The owner may sit out each naval conflict (Forgotten Oasis)."""
+
+    def naval_opt_out(self) -> bool:
+        return True
+
+
+@dataclass
+class FleetIncome(Effect):
+    """``coins`` from the reserve each time one of the owner's fleets advances (Wonderous Oasis)."""
+
+    coins: int = 1
+
+    def fleet_income(self) -> int:
+        return self.coins
+
+
+@dataclass
+class WonderFleetChoice(Effect):
+    """No fleet goes with the wonder: each stage advances a fleet of your choice for free (Lost Island)."""
+
+    def wonder_fleet_choice(self) -> bool:
+        return True
+
+
+@dataclass
+class BestColor(Effect):
+    """At the end, ``vp_each`` per card of one colour of Age cards, the best one (Rainbow Archipelago)."""
+
+    vp_each: int = 1
+
+    def victory_points(self, ctx: Context) -> int:
+        counts: Dict[Color, int] = {}
+        for card in ctx.player.cards:
+            if card.age is not None:
+                counts[card.color] = counts.get(card.color, 0) + 1
+        return self.vp_each * max(counts.values(), default=0)

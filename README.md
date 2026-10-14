@@ -97,9 +97,10 @@ the [leaderboard](LEADERBOARD.md).
 | Base game, 2nd edition | ✅ playable | the 2020 edition: 70 cards incl. 10 guilds, 7 boards with day and night sides ([editions](docs/editions.md)) |
 | Leaders, 2nd edition | ✅ playable | 55 leaders (standard, expert, bonus with Cities), leaders that cost the Age, Roma and Abu Simbel |
 | Cities, 2nd edition | ✅ playable | 42 black cards, the second-edition Byzantium and Petra |
+| Armada, 2nd edition | ✅ playable | Shipyards with four fleets, Naval Construction, Taxes, islands, naval conflicts, Boarding, Siracusa ([armada](docs/armada.md)) |
 | Leaders | ✅ playable | 36 leaders with the draft and recruitment phases, 4 extra guilds, the Rome board |
 | Cities | ✅ playable | 42 black cards (debt, diplomacy, plunder, …), the Petra and Byzantium boards |
-| Armada | 🛠 planned | naval boards, ships and naval conflicts, islands |
+| Armada | ✅ playable | the 2018 edition: Dockyards, fleets, islands, naval conflicts (a third rank in Age III), Incursions |
 | Wonder Pack | ✅ playable | the Great Wall, Abu Simbel, Stonehenge and the Manneken Pis, with every board power |
 
 Expansions combine freely (any subset with the base game). Every power is mechanized and was

@@ -71,12 +71,13 @@ def _lineup(agents: str):
 def _score_table(game) -> str:
     from wonders.agents.bench import CATEGORIES
 
-    header = f"{'seat':<4} {'player':<14} {'wonder':<36} " + ' '.join(f'{c[:5]:>5}' for c in CATEGORIES) + '  total'
+    categories = CATEGORIES + tuple(c for c in ('naval', 'islands') if c in game.score(0).as_dict())  # Armada
+    header = f"{'seat':<4} {'player':<14} {'wonder':<36} " + ' '.join(f'{c[:5]:>5}' for c in categories) + '  total'
     lines = [header]
     for i, p in enumerate(game.players):
         b = game.score(i).as_dict()
         wonder = f'{p.wonder.name} ({p.wonder.side})'
-        cats = ' '.join(f'{b[c]:5d}' for c in CATEGORIES)
+        cats = ' '.join(f'{b[c]:5d}' for c in categories)
         lines.append(f'{i:<4} {p.name:<14} {wonder:<36} {cats}  {b["total"]:5d}')
     lines.append(f'winner: {game.players[game.winner()].name}')
     return '\n'.join(lines)

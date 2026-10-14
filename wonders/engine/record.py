@@ -15,6 +15,10 @@ A move on which the player chose how to split a purchase between the neighbours 
 ``[code, card, left, right]``; moves without them paid the cheapest way. A chosen wonder stage (the Great
 Wall, the Manneken Pis) follows as a fifth entry: ``[code, card, left, right, stage]`` (left/right may be null).
 
+Armada: a move with a Naval Construction (or a sale that advances the yellow fleet) has a ``+`` after its
+code (``B+``, ``W+``, ``F+``, ``D+``); each seat's Shipyard is part of its setup, and every island drawn is
+kept in ``islands`` (``[age, turn, seat, level, names]``) so explorations replay without the shuffle.
+
 The decks are stored explicitly (not as an RNG seed) so replay does not depend on
 the shuffle implementation or engine version — only on the rules staying stable.
 """
@@ -22,8 +26,9 @@ the shuffle implementation or engine version — only on the rules staying stabl
 from __future__ import annotations
 
 import json
+import random
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from wonders.cards.base import Card
@@ -46,6 +51,33 @@ class PlayerSetup:
     name: str
     wonder: str
     side: str = 'A'
+    shipyard: Optional[str] = None  # Armada: the seat's Shipyard board
+
+    def to_dict(self) -> Dict[str, Any]:
+        out: Dict[str, Any] = {'name': self.name, 'wonder': self.wonder, 'side': self.side}
+        if self.shipyard is not None:
+            out['shipyard'] = self.shipyard
+        return out
+
+
+def with_shipyards(setups: Sequence[PlayerSetup], content: Content, rng: random.Random) -> List[PlayerSetup]:
+    """Armada: deal a random Shipyard to every seat that has none (``content`` must have enough)."""
+    if all(s.shipyard is not None for s in setups):
+        return list(setups)
+    taken = {s.shipyard for s in setups}
+    free = [y.name for y in content.shipyards if y.name not in taken]
+    missing = [s for s in setups if s.shipyard is None]
+    if len(free) < len(missing):
+        raise ValueError(f'only {len(free)} shipyards for {len(missing)} seats')
+    dealt = iter(rng.sample(free, len(missing)))
+    return [s if s.shipyard is not None else replace(s, shipyard=next(dealt)) for s in setups]
+
+
+def start_armada(game: Game, content: Content, setups: Sequence[PlayerSetup], rng=None, script=None) -> None:
+    """Give an Armada game its Shipyards, island decks and fleets (a record's draws when ``script``)."""
+    if game.armada:
+        shipyards = [content.shipyard(s.shipyard) if s.shipyard else content.shipyards[0] for s in setups]
+        game.setup_armada(shipyards, content.islands, content.fleets, rng, script)
 
 
 # moves[age] -> list of turns; each turn -> per-seat [code, card_name]
@@ -73,13 +105,15 @@ class GameRecord:
     extras: Extras = field(default_factory=dict)
     # Extensions behind the expansions in play: {id: {version, hash}} (empty for bundled content).
     extensions: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    # Armada: every island drawn, in order ([age, turn, seat, level, names]).
+    islands: List[List[Any]] = field(default_factory=list)
 
     # -- serialization -----------------------------------------------------
     def to_dict(self) -> Dict[str, object]:
         out: Dict[str, object] = {
             'version': self.version,
             'expansions': list(self.expansions),
-            'players': [{'name': s.name, 'wonder': s.wonder, 'side': s.side} for s in self.players],
+            'players': [s.to_dict() for s in self.players],
             'age_decks': {str(a): list(v) for a, v in self.age_decks.items()},
             'moves': {str(a): turns for a, turns in self.moves.items()},
         }
@@ -91,6 +125,8 @@ class GameRecord:
             out['extras'] = {str(a): entries for a, entries in self.extras.items()}
         if self.extensions:
             out['extensions'] = self.extensions
+        if self.islands:
+            out['islands'] = self.islands
         return out
 
     @classmethod
@@ -112,6 +148,7 @@ class GameRecord:
             recruits=recruits,
             extras=extras,
             extensions=dict(d.get('extensions', {})),
+            islands=list(d.get('islands', [])),
         )
 
     def to_json(self, indent: Optional[int] = None) -> str:
@@ -159,12 +196,7 @@ class GameRecord:
         """Re-simulate the recorded decisions and return the finished game."""
         for problem in self.check_extensions():
             warnings.warn(f'replay may differ: {problem}', stacklevel=2)
-        coins = Ruleset.of(*self.expansions).starting_coins
-        players = [Player.starting(s.name, content.wonder(s.wonder, s.side), coins) for s in self.players]
-        game = Game(players, expansions=self.expansions)
-        for seat, names in self.leader_hands.items():
-            players[seat].leaders_hand = [content.card(n) for n in names]
-        game.leader_box = [content.card(n) for n in self.leader_box]
+        game, _builder = self._start(content)
         for age in (1, 2, 3):
             choose = self._chooser(age)  # one chooser: recruitment extras precede the Age's
             if self.leader_hands:
@@ -232,6 +264,11 @@ class GameRecord:
                 point = next(steps)
                 while True:
                     if diverged:
+                        if game._island_script is not None:  # islands are drawn afresh from here on
+                            game._island_script = None
+                            game._island_rng = rng or random.Random(0)
+                            for level in sorted(game.island_decks):
+                                game._island_rng.shuffle(game.island_decks[level])
                         actions = {
                             i: policy(game, i, builder.build(game, i, opts), opts) for i, opts in point.options.items()
                         }
@@ -269,6 +306,7 @@ class GameRecord:
         for i, names in self.leader_hands.items():
             players[i].leaders_hand = [content.card(n) for n in names]
         game.leader_box = [content.card(n) for n in self.leader_box]
+        start_armada(game, content, self.players, script=self.islands)
         return game, ObservationBuilder()
 
     def _chooser(self, age: int) -> Callable[[DecisionPoint], Dict[int, Action]]:
@@ -280,7 +318,7 @@ class GameRecord:
             card = next((c for c in options if c.name == name), None)
             if card is None:
                 raise ReplayError(f'Age {age}: recorded card {name!r} is not among the options')
-            action = Action(_KIND[code], card)
+            action = Action(_KIND[code[0]], card, naval=code.endswith('+'))
             if len(split) >= 2 and split[0] is not None:
                 action = action.paying(int(split[0]), int(split[1]))
             if len(split) >= 3:
@@ -320,13 +358,18 @@ def _log(builder: ObservationBuilder, game: Game, point: DecisionPoint, actions:
         builder.record(point.age, point.turn, moves)
 
 
+def _code(action: Action) -> str:
+    """A move's code: ``B`` / ``W`` / ``D`` / ``F``, with ``+`` for a Naval Construction (Armada)."""
+    return _CODE[action.kind] + ('+' if action.naval else '')
+
+
 def _move(action: Action) -> List[Any]:
     """A recorded move: ``[code, card]`` plus any choices made.
 
     ``left, right`` coins when the player chose how to split a purchase, then the stage option when
     they chose which wonder stage to build (``null, null`` for the cheapest split).
     """
-    move: List[Any] = [_CODE[action.kind], action.card.name]
+    move: List[Any] = [_code(action), action.card.name]
     if action.payment is not None or action.stage is not None:
         move += list(action.payment) if action.payment is not None else [None, None]
     if action.stage is not None:
@@ -346,6 +389,7 @@ class RecordBuilder:
         self.leader_box: List[str] = []
         self.recruits: Dict[int, List[Optional[List[str]]]] = {}
         self.extras: Extras = {1: [], 2: [], 3: []}
+        self.islands: List[List[Any]] = []  # Armada: the game's ``island_log`` (shared, filled as it plays)
 
     def set_deck(self, age: int, names: Sequence[str]) -> None:
         self.age_decks[age] = list(names)
@@ -364,7 +408,7 @@ class RecordBuilder:
         self.leader_hands = {i: [c.name for c in cards] for i, cards in hands.items()}
 
     def add_recruits(self, age: int, actions: Sequence[Optional[Action]]) -> None:
-        self.recruits[age] = [None if a is None else [_CODE[a.kind], a.card.name] for a in actions]
+        self.recruits[age] = [None if a is None else [_code(a), a.card.name] for a in actions]
 
     def build(self) -> GameRecord:
         from wonders.extensions import REGISTRY
@@ -379,6 +423,7 @@ class RecordBuilder:
             recruits=self.recruits,
             extras=self.extras,
             extensions=REGISTRY.pins(self.expansions),
+            islands=[list(entry) for entry in self.islands],
         )
 
 
@@ -403,10 +448,16 @@ def play_and_record(
     before each Age, recruits (``RECRUIT``) — the same coroutines the env drives.
     ``leader_box`` holds the undealt leaders (Rome B draws from it).
     """
-    coins = Ruleset.of(*expansions).starting_coins
-    players = [Player.starting(s.name, content.wonder(s.wonder, s.side), coins) for s in setups]
+    ruleset = Ruleset.of(*expansions)
+    island_rng = None
+    if ruleset.uses('armada'):  # deal Shipyards; islands shuffle with their own generator
+        setups = with_shipyards(setups, content, rng)
+        island_rng = random.Random(rng.getrandbits(64))
+    players = [Player.starting(s.name, content.wonder(s.wonder, s.side), ruleset.starting_coins) for s in setups]
     game = Game(players, expansions=tuple(expansions))
+    start_armada(game, content, setups, island_rng)
     builder = RecordBuilder(setups, tuple(expansions))
+    builder.islands = game.island_log
 
     def choose(point: DecisionPoint) -> Dict[int, Action]:
         return {seat: policy(game, seat, options) for seat, options in point.options.items()}

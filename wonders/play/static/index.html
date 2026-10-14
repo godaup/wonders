@@ -156,6 +156,15 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .stage { flex: 1; text-align: center; font-size: 12px; padding: 4px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); }
 .stage.built { background: var(--green); color: #fff; border-color: var(--green); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.board #g-shipyard { margin-top: 10px; max-height: 300px; }
+.handcard .acts button.naval { border-left: 4px solid var(--fleet); }
+.handcard .acts button.naval .ic { vertical-align: -3px; margin-right: 3px; }
+.cell.clickable { cursor: pointer; }
+.opponents .cell.clickable .ic { width: 13px !important; height: 13px !important; }
+.opponents .cell.clickable .ic svg { width: 13px; height: 13px; }
+.opponents .cell.clickable .v { gap: 1px; font-size: 13px; }
+.fleets-link { margin-top: 8px; font-size: 12px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink); display: inline-flex; align-items: center; gap: 2px; }
+.cell.clickable:hover { border-color: var(--accent); }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; overflow-wrap: anywhere; }
 .decision { padding: 10px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); margin-bottom: 12px; }
@@ -496,6 +505,7 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
       <div class="panel me">
         <div class="board">
           <img id="g-board" data-i18n-attrs="alt" alt="Your wonder board">
+          <img id="g-shipyard" class="hidden" data-i18n-attrs="alt" alt="Your shipyard">
         </div>
         <div class="me-info">
           <div class="city-head"><h3 id="g-name"></h3></div>
@@ -659,7 +669,10 @@ const DECISIONS = {
   leader_build: N('<b>Rome:</b> recruit an extra leader right away.'),
   copy_leader: N("<b>Courtesans' Guild:</b> copy one of your neighbours' leaders."),
   entomb_leader: N("<b>Abu Simbel:</b> entomb one of your recruited leaders: its power is lost, it scores twice its cost."),
+  explore: N('<b>Exploration:</b> keep one of these islands; the others go back.'),
+  advance_fleet: N('<b>Free advance:</b> choose the fleet to move one space for free.'),
 };
+const TRACK_NAMES = { red: N('Red fleet'), yellow: N('Yellow fleet'), blue: N('Blue fleet'), green: N('Green fleet') };
 
 let options = null;   // /api/options
 let state = null;     // current game state
@@ -695,6 +708,14 @@ function viewUrl(src, alt, wide) {
   $('viewer').classList.remove('hidden'); hideTip();
 }
 function viewCard(name) { viewUrl(cardUrl(name), nm(name), false); }
+// Armada: a seat's Shipyard with its fleets (``state.shipyards``), as an image.
+function shipyardUrl(seat) {
+  const y = (state.shipyards || [])[seat];
+  if (!y) return null;
+  const fleets = ['red', 'yellow', 'blue', 'green'].map((k) => y.tracks[k].position).join(',');
+  return '/api/shipyard.svg?name=' + encodeURIComponent(y.name) + '&fleets=' + fleets + '&wonder=' + (y.wonder_track || '') + assetV();
+}
+function viewShipyard(seat) { const url = shipyardUrl(seat); if (url) viewUrl(url, nm(state.shipyards[seat].name), true); }
 function viewWonder(name, side, built) { viewUrl(wonderUrl(name, side, built), nm(name), true); }
 $('viewer').addEventListener('click', () => $('viewer').classList.add('hidden'));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('viewer').classList.add('hidden'); });
@@ -941,6 +962,21 @@ function statGrid(city, cols) {
     cells.push(diplomacy ? statCell(icon('shield', 'var(--accent)'), String(city.diplomacy || 0), t('Diplomacy'),
       t('Diplomacy tokens: sit out the next military conflict')) : el('div'));
   }
+  if (city.shipyard) {  // Armada: naval strength and tokens, commercial level, the fleets' spaces
+    const naval = tokenSum(city.naval_tokens);
+    const fleets = city.fleets || {};
+    cells.push(statCell(icon('anchor', 'var(--c-blue)'), String(city.naval_strength), t('Naval'),
+      t('Naval strength, compared with every player at the end of each Age') + '\n' +
+      t('Naval tokens: {list}', { list: (city.naval_tokens || []).map((x) => (x > 0 ? '+' : '') + x).join(', ') || t('none') }) +
+      ' (' + (naval >= 0 ? '+' : '') + naval + ')'));
+    cells.push(statCell(icon('coin', 'var(--gold)'), String(city.commercial_level), t('Trade level'),
+      t('Commercial level: Taxes cost this many coins less')));
+    cells.push(el('div', { class: 'cell clickable', style: 'grid-column: span 2', onclick: () => viewShipyard(city.seat),
+      'data-tip': nm(city.shipyard) + '\n' + ['red', 'yellow', 'blue', 'green'].map((k) => t(TRACK_NAMES[k]) + ': ' + (fleets[k] || 0) + '/6').join('\n') +
+        (city.boardings ? '\n' + t('Boarding tokens received: {n}', { n: city.boardings }) : '') + '\n' + t('Click to view the shipyard') },
+      el('div', { class: 'v' }, ...['red', 'yellow', 'blue', 'green'].flatMap((k) => [icon('ship', `var(--c-${k})`, 16), el('span', { class: 'n' }, String(fleets[k] || 0))])),
+      el('div', { class: 'l' }, t('Fleets'))));
+  }
   return cells;
 }
 
@@ -965,7 +1001,7 @@ function renderOpponents(obs) {
       el('div', { class: 'statgrid' }, statGrid(city)),
       el('div', { class: 'res' }, resChips(city)),
       el('div', { class: 'minis' }, minis(board)),
-      el('div', { class: 'tableau' }, tableau(city.cards))));
+      el('div', { class: 'tableau' }, tableau(city.cards.concat(city.islands || [])))));
   }
 }
 
@@ -987,23 +1023,39 @@ function renderMe(obs) {
   const add = (k, v, tip) => kv.append(el('dt', {}, k), el('dd', { 'data-tip': tip }, v));
   if (obs.free_builds_left) add(t('Free builds'), t('{n} left this Age', { n: obs.free_builds_left }), t('Build a card from your hand for free'));
   kv.classList.toggle('hidden', !kv.children.length);
-  $('g-tableau').replaceChildren(...cityGroups(me.cards));
+  $('g-tableau').replaceChildren(...cityGroups(me.cards.concat(me.islands || [])));
+  renderFleets(obs);
+}
+
+function renderFleets(obs) {  // Armada: the own Shipyard under the wonder board
+  const img = $('g-shipyard'), src = shipyardUrl(obs.seat);
+  img.classList.toggle('hidden', !src);
+  if (!src) return;
+  if (img.getAttribute('src') !== src) { img.src = src; img.onclick = () => viewShipyard(obs.seat); }
+  const yard = state.shipyards[obs.seat];
+  img.dataset.tip = ['red', 'yellow', 'blue', 'green'].map((k) => {
+    const track = yard.tracks[k], next = track.spaces[track.position];
+    return t(TRACK_NAMES[k]) + ' ' + track.position + '/6' + (yard.wonder_track === k ? ' ▲' : '') + ': ' +
+      (next ? t('next: {cost}', { cost: next.cost }) + ' → ' + (next.effects.join(', ') || '—') : t('done'));
+  }).join('\n') + '\n\n' + t('Click to enlarge');
 }
 
 function coinsText(n) { return t(n === 1 ? '{n} coin' : '{n} coins', { n }); }
 const tradeText = (n) => (n ? ' ' + t('({n} trade)', { n }) : '');
+const PICKS = ['draft', 'copy_leader', 'entomb_leader', 'explore', 'advance_fleet'];
 function actionLabel(a, decision) {
-  if (a.kind === 'wonder') return [t('Wonder', null, 'action'), a.coins ? coinsText(a.coins) + tradeText(a.trade) : ''];
+  const fleet = a.naval ? ' + ' + t('fleet') : '';  // Armada: with a Naval Construction
+  if (a.kind === 'wonder') return [t('Wonder', null, 'action') + fleet, a.coins ? coinsText(a.coins) + tradeText(a.trade) : ''];
   if (a.kind === 'build') {
     const verb = { draft: N('Keep'), recruit: N('Recruit'), leader_build: N('Recruit'), copy_leader: N('Copy'),
-      entomb_leader: N('Entomb') }[decision] || N('Build');
+      entomb_leader: N('Entomb'), explore: N('Keep'), advance_fleet: N('Advance') }[decision] || N('Build');
     let cost = t('free');
     if (a.chain) cost = t('chain');
     else if (a.coins) cost = coinsText(a.coins) + tradeText(a.trade);
-    return [t(verb), decision === 'draft' || decision === 'copy_leader' || decision === 'entomb_leader' ? '' : cost];
+    return [t(verb) + fleet, a.detail || (PICKS.includes(decision) ? '' : cost)];
   }
-  if (a.kind === 'discard') return [t('Discard'), t('+3 coins')];
-  return [t('Build free'), decision === 'discard_build' ? t('from discards') : t('board power')];
+  if (a.kind === 'discard') return a.naval ? [t('Sell'), t('yellow fleet +1')] : [t('Discard'), t('+3 coins')];
+  return [t('Build free') + fleet, decision === 'discard_build' ? t('from discards') : a.naval && a.coins ? coinsText(a.coins) : t('board power')];
 }
 
 const KIND_ORDER = ['build', 'free', 'wonder', 'discard'];
@@ -1014,8 +1066,12 @@ function payTip(p, obs) {
 function actionButtons(a, obs) {
   const [label, detail] = actionLabel(a, obs.decision);
   const choice = { payment: null, stage: null };
-  const button = el('button', { class: a.kind === 'build' || a.kind === 'free' ? 'primary' : '',
-    onclick: () => play(a.index, choice.payment, choice.stage) }, label, detail ? el('small', {}, detail) : null);
+  const naval = a.naval ? { class: 'naval', style: `--fleet:var(--c-${a.naval})`,
+    'data-tip': a.kind === 'discard' ? t('Sell the card to advance your yellow fleet one space instead of taking 3 coins')
+      : t('Naval Construction: also advance your {fleet}, paid together with the card', { fleet: t(TRACK_NAMES[a.naval]).toLowerCase() }) } : {};
+  const button = el('button', { class: (a.kind === 'build' || a.kind === 'free') && !a.naval ? 'primary' : '', ...naval,
+    onclick: () => play(a.index, choice.payment, choice.stage) }, a.naval ? icon('ship', `var(--c-${a.naval})`, 15) : null, label,
+    detail ? el('small', {}, detail) : null);
   if (a.stages && a.stages.length > 1) {
     // The Great Wall (stages in any order) or a Manneken Pis stage copying it: pick the stage, paid the cheapest way.
     const pills = a.stages.map((s, k) => {
@@ -1044,7 +1100,8 @@ function actionButtons(a, obs) {
 }
 const SHORT = { play: N('Your turn: pick a card'), last_card: N('Babylon: play your last card?'), discard_build: N('Build a discarded card for free'),
   draft: N('Leaders draft: keep one'), recruit: N('Recruit a leader'), leader_build: N('Rome: recruit an extra leader'),
-  copy_leader: N("Courtesans' Guild: copy a leader"), entomb_leader: N('Abu Simbel: entomb a leader') };
+  copy_leader: N("Courtesans' Guild: copy a leader"), entomb_leader: N('Abu Simbel: entomb a leader'),
+  explore: N('Exploration: keep an island'), advance_fleet: N('Advance a fleet for free') };
 const plain = (html) => { const d = document.createElement('div'); d.innerHTML = t(html); return d.textContent; };
 function pairUp(buttons) {  // secondary moves sit two per row; a leftover one takes the full row
   const halves = buttons.filter((b) => b.tagName === 'BUTTON' && !b.classList.contains('primary'));
@@ -1056,7 +1113,7 @@ function renderHand(obs) {
   for (const a of obs.actions) {
     if (!byCard.has(a.card)) byCard.set(a.card, []);
     const acts = byCard.get(a.card);
-    if (!acts.some((x) => x.kind === a.kind)) acts.push(a);  // two copies of a card offer the same moves once
+    if (!acts.some((x) => x.kind === a.kind && !!x.naval === !!a.naval)) acts.push(a);  // two copies of a card offer the same moves once
   }
   const copies = {};
   for (const c of obs.hand) copies[c.name] = (copies[c.name] || 0) + 1;
@@ -1064,7 +1121,7 @@ function renderHand(obs) {
   for (const name of byCard.keys()) if (!names.includes(name)) names.push(name);
   const hand = $('g-hand'); hand.replaceChildren();
   for (const name of names) {
-    const acts = (byCard.get(name) || []).sort((x, y) => KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind));
+    const acts = (byCard.get(name) || []).sort((x, y) => KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind) || !!x.naval - !!y.naval);
     hand.append(el('div', { class: 'handcard' },
       el('img', { src: cardUrl(name), alt: nm(name), 'data-tip': cardTip(name) + '\n' + t('Click to enlarge'), onclick: () => viewCard(name) }),
       copies[name] > 1 ? el('span', { class: 'count', 'data-tip': t('{n} copies in your hand', { n: copies[name] }) }, '×' + copies[name]) : null,
@@ -1083,10 +1140,13 @@ const LOG = {  // [your move, someone else's move] per kind, without and with a 
   wonder_hidden: [N('You built a wonder stage'), N('{who} built a wonder stage')],
   discard: [N('You discarded {card}'), N('{who} discarded {card}')],
   discard_hidden: [N('You discarded a card'), N('{who} discarded a card')],
+  island: [N('You explored and kept {card}'), N('{who} explored and kept {card}')],
+  fleet: [N('You advanced your {card} for free'), N('{who} advanced their {card} for free')],
 };
 function describe(e, obs) {
   const mine = e.seat === obs.seat ? 0 : 1;
-  const forms = (!e.card && LOG[e.kind + '_hidden']) || LOG[e.kind];
+  const deck = e.card && ((state.cards || {})[e.card] || {}).deck;  // Armada: an island kept, a fleet advanced
+  const forms = (deck === 'island' && LOG.island) || (deck === 'fleet' && LOG.fleet) || (!e.card && LOG[e.kind + '_hidden']) || LOG[e.kind];
   const vars = { who: playerName(e.seat), card: e.card ? cardLink(e.card) : '' };
   return forms ? tn(forms[mine], vars) : [(mine ? vars.who : t('You')) + ' ' + e.kind + ' ', vars.card];
 }
@@ -1139,7 +1199,8 @@ function setHeader() {
 }
 
 const CAT_COLOR = { military: 'var(--c-red)', treasury: 'var(--gold)', wonders: 'var(--c-grey)', civilian: 'var(--c-blue)',
-  commercial: 'var(--c-yellow)', guilds: 'var(--c-purple)', science: 'var(--c-green)', leaders: 'var(--c-white)', cities: 'var(--c-black)' };
+  commercial: 'var(--c-yellow)', guilds: 'var(--c-purple)', science: 'var(--c-green)', leaders: 'var(--c-white)', cities: 'var(--c-black)',
+  naval: 'var(--c-blue)', islands: 'var(--c-island, #2a8c86)' };
 let scoreSort = { key: 'total', dir: -1 };
 function renderScoreTable(cats) {
   const r = state.result, human = state.human;
@@ -1410,7 +1471,14 @@ function renderResult() {
     el('div', { class: 'city-head' }, el('h3', {}, playerName(c.seat)), el('span', { class: 'score' }, String(r.scores[c.seat].total))),
     el('div', { class: 'muted', style: 'font-size:12px;margin-bottom:6px' }, agentLabel(state.players[c.seat].agent) + ' · ' + coinsText(c.coins) + ' · ' +
       t(c.stages_built === 1 ? '{n} stage' : '{n} stages', { n: c.stages_built })),
-    el('div', { class: 'tableau' }, tableau(c.cards)))));
+    el('div', { class: 'tableau' }, tableau(c.cards.concat(c.islands || []))),
+    shipyardLink(c.seat))));
+}
+function shipyardLink(seat) {  // Armada: the final fleets, opening the Shipyard
+  const y = (state.shipyards || [])[seat];
+  if (!y) return null;
+  return el('button', { class: 'linkish fleets-link', 'data-tip': nm(y.name) + '\n' + t('Click to view the shipyard'), onclick: () => viewShipyard(seat) },
+    ...['red', 'yellow', 'blue', 'green'].flatMap((k) => [icon('ship', `var(--c-${k})`, 15), String(y.tracks[k].position) + ' ']));
 }
 
 function render() {
@@ -1830,7 +1898,7 @@ function paramInput(effect, p, rerender) {
     case 'symbol': return bSelect(effect, p.name, builder.info.symbols.map((s) => [s, t(s, null, 'science')]));
     case 'resource': return bSelect(effect, p.name, builder.info.resources.map((r) => [r, resName(r)]), { blank: '—' });
     case 'color': return bSelect(effect, p.name, colorChoices(), { blank: '—' });
-    case 'target': return bSelect(effect, p.name, [...colorChoices(), ['wonder', t('wonder stages')]]);
+    case 'target': return bSelect(effect, p.name, [...colorChoices(), ['wonder', t('wonder stages')], ['naval', t('Naval Constructions')]]);
     case 'colors': {
       if (!Array.isArray(effect[p.name])) effect[p.name] = [];
       return toggles(effect[p.name], colorChoices().map(([c, l]) => [c, l, el('i', { class: 'b-swatch', style: `background:${colorFill(c)}` })]),

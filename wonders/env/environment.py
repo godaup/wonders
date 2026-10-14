@@ -32,7 +32,7 @@ from wonders.engine.game import Game
 from wonders.engine.observation import Observation, ObservationBuilder
 from wonders.engine.phase import Phase
 from wonders.engine.player import Player
-from wonders.engine.record import GameRecord, PlayerSetup, RecordBuilder
+from wonders.engine.record import GameRecord, PlayerSetup, RecordBuilder, start_armada, with_shipyards
 from wonders.env.action_space import ActionSpace
 from wonders.ruleset import Ruleset
 
@@ -92,12 +92,12 @@ class WondersEnv:
         self.expansions = tuple(expansions)
         self.content = content if content is not None else load_content(*self.ruleset.content_expansions)
         if card_names is not None:  # a fixed (e.g. universal) vocabulary, shared across games
-            missing = {c.name for c in self.content.cards} - set(card_names)
+            missing = {c.name for c in self.content.choices()} - set(card_names)
             if missing:
                 raise ValueError(f'card_names lacks {len(missing)} cards of this content, e.g. {sorted(missing)[:3]}')
-            self.action_space = ActionSpace(card_names)
+            self.action_space = ActionSpace(card_names, naval=self.ruleset.uses('armada'))
         else:
-            self.action_space = ActionSpace.from_content(self.content)
+            self.action_space = ActionSpace.from_content(self.content, naval=self.ruleset.uses('armada'))
         self.leaders = self.ruleset.uses('leaders')
         if decisions is None:
             decisions = LEADERS_DECISIONS if self.leaders else DECISIONS
@@ -138,10 +138,16 @@ class WondersEnv:
     def reset(self, seed: Optional[int] = None) -> Tuple[Dict[int, EnvObs], Dict[int, Dict[str, Any]]]:
         rng = random.Random(seed)
         setups = self.setups or self._random_setups(rng)
+        island_rng = None
+        if self.ruleset.uses('armada'):  # deal Shipyards; islands shuffle with their own generator
+            setups = with_shipyards(setups, self.content, rng)
+            island_rng = random.Random(rng.getrandbits(64))
         coins = self.ruleset.starting_coins
         players = [Player.starting(s.name, self.content.wonder(s.wonder, s.side), coins) for s in setups]
         self.game = Game(players, expansions=self.expansions)
+        start_armada(self.game, self.content, setups, island_rng)
         self._builder = RecordBuilder(setups, self.expansions)
+        self._builder.islands = self.game.island_log
         self._observations = ObservationBuilder()
         self._last_margin = [0.0] * self.n_players
         self.agents = list(self.possible_agents)

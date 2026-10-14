@@ -112,7 +112,12 @@ list and the board images.
   * Taking debt by choice although you could pay is not offered (it is never better).
   * Telesilla's victims always give up their lowest victory token.
 
+## Armada (`armada`, `armada2`)
+
+Both editions: see [`armada.md`](armada.md). The second edition renames most cards and islands, pays 2/3/4/5 coins
+on the yellow track (the 2018 board figure: 3/4/5/6), has no third naval rank, lets every Boarding fight a conflict
+of its own and has 7 Shipyards (8 Dockyards in the first edition).
+
 ## Next
 
-Armada's second edition (`armada2`; see `docs/armada.md`). Then agents and value tables tuned on the second
-edition, a model trained on it, and switching the default edition.
+Agents and value tables tuned on the second edition, a model trained on it, and switching the default edition.

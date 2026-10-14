@@ -19,12 +19,13 @@ import os
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from wonders.agents.base import Agent
 from wonders.agents.bench import AGENTS, CATEGORIES, MAX_PLAYERS, MIN_PLAYERS, agent_name
 from wonders.cards.base import Color
 from wonders.cards.content import Content, load_content, read_expansion
+from wonders.cards.wonder import TRACKS
 from wonders.engine.actions import Action, ActionKind, DecisionKind
 from wonders.engine.observation import Observation
 from wonders.engine.record import PlayerSetup
@@ -313,7 +314,7 @@ class HumanSession:
         self.seed = config.seed if config.seed is not None else random.randrange(2**31)
         rng = random.Random(self.seed)
         self.content = load_content(*self.ruleset.content_expansions)
-        self.cards = {c.name: c for c in self.content.cards}
+        self.cards = {c.name: c for c in self.content.choices()}  # Armada: islands and fleets too
         self.setups = self._setups(rng)
         options = {a.id: a for a in agent_options(checkpoints)}
         self.agents: Dict[int, Agent] = {}
@@ -386,7 +387,7 @@ class HumanSession:
         assert decision is not None
         self.log.append({'decision': decision.value, 'moves': {str(s): _move(a) for s, a in sorted(actions.items())}})
         mine = actions.get(self.human)
-        if mine is not None and mine.kind in (ActionKind.BUILD, ActionKind.WONDER):
+        if mine is not None and mine.kind in (ActionKind.BUILD, ActionKind.WONDER) and self.env.decision in _PLAYS:
             options = self._payments(mine)
             chosen = [p for p in options if mine.payment is not None and (p.left, p.right) == mine.payment]
             if options:
@@ -401,9 +402,14 @@ class HumanSession:
             raise ConfigError('the saved game no longer matches the rules: it cannot be restored')
         actions = {}
         for seat, move in moves.items():
-            kind, card = ActionKind(move[0]), move[1]
+            kind, card, naval = ActionKind(move[0].rstrip('+')), move[1], move[0].endswith('+')
             found = next(
-                (a for a in env.observation(seat).legal_actions if a.kind is kind and a.card.name == card), None
+                (
+                    a
+                    for a in env.observation(seat).legal_actions
+                    if a.kind is kind and a.card.name == card and a.naval == naval
+                ),
+                None,
             )
             if found is None:
                 raise ConfigError(f'the saved game no longer matches the rules ({kind.value} {card} is not legal)')
@@ -468,7 +474,10 @@ class HumanSession:
             text.append(t('Free if you own {card}', card=t.name(card.chain_requires)))
         if card.chain_enables:
             text.append(t('Unlocks {cards}', cards=', '.join(t.name(c) for c in card.chain_enables)))
-        return {'name': name, 'title': t.name(name), 'color': card.color.value, 'age': card.age, 'text': text}
+        info = {'name': name, 'title': t.name(name), 'color': card.color.value, 'age': card.age, 'text': text}
+        if card.deck in ('island', 'fleet'):  # Armada: the log tells an island kept or a fleet advanced
+            info['deck'] = card.deck
+        return info
 
     def boards(self, built: Sequence[Any], t: Translator = ENGLISH) -> List[Dict[str, Any]]:
         """Every seat's wonder board (public): starting resource and stages.
@@ -504,7 +513,7 @@ class HumanSession:
             )
         return out
 
-    def _actions(self, obs: Observation) -> List[Dict[str, Any]]:
+    def _actions(self, obs: Observation, t: Translator = ENGLISH) -> List[Dict[str, Any]]:
         views = {c.name: c for c in obs.hand}
         out = []
         for i, action in enumerate(obs.legal_actions):
@@ -513,9 +522,24 @@ class HumanSession:
             if action.kind.value == 'build' and view is not None and view.build_coin_cost is not None:
                 entry.update(coins=view.build_coin_cost, bank=view.bank_coins, trade=view.trade_coins)
                 entry['chain'] = view.chain_free
+            if obs.decision == DecisionKind.ADVANCE_FLEET.value:  # what the fleet's next space brings
+                entry['detail'] = self._next_space(action.card.color.value, t)
+            if action.naval:  # Armada: the fleet it advances, and the whole price (card and Naval Construction)
+                game = self.env.game
+                assert game is not None
+                entry['naval'] = game.naval_track(self.human, action)
+                if action.kind is not ActionKind.DISCARD:
+                    coins = self._naval_price(action)
+                    if coins is not None:
+                        entry.update(coins=coins[0], trade=coins[1], chain=False)
             if action.kind.value in ('build', 'wonder') and obs.decision == 'play':
                 payments = self._payments(action)
-                if action.kind.value == 'wonder' and payments and obs.next_wonder_stage is not None:
+                if (
+                    action.kind.value == 'wonder'
+                    and payments
+                    and obs.next_wonder_stage is not None
+                    and not action.naval
+                ):
                     stage_coins = int(obs.next_wonder_stage.cost.get('coins', 0) or 0)  # type: ignore[call-overload]
                     entry.update(coins=stage_coins + payments[0].total, trade=payments[0].traded)
                 if len(payments) > 1:  # a real choice of whom to buy from
@@ -523,6 +547,62 @@ class HumanSession:
             if action.kind.value == 'wonder' and obs.stage_options:  # which stage to build (Great Wall, ...)
                 entry['stages'] = self._stage_choices(action, obs)
             out.append(entry)
+        return out
+
+    def _next_space(self, track: str, t: Translator) -> str:
+        """The effects of the human's next space on ``track``."""
+        game = self.env.game
+        assert game is not None
+        player = game.players[self.human]
+        if player.shipyard is None or player.naval_cost(track) is None:
+            return ''
+        return ', '.join(effect_lines(player.shipyard.space(track, player.fleets[track] + 1), t))
+
+    def _naval_price(self, action: Action) -> Optional[Tuple[int, int]]:
+        """``(coins in all, coins to neighbours)`` of an action with a Naval Construction, paid the cheapest way."""
+        game = self.env.game
+        assert game is not None
+        if action.kind is ActionKind.BUILD:
+            result = game._card_payment(self.human, action.card, naval=True)
+        elif action.kind is ActionKind.FREE:
+            result = game._free_naval_payment(self.human, action.card)
+        else:
+            stage = game._stage_payment(self.human, action.stage, naval=True)
+            result = None if stage is None else (stage[2], stage[3])
+        if result is None:
+            return None
+        return result[0] + result[1].total, result[1].traded
+
+    def shipyards(self, t: Translator = ENGLISH) -> List[Dict[str, Any]]:
+        """Armada: every seat's Shipyard (public): the wonder's fleet and, per fleet, its space and the next cost."""
+        game = self.env.game
+        assert game is not None
+        out = []
+        for seat, player in enumerate(game.players):
+            yard = player.shipyard
+            if yard is None:
+                return []
+            tracks = {}
+            for track in TRACKS:
+                spaces = []
+                for k in range(1, len(yard.spaces[track]) + 1):
+                    cost = yard.costs[track][k - 1]
+                    spaces.append(
+                        {
+                            'cost': cost_text(cost.coins, cost.resources, t) or t('free'),
+                            'effects': effect_lines(yard.space(track, k), t),
+                        }
+                    )
+                tracks[track] = {'position': player.fleets[track], 'spaces': spaces}
+            out.append(
+                {
+                    'seat': seat,
+                    'name': yard.name,
+                    'title': t.name(yard.name),
+                    'wonder_track': player.wonder_track(),
+                    'tracks': tracks,
+                }
+            )
         return out
 
     def _stage_choices(self, action: Action, obs: Observation) -> List[Dict[str, Any]]:
@@ -572,19 +652,24 @@ class HumanSession:
         obs = self.observation()
         if obs is not None:
             view = obs.to_dict()
-            view['actions'] = self._actions(obs)
+            view["actions"] = self._actions(obs, t)
             state['observation'] = view
             state['boards'] = self.boards([[slot for slot, _ in city.stage_slots] for city in obs.table], t)
+            state['shipyards'] = self.shipyards(t)
             cards = {c.name for c in obs.hand}
-            cards.update(n for city in obs.table for n in city.cards)
+            cards.update(n for city in obs.table for n in city.cards + city.islands)
             cards.update(e.card for e in obs.history if e.card)
             cards.update(obs.leaders_hand)
             state['cards'] = {n: self.card_info(n, t) for n in sorted(cards)}
         else:
             scores = [game.score(i).as_dict() for i in range(game.n)]
             winner = game.winner()
-            state['result'] = {'scores': scores, 'categories': list(CATEGORIES), 'winner': winner}
-            state['cards'] = {n: self.card_info(n, t) for p in game.players for n in (c.name for c in p.cards)}
+            categories = list(CATEGORIES) + [c for c in ARMADA_CATEGORIES if c in scores[0]]
+            state['result'] = {'scores': scores, 'categories': categories, 'winner': winner}
+            state['shipyards'] = self.shipyards(t)
+            state['cards'] = {
+                n: self.card_info(n, t) for p in game.players for n in (c.name for c in p.cards + p.islands)
+            }
             state['cities'] = [
                 {
                     'seat': i,
@@ -592,6 +677,8 @@ class HumanSession:
                     'coins': p.coins,
                     'stages_built': p.wonder_stages_built,
                     'tokens': list(p.tokens),
+                    'islands': [c.name for c in p.islands],
+                    'naval_tokens': list(p.naval_tokens),
                 }
                 for i, p in enumerate(game.players)
             ]
@@ -614,7 +701,7 @@ class HumanSession:
             for seat, move in step['moves'].items():
                 if step['decision'] == DecisionKind.DISCARD_BUILD.value:
                     builds[int(seat)] += move[0] == ActionKind.BUILD.value
-                discards[int(seat)] += move[0] == ActionKind.DISCARD.value
+                discards[int(seat)] += move[0].rstrip('+') == ActionKind.DISCARD.value
         return {
             'totals': totals,
             'coins': coins,
@@ -681,13 +768,18 @@ class HumanSession:
         return session
 
 
+# Decisions whose BUILD / WONDER moves are purchases (the others pick a leader, an island or a fleet).
+_PLAYS = (DecisionKind.PLAY, DecisionKind.LAST_CARD, DecisionKind.RECRUIT, DecisionKind.LEADER_BUILD)
+ARMADA_CATEGORIES = ('naval', 'islands')  # score columns of Armada games
+
+
 def _move(action: Action) -> List[Any]:
     """A logged move: ``[kind, card]`` plus any choices made.
 
     ``left, right`` coins when the payment was chosen, then the wonder stage option when that was
-    chosen (``null, null`` for the cheapest payment).
+    chosen (``null, null`` for the cheapest payment). A Naval Construction (Armada) adds ``+`` to the kind.
     """
-    move: List[Any] = [action.kind.value, action.card.name]
+    move: List[Any] = [action.kind.value + ('+' if action.naval else ''), action.card.name]
     if action.payment is not None or action.stage is not None:
         move += list(action.payment) if action.payment is not None else [None, None]
     if action.stage is not None:

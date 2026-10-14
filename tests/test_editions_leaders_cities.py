@@ -31,6 +31,7 @@ from wonders.engine.actions import Action, DecisionKind
 from wonders.engine.game import Game, drive, science_score
 from wonders.engine.player import Player
 from wonders.engine.record import GameRecord, PlayerSetup
+from wonders.engine.trade import Payment
 from wonders.play.session import GameConfig, HumanSession, SeatConfig
 from wonders.ruleset import Ruleset, rules_of
 
@@ -173,7 +174,7 @@ def test_berenice_takes_one_extra_coin_per_turn_from_the_reserve():
     g._flush_pending()
     assert p.coins == 3 + 3 + 1
     g.players[1].coins, g.players[0].coins = 10, 0
-    g._settle(1, 0, type('Pay', (), {'total': 2, 'left': 0, 'right': 2})())  # seat 1 buys from seat 0 (its right)
+    g._settle(1, 0, Payment(2, 0, 2))  # seat 1 buys from seat 0 (its right)
     g._flush_pending()
     assert p.coins == 2  # coins from a neighbour are not from the reserve
 

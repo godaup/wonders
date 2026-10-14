@@ -10,21 +10,24 @@ from __future__ import annotations
 
 import re
 from html import escape
-from typing import Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 from wonders.cards.base import MANUFACTURED_GOODS, OFFICIAL_COLORS, RAW_MATERIALS, Card, Resource
-from wonders.cards.wonder import Wonder, WonderStage
+from wonders.cards.wonder import TRACKS, Shipyard, Wonder, WonderStage
 from wonders.effects.library import (
     BuildFromDiscard,
     Coins,
+    CommercialLevel,
     CopyGuild,
     Debt,
     Diplomacy,
+    Explore,
     FreeBuildPerAge,
     GainToken,
     Grant,
     Military,
     MultiProduction,
+    NavalStrength,
     PlayLastCard,
     Plunder,
     Production,
@@ -34,6 +37,7 @@ from wonders.effects.library import (
     ScienceWild,
     Special,
     Tally,
+    Tax,
     Trade,
     VictoryPoints,
 )
@@ -76,6 +80,7 @@ RES_NAME = {
 }
 SCI_NAME = {'tablet': 'Tablet', 'gear': 'Gear', 'compass': 'Compass'}
 SCIENCE, MILITARY, CIVIC, GOLD, GUILD = '#2f7d46', '#b23b3b', '#2f6fb0', '#c8951a', '#6b46a8'
+NAVAL = '#1f5f8b'
 INK, MUTED, SLATE = '#233043', '#6b7684', '#334155'
 TILE_BG, TILE_LINE = '#f1f3f5', '#e4e7eb'
 SCOPE = {'self': 'you', 'neighbours': 'neighbours', 'both': 'you + neighbours', 'others': 'all others'}
@@ -115,6 +120,14 @@ ICONS = {
     'trade': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     '<path d="M4 9h14M15 6l3 3-3 3"/><path d="M20 15H6M9 12l-3 3 3 3"/></g>',
     'special': '<path fill="currentColor" d="M12 2 13.7 9.3 21 11 13.7 12.7 12 20 10.3 12.7 3 11 10.3 9.3Z"/>',
+    'anchor': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    '<circle cx="12" cy="5" r="2"/><path d="M12 7v13M8 10h8"/><path d="M4 13c0 4 4 7 8 7s8-3 8-7"/></g>',
+    'ship': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M3 15h18l-3 5H6Z"/><path d="M12 3v12"/><path d="M12 4 19 12H12"/><path d="M11 6 6 12h5"/></g>',
+    'amphora': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M9 3h6M10 3v3c-3 2-4 5-4 8 0 4 3 7 6 7s6-3 6-7c0-3-1-6-4-8V3"/><path d="M7 9H5v3M17 9h2v3"/></g>',
+    'island': '<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M3 18c3-2 6-2 9 0s6 2 9 0"/><path d="M6 15c1-4 4-6 6-6s5 2 6 6"/><path d="M12 9V4l4 2-4 2"/></g>',
 }
 
 Row = Tuple[List[Tuple[str, str]], str]  # (icons, label)
@@ -279,6 +292,19 @@ def _describe(effect, t: Translator = ENGLISH) -> List[Row]:  # noqa: C901 - one
         return [([('coin', GOLD)], t('others +{n}c ({scope})', n=effect.amount, scope=t(effect.scope, 'scope')))]
     if isinstance(effect, GainToken):
         return [([('shield', MILITARY)], t('+war token ({n})', n=effect.value))]
+    if isinstance(effect, NavalStrength):  # Armada
+        return [([('anchor', NAVAL)], t('{n} naval strength', n=effect.strength))]
+    if isinstance(effect, CommercialLevel):
+        return [([('coin', GOLD)], t('Commercial level {n}', n=effect.level))]
+    if isinstance(effect, Tax):
+        return [
+            (
+                [('coin', MILITARY)],
+                t('Tax {n}: the others lose that many coins minus their commercial level', n=effect.amount),
+            )
+        ]
+    if isinstance(effect, Explore):
+        return [([('island', SCIENCE)], t('Explore a level {n} island', n=effect.level))]
     if type(effect) in _POWER_LABELS:
         return [([('special', GUILD)], t(_POWER_LABELS[type(effect)]))]
     if isinstance(effect, Special):
@@ -443,7 +469,7 @@ def card_svg(card: Card, t: Translator = ENGLISH) -> str:
         f'<rect x="3" y="3" width="{_W - 6}" height="64" fill="url(#hg{uid})"/>',
         f'<rect x="3" y="65" width="{_W - 6}" height="2" fill="{_shade(fill, 0.62)}"/>',
         f'<text x="18" y="26" font-size="10" letter-spacing="1.4" fill="#ffffff" fill-opacity="0.8">'
-        f'{escape(t(card.color.label).upper())}</text>',
+        f'{escape((t("Fleet") if card.deck == "fleet" else t(card.color.label)).upper())}</text>',
     ]
     if len(lines) == 1:
         parts.append(f'<text x="18" y="52" font-size="17" font-weight="700" fill="#fff">{escape(lines[0])}</text>')
@@ -473,6 +499,8 @@ def card_svg(card: Card, t: Translator = ENGLISH) -> str:
     rows: List[Row] = []
     for effect in card.effects:
         rows += _describe(effect, t)
+    if card.deck == 'fleet':  # Armada: a fleet to advance (a choice of fleet)
+        rows.append(([('ship', fill)], t('Advance this fleet one space for free')))
     panel_h = _H - 144 - 34
     parts.append(
         f'<rect x="10" y="144" width="{_W - 20}" height="{panel_h}" rx="12" fill="{fill}" fill-opacity="0.06"/>'
@@ -616,6 +644,156 @@ def wonder_svg(wonder: Wonder, built: Union[int, Iterable[int]] = 0, t: Translat
         parts.append(_stage_panel(stage, i, _WLEFT + (i - 1) * _WSTAGE, built=i - 1 in done, t=t))
     parts.append('</svg>')
     return ''.join(parts)
+
+
+# --- Armada shipyards ---------------------------------------------------------
+_YLEFT, _YCELL, _YROW, _YTOP = 132, 112, 92, 46
+TRACK_LABEL = {'red': 'Red fleet', 'yellow': 'Yellow fleet', 'blue': 'Blue fleet', 'green': 'Green fleet'}
+TRACK_COLOR = {'red': '#b23b3b', 'yellow': '#d99a1c', 'blue': '#2f6fb0', 'green': '#3f9e5a'}
+_ROMAN = {1: 'I', 2: 'II', 3: 'III'}
+
+
+def _space_badges(effects, t: Translator) -> Tuple[List[Tuple[str, str, str]], List[Tuple[str, str, str]]]:
+    """A fleet space as compact (icon, colour, text) badges: what it shows while there, and what it gives on arrival."""
+    status: List[Tuple[str, str, str]] = []
+    arrival: List[Tuple[str, str, str]] = []
+    for effect in effects:
+        if isinstance(effect, NavalStrength):
+            status.append(('anchor', NAVAL, str(effect.strength)))
+        elif isinstance(effect, CommercialLevel):
+            status.append(('amphora', GOLD, str(effect.level)))
+        elif isinstance(effect, VictoryPoints):
+            status.append(('vp', CIVIC, str(effect.points)))
+        elif isinstance(effect, Coins):
+            arrival.append(('coin', GOLD, f'+{effect.amount}'))
+        elif isinstance(effect, Tax):
+            arrival.append(('coin', MILITARY, t('tax {n}', n=effect.amount)))
+        elif isinstance(effect, Explore):
+            arrival.append(('island', SCIENCE, _ROMAN.get(effect.level, str(effect.level))))
+        else:
+            arrival.append(('special', MUTED, ''))
+    return status, arrival
+
+
+def _badge_row(badges: List[Tuple[str, str, str]], x: float, y: float, color: str = INK) -> str:
+    out = []
+    for key, bcolor, text in badges:
+        out.append(_icon(key, x, y - 14, 18, bcolor))
+        x += 20
+        if text:
+            out.append(
+                f'<text x="{x:.1f}" y="{y:.0f}" font-size="12.5" font-weight="700" fill="{color}">{escape(text)}</text>'
+            )
+            x += 7.2 * len(text) + 7
+    return ''.join(out)
+
+
+def _small_cost(cost, x: float, y: float, t: Translator) -> str:
+    """A Naval Construction cost: one small chip per unit, coins as a chip with the amount."""
+    out = []
+    if cost.coins:
+        out.append(_cost_chip(x, y, 'coin', RES_COLOR[Resource.GOLD], 1, t('Coins'), 20))
+        out.append(
+            f'<text x="{x + 24:.1f}" y="{y + 15:.1f}" font-size="12.5" font-weight="700" '
+            f'fill="{INK}">{cost.coins}</text>'
+        )
+        x += 40
+    for res, n in sorted(cost.resources.items(), key=lambda kv: kv[0].value):
+        for _ in range(n):
+            out.append(_cost_chip(x, y, RES_ICON[res], RES_COLOR[res], 1, res_name(res, t), 20))
+            x += 23
+    return ''.join(out)
+
+
+def shipyard_svg(
+    shipyard: Shipyard,
+    fleets: Optional[Dict[str, int]] = None,
+    wonder_track: Optional[str] = None,
+    t: Translator = ENGLISH,
+) -> str:
+    """A standalone ``<svg>`` Shipyard: per fleet its start and six spaces (cost, effects), the fleet's position.
+
+    ``wonder_track`` marks the fleet that goes with the wonder (default: the board's; ``''``: none).
+    """
+    fleets = fleets or {}
+    wonder_track = shipyard.wonder_track if wonder_track is None else wonder_track
+    uid = _slug(shipyard.name)
+    width = _YLEFT + 7 * _YCELL + 12
+    height = _YTOP + len(TRACKS) * _YROW + (30 if not shipyard.official else 12)
+    name = t.name(shipyard.name)
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}" '
+        f'font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif" role="img">',
+        f'<title>{escape(name)}</title>',
+        f'<defs><filter id="ysh{uid}" x="-4%" y="-6%" width="108%" height="112%">'
+        f'<feDropShadow dx="0" dy="2" stdDeviation="3.2" flood-color="#233043" flood-opacity="0.16"/></filter></defs>',
+        f'<rect x="3" y="3" width="{width - 6}" height="{height - 6}" rx="16" fill="#f4f8fb" stroke="#e2e6ea" '
+        f'stroke-width="1.5" filter="url(#ysh{uid})"/>',
+        _icon('ship', 16, 10, 22, NAVAL),
+        f'<text x="44" y="27" font-size="15" font-weight="700" fill="{INK}">{escape(name)}</text>',
+    ]
+    for k in range(7):
+        label = t('START') if k == 0 else str(k)
+        parts.append(
+            f'<text x="{_YLEFT + k * _YCELL + (_YCELL - 8) / 2:.0f}" y="{_YTOP - 8}" text-anchor="middle" '
+            f'font-size="10" letter-spacing="1" fill="{MUTED}">{escape(label)}</text>'
+        )
+    for row, track in enumerate(TRACKS):
+        y = _YTOP + row * _YROW
+        color = TRACK_COLOR[track]
+        pos = fleets.get(track, 0)
+        parts.append(
+            f'<rect x="12" y="{y + 4}" width="{_YLEFT - 22}" height="{_YROW - 10}" rx="10" fill="{color}"/>'
+            f'<text x="22" y="{y + 27}" font-size="12.5" font-weight="700" fill="#fff">'
+            f'{escape(t(TRACK_LABEL[track]))}</text>'
+            f'<text x="22" y="{y + _YROW - 16}" font-size="11" fill="#fff" fill-opacity="0.92">'
+            f'{escape(t("space {n} of 6", n=pos))}</text>'
+        )
+        for k in range(7):
+            x = _YLEFT + k * _YCELL
+            w, h = _YCELL - 8, _YROW - 10
+            here, passed = k == pos, k < pos
+            fill = '#ffffff' if not (here or passed) else _shade_light(color)
+            stroke = color if here or passed else TILE_LINE
+            parts.append(
+                f'<rect x="{x:.0f}" y="{y + 4}" width="{w}" height="{h}" rx="9" fill="{fill}" stroke="{stroke}" '
+                f'stroke-width="{2.5 if here else 1}"/>'
+            )
+            if k == 0:
+                if track == wonder_track:  # the wonder symbol on the start space
+                    parts.append(
+                        f'<g><title>{escape(t("A wonder stage may advance this fleet"))}</title>'
+                        f'<text x="{x + 10:.0f}" y="{y + 30}" font-size="18" fill="{GOLD}">▲</text>'
+                        f'<text x="{x + 30:.0f}" y="{y + 29}" font-size="10.5" fill="{MUTED}">'
+                        f'{escape(t("Wonder", "action"))}</text></g>'
+                    )
+            else:
+                space = shipyard.space(track, k)
+                cost = shipyard.costs[track][k - 1]
+                tip = '\n'.join(
+                    [t('Cost: {cost}', cost=cost_text(cost.coins, cost.resources, t)), *effect_lines(space, t)]
+                )
+                status, arrival = _space_badges(space, t)
+                parts.append(f'<g><title>{escape(tip)}</title>')
+                parts.append(_small_cost(cost, x + 6, y + 10, t))
+                parts.append(_badge_row(status, x + 7, y + 55))
+                parts.append(_badge_row(arrival, x + 7, y + 77, MUTED))
+                parts.append('</g>')
+            if here:
+                parts.append(_icon('ship', x + w - 28, y + 9, 22, color, t('fleet')))
+    if not shipyard.official:
+        parts.append(
+            f'<text x="{width - 18}" y="{height - 12}" text-anchor="end" font-size="10.5" fill="{MUTED}">'
+            f'{escape(t("Costs follow the official pattern; the printed board may differ."))}</text>'
+        )
+    parts.append('</svg>')
+    return ''.join(parts)
+
+
+def _shade_light(hexc: str) -> str:
+    """A pale tint of a colour (a fleet's passed spaces)."""
+    r, g, b = (int(hexc[i : i + 2], 16) for i in (1, 3, 5))
+    return '#%02x%02x%02x' % tuple(int(c + (255 - c) * 0.82) for c in (r, g, b))
 
 
 def gallery_html(

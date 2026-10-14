@@ -16,6 +16,16 @@
   * Cities: the 42 black cards and the second-edition Byzantium and Petra boards.
   * New meta rules `leader_draft_left` and `return_last_leaders`. Coins from the reserve go through
     `Player.gain`.
+* **Armada**, both editions (`armada2` with the second-edition base game, `armada` with the first;
+  `docs/armada.md`): Shipyards with four fleets and Naval Construction (paid together with a card or wonder stage,
+  `Action.naval`, moves coded `B+` / `W+` / `D+` / `F+`), selling for the yellow fleet, Taxes and Pirates, islands
+  (explorations as `EXPLORE` decisions, recorded island draws), free fleet advances (`ADVANCE_FLEET`), Boarding,
+  naval conflicts with their own score column, the Emporiums, the 10-point guild cap and Siracusa. 24 cards, 27
+  islands and the Shipyard boards (the rulebook's board; the others generated from the official cost pattern).
+  Scripted agents sail when the next space is worth its cost (+12 VP against agents that never do); the GUI shows
+  the Shipyard board (`shipyard_svg`, `/api/shipyard.svg`; opponents' on click), naval buttons in the fleet's
+  colour, island and fleet choices with what they bring, and Naval / Islands score columns. Non-Armada games are
+  unchanged.
 * Post-game analysis of a game with an extension's cards (e.g. Rinascita) stopped with a bare card name
   (a `KeyError`: the bundled network was trained on the official cards only). `analysis.unknown_content`
   now checks the game's decks, leaders and boards against the network first, and the GUI and
