@@ -1395,5 +1395,19 @@
   "Shipyard VI": "Werft VI",
   "Dockyard VII": "Hafenwerft VII",
   "Shipyard VII": "Werft VII",
-  "Dockyard VIII": "Hafenwerft VIII"
+  "Dockyard VIII": "Hafenwerft VIII",
+  "A wonder stage may advance this fleet": "Eine Weltwunderstufe darf diese Flotte vorrücken",
+  "Advance this fleet one space for free": "Diese Flotte kostenlos ein Feld vorrücken",
+  "Costs follow the official pattern; the printed board may differ.": "Die Kosten folgen dem offiziellen Muster; der gedruckte Plan kann abweichen.",
+  "START": "START",
+  "space {n} of 6": "Feld {n} von 6",
+  "tax {n}": "Steuer {n}",
+  "Click to view the shipyard": "Klicken, um die Werft anzusehen",
+  "Sell the card to advance your yellow fleet one space instead of taking 3 coins": "Verkaufe die Karte und rücke deine gelbe Flotte ein Feld vor, statt 3 Münzen zu nehmen",
+  "You advanced your {card} for free": "Du hast deine {card} kostenlos vorgerückt",
+  "{who} advanced their {card} for free": "{who} hat die eigene {card} kostenlos vorgerückt",
+  "You explored and kept {card}": "Du hast erkundet und {card} behalten",
+  "{who} explored and kept {card}": "{who} hat erkundet und {card} behalten",
+  "Your shipyard": "Deine Werft",
+  "yellow fleet +1": "gelbe Flotte +1"
 }

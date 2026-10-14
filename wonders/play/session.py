@@ -474,7 +474,10 @@ class HumanSession:
             text.append(t('Free if you own {card}', card=t.name(card.chain_requires)))
         if card.chain_enables:
             text.append(t('Unlocks {cards}', cards=', '.join(t.name(c) for c in card.chain_enables)))
-        return {'name': name, 'title': t.name(name), 'color': card.color.value, 'age': card.age, 'text': text}
+        info = {'name': name, 'title': t.name(name), 'color': card.color.value, 'age': card.age, 'text': text}
+        if card.deck in ('island', 'fleet'):  # Armada: the log tells an island kept or a fleet advanced
+            info['deck'] = card.deck
+        return info
 
     def boards(self, built: Sequence[Any], t: Translator = ENGLISH) -> List[Dict[str, Any]]:
         """Every seat's wonder board (public): starting resource and stages.
@@ -510,7 +513,7 @@ class HumanSession:
             )
         return out
 
-    def _actions(self, obs: Observation) -> List[Dict[str, Any]]:
+    def _actions(self, obs: Observation, t: Translator = ENGLISH) -> List[Dict[str, Any]]:
         views = {c.name: c for c in obs.hand}
         out = []
         for i, action in enumerate(obs.legal_actions):
@@ -519,6 +522,8 @@ class HumanSession:
             if action.kind.value == 'build' and view is not None and view.build_coin_cost is not None:
                 entry.update(coins=view.build_coin_cost, bank=view.bank_coins, trade=view.trade_coins)
                 entry['chain'] = view.chain_free
+            if obs.decision == DecisionKind.ADVANCE_FLEET.value:  # what the fleet's next space brings
+                entry['detail'] = self._next_space(action.card.color.value, t)
             if action.naval:  # Armada: the fleet it advances, and the whole price (card and Naval Construction)
                 game = self.env.game
                 assert game is not None
@@ -543,6 +548,15 @@ class HumanSession:
                 entry['stages'] = self._stage_choices(action, obs)
             out.append(entry)
         return out
+
+    def _next_space(self, track: str, t: Translator) -> str:
+        """The effects of the human's next space on ``track``."""
+        game = self.env.game
+        assert game is not None
+        player = game.players[self.human]
+        if player.shipyard is None or player.naval_cost(track) is None:
+            return ''
+        return ', '.join(effect_lines(player.shipyard.space(track, player.fleets[track] + 1), t))
 
     def _naval_price(self, action: Action) -> Optional[Tuple[int, int]]:
         """``(coins in all, coins to neighbours)`` of an action with a Naval Construction, paid the cheapest way."""
@@ -638,7 +652,7 @@ class HumanSession:
         obs = self.observation()
         if obs is not None:
             view = obs.to_dict()
-            view['actions'] = self._actions(obs)
+            view["actions"] = self._actions(obs, t)
             state['observation'] = view
             state['boards'] = self.boards([[slot for slot, _ in city.stage_slots] for city in obs.table], t)
             state['shipyards'] = self.shipyards(t)
@@ -652,6 +666,7 @@ class HumanSession:
             winner = game.winner()
             categories = list(CATEGORIES) + [c for c in ARMADA_CATEGORIES if c in scores[0]]
             state['result'] = {'scores': scores, 'categories': categories, 'winner': winner}
+            state['shipyards'] = self.shipyards(t)
             state['cards'] = {
                 n: self.card_info(n, t) for p in game.players for n in (c.name for c in p.cards + p.islands)
             }

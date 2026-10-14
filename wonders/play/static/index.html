@@ -156,12 +156,15 @@ main { max-width: 1920px; margin: 0 auto; padding: 12px 16px; }
 .stage { flex: 1; text-align: center; font-size: 12px; padding: 4px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); }
 .stage.built { background: var(--green); color: #fff; border-color: var(--green); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
-.fleets { display: grid; gap: 3px; font-size: 11px; }
-.fleet { display: flex; align-items: center; gap: 3px; }
-.fleet .tr { width: 4.6em; font-weight: 600; }
-.fleet .sp { width: 13px; height: 10px; border-radius: 3px; border: 1px solid var(--line); background: var(--panel-2); }
-.fleet .sp.on { background: var(--fleet); border-color: var(--fleet); }
-.fleet .next { color: var(--muted); margin-left: 4px; white-space: nowrap; }
+.board #g-shipyard { margin-top: 10px; max-height: 300px; }
+.handcard .acts button.naval { border-left: 4px solid var(--fleet); }
+.handcard .acts button.naval .ic { vertical-align: -3px; margin-right: 3px; }
+.cell.clickable { cursor: pointer; }
+.opponents .cell.clickable .ic { width: 13px !important; height: 13px !important; }
+.opponents .cell.clickable .ic svg { width: 13px; height: 13px; }
+.opponents .cell.clickable .v { gap: 1px; font-size: 13px; }
+.fleets-link { margin-top: 8px; font-size: 12px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink); display: inline-flex; align-items: center; gap: 2px; }
+.cell.clickable:hover { border-color: var(--accent); }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; overflow-wrap: anywhere; }
 .decision { padding: 10px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); margin-bottom: 12px; }
@@ -502,6 +505,7 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
       <div class="panel me">
         <div class="board">
           <img id="g-board" data-i18n-attrs="alt" alt="Your wonder board">
+          <img id="g-shipyard" class="hidden" data-i18n-attrs="alt" alt="Your shipyard">
         </div>
         <div class="me-info">
           <div class="city-head"><h3 id="g-name"></h3></div>
@@ -510,10 +514,6 @@ input[type=color] { width: 60px; height: 32px; padding: 2px; border: 1px solid v
               <div class="statgrid" id="g-stats"></div>
               <p class="section-title" data-i18n>Production</p>
               <div class="res" id="g-res"></div>
-              <div id="g-fleet-box" class="hidden">
-                <p class="section-title" data-i18n>Shipyard</p>
-                <div class="fleets" id="g-fleets"></div>
-              </div>
             </div>
             <div>
               <p class="section-title" style="margin-top:0" data-i18n>Your city</p>
@@ -708,6 +708,14 @@ function viewUrl(src, alt, wide) {
   $('viewer').classList.remove('hidden'); hideTip();
 }
 function viewCard(name) { viewUrl(cardUrl(name), nm(name), false); }
+// Armada: a seat's Shipyard with its fleets (``state.shipyards``), as an image.
+function shipyardUrl(seat) {
+  const y = (state.shipyards || [])[seat];
+  if (!y) return null;
+  const fleets = ['red', 'yellow', 'blue', 'green'].map((k) => y.tracks[k].position).join(',');
+  return '/api/shipyard.svg?name=' + encodeURIComponent(y.name) + '&fleets=' + fleets + '&wonder=' + (y.wonder_track || '') + assetV();
+}
+function viewShipyard(seat) { const url = shipyardUrl(seat); if (url) viewUrl(url, nm(state.shipyards[seat].name), true); }
 function viewWonder(name, side, built) { viewUrl(wonderUrl(name, side, built), nm(name), true); }
 $('viewer').addEventListener('click', () => $('viewer').classList.add('hidden'));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('viewer').classList.add('hidden'); });
@@ -963,10 +971,10 @@ function statGrid(city, cols) {
       ' (' + (naval >= 0 ? '+' : '') + naval + ')'));
     cells.push(statCell(icon('coin', 'var(--gold)'), String(city.commercial_level), t('Trade level'),
       t('Commercial level: Taxes cost this many coins less')));
-    cells.push(el('div', { class: 'cell', style: 'grid-column: span 2',
-      'data-tip': ['red', 'yellow', 'blue', 'green'].map((k) => t(TRACK_NAMES[k]) + ': ' + (fleets[k] || 0) + '/6').join('\n') +
-        (city.boardings ? '\n' + t('Boarding tokens received: {n}', { n: city.boardings }) : '') },
-      el('div', { class: 'v' }, ...['red', 'yellow', 'blue', 'green'].map((k) => el('span', { class: 'n', style: `color:var(--c-${k})` }, '⛵' + (fleets[k] || 0)))),
+    cells.push(el('div', { class: 'cell clickable', style: 'grid-column: span 2', onclick: () => viewShipyard(city.seat),
+      'data-tip': nm(city.shipyard) + '\n' + ['red', 'yellow', 'blue', 'green'].map((k) => t(TRACK_NAMES[k]) + ': ' + (fleets[k] || 0) + '/6').join('\n') +
+        (city.boardings ? '\n' + t('Boarding tokens received: {n}', { n: city.boardings }) : '') + '\n' + t('Click to view the shipyard') },
+      el('div', { class: 'v' }, ...['red', 'yellow', 'blue', 'green'].flatMap((k) => [icon('ship', `var(--c-${k})`, 16), el('span', { class: 'n' }, String(fleets[k] || 0))])),
       el('div', { class: 'l' }, t('Fleets'))));
   }
   return cells;
@@ -1019,20 +1027,17 @@ function renderMe(obs) {
   renderFleets(obs);
 }
 
-function renderFleets(obs) {  // Armada: the own Shipyard, one row per fleet
-  const yard = (state.shipyards || [])[obs.seat];
-  $('g-fleet-box').classList.toggle('hidden', !yard);
-  if (!yard) return;
-  $('g-fleets').replaceChildren(...['red', 'yellow', 'blue', 'green'].map((k) => {
-    const track = yard.tracks[k];
-    const tip = [t(TRACK_NAMES[k]) + (yard.wonder_track === k ? ' · ' + t('goes with your wonder') : ''),
-      ...track.spaces.map((sp, i) => (i + 1 === track.position ? '▶ ' : '') + (i + 1) + '. ' + sp.cost + ' → ' + (sp.effects.join(', ') || '—'))].join('\n');
-    const next = track.spaces[track.position];
-    return el('div', { class: 'fleet', style: `--fleet:var(--c-${k})`, 'data-tip': tip },
-      el('span', { class: 'tr' }, t(TRACK_NAMES[k]).split(' ')[0] + (yard.wonder_track === k ? ' ▲' : '')),
-      ...track.spaces.map((_sp, i) => el('span', { class: 'sp' + (i < track.position ? ' on' : '') })),
-      el('span', { class: 'next' }, next ? t('next: {cost}', { cost: next.cost }) : t('done')));
-  }));
+function renderFleets(obs) {  // Armada: the own Shipyard under the wonder board
+  const img = $('g-shipyard'), src = shipyardUrl(obs.seat);
+  img.classList.toggle('hidden', !src);
+  if (!src) return;
+  if (img.getAttribute('src') !== src) { img.src = src; img.onclick = () => viewShipyard(obs.seat); }
+  const yard = state.shipyards[obs.seat];
+  img.dataset.tip = ['red', 'yellow', 'blue', 'green'].map((k) => {
+    const track = yard.tracks[k], next = track.spaces[track.position];
+    return t(TRACK_NAMES[k]) + ' ' + track.position + '/6' + (yard.wonder_track === k ? ' ▲' : '') + ': ' +
+      (next ? t('next: {cost}', { cost: next.cost }) + ' → ' + (next.effects.join(', ') || '—') : t('done'));
+  }).join('\n') + '\n\n' + t('Click to enlarge');
 }
 
 function coinsText(n) { return t(n === 1 ? '{n} coin' : '{n} coins', { n }); }
@@ -1047,9 +1052,9 @@ function actionLabel(a, decision) {
     let cost = t('free');
     if (a.chain) cost = t('chain');
     else if (a.coins) cost = coinsText(a.coins) + tradeText(a.trade);
-    return [t(verb) + fleet, PICKS.includes(decision) ? '' : cost];
+    return [t(verb) + fleet, a.detail || (PICKS.includes(decision) ? '' : cost)];
   }
-  if (a.kind === 'discard') return a.naval ? [t('Sell'), t('advance the yellow fleet')] : [t('Discard'), t('+3 coins')];
+  if (a.kind === 'discard') return a.naval ? [t('Sell'), t('yellow fleet +1')] : [t('Discard'), t('+3 coins')];
   return [t('Build free') + fleet, decision === 'discard_build' ? t('from discards') : a.naval && a.coins ? coinsText(a.coins) : t('board power')];
 }
 
@@ -1061,9 +1066,12 @@ function payTip(p, obs) {
 function actionButtons(a, obs) {
   const [label, detail] = actionLabel(a, obs.decision);
   const choice = { payment: null, stage: null };
-  const button = el('button', { class: (a.kind === 'build' || a.kind === 'free') && !a.naval ? 'primary' : '',
-    'data-tip': a.naval ? t('Naval Construction: also advance your {fleet}, paid together with the card', { fleet: t(TRACK_NAMES[a.naval]).toLowerCase() }) : null,
-    onclick: () => play(a.index, choice.payment, choice.stage) }, label, detail ? el('small', {}, detail) : null);
+  const naval = a.naval ? { class: 'naval', style: `--fleet:var(--c-${a.naval})`,
+    'data-tip': a.kind === 'discard' ? t('Sell the card to advance your yellow fleet one space instead of taking 3 coins')
+      : t('Naval Construction: also advance your {fleet}, paid together with the card', { fleet: t(TRACK_NAMES[a.naval]).toLowerCase() }) } : {};
+  const button = el('button', { class: (a.kind === 'build' || a.kind === 'free') && !a.naval ? 'primary' : '', ...naval,
+    onclick: () => play(a.index, choice.payment, choice.stage) }, a.naval ? icon('ship', `var(--c-${a.naval})`, 15) : null, label,
+    detail ? el('small', {}, detail) : null);
   if (a.stages && a.stages.length > 1) {
     // The Great Wall (stages in any order) or a Manneken Pis stage copying it: pick the stage, paid the cheapest way.
     const pills = a.stages.map((s, k) => {
@@ -1132,10 +1140,13 @@ const LOG = {  // [your move, someone else's move] per kind, without and with a 
   wonder_hidden: [N('You built a wonder stage'), N('{who} built a wonder stage')],
   discard: [N('You discarded {card}'), N('{who} discarded {card}')],
   discard_hidden: [N('You discarded a card'), N('{who} discarded a card')],
+  island: [N('You explored and kept {card}'), N('{who} explored and kept {card}')],
+  fleet: [N('You advanced your {card} for free'), N('{who} advanced their {card} for free')],
 };
 function describe(e, obs) {
   const mine = e.seat === obs.seat ? 0 : 1;
-  const forms = (!e.card && LOG[e.kind + '_hidden']) || LOG[e.kind];
+  const deck = e.card && ((state.cards || {})[e.card] || {}).deck;  // Armada: an island kept, a fleet advanced
+  const forms = (deck === 'island' && LOG.island) || (deck === 'fleet' && LOG.fleet) || (!e.card && LOG[e.kind + '_hidden']) || LOG[e.kind];
   const vars = { who: playerName(e.seat), card: e.card ? cardLink(e.card) : '' };
   return forms ? tn(forms[mine], vars) : [(mine ? vars.who : t('You')) + ' ' + e.kind + ' ', vars.card];
 }
@@ -1460,7 +1471,14 @@ function renderResult() {
     el('div', { class: 'city-head' }, el('h3', {}, playerName(c.seat)), el('span', { class: 'score' }, String(r.scores[c.seat].total))),
     el('div', { class: 'muted', style: 'font-size:12px;margin-bottom:6px' }, agentLabel(state.players[c.seat].agent) + ' · ' + coinsText(c.coins) + ' · ' +
       t(c.stages_built === 1 ? '{n} stage' : '{n} stages', { n: c.stages_built })),
-    el('div', { class: 'tableau' }, tableau(c.cards)))));
+    el('div', { class: 'tableau' }, tableau(c.cards.concat(c.islands || []))),
+    shipyardLink(c.seat))));
+}
+function shipyardLink(seat) {  // Armada: the final fleets, opening the Shipyard
+  const y = (state.shipyards || [])[seat];
+  if (!y) return null;
+  return el('button', { class: 'linkish fleets-link', 'data-tip': nm(y.name) + '\n' + t('Click to view the shipyard'), onclick: () => viewShipyard(seat) },
+    ...['red', 'yellow', 'blue', 'green'].flatMap((k) => [icon('ship', `var(--c-${k})`, 15), String(y.tracks[k].position) + ' ']));
 }
 
 function render() {

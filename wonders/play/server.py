@@ -11,6 +11,7 @@ Serves the single-page UI (``static/index.html``) and a small JSON API:
 - ``GET /api/record`` — the replayable GameRecord JSON
 - ``POST /api/analyse`` / ``GET /api/analysis`` — start / poll the post-game analysis of the human's moves
 - ``GET /api/card.svg?name=…`` / ``GET /api/wonder.svg?name=…&side=A[&built=N]`` — renderings
+- ``GET /api/shipyard.svg?name=…&fleets=r,y,b,g[&wonder=track]`` — an Armada Shipyard with its fleets
   (``&edition=2``: the second edition's card of that name)
 - ``GET /favicon.svg`` — the project logo (``static/logo.svg``, a copy of ``docs/images/logo.svg``)
 - ``GET /api/locale?lang=de`` — the translation catalog the page uses for its own texts
@@ -51,6 +52,7 @@ from typing import Any, Callable, Dict, Optional, Sequence, Tuple
 from urllib.parse import parse_qs, urlparse, urlsplit
 
 from wonders.cards.content import Content, load_content
+from wonders.cards.wonder import TRACKS
 from wonders.i18n import DEFAULT, ENGLISH, Translator, catalog
 from wonders.play import builder, strength
 from wonders.play.achievements import achievements, earned
@@ -58,7 +60,7 @@ from wonders.play.rating import AGENT_ELO, DEFAULT_AGENT_ELO, START, agent_elo, 
 from wonders.play.session import ConfigError, GameConfig, HumanSession, menu_options
 from wonders.ruleset import DEFAULT_EDITION, EDITIONS, EXPANSIONS
 from wonders.storage import StorageError, Store
-from wonders.viz.render import card_svg, wonder_svg
+from wonders.viz.render import card_svg, shipyard_svg, wonder_svg
 
 
 @lru_cache(maxsize=4)
@@ -116,6 +118,21 @@ def _wonder_svg(
         return wonder_svg(wonder, built=max(0, int(built or 0)), t=_translator(lang))
     except (KeyError, ValueError):
         return None
+
+
+@lru_cache(maxsize=256)
+def _shipyard_svg(
+    name: str, fleets: str = '', wonder: Optional[str] = None, lang: str = DEFAULT, edition: int = DEFAULT_EDITION
+) -> Optional[str]:
+    """``fleets``: the four fleets' spaces (``'2,6,0,3'``); ``wonder``: the wonder's fleet (``''``: none)."""
+    try:
+        shipyard = _all_content(edition).shipyard(name)
+        spaces = [max(0, min(6, int(x))) for x in fleets.split(',')] if fleets else []
+    except (KeyError, ValueError):
+        return None
+    if wonder not in (None, '', *TRACKS):
+        return None
+    return shipyard_svg(shipyard, dict(zip(TRACKS, spaces)), wonder, _translator(lang))
 
 
 class PlayServer:
@@ -326,7 +343,7 @@ class PlayServer:
     def _content_changed(self) -> None:
         """An expansion changed on disk: menus, renderings and image versions are rebuilt."""
         self._options.clear()
-        for cache in (_all_content, _card_svg, _wonder_svg):
+        for cache in (_all_content, _card_svg, _wonder_svg, _shipyard_svg):
             cache.cache_clear()
 
     # -- post-game analysis ------------------------------------------------------------------
@@ -450,6 +467,9 @@ GET_ROUTES: Dict[str, Callable[[PlayServer, Dict[str, str]], Response]] = {
     '/api/card.svg': lambda play, q: _svg(_card_svg(q.get('name', ''), _t(q).lang, _edition(q))),
     '/api/wonder.svg': lambda play, q: _svg(
         _wonder_svg(q.get('name', ''), q.get('side', 'A'), q.get('built', '0'), _t(q).lang, _edition(q))
+    ),
+    '/api/shipyard.svg': lambda play, q: _svg(
+        _shipyard_svg(q.get('name', ''), q.get('fleets', ''), q.get('wonder'), _t(q).lang, _edition(q))
     ),
     '/api/catalog': lambda play, q: _json(play.catalog(q.get('q', ''))),
     '/api/builder': lambda play, q: _json(play.builder_state(_t(q))),

@@ -63,6 +63,21 @@ The environment adds a naval block to the action space (`ActionSpace(naval=True)
 kind`) when Armada is in play. No network is trained on Armada: the bundled one refuses Armada tables (its card
 vocabulary lacks the cards), and search (`sample_world`) does not rebuild fleets and islands yet.
 
+## GUI
+
+`wonders gui` with the second (or first) edition and Armada ticked in the menu:
+
+* Your **Shipyard** is drawn under your wonder board (`viz.render.shipyard_svg`, route `/api/shipyard.svg`): per
+  fleet the start and six spaces with their Naval Construction cost, what a space shows while the fleet is there
+  (naval strength, commercial level, points) and what it gives on arrival (coins, Tax, island level), the fleet's
+  position and the wonder's fleet (▲). Click it to enlarge; click an opponent's fleet counters to see theirs.
+* The stat grids add naval strength, commercial level and the four fleets' spaces; islands join the cities' cards.
+* A card that can take a Naval Construction gets a second button in the fleet's colour ("Build + fleet", the whole
+  price); "Sell" advances the yellow fleet instead of taking 3 coins.
+* Explorations show the islands offered (keep one); a free advance shows the four fleets with what each one's next
+  space brings. The log says which island was kept and which fleet advanced.
+* The result table adds Naval and Islands columns; the final cities show islands and fleets.
+
 ## Approximations
 
 * **Shipyard boards**: only the board printed in the rulebooks (board I) is known; the others follow the

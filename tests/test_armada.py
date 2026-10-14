@@ -27,7 +27,11 @@ from wonders.engine.game import Game, IllegalAction, ScoreBreakdown, drive
 from wonders.engine.player import Player
 from wonders.engine.record import GameRecord, PlayerSetup
 from wonders.env.environment import WondersEnv
+from wonders.i18n import Translator
+from wonders.play.server import _shipyard_svg
+from wonders.play.session import GameConfig, HumanSession, SeatConfig
 from wonders.ruleset import Ruleset, rules_of
+from wonders.viz.render import shipyard_svg
 
 SECOND = ('base2', 'armada2')
 FIRST = ('base', 'armada')
@@ -306,6 +310,23 @@ def test_the_green_fleet_explores_at_the_end_of_the_turn():
     card = Card('Lab', Color.GREEN, age=1)
     g.apply(0, Action.build(card).with_naval())
     assert p.fleets['green'] == 2 and p.coins == 0 and p.pending_explores == [1]
+
+
+# -- GUI -------------------------------------------------------------------------------------------
+
+
+def test_the_shipyard_renders_and_the_session_shows_it():
+    content = load_content(*SECOND)
+    svg = shipyard_svg(content.shipyards[0], {'red': 2}, t=Translator('de'))
+    assert svg.startswith('<svg') and 'Rote Flotte' in svg and 'Feld 2 von 6' in svg
+    assert _shipyard_svg('Shipyard I', '1,2,3,4', 'red', 'en', 2) is not None
+    assert _shipyard_svg('Nowhere', '', None, 'en', 2) is None
+    seats = [SeatConfig(), SeatConfig('greedy'), SeatConfig('heuristic')]
+    session = HumanSession(GameConfig(expansions=['armada'], seats=seats, seed=2, edition=2))
+    state = session.state()
+    assert len(state['shipyards']) == 3 and set(state['shipyards'][0]['tracks']) == {'red', 'yellow', 'blue', 'green'}
+    assert any(a.get('naval') == 'yellow' for a in state['observation']['actions'])  # selling for the yellow fleet
+    assert session.card_info('Red Fleet')['deck'] == 'fleet'
 
 
 # -- whole games -----------------------------------------------------------------------------------

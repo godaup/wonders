@@ -17,7 +17,7 @@ from wonders.i18n import Translator, catalog, english, languages, msg
 from wonders.play.achievements import ACHIEVEMENTS
 from wonders.play.builder import builder_info
 from wonders.play.session import ARMADA_CATEGORIES, GameConfig, HumanSession, SeatConfig, menu_options
-from wonders.viz.render import card_svg, gallery_html, wonder_svg
+from wonders.viz.render import card_svg, gallery_html, shipyard_svg, wonder_svg
 
 ROOT = Path(__file__).resolve().parent.parent
 QUOTED = r"'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\""
@@ -75,6 +75,8 @@ def test_every_card_board_session_and_menu_text_has_a_german_translation() -> No
         card_svg(card, t)
     for wonder in content.wonders + second.wonders:
         wonder_svg(wonder, 1, t)
+    for shipyard in content.shipyards + second.shipyards:
+        shipyard_svg(shipyard, {'red': 1}, t=t)
     gallery_html(content.cards[:1], content.wonders[:1], t=t)
     menu_options((), t)
     builder_info(t)  # the expansion builder's effect, rule and choice labels

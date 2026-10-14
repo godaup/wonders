@@ -23,7 +23,9 @@
   naval conflicts with their own score column, the Emporiums, the 10-point guild cap and Siracusa. 24 cards, 27
   islands and the Shipyard boards (the rulebook's board; the others generated from the official cost pattern).
   Scripted agents sail when the next space is worth its cost (+12 VP against agents that never do); the GUI shows
-  the Shipyard, naval actions and island choices. Non-Armada games are unchanged.
+  the Shipyard board (`shipyard_svg`, `/api/shipyard.svg`; opponents' on click), naval buttons in the fleet's
+  colour, island and fleet choices with what they bring, and Naval / Islands score columns. Non-Armada games are
+  unchanged.
 * Post-game analysis of a game with an extension's cards (e.g. Rinascita) stopped with a bare card name
   (a `KeyError`: the bundled network was trained on the official cards only). `analysis.unknown_content`
   now checks the game's decks, leaders and boards against the network first, and the GUI and
